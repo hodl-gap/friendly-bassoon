@@ -1,0 +1,5 @@
+langgraph
+pinecone-client
+openai
+python-dotenv
+telethon

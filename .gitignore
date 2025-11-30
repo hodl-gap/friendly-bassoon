@@ -1,0 +1,36 @@
+# Environment and secrets
+.env
+*.session
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+
+# Data files (large, local only)
+subproject_database_manager/data/raw/
+subproject_database_manager/data/processed/
+subproject_database_manager/data/qa_logs/
+subproject_database_manager/test_data/
+subproject_database_manager/telegram_messages/
+
+# Images
+*.jpg
+*.jpeg
+*.png
+*.gif
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
