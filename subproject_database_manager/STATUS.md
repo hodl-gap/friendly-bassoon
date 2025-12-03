@@ -30,7 +30,24 @@ Added complete vector embedding pipeline for processed research data.
 python vector_db_orchestrator.py --input data/processed/processed_xxx.csv
 ```
 
-### 2. Source Entity Normalization
+### 2. Git Repository Setup
+
+Pushed to GitHub for remote server deployment.
+
+**Repository**: https://github.com/hodl-gap/friendly-bassoon
+
+**Setup**:
+- Created `.gitignore` (excludes `.env`, `.session`, `data/`, `test_data/`, images)
+- Initial commit with 36 files (all code, no data)
+
+**Remote server deployment**:
+```bash
+git clone https://github.com/hodl-gap/friendly-bassoon.git project_macro_analyst
+# Copy .env and telegram_session.session manually
+# Run in Zellij for persistent sessions
+```
+
+### 3. Source Entity Normalization
 
 Added LLM-based normalization for institution names in metrics dictionary sources.
 
@@ -280,7 +297,18 @@ MAX_CONCURRENT_REQUESTS = 10        # Parallel API calls
    - Integrated into pipeline after metrics update
    - Batch processing for efficiency
 
-3. **[ ] Benchmark parallel vs sequential**
+3. **[ ] Fix duplicate entries in processed CSV**
+   - Same message processed multiple times when pipeline re-run on overlapping dates
+   - `opinion_id` inconsistency (`Fomo_CTRINE_1` vs `Fomo CTRINE_1`) breaks deduplication
+   - Results in duplicate vectors in Pinecone (e.g., 6 entries for same message)
+   - Need deduplication by `(tg_channel, original_message_num, date)` or similar
+   - Example duplicate Pinecone IDs (same message `2025-11-20T12:39:35+00:00`):
+     - `6c9624166ad7c42a_341`
+     - `288d179374e546d5_349`
+     - `80c887a1176fe209_345`
+     - `9c0543bd755928ac_348`
+
+4. **[ ] Benchmark parallel vs sequential**
    - Compare Step 4 times
    - Document speedup factor
    - Identify optimal `MAX_CONCURRENT_REQUESTS` value
@@ -301,18 +329,22 @@ MAX_CONCURRENT_REQUESTS = 10        # Parallel API calls
 
 ### Low Priority
 
-6. **[ ] Blocking QA mode**
+6. **[ ] Handle billing quota limits**
+   - Add rate limiting / backoff when hitting API billing quotas
+   - Graceful handling of quota exceeded errors
+
+7. **[ ] Blocking QA mode**
    - Halt pipeline on low QA scores
    - Require manual review before proceeding
 
-7. **[ ] Auto-fix mode for QA**
+8. **[ ] Auto-fix mode for QA**
    - LLM suggests fixes → apply automatically → re-validate
 
-8. **[ ] Quality metrics dashboard**
+9. **[ ] Quality metrics dashboard**
    - Track QA scores over time
    - Identify extraction patterns
 
-9. **[ ] Set up git remote**
+10. **[ ] Set up git remote**
    - Create remote repository (GitHub/GitLab)
    - Add origin and push
 

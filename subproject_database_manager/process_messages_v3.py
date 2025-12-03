@@ -603,6 +603,20 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
     print("WRITING RESULTS")
     print("=" * 80)
 
+    # Deduplicate by (original_message_num, date, tg_channel, entry_type)
+    seen = set()
+    deduped_results = []
+    for result in all_results:
+        key = (result['original_message_num'], result['date'], result['tg_channel'], result['entry_type'])
+        if key not in seen:
+            seen.add(key)
+            deduped_results.append(result)
+
+    if len(deduped_results) < len(all_results):
+        print(f"Deduplicated: {len(all_results)} -> {len(deduped_results)} entries (removed {len(all_results) - len(deduped_results)} duplicates)")
+
+    all_results = deduped_results
+
     with open(output_csv, 'w', encoding='utf-8', newline='') as f:
         fieldnames = ['original_message_num', 'date', 'tg_channel', 'category',
                      'entry_type', 'opinion_id', 'raw_text', 'has_photo', 'extracted_data']
