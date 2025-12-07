@@ -16,7 +16,7 @@ from metrics_mapping_utils import append_new_metrics, collect_new_metrics_from_e
 # =============================================================================
 # Model to use for batch extraction (Step 4)
 # Options: "gpt5", "gpt51", "gpt5_mini", "claude_sonnet", "claude_haiku"
-EXTRACTION_MODEL = "gpt5"
+EXTRACTION_MODEL = "gpt5_mini"
 FALLBACK_MODEL = "claude_sonnet"  # Used if primary model fails
 
 # Maximum concurrent requests for parallel processing

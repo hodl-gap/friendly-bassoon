@@ -92,12 +92,20 @@ For EACH message, extract the following fields:
      - "suggested_description": Brief description of what this metric measures
    - Empty array [] if no liquidity metrics
 
-9. **metric_relationships** - Array of causal links
-   - "cause": Metric name
-   - "effect": Metric name or outcome
-   - "mechanism": Brief how/why this link exists
-   - "direction": "positive" | "negative" | ""
-   - Empty array [] if no relationships
+9. **logic_chains** - Array of causal chains (multi-step sequences)
+   - Each chain represents a connected sequence: cause → effect → next effect
+   - "steps": Array of ordered steps in the chain
+     - Each step has: "cause", "effect", "mechanism"
+   - Chains should have 2+ steps when the logic continues
+   - Single-step chains are acceptable if no further effects
+   - Empty array [] if no causal relationships
+
+   **Example of a 3-step chain:**
+   Fed rate cuts → real rates down → risk asset valuations up
+
+   **How to structure:**
+   - Step 1: cause="Fed rate cuts", effect="real rates down", mechanism="rate cuts reduce yields"
+   - Step 2: cause="real rates down", effect="risk asset valuations up", mechanism="lower real yields increase PV of future cash flows"
 
 **Output format (JSON array, one entry per message):**
 ```json
@@ -130,12 +138,17 @@ For EACH message, extract the following fields:
                 "suggested_description": "Reserve Demand Elasticity, Fed liquidity sensitivity"
             }}
         ],
-        "metric_relationships": [
+        "logic_chains": [
             {{
-                "cause": "TGA",
-                "effect": "bank_reserves",
-                "mechanism": "TGA spending injects reserves",
-                "direction": "negative"
+                "steps": [
+                    {{"cause": "TGA drawdown", "effect": "bank reserves increase", "mechanism": "Treasury spending releases TGA funds into banking system"}},
+                    {{"cause": "bank reserves increase", "effect": "funding conditions ease", "mechanism": "more reserves reduce repo rate pressure"}}
+                ]
+            }},
+            {{
+                "steps": [
+                    {{"cause": "RDE spike", "effect": "QT pause likely", "mechanism": "high reserve demand elasticity signals system stress"}}
+                ]
             }}
         ]
     }}

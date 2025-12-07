@@ -80,8 +80,12 @@ Check for:
 - **Conditions**: When/if statements
 - **Causality**: Because/due to/driven by relationships
 - **Context dependencies**: What makes this significant?
-- **metric_relationships field** (data_opinion only): Are causal chains between metrics captured?
-  - Example: "TGA decline → bank_reserves increase → repo_rate pressure"
+- **logic_chains field**: Are causal chains properly structured?
+  - Each chain should have "steps" array with cause → effect → mechanism
+  - Multi-step chains (2+ steps) preferred when logic continues
+  - Example: "TGA decline → bank reserves increase → funding conditions ease"
+  - Check: Are chains connected (step N's effect = step N+1's cause)?
+  - Check: Does each step have a mechanism explaining the link?
 
 **DIMENSION 3: Answerability**
 Question: Can this extraction answer real financial research questions?
@@ -118,7 +122,7 @@ Check:
             "score": 0.0-1.0,
             "analysis": "Analysis of if-then logic and context",
             "missing_pieces": ["No threshold value specified", "Causality unclear"],
-            "metric_relationships_quality": "Assessment of metric_relationships array (data_opinion only)"
+            "logic_chains_quality": "Assessment of logic_chains: connected steps? mechanisms present? multi-step where appropriate?"
         }},
         "answerability": {{
             "score": 0.0-1.0,

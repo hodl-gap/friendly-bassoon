@@ -82,6 +82,14 @@ For EACH message, extract structured information about who said what.
                 "suggested_category": "direct",
                 "suggested_description": "Reserve Demand Elasticity"
             }}
+        ],
+        "logic_chains": [
+            {{
+                "steps": [
+                    {{"cause": "labor market cooling", "effect": "wage pressure easing", "mechanism": "fewer job openings reduce worker bargaining power"}},
+                    {{"cause": "wage pressure easing", "effect": "inflation decline", "mechanism": "lower wage growth reduces service inflation"}}
+                ]
+            }}
         ]
     }}
 ]
@@ -113,6 +121,23 @@ For EACH message, extract structured information about who said what.
 - "is_new": true if NOT in mapping table
 - If is_new: add "suggested_category" and "suggested_description"
 - Empty array [] if no liquidity metrics
+
+**logic_chains field:**
+- Array of causal chains expressing policy logic (multi-step sequences)
+- Each chain represents: cause → effect → next effect
+- "steps": Array of ordered steps in the chain
+  - Each step has: "cause", "effect", "mechanism"
+- Chains should have 2+ steps when the logic continues
+- Single-step chains acceptable if no further effects
+- Empty array [] if no causal relationships
+
+**Example chain from Fed speech:**
+"If inflation falls to 2%, we can normalize rates, which would support housing"
+→ Chain: inflation down → rate cuts → housing recovery
+
+Structure as:
+- Step 1: cause="inflation falls to 2%", effect="rate cuts", mechanism="target achieved allows policy normalization"
+- Step 2: cause="rate cuts", effect="housing recovery", mechanism="lower mortgage rates increase affordability"
 
 ---
 

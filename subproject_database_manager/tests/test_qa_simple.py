@@ -33,18 +33,17 @@ extracted_data = [
         "direction": "down"
       }
     ],
-    "metric_relationships": [
+    "logic_chains": [
       {
-        "cause": "RDE increases",
-        "effect": "Funding stress increases"
+        "steps": [
+          {"cause": "RDE increases", "effect": "funding stress increases", "mechanism": "high reserve demand elasticity signals system-wide funding pressure"},
+          {"cause": "funding stress increases", "effect": "Fed halts QT", "mechanism": "stress forces Fed to stop balance sheet reduction"}
+        ]
       },
       {
-        "cause": "Funding stress increases",
-        "effect": "Higher likelihood the Fed halts QT"
-      },
-      {
-        "cause": "TGA balance decreases",
-        "effect": "Bank reserves increase (system liquidity injection)"
+        "steps": [
+          {"cause": "TGA balance decreases", "effect": "bank reserves increase", "mechanism": "Treasury spending releases TGA funds into banking system"}
+        ]
       }
     ]
   },
@@ -66,14 +65,12 @@ extracted_data = [
         "direction": "down"
       }
     ],
-    "metric_relationships": [
+    "logic_chains": [
       {
-        "cause": "ON RRP usage decreases",
-        "effect": "MMFs move cash to higher-yield assets (bills/private repo)"
-      },
-      {
-        "cause": "ON RRP usage decreases",
-        "effect": "Less cash parked at the Fed and more liquidity flows to private markets"
+        "steps": [
+          {"cause": "ON RRP usage decreases", "effect": "MMFs move to higher-yield assets", "mechanism": "lower RRP rates make bills/private repo more attractive"},
+          {"cause": "MMFs move to higher-yield assets", "effect": "private market liquidity increases", "mechanism": "cash flows from Fed facility to private markets"}
+        ]
       }
     ]
   }

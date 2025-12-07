@@ -1,10 +1,50 @@
 # Project Status - Telegram Financial Message Processing Workflow
 
-**Last Updated**: 2025-11-30
+**Last Updated**: 2025-12-07
 
 ## Current State: Production-Ready with Vector DB Integration
 
 Complete end-to-end workflow for fetching and processing financial research messages from Telegram channels with AI-powered analysis, categorization, structured data extraction, automated QA sampling, and vector database storage.
+
+---
+
+## Session Summary: 2025-12-07
+
+### 1. Logic Chains Schema Update
+
+Replaced `metric_relationships` with `logic_chains` for better causal chain extraction.
+
+**Problem**: Old `metric_relationships` only captured single-hop links (cause → effect). Need multi-step chains.
+
+**New schema**:
+```json
+"logic_chains": [
+    {
+        "steps": [
+            {"cause": "Fed rate cuts", "effect": "real rates down", "mechanism": "rate cuts reduce yields"},
+            {"cause": "real rates down", "effect": "risk asset valuations up", "mechanism": "lower real yields increase PV of cash flows"}
+        ]
+    }
+]
+```
+
+**Updated files**:
+- `data_opinion_prompts.py` - Replaced `metric_relationships` with `logic_chains`
+- `interview_meeting_prompts.py` - Added `logic_chains` (was missing entirely)
+- `qa_validation_prompts.py` - Updated to validate chain structure (connected steps, mechanisms)
+- `tests/test_qa_simple.py` - Updated test data
+
+### 2. Extraction Model Cost Reduction
+
+Changed primary extraction model from GPT-5 to GPT-5 Mini for cost savings.
+
+**Configuration** (`process_messages_v3.py`):
+```python
+EXTRACTION_MODEL = "gpt5_mini"  # Changed from "gpt5"
+FALLBACK_MODEL = "claude_sonnet"
+```
+
+**Cost impact**: ~10x reduction in extraction costs ($0.05 → ~$0.005 per call)
 
 ---
 
@@ -136,11 +176,11 @@ telegram_workflow_orchestrator.py (MAIN ENTRY POINT)
     │
     ├─→ process_messages_v3.py       → Image-first processing
     │       │                         → Categorization (6 types)
-    │       │                         → Structured extraction (GPT-5 + Claude fallback)
+    │       │                         → Structured extraction (GPT-5 Mini + Claude fallback)
     │       │                         → Parallel batch processing
     │       │                         → Auto-update metrics dictionary
     │       │
-    │       ├─→ models.py            → GPT-5, Claude 4.5 models
+    │       ├─→ models.py            → GPT-5 Mini, Claude 4.5 models
     │       │                         → process_batch_parallel_with_retry()
     │       │
     │       └─→ metrics_mapping_utils.py → Metric normalization
@@ -239,7 +279,7 @@ python qa_post_processor.py \
 
 ```python
 # process_messages_v3.py
-EXTRACTION_MODEL = "gpt5"           # Primary model
+EXTRACTION_MODEL = "gpt5_mini"      # Primary model (cost-effective)
 FALLBACK_MODEL = "claude_sonnet"    # Fallback if primary fails
 MAX_CONCURRENT_REQUESTS = 10        # Parallel API calls
 ```
@@ -254,7 +294,7 @@ MAX_CONCURRENT_REQUESTS = 10        # Parallel API calls
   - `used_data`, `what_happened`, `interpretation`
   - `tags` (direct_liquidity | indirect_liquidity | irrelevant)
   - `liquidity_metrics[]` - normalized metrics with values/directions
-  - `metric_relationships[]` - causal chains between metrics
+  - `logic_chains[]` - multi-step causal chains (cause → effect → mechanism)
 
 **Metrics Dictionary CSV columns:**
 - `normalized` - Standard metric name
@@ -269,16 +309,16 @@ MAX_CONCURRENT_REQUESTS = 10        # Parallel API calls
 |-------|----------|-------|
 | Claude Sonnet 4.5 vision | ~$0.015 | Image analysis |
 | GPT-4.1 mini | ~$0.0004 | Categorization |
-| GPT-5 | ~$0.05 | Extraction (primary) |
+| GPT-5 Mini | ~$0.005 | Extraction (primary) |
 | Claude Sonnet 4.5 text | ~$0.01 | Extraction (fallback) |
 | GPT-4.1 | ~$0.01 | QA validation |
 
-**Example run (7 messages, GPT-5):**
+**Example run (7 messages, GPT-5 Mini):**
 - Vision calls: $0.02
 - Categorization: $0.003
-- Extraction: $0.25
+- Extraction: $0.025
 - QA sampling (3): $0.03
-- **Total: ~$0.30 USD**
+- **Total: ~$0.08 USD**
 
 ---
 
@@ -297,16 +337,10 @@ MAX_CONCURRENT_REQUESTS = 10        # Parallel API calls
    - Integrated into pipeline after metrics update
    - Batch processing for efficiency
 
-3. **[ ] Fix duplicate entries in processed CSV**
-   - Same message processed multiple times when pipeline re-run on overlapping dates
-   - `opinion_id` inconsistency (`Fomo_CTRINE_1` vs `Fomo CTRINE_1`) breaks deduplication
-   - Results in duplicate vectors in Pinecone (e.g., 6 entries for same message)
-   - Need deduplication by `(tg_channel, original_message_num, date)` or similar
-   - Example duplicate Pinecone IDs (same message `2025-11-20T12:39:35+00:00`):
-     - `6c9624166ad7c42a_341`
-     - `288d179374e546d5_349`
-     - `80c887a1176fe209_345`
-     - `9c0543bd755928ac_348`
+3. **[x] Fix duplicate entries in processed CSV** ✅ Done 2025-12-04
+   - Verified no true duplicates exist when keying by `(tg_channel, original_message_num, date, entry_type)`
+   - Multiple rows per message are intentional: separate extractions for text vs image content
+   - Example: 73 messages → 139 entries (66 messages have both text + image)
 
 4. **[ ] Benchmark parallel vs sequential**
    - Compare Step 4 times
@@ -360,12 +394,13 @@ MAX_CONCURRENT_REQUESTS = 10        # Parallel API calls
 - **2025-11-28** - GPT-5/Claude 4.5 models, parallel processing
 - **2025-11-29** - Source tracking, QA sampling integration, GPT-5 primary model
 - **2025-11-30** - Embedding workflow, Pinecone integration, source entity normalization
+- **2025-12-07** - Logic chains schema (replaced metric_relationships), GPT-5 Mini extraction
 
 ---
 
 ## Known Limitations
 
-1. GPT-5 is slower and more expensive than Claude Sonnet (~4x cost, ~2x time)
+1. GPT-5 Mini may have lower extraction quality than GPT-5 (cost tradeoff)
 2. No incremental updates (re-fetches full date range)
 3. No keyword search (Telethon supports it)
 4. Metrics dictionary can accumulate duplicate metric names (needs cleaner for metrics, not sources)

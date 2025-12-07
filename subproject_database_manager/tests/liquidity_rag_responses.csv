@@ -1,0 +1,42 @@
+query,raw_response
+liquidity injection monetary expansion,"{
+  ""reasoning"": ""The context describes liquidity expansion primarily through central bank actions such as quantitative easing (QE), balance sheet expansion, reverse repo operations, and interest rate cuts. QE involves the central bank purchasing long-term securities, which increases the money supply and bank reserves, thereby making lending easier and expanding credit supply. To monitor liquidity expansion effectively, one should track data reflecting these processes: the size of the central bank's balance sheet (to capture asset purchases and QE scale), money supply aggregates (to see new money creation), interest rates (especially long-term rates affected by QE), bank reserves (indicating liquidity available to banks), credit growth (to observe lending capacity and borrowing), and indicators of system liquidity such as the Treasury General Account (TGA) balance and reverse repo operations. Additionally, market-based signals like policy rate expectations and market liquidity measures can provide complementary insights into liquidity conditions."",
+  ""metrics_to_monitor"": [
+    ""Central bank balance sheet size"",
+    ""Money supply aggregates (e.g., M2)"",
+    ""Bank reserves"",
+    ""Long-term interest rates"",
+    ""Credit growth (bank lending volumes)"",
+    ""Reverse repo operation volumes"",
+    ""Treasury General Account (TGA) balance"",
+    ""Policy rate expectations (e.g., futures pricing)"",
+    ""Market liquidity indicators (e.g., bid-ask spreads, repo rates)""
+  ]
+}"
+Fed balance sheet expansion QE,"{
+  ""reasoning"": ""The context revolves around central bank liquidity expansion, particularly focusing on the Fed and PBOC balance sheets, the end of quantitative tightening (QT), and the shift to purchasing short-term Treasury bills (T-Bills) as a form of quasi-quantitative easing (QE). Liquidity expansion is primarily reflected in the growth or expansion of central bank balance sheets, signaling increased monetary accommodation. The Fed's liquidity supply signals and the balance sheet size are key indicators, as are the timing of QT cessation and the switch to asset purchases. Additionally, moving averages such as the 100-day DEMA of liquidity supply provide trend confirmation. For the PBOC, monitoring its balance sheet size, reserve requirement ratio changes, interest rate cuts, and liquidity injections also indicate liquidity expansion. Therefore, to check liquidity expansion, one should monitor central bank balance sheet size (Fed and PBOC), Fed liquidity supply measures, the end of QT, Fed asset purchase composition (T-Bills vs long-term), and relevant moving averages like the 100-day DEMA of liquidity supply."",
+  ""metrics_to_monitor"": [
+    ""Federal Reserve total balance sheet size"",
+    ""People's Bank of China (PBOC) total balance sheet size"",
+    ""Fed liquidity supply indicator"",
+    ""Fed quantitative tightening (QT) status and schedule"",
+    ""Fed asset purchase composition (T-Bill vs long-term securities)"",
+    ""100-day DEMA (Double Exponential Moving Average) of Fed liquidity supply"",
+    ""PBOC reserve requirement ratio changes"",
+    ""PBOC interest rate changes"",
+    ""PBOC liquidity injection volumes""
+  ]
+}"
+central bank liquidity increase easing,"```json
+{
+  ""reasoning"": ""The context highlights several key actions and indicators related to liquidity expansion. First, the easing of the Supplementary Leverage Ratio (SLR) allows banks to hold more U.S. Treasuries (UST), which increases their balance sheet capacity and acts as a de facto liquidity easing measure. Historically, SLR easing precedes quantitative easing (QE), so monitoring changes in SLR and bank UST holdings is important. Second, active reverse repo operations and cuts to lending rates (LPR cuts) are mentioned as direct liquidity expansion tools, implying that monitoring central bank liquidity injection operations and interest rate adjustments is critical. Third, balance sheet expansions, particularly at record highs, signal QE or similar monetary easing measures. Therefore, to check liquidity expansion, one should monitor metrics related to regulatory easing (SLR), bank holdings of UST, central bank balance sheet size, reverse repo liquidity injections, and lending rate changes (LPR)."",
+  ""metrics_to_monitor"": [
+    ""Supplementary Leverage Ratio (SLR) levels and changes"",
+    ""Bank holdings of U.S. Treasuries (UST)"",
+    ""Central bank balance sheet size"",
+    ""Reverse repo liquidity injection volumes"",
+    ""Lending Prime Rate (LPR) cuts or changes"",
+    ""Treasury market stabilization indicators""
+  ]
+}
+```"

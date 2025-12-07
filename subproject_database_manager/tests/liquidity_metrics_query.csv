@@ -1,0 +1,200 @@
+rank,score,id,date,tg_channel,category,entry_type,raw_text,extracted_data
+1,0.535867751,5eb637a4c093a7b6_15,2025-11-28T10:40:45+00:00,Plan G Research,data_opinion,,"10월 30일에 5.56조 달러로 수년 만의 최저치를 찍은 이후, 미국 시장 유동성이 드디어 반등하고 있습니다.
+
+6주간의 연방정부 셧다운으로 6,210억 달러의 유동성이 빠져나갔지만, 정부 재가동으로 이미 700억 달러가 시장에 다시 공급되었고, 향후 5~6주 동안 재무부 일반계정(TGA)이 정상화되면서 추가로 약 3,000억 달러가 시장에 돌아올 가능성이 있습니다.
+
+이러한 유동성 개선 흐름은 연준의 비둘기파적 전환과 맞물리고 있습니다. 뉴욕 연준 윌리엄스 총재에 이어 월러 이사, 샌프란시스코 연준 데일리 총재까지 금리 인하를 지지하는 신호를 보내면서, 시장이 반영하는 단기 금리 인하 확률은 약 90% 수준까지 상승했습니다.
+
+한편, 재무부 일반계정(TGA)은 현재 8,920억 달러로 여전히 높은 수준에 있으며, 정상화된 수준인 약 6,000억 달러 대비 크게 높습니다. 이는 상당한 규모의 유동성이 앞으로도 시장에 추가로 풀릴 여지가 남아있다는 의미입니다.
+
+최근 거시 지표들은 완화(금리 인하) 가능성을 더욱 강화하고 있습니다. 9월 고용보고서 기준 실업률은 4.44%로 상승했고, ADP 데이터는 지난주 1만 3,500개의 일자리 감소를 보여주었으며, 소매판매는 부진했고 근원 PPI도 예상보다 낮게 나왔습니다.
+
+ARK의 견해:
+유동성이 돌아오고, 양적긴축(QT)이 12월 1일 종료되며, 통화정책도 완화적으로 전환되는 가운데, 최근의 조정(낙폭)을 시장이 되돌릴 수 있는 환경이 형성되고 있다고 보고 있습니다.
+
+https://x.com/arkinvest/status/1993797871259255230?s=52","{""source"": ""ARK"", ""data_source"": """", ""asset_class"": ""money markets"", ""used_data"": ""market_liquidity_trough: $5.56T (2025-10-30), gov_shutdown_outflow: $621B, returned_after_restart: $70B, potential_TGA_return: $300B (5-6 weeks), TGA: $892B, TGA_normal: $600B, market_cut_prob: 90%, QT_end: 2025-12-01"", ""what_happened"": ""liquidity rebound underway, TGA normalization expected, govt shutdown drained liquidity then partial return, Fed officials signaling cuts"", ""interpretation"": ""liquidity tailwind for risk assets, QT end + TGA inflows → yield easing potential, policy easing priced, monitor rate decision"", ""tags"": ""direct_liquidity"", ""liquidity_metrics"": [{""raw"": ""market liquidity trough: $5.56T (Oct 30)"", ""normalized"": ""market_liquidity"", ""value"": ""5.56T"", ""direction"": ""up"", ""is_new"": true, ""suggested_category"": ""direct"", ""suggested_description"": ""aggregate market liquidity level, indicates available funding""}, {""raw"": ""government shutdown outflow: $621B"", ""normalized"": ""gov_shutdown_outflow"", ""value"": ""621B"", ""direction"": ""down"", ""is_new"": true, ""suggested_category"": ""direct"", ""suggested_description"": ""liquidity withdrawn from markets due to federal government shutdown effects on TGA""}, {""raw"": ""TGA current: $892B"", ""normalized"": ""TGA"", ""value"": ""892B"", ""direction"": ""up"", ""is_new"": false}, {""raw"": ""potential TGA normalization inflow: $300B"", ""normalized"": ""TGA_normalization_inflow"", ""value"": ""300B"", ""direction"": ""up"", ""is_new"": true, ""suggested_category"": ""direct"", ""suggested_description"": ""expected reduction in TGA balance returning cash to market, increases bank reserves""}, {""raw"": ""market-implied cut probability: 90%"", ""normalized"": ""market_cut_prob"", ""value"": ""90%"", ""direction"": ""up"", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""market-implied probability of Fed rate cut, reflects easing expectations""}], ""metric_relationships"": [{""cause"": ""TGA_normalization_inflow"", ""effect"": ""bank_reserves"", ""mechanism"": ""TGA drawdown returns balances to banking system, increases reserves"", ""direction"": ""positive""}, {""cause"": ""gov_shutdown_outflow"", ""effect"": ""market_liquidity"", ""mechanism"": ""TGA drawdown drained liquidity from markets during shutdown"", ""direction"": ""negative""}, {""cause"": ""market_cut_prob"", ""effect"": ""yields"", ""mechanism"": ""higher cut probability lowers expected policy path, pushes yields down"", ""direction"": ""negative""}]}"
+2,0.527589858,7435cc3a0aa83bbb_8,2025-12-01T12:49:27+00:00,Plan G Research,data_opinion,,"**[요즘 가장 중요시 봐야하는 지표 정리]**
+
+**1. 엔/달러 (실시간)**
+https://www.investing.com/currencies/usd-jpy
+
+최근 일본 GDP, 도쿄 CPI 등 일본 경제 매크로가 예상치를 상회하면서 우에다 카즈오 총재 등의 금리인상 기조 발언이 엔케리트레이드언와인딩 우려를 자극하며 코인시장 악재로 작용 중.
+
+**2. 지준금 (매주 금요일 오전 6시 30~7시)**
+https://fred.stlouisfed.org/series/WRESBAL
+
+뉴욕 연준 계좌에 예치한 미국 은행들의 현금 잔고로 달러 유동성 지표 역할을 하며, 특히 최근 단기자금시장에 대한 우려가 은행 시스템 리스크로 번질 가능성도 배제할 수 없기에 매일 체크 필요.
+
+**3. TGA (매주 금요일 오전 6시 30~7시)**
+https://fred.stlouisfed.org/series/WTREGEN
+
+TGA는 재무부 계좌의 일일 잔고로서 재무부가 세금 입금/지출/국채 발행 등으로 매일 변하는 금액임. 셧다운 기간동안 재무부가 지출이 없었기에 TGA가 증가만 하였고, 유동성이 풀리지 않아 악재로 작용했었으며, 셧다운 해제 이후 서서히 감소 중.
+
+**4. SOFR (매일 밤 10시)**
+https://www.newyorkfed.org/markets/reference-rates/sofr
+
+미국 채권 및 MBS를 담보로
+하루짜리 돈을 빌리고 빌려주는 시장의 실제 거래 금리. LIBOR 이후 공식 벤치마크 금리로서, 10월에 SOFR이 급등하며 단기 유동성 부족 시그널로 코인시장이 충격을 받았기 때문에, QT 종료 이후 단기자금시장 안정화되는지, 12월 FOMC 이후에도 다시 리스크로 불거지는지 매일 체크 필요.","{""source"": ""NY Fed"", ""data_source"": ""Investing.com, FRED WRESBAL, FRED WTREGEN, NY Fed SOFR"", ""asset_class"": ""money markets"", ""used_data"": """", ""what_happened"": ""monitor USDJPY, monitor bank reserves (WRESBAL), monitor TGA (WTREGEN), monitor SOFR"", ""interpretation"": ""Japan macro beats raise BOJ hike risk, fuels carry_unwind concern, SOFR volatility signals short-term funding risk, monitor QT end and FOMC for stability"", ""tags"": ""direct_liquidity"", ""liquidity_metrics"": [{""raw"": ""WRESBAL (NY Fed reserves)"", ""normalized"": ""Reserves (WRESBAL)"", ""value"": """", ""direction"": """", ""is_new"": false}, {""raw"": ""TGA 잔고 (WTREGEN)"", ""normalized"": ""TGA"", ""value"": """", ""direction"": ""down"", ""is_new"": false}, {""raw"": ""SOFR"", ""normalized"": ""SOFR"", ""value"": """", ""direction"": """", ""is_new"": false}, {""raw"": ""USD/JPY real-time"", ""normalized"": ""USDJPY"", ""value"": """", ""direction"": """", ""is_new"": false}], ""metric_relationships"": [{""cause"": ""TGA"", ""effect"": ""bank_reserves"", ""mechanism"": ""Treasury drawdown reduces TGA, injects reserves into banking system"", ""direction"": ""negative""}, {""cause"": ""SOFR"", ""effect"": ""crypto_market"", ""mechanism"": ""SOFR spikes signal funding stress, transmit to risk assets"", ""direction"": ""positive""}, {""cause"": ""USDJPY_strength"", ""effect"": ""carry_unwind"", ""mechanism"": ""JPY appreciation raises cost of carry, triggers position closures"", ""direction"": ""positive""}]}"
+3,0.51351738,02ebf38ba3bfdc59_83,2025-11-16T12:57:30+00:00,Macro jungle for Tarzan,data_opinion,,"**BofA_Flow Show
+
+Trading FCI, PMI & CPI**
+
+**Scores on the Doors**
+: 금 +58.6%, 해외주식 +27.5%, 미국주식 +14.6%, IG채 +9.6%, HY채 +9.4%, 원자재 +7.2%, 미국 국채 +6.7%, 비트코인 +5.8%, 현금 +3.7%, 달러 -8.6%, 유가 -17.8% YTD였음.
+
+**Tale of the Tape**
+: 주식 ETF로의 유입이 연율 기준 1.3조 달러(차트 3)로 기록적이었음. IG +430bn, 테크 +72bn, MMF로의 유입은 사상 두 번째로 큰 1.2조 달러, 미국 대형주 +423bn. 순유출은 스몰캡(–64bn, 사상 최대), 부동산(–15bn)이었음.
+
+**The Price is Right**
+: 금융여건 완화 → 월가 기업의 차입비용은 싸졌으나, 메인스트리트(일반 가계/중소기업) 대출비용은 여전히 비쌈. 미국 정부차입비용 4%, IG 회사채 5%, 모기지 6%+, 중소기업 신용 7%, 주택 순자산대출 8%, 중고차 13%, SBA 14%, 신용카드 APR 20% (표 1).
+
+**The Biggest Picture**
+: 금융여건이 가장 쉬운 구간 → 크레딧 스프레드 최저점. 하지만 테크 기업(월가 리더)의 CDS·채권스프레드는 넓어져서, AI CAPEX “무기경쟁”을 감당할 만큼 충분치 않음 → 스프레드 확대로 귀결됨(차트 2).
+
+**Flows to Know**
+: 일본: 5주 연속 최대 유출 –0.9bn
+한국: 2번째로 큰 유입 기록(2.0bn)… 4주 누적 3.8bn(차트 11)
+헬스케어: ’21년 1월 이후 최대 유입(1.9bn)
+에너지: 5개월간 최대 유입(0.9bn)
+
+**2025 Foreign Flows into US**
+: 미국 주식: 연율 +134bn → 사상 2번째로 큰 해 (‘24년 163bn 다음), 미국 채권: +40bn (부채·적자·달러 우려에도 자금 유입 유지)
+
+*Source: BofA","{""source"": ""BofA"", ""data_source"": ""BofA Flow Show"", ""asset_class"": ""equities,bonds,FX,commodities,crypto"", ""used_data"": ""YTD returns: Gold +58.6%, Foreign equities +27.5%, US equities +14.6%, IG +9.6%, HY +9.4%, Commodities +7.2%, US Treasuries +6.7%, Bitcoin +5.8%, Cash +3.7%, DXY -8.6%, Oil -17.8%; ETF inflows annualized: $1.3T, IG inflows +$430bn, Tech +$72bn, MMF inflow $1.2T, US large +$423bn, Smallcap outflow -$64bn, RE outflow -$15bn; borrowing costs: US govt 4%, IG 5%, mortgage 6%+, SMB credit 7%, HELOC 8%, used car 13%, SBA 14%, credit card APR 20%; 2025 foreign flows to US stocks +$134bn annualized, US bonds +$40bn; Japan outflow -$0.9bn, Korea inflow +$2.0bn, Healthcare inflow +$1.9bn, Energy inflow +$0.9bn"", ""what_happened"": ""record ETF inflows, concentrated flows into large caps and IG, MMF cash inflows large, smallcaps and RE net outflows, asset return dispersion: gold lead, DXY weak, oil down, credit spreads low while tech CDS widening, borrowing cost divergence between Wall St and Main St"", ""interpretation"": ""financial conditions easy at macro level, liquidity concentrated (large caps/IG), idiosyncratic credit stress in tech, foreign demand still supports US assets, best trades: HY dip buys, PMI cyclical longs, duration if CPI→2%"", ""tags"": ""indirect_liquidity"", ""liquidity_metrics"": [{""raw"": ""ETF inflows annualized"", ""normalized"": ""ETF inflows (annualized)"", ""value"": ""1.3T"", ""direction"": ""up"", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""Annualized net inflows into equity ETFs, indicator of passive demand liquidity""}, {""raw"": ""IG inflows"", ""normalized"": ""Investment-grade inflows"", ""value"": ""430bn"", ""direction"": ""up"", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""Net flows into IG bonds, reflects credit market demand""}, {""raw"": ""MMF inflow"", ""normalized"": ""Money market fund inflows"", ""value"": ""1.2T"", ""direction"": ""up"", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""Money market fund inflows, short-term liquidity pool indicator""}, {""raw"": ""Smallcap flows"", ""normalized"": ""Smallcap net flows"", ""value"": ""-64bn"", ""direction"": ""down"", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""Net flows into small-cap equities, risk-on breadth indicator""}, {""raw"": ""DXY"", ""normalized"": ""DXY (US Dollar Index)"", ""value"": ""-8.6%"", ""direction"": ""down"", ""is_new"": false, ""suggested_category"": ""indirect"", ""suggested_description"": ""US dollar index, FX liquidity / valuation driver""}, {""raw"": ""Borrowing costs list"", ""normalized"": ""Market borrowing rates"", ""value"": ""US govt 4%, IG 5%, mortgage 6%+, SMB credit 7%, HELOC 8%, used car 13%, SBA 14%, credit card 20%"", ""direction"": ""stable"", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""Range of consumer and corporate borrowing costs, credit access indicator""}, {""raw"": ""Foreign flows to US stocks 2025"", ""normalized"": ""Foreign flows into US equities (annualized)"", ""value"": ""134bn"", ""direction"": ""up"", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""Annualized foreign net purchases of US equities, cross-border liquidity""}], ""metric_relationships"": [{""cause"": ""ETF inflows"", ""effect"": ""US large cap prices"", ""mechanism"": ""net demand into ETFs concentrates buying into large caps → price support"", ""direction"": ""positive""}, {""cause"": ""MMF inflows"", ""effect"": ""cash liquidity"", ""mechanism"": ""higher MMF balances increase short-term liquidity available for markets"", ""direction"": ""positive""}, {""cause"": ""tech CDS widening"", ""effect"": ""idiosyncratic credit stress"", ""mechanism"": ""issuer-level CDS widening signals issuer credit repricing separate from index"", ""direction"": ""positive""}]}"
+4,0.492296219,1f306574bd48b0ba_9,2025-11-19T03:16:32+00:00,Macro jungle for Tarzan,data_opinion,,"SOFR 단기자금시장금리를 보면,
+
+다소 압력이 있지만, 여전히 유동성 전반에 시스템 리스크를 유발하는 레벨은 아닌 상황이며, 통제 가이드라인 내에 위치해 있음.
+
+IORB-SOFR 스프레드가 상회하고 있지만, 최종 가이드라인인 기준금리 범위 Upper Limit 내에 유지되고 있음.
+
+HFs들의 Basis Trading이 레포 차입과 관련되어 최근 자산시장 변동성, 분기말 은행간 레버리지 정산 등, 담보 Leverage Off 문제가 일부 있는 것으로 추측되나, 현재 10월 중순의 SOFR의 움직임보다는 다소 안정된 상황으로 관측됨.
+
+셧다운 이후, TGA 리필은 재정지출이 곧 시작될 것으로 관측되며 이번주 노동통계 데이터 수입 이후 전반적 재정지출 MTS, DTS(Monthly, Daily Treasury Statement) 업데이트 및 변화 보일 것.
+
+결국 시중으로부터 정부향으로 흡수된 유동성은 다시 재정지출을 통해 시중으로 공급되고, 이러한 예금잔액은 다시 상업, 시중은행 전체 지준으로 합류될 것이므로 유동성 압박도 해결될 수 있을 것.
+
+따라서, 단기자금 압박 현상에 다른 SOFR 금리 역시 가이드라인 내 유지될 것으로 전망하고, 이에 대비한 12월 FOMC QT 종료는 계획적으로 이행되어 유동성 압박과 채권발행으로 이어진 겹가지 유동성 스트레스를 해소할 것으로 예상.
+
+머지 않아 NY FED 대차대조표 리밸런싱이 이어질 것으로 보이는데, 다만 이는 2020년대 보인 무제한 유동성 공급 QE와는 다른 만기 조정의 리밸런싱일 가능성이 높음. 내년 2분기 내 기점으로 어나운스 -> 실행을 다른 FOMC 시기에 시행할 것으로 예상. (EX. n월 어나운스 - N월 실행)","{""source"": ""Fed"", ""data_source"": ""SOFR, Daily Treasury Statement"", ""asset_class"": ""money markets"", ""used_data"": ""SOFR: some pressure but within guide, IORB-SOFR spread: elevated within upper limit, HF basis trading -> repo borrowing, TGA refill: expected post-shutdown, QT end: Dec FOMC planned, NY Fed BS rebalancing: announce->execute by 2Q next year"", ""what_happened"": ""short-term SOFR pressured yet controlled, IORB-SOFR above but within upper limit, basis trading linked to repo funding volatility, fiscal spending to refill TGA, planned QT stop in Dec, NY Fed to rebalance maturities not QE"", ""interpretation"": ""SOFR to remain within guidance, TGA spending + QT end to relieve liquidity stress, NY Fed rebalancing = maturity adjustment, execution post-announcement into 2Q"", ""tags"": ""direct_liquidity"", ""liquidity_metrics"": [{""raw"": ""SOFR 단기자금시장금리"", ""normalized"": ""SOFR"", ""value"": """", ""direction"": ""stable"", ""is_new"": false}, {""raw"": ""IORB-SOFR 스프레드"", ""normalized"": ""IORB-SOFR spread"", ""value"": """", ""direction"": ""up"", ""is_new"": false}, {""raw"": ""HFs들의 Basis Trading (레포 차입 연관)"", ""normalized"": ""Basis trading (repo)"", ""value"": """", ""direction"": ""up"", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""hedge/funding trades increasing repo demand and collateral use""}, {""raw"": ""TGA 리필"", ""normalized"": ""TGA"", ""value"": """", ""direction"": ""up"", ""is_new"": false}, {""raw"": ""QT 종료 (12월 FOMC)"", ""normalized"": ""QT"", ""value"": ""Dec"", ""direction"": """", ""is_new"": false}, {""raw"": ""NY FED 대차대조표 리밸런싱"", ""normalized"": ""NY Fed balance sheet rebalancing"", ""value"": """", ""direction"": """", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""maturity-adjusted asset rebalancing by NY Fed, alters term supply""}], ""metric_relationships"": [{""cause"": ""TGA"", ""effect"": ""bank_reserves"", ""mechanism"": ""Treasury spending/refill changes reserve supply"", ""direction"": ""negative""}, {""cause"": ""QT"", ""effect"": ""system_liquidity"", ""mechanism"": ""QT end stops balance-sheet runoff, reduces liquidity drain"", ""direction"": ""positive""}, {""cause"": ""ON RRP"", ""effect"": ""system_liquidity"", ""mechanism"": ""ON RRP usage withdraws cash from banks"", ""direction"": ""negative""}, {""cause"": ""IORB-SOFR spread"", ""effect"": ""funding_stress"", ""mechanism"": ""wider spread signals tighter bank funding conditions"", ""direction"": ""positive""}, {""cause"": ""Basis trading (repo)"", ""effect"": ""repo_borrowing_pressure"", ""mechanism"": ""basis trades increase demand for repo financing and collateral"", ""direction"": ""positive""}]}"
+5,0.484584808,1f9faa60a5032c60_22,2025-12-01T04:09:18+00:00,Fomo CTRINE,data_opinion,,"2019년 연준은 양적긴축(QT)이 8월 1일에 종료될 것이라고 발표했습니다.
+
+양적긴축이 공식적으로 종료되었음에도 불구하고, 마지막 국채 만기가 8월 중순까지 결제되지 않았기 때문에 연준의 대차대조표는 8월에도 계속 감소했습니다.
+
+양적긴축이 12월 1일에 종료된다고 해서 대차대조표가 즉시 증가하기 시작하는 것은 아닙니다. 2026년 초까지는 그 징후를 알아차리기 어려울 수 있습니다.","{""source"": ""Fed"", ""data_source"": """", ""asset_class"": ""money markets"", ""used_data"": ""QT_end_2019: Aug 1, final_treasury_maturity: mid-August, QT_end_current: Dec 1, balance_sheet: continued shrinkage post-official QT end, visibility_of_rebound: early 2026"", ""what_happened"": ""balance sheet continued shrinking after official QT end, immediate QT end ≠ instant balance sheet expansion"", ""interpretation"": ""QT end timing lags, balance sheet expansion delayed until 2026, liquidity restoration slow"", ""tags"": ""direct_liquidity"", ""liquidity_metrics"": [{""raw"": ""연준 대차대조표"", ""normalized"": ""Fed_balance_sheet"", ""value"": """", ""direction"": ""down"", ""is_new"": true, ""suggested_category"": ""direct"", ""suggested_description"": ""Federal Reserve total assets, indicates central bank liquidity supply""}, {""raw"": ""마지막 국채 만기"", ""normalized"": ""Treasury_maturity_timing"", ""value"": ""mid-August"", ""direction"": """", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""Timing of final Treasury settlements, affects reinvestment and reserve flows""}, {""raw"": ""양적긴축 종료일"", ""normalized"": ""QT_end_date"", ""value"": ""Dec 1"", ""direction"": """", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""Official end date of quantitative tightening, signals policy transition timing""}], ""metric_relationships"": [{""cause"": ""Treasury_maturity_timing"", ""effect"": ""Fed_balance_sheet"", ""mechanism"": ""final maturities settle without reinvestment, reduce reserve balances and shrink balance sheet"", ""direction"": ""negative""}]}"
+6,0.482946396,5f29c0af8cda7d98_60,2025-11-28T05:12:28+00:00,Fomo CTRINE,data_opinion,,"M2 화폐유통속도의 변화율
+
+● M2는 늘었지만, 유동 속도는 저하는 경기 침체 혹은 저성장 → 디플레이션 리스크
+
+● M2 유통속도 변화율 마이너스 + 디플레 압력 상승으로 Fed 완화 전환이 빨라질 수 있음
+
+● M2 유통속도 둔화에 Fed의 정책 방향
+
+- Fed
+금리 인하 가속
+QT 축소 → 종료
+필요 시 QE 재가동
+레포시장 유동성 공급 강화
+
+- 시장
+채권: 금리 ↓ / 장기채 폭등
+주식: 나스닥(빅테크) → 그 후 중소형 → 마지막 경기민감주
+부동산: 금리 인하 후 회복
+비트코인: 초기 랠리의 선봉장","{""source"": """", ""data_source"": """", ""asset_class"": ""money markets"", ""used_data"": ""M2: up, M2_velocity_change: negative, Fed_policy_signals: rate cuts accelerated, QT: reduce→end, QE: possible restart, repo_liquidity: increase"", ""what_happened"": ""M2 up + velocity down, deflationary pressure rising, Fed likely to ease sooner"", ""interpretation"": ""earlier Fed easing, liquidity injection via QE/repo, bond yields↓, long-term bond rally, BTC initial rally"", ""tags"": ""direct_liquidity"", ""liquidity_metrics"": [{""raw"": ""M2"", ""normalized"": ""M2"", ""value"": ""up"", ""direction"": ""up"", ""is_new"": false}, {""raw"": ""M2 화폐유통속도 변화율"", ""normalized"": ""M2_velocity"", ""value"": ""negative"", ""direction"": ""down"", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""rate of circulation of M2, indicates velocity of money""}, {""raw"": ""레포시장 유동성 공급 강화"", ""normalized"": ""repo_liquidity"", ""value"": ""increase"", ""direction"": ""up"", ""is_new"": true, ""suggested_category"": ""direct"", ""suggested_description"": ""short-term funding liquidity via repo operations""}], ""metric_relationships"": [{""cause"": ""M2_velocity"", ""effect"": ""deflationary_pressure"", ""mechanism"": ""lower money circulation reduces nominal demand"", ""direction"": ""negative""}, {""cause"": ""M2 up"", ""effect"": ""Fed_easing_timing"", ""mechanism"": ""rising M2 with falling velocity raises disinflation risk prompting policy easing"", ""direction"": ""negative""}]}"
+7,0.477752686,9fc08b39ed35de90_76,2025-11-16T13:05:45+00:00,Macro jungle for Tarzan,data_opinion,,"**Chart 3: 연율 기준 자산군별 펀드 유입액**
+
+주식 ETF, MMF, IG채권, 미국 대형주, 테크로 기록적 유입이 발생함.
+
+반대로 스몰캡과 리얼에스테이트는 기록적 순유출 발생함.","{""source"": """", ""data_source"": """", ""asset_class"": ""equities, MMF, IG_bonds, real_estate"", ""used_data"": ""Equity_ETF: record inflow, MMF: record inflow, IG_bonds: record inflow, US_large_cap: record inflow, Tech: record inflow, Small_cap: record outflow, Real_estate: record outflow"", ""what_happened"": ""record inflows: Equity ETF, MMF, IG bonds, US large-cap, Tech; record outflows: Small-cap, Real estate"", ""interpretation"": ""tilt toward large-cap tech, liquidity into MMF/IG, risk-off for small-cap/RE"", ""tags"": ""indirect_liquidity"", ""liquidity_metrics"": [{""raw"": ""주식 ETF 유입"", ""normalized"": ""Equity_ETF_flows"", ""value"": ""record inflow"", ""direction"": ""up"", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""Net fund flows into equity ETFs, proxy for investor demand/liquidity into equities""}, {""raw"": ""MMF 유입"", ""normalized"": ""MMF_flows"", ""value"": ""record inflow"", ""direction"": ""up"", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""Net flows into money market funds, proxy for short-term liquidity preference""}, {""raw"": ""IG 채권 유입"", ""normalized"": ""IG_bond_flows"", ""value"": ""record inflow"", ""direction"": ""up"", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""Net flows into investment-grade bonds, proxy for credit demand/liquidity""}, {""raw"": ""미국 대형주 유입"", ""normalized"": ""US_large_cap_flows"", ""value"": ""record inflow"", ""direction"": ""up"", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""Net flows into US large-cap equities, indicator of concentration of capital""}, {""raw"": ""테크 유입"", ""normalized"": ""Tech_flows"", ""value"": ""record inflow"", ""direction"": ""up"", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""Net flows into technology sector equities""}, {""raw"": ""스몰캡 순유출"", ""normalized"": ""Small_cap_flows"", ""value"": ""record outflow"", ""direction"": ""down"", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""Net flows out of small-cap equities, indicator of shrinking liquidity/demand""}, {""raw"": ""리얼에스테이트 순유출"", ""normalized"": ""Real_estate_flows"", ""value"": ""record outflow"", ""direction"": ""down"", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""Net flows out of real estate assets/ETFs, proxy for property sector liquidity""}], ""metric_relationships"": [{""cause"": ""Equity_ETF_flows"", ""effect"": ""equity_prices"", ""mechanism"": ""net inflows push demand -> price pressure"", ""direction"": ""positive""}, {""cause"": ""Small_cap_flows"", ""effect"": ""small_cap_prices"", ""mechanism"": ""net outflows reduce demand/liquidity -> price weakness"", ""direction"": ""negative""}]}"
+8,0.474315643,cdce2e4770cf58eb_58,2025-11-28T05:37:57+00:00,Fomo CTRINE,data_opinion,,"2026년에 올 수 있는 글로벌 금융 충격
+
+● 세 가지 글로벌 리스크
+1) 미국 – 국채 발행 폭증 + 수요 약화
+10년·30년물 국채 입찰이 실패하거나 취약해질 위험 증가
+
+2) 일본 – 엔화 약세 + 캐리트레이 붕괴 가능성
+미국 국채 변동성을 더 키우는 증폭기 역할
+
+3) 중국 – 지방정부 채무(LGFV) 버블
+
+● 트리거
+미국 장기채(10년·30년) 입찰 실패
+
+● Phase 1: 충격
+장기 금리 폭등/달러 급등/유동성 증발/일본 개입/위안화 하락/크레딧 경색/BTC·기술주 급락/금 상승.은 상대적 약세/주식시장 20~30% 하락
+
+● Phase 2: 중앙은행의 개입 → 유동성 폭발
+
+유동성 공급/달러 스왑라인/미국 국채 buyback/일시적 장단기 금리 통제/QE성 조치들
+ 
+● Phase3: 대상승(2026~2028년)
+
+실질금리 하락/금 → 신고가
+/은 → 금보다 더 강한 상승/비트코인 → 급반등 및 강세장/원자재 상품 강세/달러 피크 후 약세 전환
+
+● 2026~2028년이 하드애셋(금·은·BTC·원자재) 슈퍼사이클의 시작이 될 것
+
+🔗[link](https://x.com/NoLimitGains/status/1994014592616354146?t=LqxwU1u6sxP0eFj9PueESQ&s=19)","{""source"": """", ""data_source"": """", ""asset_class"": ""multi-asset"", ""used_data"": ""US: surge Treasury issuance + weak demand, auction risk: 10y&30y, Japan: JPY weak + carry unwind risk, China: LGFV bubble, trigger: 10y/30y auction failure, equity shock: -20-30%, phase3 window: 2026-2028"", ""what_happened"": ""three global risks: US issuance+demand gap, JPY weakness+carry risk, China LGFV bubble; trigger: long-term UST auction failure; Phase1: yields spike, USD spike, liquidity evaporates, equities -20-30; Phase2: CB liquidity measures (swap lines, US Treasury buyback, temporary yield controls, QE-like); Phase3: hard-asset supercycle (gold/silver/BTC/commodities) 2026-2028"", ""interpretation"": ""central bank intervention likely -> temporary liquidity injection, eventual real-asset bull market 2026-2028, USD peaks then weakens"", ""tags"": ""direct_liquidity"", ""liquidity_metrics"": [{""raw"": ""10y·30y Treasury auction failure risk"", ""normalized"": ""UST_auction_failure_risk"", ""value"": """", ""direction"": ""up"", ""is_new"": true, ""suggested_category"": ""direct"", ""suggested_description"": ""probability of failed or weak demand at long-term UST auctions""}, {""raw"": ""equity drawdown 20~30%"", ""normalized"": ""equity_drawdown"", ""value"": ""20-30%"", ""direction"": ""down"", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""projected peak-to-trough decline in equity markets during shock""}, {""raw"": ""Phase3 window 2026-2028"", ""normalized"": ""hard_assets_supercycle_window"", ""value"": ""2026-2028"", ""direction"": """", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""expected timeframe for sustained strength in hard assets""}, {""raw"": ""CB tools: dollar swap lines, US Treasury buyback, temporary rate controls, QE-like measures"", ""normalized"": ""CB_liquidity_tools"", ""value"": """", ""direction"": ""up"", ""is_new"": true, ""suggested_category"": ""direct"", ""suggested_description"": ""central bank and treasury interventions to provide liquidity and stabilize markets""}, {""raw"": ""USD spike → peak → weakness"", ""normalized"": ""USD_strength_cycle"", ""value"": ""spike→peak→weakness"", ""direction"": """", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""pattern of USD appreciation during crisis then long-run depreciation""}], ""metric_relationships"": [{""cause"": ""UST_auction_failure_risk"", ""effect"": ""long_term_yields"", ""mechanism"": ""failed auctions reduce demand -> supply-driven yield increase"", ""direction"": ""positive""}, {""cause"": ""long_term_yields"", ""effect"": ""equity_drawdown"", ""mechanism"": ""sharp yield increases -> discount rates rise -> equity valuations fall"", ""direction"": ""negative""}, {""cause"": ""CB_liquidity_tools"", ""effect"": ""market_liquidity"", ""mechanism"": ""swap lines, buybacks, QE inject reserves/liquidity"", ""direction"": ""positive""}]}"
+9,0.471391678,01b3912d7ee9c971_82,2025-11-16T12:59:52+00:00,Macro jungle for Tarzan,data_opinion,,"**BofA Global FMS (Fund Manager Survey)**
+: 11/18 발표
+
+지난 18개월간 패턴: ‘24년 8월·‘25년 4월은 “buy the bears(약세 심리 사야 함)”, ‘24년 12월·‘25년 2월은 “sell the bulls(강세 심리 팔아야 함)”
+
+11월 설문에서 봐야할 지표:
+
+FMS 캐시 레벨 3.7%로 매우 낮음 (10월 3.8%)
+주식 비중 Overweight 50%로 상승(10월 32%)
+‘25년 들어 처음으로 글로벌 성장 기대가 플러스로 전환됨(10월 –8%)
+
+**The Santa Flaws Rally**
+: 시장은 “AI 버블/붐”, 정부 지원은 “국가 안보” 명분. Fed는 금리 인하를 하반기에 진행하고 상반기엔 QE 시작 예상. ’25~’26년에 세금 감면 및 $2k 체크 지급(재정 부양) 가능성. 불리한 점: 이런 부양 때문에 리스크자산이 고점 근처에서 질질 끌리는 중.
+
+**Year Ahead CW (컨센서스 전개)**
+2026년 전망: 골디락스, 저금리, 높은 수익, AI 통한 생산성 향상. 하지만 26년 주가 경로는 상반기 고점 / 하반기 변동성 확대 가능성. 
+
+트럼프, 공화당, Gen Z 포트폴리오는: 
+상반기 → 롱 주식
+하반기 → 숏 주식 또는 크레딧 스프레드 widening 신호
+
+세 가지 핵심 지표: FCI, PMI, CPI
+
+FCI 피크, PMI 가속, CPI 하락은 모두 25년 경기·리스크자산 호재 흐름 유지 의미함.
+
+**FCI Trade**
+: “유동성 거래”
+
+FCI 최저점 = 크레딧 스프레드 최저 = HY 회사채 롱. 지난 12개월 금리인하 167bp 진행 → 채권·달러 반등. CB(ECB/RBA/BoC) 인하 종료, BoJ만 공격적 인상. DXY 100 밑이면 FCI tightening을 무시할 이유 없음. 비트코인 $100k 가능. 시장이 걱정하는 건 신용 균열과 CAPEX 붐 속 기업대출 부담. 그래도 Best trade는 HY 조정 매수(FCI cycle peak 가","{""source"": ""BofA"", ""data_source"": ""Global FMS"", ""asset_class"": ""equities,credit,bonds,commodities"", ""used_data"": ""FMS cash: 3.7% (Oct 3.8%), equity overweight: 50% (Oct 32%), global growth exp: + (Oct -8%), rate cuts past12m: 167bp, DXY threshold: <100, PMI target: ~55, Bitcoin target: $100k"", ""what_happened"": ""low cash levels, equity overweight rise, growth expectations turned positive, HY long call, PMI acceleration expected, CPI down scenario"", ""interpretation"": ""best trade: HY long at FCI trough, PMI → smallcaps/commodities long, CPI 2% → long duration, CAPEX boom → corporate credit strain risk"", ""tags"": ""indirect_liquidity"", ""liquidity_metrics"": [{""raw"": ""FMS cash level 3.7%"", ""normalized"": ""FMS cash"", ""value"": ""3.7%"", ""direction"": ""down"", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""fund managers' average cash allocation (%)""}, {""raw"": ""equity overweight 50% (Oct 32%)"", ""normalized"": ""equity overweight"", ""value"": ""50% (Oct 32%)"", ""direction"": ""up"", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""percent of managers overweight equities""}, {""raw"": ""global growth expectation + (Oct -8%)"", ""normalized"": ""global growth expectation"", ""value"": ""+ (from -8%)"", ""direction"": ""up"", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""survey net growth outlook""}, {""raw"": ""rate cuts past 12 months 167bp"", ""normalized"": ""policy_rate_change_12m"", ""value"": ""167bp cuts"", ""direction"": ""down"", ""is_new"": true, ""suggested_category"": ""indirect"", ""suggested_description"": ""cumulative policy rate reduction over past 12 months""}, {""raw"": ""FCI cycle"", ""normalized"": ""FCI"", ""value"": ""cycle_peak/trough referenced"", ""direction"": """", ""is_new"": false}, {""raw"": ""PMI ~55"", ""normalized"": ""PMI"", ""value"": ""~55"", ""direction"": ""up"", ""is_new"": false}, {""raw"": ""DXY <100"", ""normalized"": ""DXY"", ""value"": ""<100"", ""direction"": ""down"", ""is_new"": false}], ""metric_relationships"": [{""cause"": ""FCI trough"", ""effect"": ""HY_spreads_low"", ""mechanism"": ""liquidity loosening compresses credit spreads"", ""direction"": ""negative""}, {""cause"": ""PMI acceleration"", ""effect"": ""smallcaps/commodities performance"", ""mechanism"": ""manufacturing demand → cyclical earnings/commodity demand"", ""direction"": ""positive""}, {""cause"": ""CPI 2%"", ""effect"": ""long_duration_bonds rally"", ""mechanism"": ""disinflation → lower yields → bond price ↑"", ""direction"": ""negative""}]}"
+10,0.47069934,135cb47d5431382e_12,2025-11-30T02:31:17+00:00,Plan G Research,data_opinion,,"**PLAN G ON MACRO
+WHAT THE END OF QT MEANS
+12월 1일, 4년 만의 QT 종료: 무엇을 의미할까**
+
+연준은 팬데믹 이후 약 9조 달러까지 확대됐던 대차대조표를 2022년부터 2025년까지 약 6.5조 달러 수준으로 축소해 왔습니다.
+그리고 2025년 12월 1일, 4년 만에 QT(양적긴축)가 공식적으로 종료됩니다.
+
+QT 종료가 곧바로 QE를 의미하는 것은 아니지만, 대차대조표 축소가 멈추는 시점은 시장 유동성 측면에서 중요한 전환점으로 평가됩니다.
+
+──────────────────────────────
+ 1. QT 종료는 대차대조표 축소가 멈춘다는 의미
+
+QT는 만기 도래 국채와 MBS를 재투자하지 않고 소멸시키는 방식으로 자산 규모를 줄여온 과정입니다.
+
+12월 1일부터는 이러한 축소가 중단되며, 시장에서는 유동성 순유출이 종료되는 신호로 받아들입니다.
+
+──────────────────────────────
+2. MBS 만기액을 국채로 전환하는 정책적 변화
+
+QT 종료 이후 연준은 MBS 만기 상환액을 소멸시키지 않고 국채로 재투자할 예정입니다.
+이는 연준 포트폴리오에서 MBS 비중은 줄이고 국채 비중을 확대하는 구조적 변화를 의미하며, 국채 시장에 안정적인 수요가 추가되는 효과를 만들어냅니다.
+
+──────────────────────────────
+3. 국채 수요 증가는 금리 하락 압력으로 이어져
+
+매월 250~300억 달러 수준의 국채 재투자가 이뤄지면 장기 국채금리는 자연스럽게 하방 압력을 받게 됩니다.
+
+이는 차입 비용 완화, 크레딧 스프레드 축소, 자산가치 할인율 완화 등 전반적인 금융여건을 개선시키는 방향으로 작용합니다.
+
+──────────────────────────────
+4. SOFR·HIBOR 등 단기금리 스트레스가 완화
+
+연준의 국채 재투자는 단기물(T-bill) 공급 부담을 낮추며 T-bill 금리 급등을 방지합니다.
+이에 따라 SOFR 변동성이 줄어들고 Repo 시장의 안정성이 높아집니다.
+","{""source"": ""Plan G Research"", ""data_source"": ""Fed, H.4.1"", ""asset_class"": ""UST, MBS, money markets"", ""used_data"": ""Fed_bs: $9T→$6.5T, QT_end: 2025-12-01, MBS→UST reinvest: $25–30B/month, monthly_reinvest: $25–30B"", ""what_happened"": ""QT ends, Fed to reinvest MBS principal into Treasuries, MBS share down, Treasury demand up, long yields downward pressure, SOFR/HIBOR stress easing, private liquidity freed for risk assets"", ""interpretation"": ""liquidity outflow stops, structural shift to Treasury demand, downward pressure on long rates, funding market stabilization, creates room for private capital to shift to equities/credit/crypto, not full QE but easing-like"", ""tags"": ""direct_liquidity"", ""liquidity_metrics"": [{""raw"": ""대차대조표 축소 중단 ($9T→$6.5T)"", ""normalized"": ""Fed_balance_sheet"", ""value"": ""$9T→$6.5T"", ""direction"": ""stable"", ""is_new"": false}, {""raw"": ""QT 종료 날짜"", ""normalized"": ""QT_end"", ""value"": ""2025-12-01"", ""direction"": """", ""is_new"": false}, {""raw"": ""MBS 만기액을 국채로 재투자 (매월 250~300억 달러)"", ""normalized"": ""MBS_to_UST_reinvest"", ""value"": ""$25–30B/month"", ""direction"": ""up"", ""is_new"": false}, {""raw"": ""SOFR 변동성 완화"", ""normalized"": ""SOFR"", ""value"": """", ""direction"": ""down"", ""is_new"": false}, {""raw"": ""HIBOR 변동성 완화"", ""normalized"": ""HIBOR"", ""value"": """", ""direction"": ""down"", ""is_new"": false}], ""metric_relationships"": [{""cause"": ""MBS_to_UST_reinvest"", ""effect"": ""Treasury_demand"", ""mechanism"": ""Fed reinvestment shifts portfolio demand toward Treasuries"", ""direction"": ""positive""}, {""cause"": ""Treasury_demand ↑"", ""effect"": ""long_yields"", ""mechanism"": ""higher demand lowers long-term yields via price support"", ""direction"": ""negative""}, {""cause"": ""QT_end"", ""effect"": ""funding_market_stress"", ""mechanism"": ""stop of balance-sheet runoff reduces pressure on short-term supply, easing SOFR volatility"", ""direction"": ""positive""}, {""cause"": ""reduced_private_need_for_Treasuries"", ""effect"": ""private_liquidity_to_risk_assets"", ""mechanism"": ""banks/insurers free to allocate to equities/credit/crypto"", ""direction"": ""positive""}]}"

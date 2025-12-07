@@ -260,7 +260,7 @@ def call_claude_sonnet(messages, temperature=0.7, max_tokens=8000):
 
 def call_claude_haiku(messages, temperature=0.7, max_tokens=4000):
     """
-    Call Claude Haiku 4.5 (fast, cost-effective - Nov 2025)
+    Call Claude Haiku 4.5 (fast, cost-effective - Oct 2025)
 
     Capabilities:
     - Fast responses
@@ -268,11 +268,11 @@ def call_claude_haiku(messages, temperature=0.7, max_tokens=4000):
     - Good for simpler tasks
     - Best for: categorization, simple extraction, quick lookups
 
-    Pricing: $0.80/1M input tokens, $4/1M output tokens
-    Model ID: claude-haiku-4-5-20251101
+    Pricing: $1/1M input tokens, $5/1M output tokens
+    Model ID: claude-haiku-4-5-20251001
     """
     response = anthropic_client.messages.create(
-        model="claude-haiku-4-5-20251101",
+        model="claude-haiku-4-5-20251001",
         messages=messages,
         temperature=temperature,
         max_tokens=max_tokens
@@ -336,7 +336,7 @@ async def call_claude_sonnet_async(messages, temperature=0.7, max_tokens=8000):
 async def call_claude_haiku_async(messages, temperature=0.7, max_tokens=4000):
     """Async version of call_claude_haiku for parallel processing"""
     response = await async_anthropic_client.messages.create(
-        model="claude-haiku-4-5-20251101",
+        model="claude-haiku-4-5-20251001",
         messages=messages,
         temperature=temperature,
         max_tokens=max_tokens
