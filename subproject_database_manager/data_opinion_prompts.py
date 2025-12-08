@@ -78,10 +78,47 @@ For EACH message, extract the following fields:
    - BAD: "This may force the Fed to halt QT soon" (too wordy)
    - Empty string if no interpretation
 
-7. **tags** - Liquidity relevance
-   - "direct_liquidity" | "indirect_liquidity" | "irrelevant"
+7. **tags** - Liquidity relevance classification
+   - **"direct_liquidity"**: Monetary liquidity mechanisms
+     - Fed balance sheet: QE, QT, RRP, TGA, SRF, BTFP, reserves
+     - Money markets: SOFR, repo rates, fed funds, funding stress
+     - Examples: "TGA drawdown", "RRP spiked", "QT ending"
+   - **"indirect_liquidity"**: Market channels affecting liquidity
+     - Positioning: CTA flows, dealer gamma, systematic flows
+     - Credit: corporate issuance, buybacks, credit spreads
+     - Policy expectations: rate cut/hike impact on markets
+     - FX: DXY, USD liquidity effects
+     - Examples: "CTA selling $23B", "negative gamma", "buybacks supporting"
+   - **"irrelevant"**: NO liquidity connection (use sparingly)
+     - Pure company fundamentals without market implications
+     - Product prices (DRAM) without funding angle
+     - ONLY when content has zero liquidity relevance
 
-8. **liquidity_metrics** - Array of metrics
+8. **topic_tags** - Array of topic tags for discovery (ALWAYS populate, separate from liquidity)
+   - Purpose: Enable search by TOPIC regardless of liquidity relevance
+   - Categories (select ALL applicable, typically 2-4):
+     - Asset Class: "equities", "rates", "FX", "credit", "commodities"
+     - Region: "US", "china", "japan", "europe", "korea", "EM"
+     - Data Type: "macro_data", "earnings", "central_bank"
+     - Mechanics: "positioning", "flows", "volatility"
+   - Examples:
+     - TGA drawdown: ["US", "central_bank"]
+     - Fed rate cut: ["US", "central_bank", "rates"]
+     - CTA selling equities: ["equities", "positioning", "flows"]
+     - Samsung earnings: ["korea", "equities", "earnings"]
+
+9. **liquidity_metrics** - Array of liquidity-related metrics ONLY
+   **INCLUDE:**
+   - Monetary: TGA, RRP, reserves, QE/QT, SOFR, fed funds
+   - Market microstructure: CTA flows, dealer gamma, option notional
+   - Credit/funding: repo rates, spreads, issuance, buybacks
+   - FX liquidity: DXY, USD pairs affecting funding
+   **EXCLUDE:**
+   - Company fundamentals: earnings, revenue, EPS
+   - Product prices: DRAM, semiconductor prices
+   - Stock returns: individual stock/index performance
+   - Valuation: P/E, multiples
+   **Structure:**
    - "raw": Original text as mentioned
    - "normalized": Standardized name from mapping table
    - "value": Specific value (e.g., "750B", "4.5%"), empty if none
@@ -92,7 +129,7 @@ For EACH message, extract the following fields:
      - "suggested_description": Brief description of what this metric measures
    - Empty array [] if no liquidity metrics
 
-9. **logic_chains** - Array of causal chains (multi-step sequences)
+10. **logic_chains** - Array of causal chains (multi-step sequences)
    - Each chain represents a connected sequence: cause → effect → next effect
    - "steps": Array of ordered steps in the chain
      - Each step has: "cause", "effect", "mechanism"
@@ -120,6 +157,7 @@ For EACH message, extract the following fields:
         "what_happened": "RDE spike signals funding stress, TGA drawdown",
         "interpretation": "Fed may pause QT, liquidity injection via TGA",
         "tags": "direct_liquidity",
+        "topic_tags": ["US", "central_bank", "rates"],
         "liquidity_metrics": [
             {{
                 "raw": "TGA 잔고",

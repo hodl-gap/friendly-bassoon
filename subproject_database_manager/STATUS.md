@@ -1,10 +1,62 @@
 # Project Status - Telegram Financial Message Processing Workflow
 
-**Last Updated**: 2025-12-07
+**Last Updated**: 2025-12-09
 
 ## Current State: Production-Ready with Vector DB Integration
 
 Complete end-to-end workflow for fetching and processing financial research messages from Telegram channels with AI-powered analysis, categorization, structured data extraction, automated QA sampling, and vector database storage.
+
+---
+
+## Session Summary: 2025-12-09
+
+### 1. Extraction Quality Improvements - Tags & Topic Tags
+
+Improved extraction prompt quality based on QA feedback analysis.
+
+**Problems identified:**
+- `tags` field had no criteria - just options `direct_liquidity | indirect_liquidity | irrelevant`
+- 70%+ entries tagged "irrelevant" blocking semantic discovery
+- `liquidity_metrics` captured non-liquidity items (DRAM prices, earnings, stock returns)
+
+**Solution: Two-field approach**
+
+| Field | Purpose | Example |
+|-------|---------|---------|
+| `tags` | Liquidity classification | `"indirect_liquidity"` |
+| `topic_tags` | Topic discovery (ALWAYS populated) | `["US", "central_bank", "rates"]` |
+
+**New `tags` criteria:**
+```
+- "direct_liquidity": Fed balance sheet (QE, QT, RRP, TGA, reserves), money markets (SOFR, repo, fed funds)
+- "indirect_liquidity": Positioning (CTA, gamma), credit (issuance, buybacks), rate expectations, FX
+- "irrelevant": Pure company fundamentals, product prices without funding angle (use sparingly)
+```
+
+**New `topic_tags` taxonomy:**
+```
+Asset Class: equities, rates, FX, credit, commodities
+Region: US, china, japan, europe, korea, EM
+Data Type: macro_data, earnings, central_bank
+Mechanics: positioning, flows, volatility
+```
+
+**New `liquidity_metrics` guidance:**
+```
+INCLUDE: TGA, RRP, reserves, QE/QT, SOFR, CTA flows, dealer gamma, repo rates, issuance
+EXCLUDE: Company earnings, DRAM prices, stock returns, P/E multiples
+```
+
+**Updated files:**
+- `data_opinion_prompts.py` - Added tags criteria, topic_tags field, liquidity_metrics INCLUDE/EXCLUDE
+- `interview_meeting_prompts.py` - Added tags criteria, topic_tags at statement and message level
+- `qa_validation_prompts.py` - Added topic_tags validation (must always be populated)
+
+**Expected outcomes:**
+- Reduce "irrelevant" tags from 70%+ to <20%
+- All entries discoverable via topic_tags
+- liquidity_metrics contains only actual liquidity metrics
+- QA retrievability scores improve from 0.67 → 0.85+
 
 ---
 
@@ -293,6 +345,7 @@ MAX_CONCURRENT_REQUESTS = 10        # Parallel API calls
   - `source`, `data_source`, `asset_class`
   - `used_data`, `what_happened`, `interpretation`
   - `tags` (direct_liquidity | indirect_liquidity | irrelevant)
+  - `topic_tags[]` - semantic topic tags for discovery (US, rates, equities, etc.)
   - `liquidity_metrics[]` - normalized metrics with values/directions
   - `logic_chains[]` - multi-step causal chains (cause → effect → mechanism)
 
@@ -395,6 +448,7 @@ MAX_CONCURRENT_REQUESTS = 10        # Parallel API calls
 - **2025-11-29** - Source tracking, QA sampling integration, GPT-5 primary model
 - **2025-11-30** - Embedding workflow, Pinecone integration, source entity normalization
 - **2025-12-07** - Logic chains schema (replaced metric_relationships), GPT-5 Mini extraction
+- **2025-12-09** - Extraction quality: tags criteria, topic_tags field, liquidity_metrics guidance
 
 ---
 

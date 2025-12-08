@@ -67,11 +67,13 @@ For EACH message, extract structured information about who said what.
                         "data_mentioned": "NFP 3mo avg: 62k, unemployment: 4.1%",
                         "view": "labor cooling, disinflation on track",
                         "policy_implication": "rate cut support" | "rate hold" | "rate hike" | "",
-                        "tags": "direct_liquidity|indirect_liquidity|irrelevant"
+                        "tags": "direct_liquidity|indirect_liquidity|irrelevant",
+                        "topic_tags": ["US", "central_bank", "macro_data"]
                     }}
                 ]
             }}
         ],
+        "topic_tags": ["US", "central_bank", "rates"],
         "liquidity_metrics": [
             {{
                 "raw": "RDE",
@@ -109,7 +111,15 @@ For EACH message, extract structured information about who said what.
   - GOOD: "labor cooling, supports gradual cuts"
   - BAD: "He believes the labor market is cooling down" (too wordy)
 - **policy_implication**: Brief policy stance
-- **tags**: "direct_liquidity" | "indirect_liquidity" | "irrelevant"
+- **tags**: Liquidity classification
+  - "direct_liquidity": Statement about Fed balance sheet, reserves, RRP, QT/QE, funding
+  - "indirect_liquidity": Statement about rates/policy affecting liquidity channels
+  - "irrelevant": Pure inflation/employment without liquidity angle (use sparingly)
+- **topic_tags**: Array of topic tags for discovery (separate from liquidity tags)
+  - At statement level: Tags for that statement's topic
+  - At message level: Overall tags for the meeting
+  - Categories: Asset class (equities, rates, FX, credit, commodities), Region (US, china, japan, europe, korea, EM), Data type (macro_data, earnings, central_bank), Mechanics (positioning, flows, volatility)
+  - MUST have 1+ tags at both levels
 - Messages about same meeting/event get same opinion_id
 
 **liquidity_metrics field:**

@@ -68,6 +68,12 @@ Check:
   - If the message mentions liquidity-related data (TGA, RRP, Fed balance sheet, etc.),
     these should be captured in the liquidity_metrics array
   - Empty liquidity_metrics when tags != "irrelevant" is a red flag
+- **topic_tags field**: Are semantic topic tags populated?
+  - topic_tags should ALWAYS be populated (even when tags="irrelevant")
+  - Check: 1-4 relevant tags enabling topic-based search?
+  - Missing/empty topic_tags is a validation failure
+  - Tags should match content (Fed speech → "central_bank", "US", "rates")
+  - Categories: Asset class (equities, rates, FX, credit, commodities), Region (US, china, japan, europe, korea, EM), Data type (macro_data, earnings, central_bank), Mechanics (positioning, flows, volatility)
 
 **DIMENSION 2: Completeness of Context**
 Question: Is the if-then logic preserved with sufficient context?
@@ -116,7 +122,8 @@ Check:
             "analysis": "Detailed analysis of semantic entry points",
             "broken_paths": ["Searching 'credit conditions' won't find this"],
             "available_paths": ["Can be found via 'liquidity' search"],
-            "liquidity_metrics_quality": "Assessment of liquidity_metrics array"
+            "liquidity_metrics_quality": "Assessment of liquidity_metrics array",
+            "topic_tags_quality": "Assessment of topic_tags: populated? relevant? sufficient coverage?"
         }},
         "completeness": {{
             "score": 0.0-1.0,
@@ -132,7 +139,8 @@ Check:
     }},
 
     "suggested_fixes": [
-        "Add 'monetary policy' as semantic tag",
+        "Populate topic_tags field - currently empty",
+        "Add region tag 'US' to topic_tags",
         "Specify threshold value: 'below 1300' instead of just 'low'",
         "Include specific data point values"
     ]
