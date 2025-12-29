@@ -4,6 +4,7 @@ Telegram Workflow Orchestrator
 Main orchestrator for the Telegram message processing workflow:
 1. Fetch messages from Telegram channels (via telegram_fetcher.py)
 2. Process messages with V3 processor (via process_messages_v3.py)
+3. Post-mortem metrics cleanup - deduplicate and standardize metrics CSV
 
 All data is stored in data/ folder.
 
@@ -26,14 +27,11 @@ from pathlib import Path
 # Import telegram fetcher functions
 from telegram_fetcher import fetch_and_export, list_channels_only
 
-# Import V3 processor
-from process_messages_v3 import process_all_messages_v3
+# Import message pipeline (handles JSON→CSV→V3→QA)
+from message_pipeline import process_single_channel
 
-# Import JSON to CSV extractor
-from extract_telegram_data import extract_telegram_messages
-
-# Import QA validation
-from qa_validation import sample_qa_validation
+# Import metrics cleanup (post-mortem deduplication)
+from tests.cleanup_metrics import cleanup_metrics, load_csv, write_csv, print_report, backup_csv
 
 
 def parse_date(date_str):
@@ -76,7 +74,7 @@ async def fetch_telegram_messages(channel_names, start_date, end_date):
 
 def process_telegram_messages(export_folders, max_messages=None):
     """
-    Process fetched Telegram messages using V3 processor
+    Process fetched Telegram messages using message pipeline.
 
     Args:
         export_folders: List of export folder paths
@@ -86,67 +84,16 @@ def process_telegram_messages(export_folders, max_messages=None):
         list: List of output CSV paths
     """
     print("\n" + "="*60)
-    print("STEP 2: Processing Messages with V3 Processor")
+    print("STEP 2: Processing Messages")
     print("="*60)
 
     output_files = []
 
     for export_folder in export_folders:
-        export_path = Path(export_folder)
-        json_file = export_path / "result.json"
-
-        if not json_file.exists():
-            print(f"⚠️  Skipping {export_folder}: result.json not found")
-            continue
-
-        # Create intermediate CSV path in data/raw/
-        channel_name = export_path.name.replace("ChatExport_", "").replace(" ", "_")
-        intermediate_csv = export_path.parent / f"{channel_name}_messages.csv"
-
         print(f"\n📂 Processing: {export_folder}")
-        print(f"📄 JSON: {json_file}")
-
-        # Step 2a: Convert JSON to CSV
-        print(f"🔄 Converting JSON to CSV...")
-        df = extract_telegram_messages(str(json_file))
-
-        # Limit messages if specified
-        if max_messages:
-            df = df.head(max_messages)
-            print(f"   Limiting to {max_messages} messages")
-
-        df.to_csv(intermediate_csv, index=False)
-        print(f"   ✅ CSV created: {intermediate_csv}")
-
-        # Step 2b: Process with V3 processor
-        output_dir = Path("data/processed")
-        output_dir.mkdir(parents=True, exist_ok=True)
-        output_csv = output_dir / f"processed_{channel_name}.csv"
-
-        print(f"🔄 Processing with V3 processor...")
-        print(f"   Input: {intermediate_csv}")
-        print(f"   Output: {output_csv}")
-
-        # Process messages (base_photo_path will auto-detect from CSV location)
-        # Using batch_size=3 to handle long messages better with the extended schema
-        process_all_messages_v3(
-            input_csv=str(intermediate_csv),
-            output_csv=str(output_csv),
-            base_photo_path=str(export_path) + '/',
-            batch_size=3
-        )
-
-        output_files.append(str(output_csv))
-
-        # Step 2c: QA Sampling Validation
-        print(f"\n🔍 Running QA sampling validation...")
-        qa_summary = sample_qa_validation(
-            input_csv=str(output_csv),
-            validate_categories=['data_opinion', 'interview_meeting'],
-            sample_min=3,
-            sample_max=20,
-            sample_pct=0.05
-        )
+        output_csv = process_single_channel(export_folder, max_messages)
+        if output_csv:
+            output_files.append(output_csv)
 
     return output_files
 
@@ -182,6 +129,23 @@ async def run_workflow(channel_names, start_date, end_date, auto_process=True, m
     # Step 2: Process messages (if auto_process enabled)
     if auto_process:
         output_files = process_telegram_messages(export_folders, max_messages)
+
+        # Step 3: Post-mortem metrics cleanup (deduplication)
+        print("\n" + "="*60)
+        print("STEP 3: Post-Mortem Metrics Cleanup")
+        print("="*60)
+        try:
+            rows = load_csv()
+            if rows:
+                print(f"Loaded {len(rows)} metrics from CSV")
+                backup_csv()
+                cleaned_rows, report = cleanup_metrics(rows)
+                write_csv(cleaned_rows)
+                print_report(report)
+            else:
+                print("No metrics CSV found, skipping cleanup.")
+        except Exception as e:
+            print(f"⚠️  Metrics cleanup failed: {e}")
 
         print("\n" + "="*80)
         print("WORKFLOW COMPLETE")

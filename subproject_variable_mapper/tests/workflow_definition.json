@@ -1,0 +1,418 @@
+{
+  "workflow_name": "sp500_constituents_fetcher",
+  "version": "1.0",
+  "description": "Fetch historical S&P 500 constituents from Wikipedia by scraping current list and historical changes, then reconstructing backwards chronologically",
+  "created_at": "2025-12-25T00:00:00Z",
+  "author": "Claude",
+  "license": "MIT",
+
+  "inputs": {
+    "start_date": {
+      "type": "string",
+      "format": "YYYY-MM-DD",
+      "default": "2020-01-01",
+      "description": "Start date for historical reconstruction (inclusive)"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "YYYY-MM-DD",
+      "default": "2025-01-01",
+      "description": "End date for historical reconstruction (inclusive)"
+    },
+    "output_file": {
+      "type": "string",
+      "default": "snp500_constituents.json",
+      "description": "Output JSON file path"
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "name": "fetch_wikipedia_page",
+      "action": "http_get",
+      "description": "Fetch the Wikipedia page containing S&P 500 constituent data",
+      "config": {
+        "url": "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies",
+        "method": "GET",
+        "headers": {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        },
+        "timeout": 30
+      },
+      "output_var": "html_content",
+      "error_handling": {
+        "on_403": "CRITICAL - Wikipedia blocks requests without User-Agent. Ensure header is set.",
+        "on_timeout": "Retry with exponential backoff",
+        "on_network_error": "Retry up to 3 times"
+      },
+      "validation": {
+        "min_content_length": 100000,
+        "contains": "List of S&P 500 companies"
+      },
+      "implementation": "requests.get(url, headers=headers)"
+    },
+    {
+      "step": 2,
+      "name": "parse_current_constituents",
+      "action": "parse_html_table",
+      "description": "Extract current S&P 500 constituents from the first HTML table on the page",
+      "config": {
+        "input_var": "html_content",
+        "table_index": 0,
+        "parser": "pandas.read_html",
+        "extract_column": "Symbol",
+        "data_type": "set"
+      },
+      "output_var": "current_tickers",
+      "error_handling": {
+        "on_missing_table": "CRITICAL - Wikipedia page structure may have changed",
+        "on_missing_column": "Check for column name variations (Symbol, Ticker, etc.)"
+      },
+      "validation": {
+        "expected_count_range": [490, 510],
+        "item_format": "^[A-Z]{1,5}$"
+      },
+      "implementation": "pd.read_html(html_content)[0]['Symbol'].tolist()"
+    },
+    {
+      "step": 3,
+      "name": "parse_changes_table",
+      "action": "parse_html_table",
+      "description": "Extract historical changes (additions/removals) from the second HTML table",
+      "config": {
+        "input_var": "html_content",
+        "table_index": 1,
+        "parser": "pandas.read_html",
+        "columns": {
+          "date": "Date",
+          "added": "Added.Ticker",
+          "removed": "Removed.Ticker"
+        },
+        "handle_multiindex": true,
+        "flatten_multiindex": true
+      },
+      "output_var": "changes_df",
+      "error_handling": {
+        "on_multiindex_columns": "Flatten MultiIndex by joining with underscore",
+        "on_missing_column": "Search for column names containing 'date', 'added', 'removed' (case-insensitive)",
+        "on_invalid_date": "Use errors='coerce' to set invalid dates to NaT, then filter out"
+      },
+      "data_processing": [
+        {
+          "operation": "flatten_multiindex",
+          "description": "Convert MultiIndex columns to single-level by joining tuples"
+        },
+        {
+          "operation": "parse_dates",
+          "column": "Date",
+          "errors": "coerce"
+        },
+        {
+          "operation": "extract_ticker_symbol",
+          "description": "Extract ticker symbol by splitting on '(' and taking first part (removes company name)",
+          "columns": ["Added", "Removed"]
+        },
+        {
+          "operation": "filter_invalid_dates",
+          "description": "Remove rows where Date is NaT (not a valid timestamp)"
+        }
+      ],
+      "validation": {
+        "min_rows": 100,
+        "required_columns": ["Date", "Added.Ticker", "Removed.Ticker"]
+      },
+      "implementation": "pd.read_html(html_content)[1] with MultiIndex handling and date parsing"
+    },
+    {
+      "step": 4,
+      "name": "reconstruct_historical",
+      "action": "custom_function",
+      "description": "Reconstruct historical constituent lists by starting from current list and reversing changes backwards through time",
+      "algorithm": "backwards_reconstruction",
+      "config": {
+        "function": "reconstruct_backwards",
+        "inputs": ["current_tickers", "changes_df", "start_date", "end_date"],
+        "frequency": "monthly",
+        "method": "reverse_chronological"
+      },
+      "algorithm_details": {
+        "name": "Backwards Reconstruction Algorithm",
+        "steps": [
+          "Generate list of all months between start_date and end_date",
+          "Start with the most recent month using current_tickers as baseline",
+          "For each month going backwards in time:",
+          "  - Find all changes that occurred AFTER this month's end date",
+          "  - Reverse those changes:",
+          "    * If ticker was ADDED in future → REMOVE it from current month",
+          "    * If ticker was REMOVED in future → ADD it back to current month",
+          "  - Store the resulting constituent list for this month",
+          "Return dictionary mapping month strings (YYYY-MM) to sorted ticker lists"
+        ],
+        "rationale": "Wikipedia provides current state + change log. Easier to reconstruct backwards than forwards.",
+        "complexity": "O(M * C) where M = months, C = changes"
+      },
+      "output_var": "monthly_constituents",
+      "error_handling": {
+        "on_missing_ticker": "Log warning but continue (historical data may be incomplete)",
+        "on_duplicate_ticker": "Use set() to automatically deduplicate"
+      },
+      "validation": {
+        "output_type": "dict",
+        "key_format": "YYYY-MM",
+        "value_type": "list of strings",
+        "expected_months": "calculated from start_date and end_date"
+      },
+      "implementation": "See reconstruct_backwards() function in executable_script"
+    },
+    {
+      "step": 5,
+      "name": "save_output",
+      "action": "write_json",
+      "description": "Save the reconstructed historical constituents to a JSON file",
+      "config": {
+        "input_var": "monthly_constituents",
+        "output_file": "snp500_constituents.json",
+        "indent": 2,
+        "sort_keys": true,
+        "ensure_ascii": false
+      },
+      "error_handling": {
+        "on_permission_error": "Check directory write permissions",
+        "on_disk_full": "Ensure sufficient disk space (~100KB required)"
+      },
+      "validation": {
+        "verify_file_exists": true,
+        "verify_valid_json": true,
+        "min_file_size": 10000
+      },
+      "implementation": "json.dump(monthly_constituents, f, indent=2)"
+    }
+  ],
+
+  "outputs": {
+    "primary": {
+      "file": "snp500_constituents.json",
+      "format": "json",
+      "encoding": "utf-8",
+      "schema": {
+        "type": "object",
+        "description": "Dictionary mapping month strings to lists of ticker symbols",
+        "example": {
+          "2020-01": ["AAPL", "MSFT", "AMZN", "..."],
+          "2020-02": ["AAPL", "MSFT", "GOOGL", "..."]
+        },
+        "key_format": "YYYY-MM",
+        "value_format": "array of uppercase ticker symbols (1-5 characters)",
+        "sorted": "keys in chronological order, values in alphabetical order"
+      },
+      "typical_size": "~50-100 KB for 5 years of data",
+      "sample_count": 61
+    },
+    "metadata": {
+      "total_months": "number of months reconstructed",
+      "date_range": "start_date to end_date",
+      "tickers_per_month": "typically 500-506",
+      "data_source": "Wikipedia - List of S&P 500 companies"
+    }
+  },
+
+  "dependencies": {
+    "runtime": {
+      "python": ">=3.8",
+      "recommended_python": "3.10+"
+    },
+    "packages": [
+      {
+        "name": "pandas",
+        "version": ">=1.3.0",
+        "purpose": "HTML table parsing and data manipulation",
+        "install": "pip install pandas"
+      },
+      {
+        "name": "requests",
+        "version": ">=2.25.0",
+        "purpose": "HTTP requests to fetch Wikipedia page",
+        "install": "pip install requests"
+      },
+      {
+        "name": "python-dateutil",
+        "version": ">=2.8.0",
+        "purpose": "Date arithmetic for monthly iteration",
+        "install": "pip install python-dateutil"
+      },
+      {
+        "name": "lxml",
+        "version": ">=4.6.0",
+        "purpose": "HTML parsing backend for pandas (optional but recommended)",
+        "install": "pip install lxml",
+        "optional": true
+      }
+    ],
+    "system": {
+      "internet_connection": "required",
+      "disk_space": "~1 MB",
+      "memory": "~100 MB"
+    }
+  },
+
+  "execution": {
+    "executable_script": "fetch_sp500_constituents.py",
+    "language": "python",
+    "entry_point": "main()",
+    "rerun_command": "python3 fetch_sp500_constituents.py",
+    "estimated_runtime": "5-15 seconds",
+    "can_run_offline": false
+  },
+
+  "critical_fixes": [
+    {
+      "issue": "403 Forbidden Error",
+      "cause": "Wikipedia blocks requests without User-Agent header",
+      "solution": "Always include User-Agent header that mimics a real browser",
+      "severity": "CRITICAL",
+      "example": "headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ...'}"
+    },
+    {
+      "issue": "MultiIndex Column Error",
+      "cause": "Wikipedia's changes table may have MultiIndex columns from pandas.read_html",
+      "solution": "Flatten MultiIndex by joining tuples or converting to single-level index",
+      "severity": "HIGH",
+      "example": "if isinstance(df.columns, pd.MultiIndex): df.columns = ['_'.join(col) for col in df.columns.values]"
+    },
+    {
+      "issue": "Ticker Symbol Extraction",
+      "cause": "Added/Removed columns contain company names in parentheses: 'TICKER (Company Name)'",
+      "solution": "Split on '(' and take first part, then strip whitespace",
+      "severity": "MEDIUM",
+      "example": "ticker = cell_value.split('(')[0].strip()"
+    },
+    {
+      "issue": "Invalid Date Handling",
+      "cause": "Some rows in changes table may have malformed dates",
+      "solution": "Use pd.to_datetime with errors='coerce', then filter out NaT values",
+      "severity": "MEDIUM",
+      "example": "df['Date'] = pd.to_datetime(df['Date'], errors='coerce'); df = df[df['Date'].notna()]"
+    },
+    {
+      "issue": "FutureWarning: Passing literal html",
+      "cause": "Pandas recommends wrapping HTML strings in StringIO for read_html",
+      "solution": "Wrap html_content in StringIO object (cosmetic warning, not critical)",
+      "severity": "LOW",
+      "example": "from io import StringIO; pd.read_html(StringIO(html_content))"
+    }
+  ],
+
+  "known_limitations": [
+    {
+      "limitation": "Historical accuracy depends on Wikipedia data completeness",
+      "impact": "If Wikipedia's change log is incomplete, reconstructed history may be inaccurate",
+      "mitigation": "Cross-reference with authoritative sources like S&P Global for critical applications"
+    },
+    {
+      "limitation": "Wikipedia page structure may change",
+      "impact": "Table indices or column names might change, breaking the parser",
+      "mitigation": "Use flexible column name matching and add validation steps"
+    },
+    {
+      "limitation": "Only monthly granularity",
+      "impact": "Cannot determine exact day within a month for constituent membership",
+      "mitigation": "Use end-of-month snapshots as the standard reference point"
+    },
+    {
+      "limitation": "Multi-ticker changes on same date",
+      "impact": "If multiple tickers added/removed on same date, may need special handling",
+      "mitigation": "Current implementation handles this by processing each change individually"
+    }
+  ],
+
+  "testing": {
+    "validation_checks": [
+      "Verify ticker count per month is between 490-510",
+      "Verify all tickers are uppercase 1-5 character strings",
+      "Verify chronological ordering of months",
+      "Verify no duplicate tickers within a month",
+      "Verify output file is valid JSON"
+    ],
+    "sample_test_cases": [
+      {
+        "test": "Check 2020-01 contains ~505 tickers",
+        "command": "python -c \"import json; data=json.load(open('snp500_constituents.json')); print(len(data['2020-01']))\""
+      },
+      {
+        "test": "Verify AAPL exists in all months",
+        "command": "python -c \"import json; data=json.load(open('snp500_constituents.json')); print(all('AAPL' in v for v in data.values()))\""
+      },
+      {
+        "test": "Verify output has 61 months for 2020-01 to 2025-01",
+        "command": "python -c \"import json; print(len(json.load(open('snp500_constituents.json'))))\""
+      }
+    ]
+  },
+
+  "usage_examples": [
+    {
+      "name": "Basic execution",
+      "command": "python3 fetch_sp500_constituents.py",
+      "description": "Run with default parameters (2020-01-01 to 2025-01-01)"
+    },
+    {
+      "name": "Custom date range",
+      "description": "Modify start_date and end_date variables in main() function",
+      "steps": [
+        "Edit fetch_sp500_constituents.py",
+        "Change start_date = '2015-01-01'",
+        "Change end_date = '2020-12-31'",
+        "Run: python3 fetch_sp500_constituents.py"
+      ]
+    },
+    {
+      "name": "Programmatic usage",
+      "language": "python",
+      "code": "from fetch_sp500_constituents import *\n\nurl = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'\nheaders = {'User-Agent': 'Mozilla/5.0 ...'}\nhtml = fetch_wikipedia_page(url, headers)\ncurrent = parse_current_constituents(html)\nchanges = parse_changes_table(html)\nresult = reconstruct_backwards(current, changes, '2020-01-01', '2023-12-31')"
+    }
+  ],
+
+  "notes": [
+    "Wikipedia may block requests without User-Agent header - this is the #1 failure mode",
+    "Historical accuracy depends on Wikipedia's change log completeness",
+    "The reconstruction algorithm works backwards from current state rather than forwards from historical state",
+    "Ticker symbols are extracted from company descriptions by splitting on '(' character",
+    "Monthly snapshots represent constituents at the END of each month",
+    "S&P 500 typically has ~500-505 constituents, but can temporarily vary during transitions",
+    "For production use, consider caching the Wikipedia HTML to avoid repeated requests",
+    "For real-time applications, implement change detection to only fetch when Wikipedia updates"
+  ],
+
+  "related_resources": [
+    {
+      "name": "Wikipedia S&P 500 Page",
+      "url": "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies",
+      "description": "Source data for current constituents and historical changes"
+    },
+    {
+      "name": "S&P Dow Jones Indices",
+      "url": "https://www.spglobal.com/spdji/en/indices/equity/sp-500/",
+      "description": "Official S&P 500 information and methodology"
+    },
+    {
+      "name": "Pandas read_html documentation",
+      "url": "https://pandas.pydata.org/docs/reference/api/pandas.read_html.html",
+      "description": "Documentation for HTML table parsing"
+    }
+  ],
+
+  "changelog": [
+    {
+      "version": "1.0",
+      "date": "2025-12-25",
+      "changes": [
+        "Initial workflow definition",
+        "Implemented backwards reconstruction algorithm",
+        "Added MultiIndex column handling",
+        "Added User-Agent header fix for 403 errors",
+        "Added comprehensive error handling and validation"
+      ]
+    }
+  ]
+}

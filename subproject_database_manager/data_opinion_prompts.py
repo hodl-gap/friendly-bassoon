@@ -108,25 +108,55 @@ For EACH message, extract the following fields:
      - Samsung earnings: ["korea", "equities", "earnings"]
 
 9. **liquidity_metrics** - Array of liquidity-related metrics ONLY
-   **INCLUDE:**
-   - Monetary: TGA, RRP, reserves, QE/QT, SOFR, fed funds
-   - Market microstructure: CTA flows, dealer gamma, option notional
-   - Credit/funding: repo rates, spreads, issuance, buybacks
-   - FX liquidity: DXY, USD pairs affecting funding
-   **EXCLUDE:**
-   - Company fundamentals: earnings, revenue, EPS
-   - Product prices: DRAM, semiconductor prices
-   - Stock returns: individual stock/index performance
-   - Valuation: P/E, multiples
+
+   **INCLUDE (only these categories):**
+   - Fed balance sheet: TGA, RRP, reserves, QE/QT, BTFP, SRF
+   - Money markets: SOFR, repo rates, fed funds, funding spreads
+   - Systematic flows: CTA flows/triggers, vol-control, dealer gamma
+   - Credit/funding: corporate issuance, buybacks, credit spreads (market-wide)
+   - FX liquidity: DXY, USD funding, carry trade flows
+   - Rate expectations: Fed cut/hike probability, policy rate path
+   - ETF/fund flows: aggregate ETF flows, fund manager positioning
+   - Positioning: HF leverage, margin debt, options positioning (market-wide)
+
+   **STRICT EXCLUSIONS (NEVER extract these):**
+   - Substrate/materials: BT price, ABF demand, T-glass, PCB share, CCL share
+   - Daily returns: SPY return, QQQ return, DIA return, individual ETF returns
+   - Company fundamentals: revenue, net loss, IPO proceeds, PSR, EPS, earnings
+   - Product prices: DRAM, semiconductor, chip prices
+   - Valuation: P/E, multiples, target prices
+   - Battery/EV: battery orders, EV volumes
+   - Political: election probabilities
+   - Hiring/headcount metrics
+   - M&A deal values
+   - Company-specific cash burn (e.g., "OpenAI cash burn" is NOT liquidity)
+
+   **BEFORE MARKING is_new=true, CHECK THE MAPPING TABLE:**
+   1. Search BOTH "normalized" AND "variants" columns
+   2. If ANY variant matches your raw text (even partially), use that normalized name
+   3. Check for semantic equivalents (e.g., "CTA selling" matches "cta_forced_selling")
+   4. ONLY mark is_new=true if ZERO match in either column
+
+   **NAMING CONVENTION for new metrics:**
+   - Use snake_case: "cta_net_flow" NOT "CTA net flow"
+   - No values in names: "fed_cut_probability" NOT "Dec cut prob 80%"
+   - No temporal specifics: "etf_net_flows" NOT "ETF_Nov_inflows"
+   - Keep under 30 characters
+   - Use standard abbreviations: cta, etf, hf, dxy, tga, rrp
+
    **Structure:**
    - "raw": Original text as mentioned
-   - "normalized": Standardized name from mapping table
+   - "normalized": Standardized name from mapping table (use snake_case for new)
    - "value": Specific value (e.g., "750B", "4.5%"), empty if none
    - "direction": "up" | "down" | "stable" | ""
-   - "is_new": true if NOT in mapping table
+   - "is_new": true ONLY if NOT in mapping table after checking variants
    - If is_new=true:
      - "suggested_category": "direct" | "indirect"
      - "suggested_description": Brief description of what this metric measures
+     - "suggested_cluster": MUST use existing cluster if possible:
+       cta_positioning, etf_flows, fed_balance_sheet, fx_liquidity,
+       credit_spreads, equity_flows, volatility_metrics, positioning_leverage,
+       rate_expectations, macro_indicators, market_microstructure, option_flows
    - Empty array [] if no liquidity metrics
 
 10. **logic_chains** - Array of causal chains (multi-step sequences)
@@ -173,7 +203,8 @@ For EACH message, extract the following fields:
                 "direction": "up",
                 "is_new": true,
                 "suggested_category": "direct",
-                "suggested_description": "Reserve Demand Elasticity, Fed liquidity sensitivity"
+                "suggested_description": "Reserve Demand Elasticity, Fed liquidity sensitivity",
+                "suggested_cluster": "Fed_balance_sheet"
             }}
         ],
         "logic_chains": [

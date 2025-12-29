@@ -26,7 +26,8 @@ class RetrieverState(TypedDict, total=False):
 
     # Synthesis & Answer
     synthesized_context: str  # Combined relevant context
-    answer: str  # Final generated answer
+    answer: str  # Final generated answer (logic chains)
+    synthesis: str  # Consensus chains + variables to monitor
 
     # Agentic Control
     iteration_count: int  # Number of retrieval iterations

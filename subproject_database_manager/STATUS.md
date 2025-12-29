@@ -1,10 +1,223 @@
 # Project Status - Telegram Financial Message Processing Workflow
 
-**Last Updated**: 2025-12-09
+**Last Updated**: 2025-12-29
 
 ## Current State: Production-Ready with Vector DB Integration
 
 Complete end-to-end workflow for fetching and processing financial research messages from Telegram channels with AI-powered analysis, categorization, structured data extraction, automated QA sampling, and vector database storage.
+
+---
+
+## Session Summary: 2025-12-29
+
+### 1. Metrics Data Quality Overhaul
+
+Fixed severe data quality issues in `liquidity_metrics_mapping.csv`:
+- **352 → 285 entries** (67 duplicates merged)
+- **50 non-liquidity entries flagged** (substrate pricing, daily returns, company fundamentals)
+- **All names standardized** to snake_case
+
+**Root cause analysis:**
+- Extraction prompts had weak INCLUDE/EXCLUDE rules
+- No fuzzy duplicate detection in `append_new_metrics()`
+- Variants column never used for matching
+- Trust-based `is_new` flag relied entirely on LLM accuracy
+
+### 2. Prevention: Stricter Extraction Prompts
+
+Updated `data_opinion_prompts.py` and `interview_meeting_prompts.py` with:
+
+**Strict exclusions:**
+```
+- Substrate/materials: BT price, ABF demand, T-glass, PCB share
+- Daily returns: SPY return, QQQ return, individual ETF returns
+- Company fundamentals: revenue, net loss, IPO proceeds, PSR, EPS
+- Battery/EV, election probabilities, hiring metrics
+```
+
+**Variant checking instructions:**
+```
+Before marking is_new=true:
+1. Check BOTH "normalized" AND "variants" columns
+2. If ANY variant matches, use that normalized name
+3. Only mark is_new=true if ZERO match
+```
+
+**Naming conventions:**
+```
+- Use snake_case: "cta_net_flow" NOT "CTA net flow"
+- No values in names: "fed_cut_probability" NOT "Dec cut prob 80%"
+- No temporal specifics: "etf_net_flows" NOT "ETF_Nov_inflows"
+- Keep under 30 characters
+```
+
+### 3. Prevention: Validation Functions in metrics_mapping_utils.py
+
+Added three validation functions to `append_new_metrics()`:
+
+| Function | Purpose |
+|----------|---------|
+| `validate_metric_name()` | Normalize to snake_case, truncate to 40 chars |
+| `is_liquidity_metric()` | Pattern/keyword blocklist filter |
+| `fuzzy_match_metric()` | Catch duplicates via variants/word overlap/Levenshtein |
+
+**Validation flow in `append_new_metrics()`:**
+```
+1. Check is_liquidity_metric() → skip if non-liquidity
+2. Check fuzzy_match_metric() → merge if similar exists
+3. Apply validate_metric_name() → standardize format
+4. Then add as new metric
+```
+
+### 4. Post-Mortem Cleanup Script
+
+Created `tests/cleanup_metrics.py` for batch deduplication:
+
+**Features:**
+- Canonical name mappings (20 mapping rules for common duplicates)
+- Non-liquidity pattern detection (50+ regex patterns)
+- Automatic backup before modification
+- Dry-run mode by default
+
+**Canonical mappings:**
+| Canonical | Merges |
+|-----------|--------|
+| `cta_net_flow` | CTA net flow, CTA flows, CTA net flow (1m model) |
+| `cta_trigger_levels` | 11 variants (thresholds, baselines, etc.) |
+| `etf_net_flows` | 10 variants (monthly, YTD, VOO, etc.) |
+| `foreign_equity_flows` | 9 variants |
+| `fed_cut_probability` | 4 variants |
+
+**Usage:**
+```bash
+python3 tests/cleanup_metrics.py           # Dry run
+python3 tests/cleanup_metrics.py --execute # Apply changes
+```
+
+### 5. Integrated into Orchestrator
+
+Post-mortem cleanup now runs automatically as **Step 3** in `telegram_workflow_orchestrator.py`:
+
+```
+Step 1: Fetch Telegram Messages
+Step 2: Process Messages (categorize, extract, QA validate)
+Step 3: Post-Mortem Metrics Cleanup  ← NEW
+    - Backup CSV
+    - Merge duplicates
+    - Flag non-liquidity
+    - Standardize names
+Step 4: Workflow Complete
+```
+
+### 6. New CSV Column: is_liquidity
+
+Added `is_liquidity` column to metrics CSV schema:
+- `true` = legitimate liquidity metric
+- `false` = non-liquidity entry (flagged but not deleted)
+
+**Updated CSV schema:**
+```
+normalized, variants, category, description, sources, cluster, raw_data_source, is_liquidity
+```
+
+**Files updated:**
+- `tests/cleanup_metrics.py` - Created (cleanup script)
+- `metrics_mapping_utils.py` - Added validation functions + is_liquidity column
+- `data_opinion_prompts.py` - Stricter INCLUDE/EXCLUDE rules
+- `interview_meeting_prompts.py` - Stricter INCLUDE/EXCLUDE rules
+- `telegram_workflow_orchestrator.py` - Added Step 3 cleanup
+
+### 7. Codebase Cleanup
+
+Moved obsolete files to `tests/` folder:
+- `database_management.py` - Empty LangGraph skeleton (never implemented)
+- `states.py` - Empty LangGraph state definitions
+- `config.py` - Unused config (each module loads .env directly)
+- `message_categorization.py` - Superseded by process_messages_v3.py
+- `data_opinion_extraction.py` - Superseded by process_messages_v3.py
+- `interview_meeting_extraction.py` - Superseded by process_messages_v3.py
+
+Updated `CLAUDE.md` and `STATUS.md` to reflect actual architecture (two orchestrators, procedural Python instead of LangGraph).
+
+### 8. Prompts Extraction
+
+Extracted hardcoded prompts to dedicated prompts files (per CLAUDE.md guidelines):
+
+| New File | Extracted From | Prompts |
+|----------|---------------|---------|
+| `image_extraction_prompts.py` | `process_messages_v3.py` | Image summary, image structured extraction |
+| `metrics_mapping_prompts.py` | `metrics_mapping_utils.py` | Institution normalization |
+
+All modules now follow the pattern: prompts in `*_prompts.py` files, logic in main modules.
+
+### 9. Orchestrator Refactor
+
+Extracted business logic from `telegram_workflow_orchestrator.py` into new `message_pipeline.py`:
+
+| Before | After |
+|--------|-------|
+| `process_telegram_messages()`: 75 lines mixed logic | `process_telegram_messages()`: 12 lines routing only |
+| Path extraction in orchestrator | `_extract_channel_name()` in pipeline |
+| JSON→CSV in orchestrator | `_convert_json_to_csv()` in pipeline |
+| V3 + QA calls inline | `_run_v3_processor()`, `_run_qa_validation()` in pipeline |
+
+**New module:** `message_pipeline.py`
+- `process_single_channel(export_folder, max_messages)` - main entry point
+- Handles complete pipeline for one channel: JSON→CSV→V3→QA
+
+Orchestrator now follows CLAUDE.md: **NO business logic, only routing**.
+
+---
+
+## Session Summary: 2025-12-26
+
+### 1. Metrics Clustering for Data Reproduction
+
+Added `cluster` and `raw_data_source` columns to liquidity metrics mapping for easier data reproduction.
+
+**Purpose**: When looking at a cluster of related metrics, know exactly what raw data sources to find.
+
+**New CSV schema**:
+```
+normalized, variants, category, description, sources, cluster, raw_data_source
+```
+
+**New columns**:
+| Column | Purpose | Example |
+|--------|---------|---------|
+| `cluster` | Semantic grouping | `"ETF_flows"`, `"CTA_positioning"` |
+| `raw_data_source` | Data feed for reproduction | `"Bloomberg ETF Flow Data"` |
+
+**LLM-assisted cluster assignment**:
+- New metrics automatically assigned clusters via GPT-4.1-mini
+- Batch assignment for migration of existing metrics
+
+**Migration results** (352 metrics → 14 clusters):
+| Cluster | Count |
+|---------|-------|
+| corporate_fundamentals | 77 |
+| equity_flows | 70 |
+| etf_flows | 38 |
+| macro_indicators | 30 |
+| rate_expectations | 25 |
+| fx_liquidity | 20 |
+| cta_positioning | 18 |
+| credit_spreads | 17 |
+| positioning_leverage | 16 |
+| volatility_metrics | 14 |
+| sovereign_flows | 10 |
+| option_flows | 6 |
+| market_microstructure | 6 |
+| fed_balance_sheet | 5 |
+
+**New files**:
+- `cluster_assignment_prompts.py` - LLM prompts for cluster assignment
+- `tests/migrate_clusters.py` - One-time migration script
+
+**Updated files**:
+- `metrics_mapping_utils.py` - Added `get_existing_clusters()`, `assign_cluster_to_metric()`, `assign_clusters_batch()`
+- `data_opinion_prompts.py` - Added `suggested_cluster` to extraction schema
+- `interview_meeting_prompts.py` - Added `suggested_cluster` to extraction schema
 
 ---
 
@@ -220,27 +433,33 @@ QA validation now runs automatically after processing, sampling a subset of extr
 ```
 telegram_workflow_orchestrator.py (MAIN ENTRY POINT)
     │
-    ├─→ telegram_fetcher.py          → Fetch messages from Telegram API
-    │                                 → Download images
-    │                                 → Export to ChatExport format
+    ├─→ Step 1: telegram_fetcher.py   → Fetch messages from Telegram API
+    │                                  → Download images
+    │                                  → Export to ChatExport format
     │
-    ├─→ extract_telegram_data.py     → Convert JSON to CSV
+    ├─→ extract_telegram_data.py      → Convert JSON to CSV
     │
-    ├─→ process_messages_v3.py       → Image-first processing
-    │       │                         → Categorization (6 types)
-    │       │                         → Structured extraction (GPT-5 Mini + Claude fallback)
-    │       │                         → Parallel batch processing
-    │       │                         → Auto-update metrics dictionary
+    ├─→ Step 2: process_messages_v3.py → Image-first processing
+    │       │                           → Categorization (6 types)
+    │       │                           → Structured extraction (GPT-5 Mini + Claude fallback)
+    │       │                           → Parallel batch processing
+    │       │                           → Auto-update metrics dictionary
     │       │
-    │       ├─→ models.py            → GPT-5 Mini, Claude 4.5 models
-    │       │                         → process_batch_parallel_with_retry()
+    │       ├─→ models.py              → GPT-5 Mini, Claude 4.5 models
+    │       │                           → process_batch_parallel_with_retry()
     │       │
-    │       └─→ metrics_mapping_utils.py → Metric normalization
-    │                                      → Source tracking
+    │       ├─→ metrics_mapping_utils.py → Metric normalization + validation
+    │       │                             → Fuzzy duplicate detection
+    │       │                             → Source tracking
+    │       │
+    │       └─→ qa_validation.py       → QA sampling validation (integrated)
+    │                                   → 3-dimensional quality check
+    │                                   → Logs to data/qa_logs/
     │
-    └─→ qa_validation.py             → QA sampling validation (integrated)
-                                      → 3-dimensional quality check
-                                      → Logs to data/qa_logs/
+    └─→ Step 3: tests/cleanup_metrics.py → Post-mortem deduplication
+                                          → Merge duplicates to canonical names
+                                          → Flag non-liquidity entries
+                                          → Standardize to snake_case
 
 vector_db_orchestrator.py (SEPARATE ENTRY POINT)
     │
@@ -258,8 +477,9 @@ vector_db_orchestrator.py (SEPARATE ENTRY POINT)
 
 ```
 Main Workflow:
-├── telegram_workflow_orchestrator.py  ⭐ MAIN ORCHESTRATOR
+├── telegram_workflow_orchestrator.py  ⭐ MAIN ORCHESTRATOR (routing only)
 ├── telegram_fetcher.py                  Telegram API fetcher
+├── message_pipeline.py                  Single channel processing pipeline
 ├── extract_telegram_data.py             JSON to CSV converter
 ├── process_messages_v3.py               V3 message processor
 ├── categorization_prompts.py            Categorization prompts
@@ -268,14 +488,26 @@ Main Workflow:
 ├── qa_validation.py                     QA validation (with sample_qa_validation)
 ├── qa_validation_prompts.py             QA validation prompts
 ├── qa_post_processor.py                 QA validation CLI (standalone)
-├── data/processed/liquidity_metrics/
-│   └── liquidity_metrics_mapping.csv    Metrics dictionary (auto-grows, with sources)
-├── metrics_mapping_utils.py             Metric normalization + source tracking + entity normalization
+├── metrics_mapping_utils.py             Metric normalization + source tracking + clustering
+├── cluster_assignment_prompts.py        Prompts for LLM cluster assignment
+├── image_extraction_prompts.py          Prompts for image summarization + extraction
+├── metrics_mapping_prompts.py           Prompts for institution normalization
 
 Vector DB Workflow:
 ├── vector_db_orchestrator.py         ⭐ VECTOR DB ORCHESTRATOR
 ├── embedding_generation.py              OpenAI embeddings generator
 ├── pinecone_uploader.py                 Pinecone vector uploader
+
+Tests & Obsolete:
+├── tests/
+│   ├── cleanup_metrics.py               Post-mortem deduplication (called by orchestrator)
+│   ├── migrate_clusters.py              One-time cluster migration script
+│   ├── database_management.py           (obsolete) Empty LangGraph skeleton
+│   ├── states.py                        (obsolete) Empty LangGraph state
+│   ├── config.py                        (obsolete) Unused config
+│   ├── message_categorization.py        (obsolete) Superseded by process_messages_v3
+│   ├── data_opinion_extraction.py       (obsolete) Superseded by process_messages_v3
+│   └── interview_meeting_extraction.py  (obsolete) Superseded by process_messages_v3
 
 Parent Directory:
 ├── models.py                            AI model functions
@@ -355,6 +587,8 @@ MAX_CONCURRENT_REQUESTS = 10        # Parallel API calls
 - `category` - direct | indirect
 - `description` - What the metric measures
 - `sources` - Where metric was discovered (Institution, data_source)
+- `cluster` - Semantic grouping for data reproduction (e.g., `ETF_flows`, `CTA_positioning`)
+- `raw_data_source` - Raw data feed needed to reproduce (e.g., `Bloomberg ETF Flow Data`)
 
 ## API Costs
 
@@ -449,6 +683,8 @@ MAX_CONCURRENT_REQUESTS = 10        # Parallel API calls
 - **2025-11-30** - Embedding workflow, Pinecone integration, source entity normalization
 - **2025-12-07** - Logic chains schema (replaced metric_relationships), GPT-5 Mini extraction
 - **2025-12-09** - Extraction quality: tags criteria, topic_tags field, liquidity_metrics guidance
+- **2025-12-26** - Metrics clustering for data reproduction
+- **2025-12-29** - Metrics data quality overhaul: validation functions, post-mortem cleanup, stricter prompts; Codebase cleanup (obsolete files moved to tests/); Prompts extraction (image_extraction_prompts.py, metrics_mapping_prompts.py); Orchestrator refactor (message_pipeline.py)
 
 ---
 
@@ -457,5 +693,5 @@ MAX_CONCURRENT_REQUESTS = 10        # Parallel API calls
 1. GPT-5 Mini may have lower extraction quality than GPT-5 (cost tradeoff)
 2. No incremental updates (re-fetches full date range)
 3. No keyword search (Telethon supports it)
-4. Metrics dictionary can accumulate duplicate metric names (needs cleaner for metrics, not sources)
+4. ~~Metrics dictionary can accumulate duplicate metric names~~ ✅ **RESOLVED 2025-12-29** - Added validation functions + post-mortem cleanup
 5. Parallel processing requires ThreadPoolExecutor workaround in async context

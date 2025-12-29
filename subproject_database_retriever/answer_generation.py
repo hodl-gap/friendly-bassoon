@@ -13,16 +13,19 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from models import call_claude_sonnet
 from states import RetrieverState
-from answer_generation_prompts import LOGIC_CHAIN_PROMPT
+from answer_generation_prompts import LOGIC_CHAIN_PROMPT, SYNTHESIS_PROMPT
 from config import MAX_CHUNKS_FOR_ANSWER
 
 
 def generate_answer(state: RetrieverState) -> RetrieverState:
     """
-    Generate logic chain answer from retrieved chunks.
+    Generate logic chain answer from retrieved chunks (two-stage).
+
+    Stage 1: Extract and organize logic chains
+    Stage 2: Synthesize consensus and extract variables
 
     Input: query, retrieved_chunks
-    Output: synthesized_context, answer
+    Output: synthesized_context, answer, synthesis
     """
     query = state.get("query", "")
     chunks = state.get("retrieved_chunks", [])
@@ -30,20 +33,27 @@ def generate_answer(state: RetrieverState) -> RetrieverState:
     # Limit chunks to preserve LLM reasoning quality
     chunks = chunks[:MAX_CHUNKS_FOR_ANSWER]
 
-    print(f"[answer_generation] Extracting logic chains from {len(chunks)} chunks...")
+    print(f"[answer_generation] Stage 1: Extracting logic chains from {len(chunks)} chunks...")
 
     # Synthesize context with full extracted_data
     context = synthesize_context(chunks)
 
-    # Generate logic chain answer
+    # Stage 1: Generate logic chains
     answer = generate_logic_chains(query, context)
 
-    print(f"[answer_generation] Generated answer: {answer[:200]}...")
+    print(f"[answer_generation] Stage 1 complete: {answer[:200]}...")
+
+    # Stage 2: Synthesize consensus and variables
+    print(f"[answer_generation] Stage 2: Synthesizing consensus and variables...")
+    synthesis = synthesize_chains(query, answer)
+
+    print(f"[answer_generation] Stage 2 complete: {synthesis[:200]}...")
 
     return {
         **state,
         "synthesized_context": context,
-        "answer": answer
+        "answer": answer,
+        "synthesis": synthesis
     }
 
 
@@ -104,8 +114,23 @@ def generate_logic_chains(query: str, context: str) -> str:
     prompt = LOGIC_CHAIN_PROMPT.format(query=query, context=context)
     messages = [{"role": "user", "content": prompt}]
 
-    response = call_claude_sonnet(messages, temperature=0.3, max_tokens=2000)
+    response = call_claude_sonnet(messages, temperature=0.3, max_tokens=4000)
 
     print(f"[answer_generation] Full LLM response:\n{response}")
+
+    return response
+
+
+def synthesize_chains(query: str, chains: str) -> str:
+    """Stage 2: Synthesize consensus and extract variables."""
+    if not chains or "couldn't find" in chains.lower():
+        return "No chains to synthesize."
+
+    prompt = SYNTHESIS_PROMPT.format(query=query, chains=chains)
+    messages = [{"role": "user", "content": prompt}]
+
+    response = call_claude_sonnet(messages, temperature=0.3, max_tokens=3000)
+
+    print(f"[answer_generation] Synthesis response:\n{response}")
 
     return response

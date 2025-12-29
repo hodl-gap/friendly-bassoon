@@ -18,23 +18,45 @@ The entire project aims to produce an agentic research workflow. This subproject
 ### Code Organization
 ```
 subproject_database_manager/
-├── database_management.py       # MAIN FILE - orchestrator only
-├── paper_ingestion.py          # Function: add papers to database
-├── embedding_generation.py     # Function: generate embeddings
-├── metadata_extraction.py      # Function: extract paper metadata
-├── paper_ingestion_prompts.py  # All prompts for ingestion workflow
-├── {other}_prompts.py          # Prompts for other workflows
-├── states.py                   # LangGraph state definitions
-├── config.py                   # Configuration management
-└── utils/                      # Utility functions
+├── telegram_workflow_orchestrator.py  # MAIN ORCHESTRATOR - fetch + process + QA + cleanup
+├── vector_db_orchestrator.py          # VECTOR DB ORCHESTRATOR - embed + upsert
+│
+├── telegram_fetcher.py               # Step 1: Fetch from Telegram API
+├── message_pipeline.py               # Step 2: Single channel processing pipeline
+├── extract_telegram_data.py          # Convert JSON to CSV
+├── process_messages_v3.py            # Categorize + extract + metrics
+├── qa_validation.py                  # QA sampling validation
+├── qa_post_processor.py              # Standalone full QA CLI
+│
+├── embedding_generation.py           # Generate OpenAI embeddings
+├── pinecone_uploader.py              # Upsert to Pinecone
+│
+├── categorization_prompts.py         # Prompts for message categorization
+├── data_opinion_prompts.py           # Prompts for data_opinion extraction
+├── interview_meeting_prompts.py      # Prompts for interview_meeting extraction
+├── qa_validation_prompts.py          # Prompts for QA validation
+├── cluster_assignment_prompts.py     # Prompts for LLM-based cluster assignment
+├── image_extraction_prompts.py       # Prompts for image summarization + extraction
+├── metrics_mapping_prompts.py        # Prompts for institution normalization
+│
+├── metrics_mapping_utils.py          # Metrics dictionary management + clustering
+│
+├── data/                             # Data folders (raw, processed, qa_logs)
+└── tests/                            # Test files + obsolete modules
 ```
 
-### Main File Structure (`database_management.py`)
-The main file should **ONLY** contain:
-1. Loading of States
-2. Calling other .py files (function modules)
-3. Central router logic
+### Main Orchestrator Structure (`telegram_workflow_orchestrator.py`)
+The main orchestrator contains:
+1. CLI argument parsing
+2. Step orchestration (fetch → process → QA → cleanup)
+3. Calling function modules in sequence
 4. NO business logic or implementation details
+
+### Vector DB Orchestrator (`vector_db_orchestrator.py`)
+Separate orchestrator for embedding workflow:
+1. Generate embeddings from processed CSV
+2. Upsert to Pinecone
+3. Display index stats
 
 ### Function Module Pattern
 Each separate `.py` file (except main) works as a **function module**:
@@ -59,12 +81,11 @@ Each separate `.py` file (except main) works as a **function module**:
 - **Other outputs**: Print raw texts, but NOT full (summary/truncated is fine)
 - Always print raw texts (not processed/formatted versions)
 
-## State Management (LangGraph)
-- States defined in `states.py`
-- States pass data between function modules
-- Keep states simple and minimal for now
-- Add states as needed during development
-- **Don't be overly complicated** - start minimal, extend as needed
+## Workflow Architecture
+- **Procedural Python** - Current implementation uses simple function calls, not LangGraph
+- Data passes between modules via function return values and CSV files
+- Orchestrators call function modules in sequence
+- Keep it simple - only add complexity when needed
 
 ## Environment Configuration
 - `.env` file location: Project root folder (parent directory)
@@ -146,6 +167,58 @@ All structured outputs are validated by a QA agent that checks:
 
 See `qa_validation.py` for implementation details.
 
+## Metrics Dictionary (liquidity_metrics_mapping.csv)
+
+CSV file tracking all liquidity metrics discovered during extraction.
+
+### CSV Schema
+| Column | Description |
+|--------|-------------|
+| `normalized` | Canonical metric name (snake_case) |
+| `variants` | Alternative names/spellings (pipe-delimited) |
+| `category` | `direct` or `indirect` liquidity |
+| `description` | What the metric measures |
+| `sources` | Where metric was discovered (Institution, data_source) |
+| `cluster` | Semantic grouping for data reproduction |
+| `raw_data_source` | Raw data feed needed to reproduce |
+| `is_liquidity` | `true` or `false` - flags non-liquidity entries |
+
+### Cluster Examples
+`fed_balance_sheet`, `etf_flows`, `cta_positioning`, `fx_liquidity`, `equity_flows`, `rate_expectations`
+
+### Key Functions (metrics_mapping_utils.py)
+
+**Core functions:**
+- `load_metrics_mapping()` - Load metrics table for prompt injection
+- `append_new_metrics()` - Add new metrics with validation + cluster assignment
+- `get_existing_clusters()` - Get list of current clusters
+- `assign_cluster_to_metric()` - LLM assigns single metric to cluster
+- `assign_clusters_batch()` - Batch assign clusters to multiple metrics
+
+**Validation functions (prevent duplicates/non-liquidity):**
+- `validate_metric_name()` - Normalize to snake_case, truncate to 40 chars
+- `is_liquidity_metric()` - Check against non-liquidity patterns/keywords
+- `fuzzy_match_metric()` - Detect duplicates via variants/word overlap/Levenshtein
+
+### Clustering Logic
+- LLM-assisted assignment via GPT-4.1-mini
+- New metrics get `suggested_cluster` from extraction prompt
+- Defaults to existing clusters when possible
+- One-to-one: each metric belongs to exactly one cluster
+
+### Post-Mortem Cleanup (tests/cleanup_metrics.py)
+Automated deduplication script that:
+- Merges duplicates into canonical names (e.g., all CTA triggers → `cta_trigger_levels`)
+- Flags non-liquidity entries with `is_liquidity=false`
+- Standardizes all names to snake_case
+- Runs automatically at end of orchestrator workflow
+
+**Manual usage:**
+```bash
+python3 tests/cleanup_metrics.py           # Dry run
+python3 tests/cleanup_metrics.py --execute # Apply changes
+```
+
 ## Flexible Design Decisions (TBD)
 The following are intentionally left flexible for future decisions:
 - **Chunking strategy** - Not yet decided, don't constrain it
@@ -183,12 +256,24 @@ from dotenv import load_dotenv
 load_dotenv('../.env')  # or appropriate path to root .env
 ```
 
-## Router Logic (Central Router in Main File)
-- Routes execution flow between function modules
-- Decides which function module to call next
-- Handles state transitions
-- Coordinates the workflow
-- (Details to be defined during development)
+## Workflow Steps
+
+### Telegram Workflow (`telegram_workflow_orchestrator.py`)
+```
+Step 1: telegram_fetcher.py        → Fetch messages from Telegram API
+Step 2: message_pipeline.py        → For each channel:
+        ├── extract_telegram_data.py   → Convert JSON to CSV
+        ├── process_messages_v3.py     → Categorize, extract, update metrics
+        └── qa_validation.py           → QA sampling validation
+Step 3: tests/cleanup_metrics.py   → Post-mortem deduplication
+```
+
+### Vector DB Workflow (`vector_db_orchestrator.py`)
+```
+Step 1: embedding_generation.py    → Generate OpenAI embeddings
+Step 2: pinecone_uploader.py       → Upsert to Pinecone
+Step 3: Display index stats
+```
 
 ## Notes for AI Assistants
 - **Always read existing code** before suggesting modifications
@@ -209,14 +294,18 @@ load_dotenv('../.env')  # or appropriate path to root .env
 - **Keep it minimal and focused** - Only implement exactly what is asked, nothing more
 - **Write all one-time test files to `tests/` folder** - Keep root directory clean
 
+## Completed
+- [x] Telegram message fetching workflow
+- [x] Message categorization and extraction (process_messages_v3.py)
+- [x] Metrics dictionary with clustering
+- [x] QA validation (sampling + full)
+- [x] Post-mortem metrics cleanup
+- [x] Vector DB embedding + Pinecone upload
+
 ## TODO
-- [ ] Set up initial project structure
-- [ ] Create `states.py` with basic state definitions
-- [ ] Implement `database_management.py` skeleton
-- [ ] Create first function module (paper ingestion)
-- [ ] Set up Pinecone connection
-- [ ] Test basic paper upload workflow
-- (More items will be added as development progresses)
+- [ ] Incremental updates (don't re-fetch already processed messages)
+- [ ] Individual stock research category
+- [ ] Keyword search support for Telegram fetching
 
 ## Related Files in Parent Directory
 - `models.py` - AI model functions (must use this for all AI calls)
