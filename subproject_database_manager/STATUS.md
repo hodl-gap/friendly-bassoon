@@ -1,10 +1,145 @@
 # Project Status - Telegram Financial Message Processing Workflow
 
-**Last Updated**: 2025-12-29
+**Last Updated**: 2026-01-01
 
 ## Current State: Production-Ready with Vector DB Integration
 
 Complete end-to-end workflow for fetching and processing financial research messages from Telegram channels with AI-powered analysis, categorization, structured data extraction, automated QA sampling, and vector database storage.
+
+---
+
+## Session Summary: 2026-01-01
+
+### Trade Opinion Categorization + Post-Mortem Enrichment
+
+Added capability to capture trading signals buried in casual content and enrich them with exact numbers from recent data.
+
+**Problem**: Messages like "레포가 이렇게 튀었는데도 숏 안칠 거면 레포를 왜 봐요" (repo spiked → went short) were categorized as `other` and lost.
+
+**Solution: Two-phase approach**
+
+| Phase | Change | Purpose |
+|-------|--------|---------|
+| 1. Prompt tweak | `categorization_prompts.py` | Capture trade opinions in casual content |
+| 2. Post-mortem enrichment | `tests/enrich_data_opinions.py` | Fill exact numbers from data_updates |
+
+**Phase 1: Categorization Update**
+
+Updated `data_opinion` definition to include:
+- Implicit data references (spike, jump, crash)
+- Trading actions (short, long, buy, sell)
+- **IMPORTANT**: Include even if buried in greetings or casual content
+
+**Result**: Messages with trade signals now categorize as `data_opinion` instead of `other`.
+
+**Phase 2: Enrichment Script**
+
+New script `tests/enrich_data_opinions.py`:
+- Finds `data_opinion` entries with empty `liquidity_metrics` or `used_data`
+- Collects `data_update` messages from last 7 days as context
+- Calls LLM to fill in exact numbers/direction
+- Adds new metrics to dictionary via `append_new_metrics()`
+
+**Usage:**
+```bash
+# Dry run (preview)
+python3 tests/enrich_data_opinions.py --input data/processed/processed_xxx.csv
+
+# Execute enrichment
+python3 tests/enrich_data_opinions.py --input data/processed/processed_xxx.csv --execute
+```
+
+**Example flow:**
+```
+data_update: "Repo $3.00B" (Dec 30)
+data_update: "Repo $74.60B" (Dec 31)  ← 25x spike
+data_opinion: "레포 튀었다 → 숏" (extracted but empty metrics)
+    ↓ enrichment
+data_opinion: liquidity_metrics: [{repo_spike_amount: 74.6B, direction: up}]
+    ↓ append_new_metrics
+liquidity_metrics_mapping.csv: repo_spike_amount added
+```
+
+**Files created/updated:**
+- `categorization_prompts.py` - Expanded data_opinion to include trade opinions
+- `tests/enrich_data_opinions.py` - NEW: Post-mortem enrichment script
+- `tests/test_single_message.py` - NEW: Quick categorization test
+
+---
+
+## Session Summary: 2025-12-30
+
+### Metrics Cleanup Validation and Enhancement
+
+Extended the cleanup script with additional fixes and validation testing.
+
+**Cleanup Results:**
+| Metric | Before | After |
+|--------|--------|-------|
+| Total entries | 410 | 401 |
+| Entries merged | - | 9 |
+| Category errors | 8 | 0 |
+| Cluster coverage | 34.7% | **100%** |
+| Known duplicates | 7 pairs | 0 |
+| Non-liquidity flagged | 50 | 55 |
+| Direct liquidity | ~30 | 32 |
+| Indirect liquidity | ~380 | 369 |
+
+**New canonical mappings added:**
+- `carry_trade_unwind` ← `carry_trade_unwinding_risk`
+- `eurozone_banks_upside` ← `eurozone_banks_upside_potential`
+- `ndx_spx_vol_spread` ← `ndx_spx_vol_spread_3m25d`
+- `corporate_bond_price_yield` ← `corporate_bond_priceyield_core_weave`
+- `ny_fed_balance_sheet` ← `ny_fed_balance_sheet_rebalancing`
+- `spx_option_notional` ← `spx_option_notional_daily`
+- `pension_fund_flows` ← `pension_fund_net_buy_kospi`, `pension_fund_net_buy_kosdaq`
+- `policy_rate_cuts` ← `policy_rate_cut_expectations`
+
+**New NON_LIQUIDITY_PATTERNS:**
+```python
+r'_op_krw$',      # Operating profit KRW
+r'_op_yo_y$',     # Operating profit YoY
+r'_opm$',         # Operating profit margin
+r'_arr$',         # Annual recurring revenue
+r'^ai_arr',       # AI ARR
+r'^adjusted_opm', # Adjusted operating margin
+r'^2026_op_',     # 2026 OP estimates
+r'^4q25f_op',     # 4Q25F OP estimates
+```
+
+**New cleanup features:**
+1. `fix_category_contamination()` - Fixes cluster names in category column
+2. `fix_direct_indirect()` - Corrects direct/indirect classification
+3. `assign_missing_clusters()` - Auto-assigns clusters via LLM (integrated into --execute)
+
+**New test file:** `tests/test_metrics_cleanup.py`
+- 6 validation tests (category, cluster coverage, duplicates, extraction structure, is_liquidity, direct classification)
+- All tests passing
+
+**Updated cluster distribution (15 clusters, 346 liquidity metrics):**
+| Cluster | Count |
+|---------|-------|
+| equity_flows | 56 |
+| macro_indicators | 46 |
+| corporate_fundamentals | 45 |
+| fx_liquidity | 33 |
+| rate_expectations | 30 |
+| credit_spreads | 23 |
+| positioning_leverage | 23 |
+| volatility_metrics | 18 |
+| market_microstructure | 15 |
+| option_flows | 12 |
+| sovereign_flows | 12 |
+| etf_flows | 11 |
+| money_markets | 9 |
+| fed_balance_sheet | 9 |
+| cta_positioning | 4 |
+
+**Files updated:**
+- `tests/cleanup_metrics.py` - Extended with new mappings, patterns, and functions
+- `tests/test_metrics_cleanup.py` - Created (validation test script)
+- `CLAUDE.md` - Updated technology stack, development guidelines, cluster examples
+- `STATUS.md` - Added session summary
 
 ---
 
@@ -461,6 +596,12 @@ telegram_workflow_orchestrator.py (MAIN ENTRY POINT)
                                           → Flag non-liquidity entries
                                           → Standardize to snake_case
 
+    Optional: tests/enrich_data_opinions.py → Post-mortem enrichment
+                                              → Find ambiguous data_opinions
+                                              → Use 7-day data_update context
+                                              → Fill in exact numbers/direction
+                                              → Add new metrics to dictionary
+
 vector_db_orchestrator.py (SEPARATE ENTRY POINT)
     │
     ├─→ embedding_generation.py      → Generate embeddings (OpenAI text-embedding-3-large)
@@ -500,8 +641,15 @@ Vector DB Workflow:
 
 Tests & Obsolete:
 ├── tests/
-│   ├── cleanup_metrics.py               Post-mortem deduplication (called by orchestrator)
+│   ├── enrich_data_opinions.py          Post-mortem enrichment with data_update context
+│   ├── cleanup_metrics.py               Post-mortem deduplication + cluster assignment
+│   ├── test_single_message.py           Quick categorization test
+│   ├── test_metrics_cleanup.py          Validation tests for cleanup results
 │   ├── migrate_clusters.py              One-time cluster migration script
+│   ├── test_qa_simple.py                QA validation tests
+│   ├── test_qa_validation.py            QA validation tests
+│   ├── test_single_entry.py             Single entry QA test
+│   ├── test_pinecone_query.py           Pinecone query tests
 │   ├── database_management.py           (obsolete) Empty LangGraph skeleton
 │   ├── states.py                        (obsolete) Empty LangGraph state
 │   ├── config.py                        (obsolete) Unused config
@@ -557,6 +705,10 @@ python telegram_workflow_orchestrator.py \
 python qa_post_processor.py \
   --input data/processed/processed_xxx.csv \
   --categories data_opinion,interview_meeting
+
+# Post-mortem enrichment (fill exact numbers for ambiguous extractions)
+python tests/enrich_data_opinions.py --input data/processed/processed_xxx.csv           # Dry run
+python tests/enrich_data_opinions.py --input data/processed/processed_xxx.csv --execute # Apply
 ```
 
 ## Configuration
@@ -582,13 +734,16 @@ MAX_CONCURRENT_REQUESTS = 10        # Parallel API calls
   - `logic_chains[]` - multi-step causal chains (cause → effect → mechanism)
 
 **Metrics Dictionary CSV columns:**
-- `normalized` - Standard metric name
-- `variants` - Alternative names/spellings
-- `category` - direct | indirect
+- `normalized` - Standard metric name (snake_case)
+- `variants` - Alternative names/spellings (pipe-delimited)
+- `category` - `direct` | `indirect`
 - `description` - What the metric measures
 - `sources` - Where metric was discovered (Institution, data_source)
-- `cluster` - Semantic grouping for data reproduction (e.g., `ETF_flows`, `CTA_positioning`)
-- `raw_data_source` - Raw data feed needed to reproduce (e.g., `Bloomberg ETF Flow Data`)
+- `cluster` - Semantic grouping for data reproduction (15 clusters)
+- `raw_data_source` - Raw data feed needed to reproduce
+- `is_liquidity` - `true` | `false` - flags non-liquidity entries
+
+**Current metrics stats:** 401 entries (346 liquidity, 55 non-liquidity), 100% cluster coverage
 
 ## API Costs
 
@@ -685,6 +840,8 @@ MAX_CONCURRENT_REQUESTS = 10        # Parallel API calls
 - **2025-12-09** - Extraction quality: tags criteria, topic_tags field, liquidity_metrics guidance
 - **2025-12-26** - Metrics clustering for data reproduction
 - **2025-12-29** - Metrics data quality overhaul: validation functions, post-mortem cleanup, stricter prompts; Codebase cleanup (obsolete files moved to tests/); Prompts extraction (image_extraction_prompts.py, metrics_mapping_prompts.py); Orchestrator refactor (message_pipeline.py)
+- **2025-12-30** - Cleanup validation: extended canonical mappings, NON_LIQUIDITY_PATTERNS, cluster assignment; 100% cluster coverage; test_metrics_cleanup.py validation suite
+- **2026-01-01** - Trade opinion categorization (data_opinion captures trading actions); Post-mortem enrichment script (fills exact numbers using 7-day data_update context)
 
 ---
 

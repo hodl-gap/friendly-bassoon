@@ -40,10 +40,12 @@ Text: {message_text}
    - Example: "연속 실업수당 청구건수는 4년래 최고치"
    - Will save raw text only
 
-6. **data_opinion** - Research analysis with data + interpretation
-   - Contains specific data/indicators
-   - Describes what happened to the data
-   - Provides interpretation/conclusions
+6. **data_opinion** - Research analysis with data/market signal + interpretation
+   - Contains specific data/indicators OR references to data movement (spike, jump, crash, etc.)
+   - Describes what happened OR trading actions taken (short, long, buy, sell, enter, exit)
+   - Provides interpretation, conclusions, or positioning rationale
+   - IMPORTANT: Include messages with trade opinions even if buried in greetings or casual content
+   - If a message mentions both a market signal AND a trading action, categorize as data_opinion
    - Example: "호주 10년물 금리 18bp 상승... RBA 기준금리 동결... 금리 인하 사이클 종료 가능성"
    - Will extract full structured analysis
 

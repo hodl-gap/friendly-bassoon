@@ -18,14 +18,30 @@ The entire project aims to produce an agentic research workflow. This subproject
 ### Code Organization
 ```
 subproject_variable_mapper/
-├── variable_mapper_orchestrator.py  # MAIN FILE - orchestrator only
-├── variable_extraction.py           # Function: extract variables from text
-├── threshold_extraction.py          # Function: extract thresholds/conditions
-├── source_mapping.py                # Function: map variables to data sources
-├── query_builder.py                 # Function: build structured queries
-├── {module}_prompts.py              # Prompts for each workflow
+├── variable_mapper_orchestrator.py  # MAIN FILE - LangGraph orchestrator
 ├── states.py                        # LangGraph state definitions
 ├── config.py                        # Configuration management
+│
+│  # 4-Step Pipeline
+├── variable_extraction.py           # Step 1: Extract variables from text
+├── variable_extraction_prompts.py
+├── normalization.py                 # Step 2: Normalize to canonical names
+├── normalization_prompts.py
+├── missing_variable_detection.py    # Step 3: Find missing chain variables
+├── missing_variable_detection_prompts.py
+├── data_id_mapping.py               # Step 4: Map to data source IDs (auto-discovers if unmapped)
+│
+│  # Data ID Discovery (auto-triggered or stand-alone)
+├── data_id_discovery.py             # Claude Agent SDK discovery
+├── data_id_discovery_prompts.py
+├── data_id_validation.py            # API ping validation
+│
+├── mappings/
+│   └── discovered_data_ids.json     # Discovered data ID mappings
+│
+├── logs/                            # Debug logs (timestamped per run)
+│   └── discovery_YYYYMMDD_HHMMSS.log
+│
 └── tests/                           # Test files
 ```
 
@@ -55,9 +71,11 @@ Each separate `.py` file (except main) works as a **function module**:
 - Example: `variable_extraction.py` uses prompts from `variable_extraction_prompts.py`
 
 ### Debug Print Guidelines
-- **LLM responses**: Print FULL raw texts
+- **LLM responses**: Print FULL raw texts (no truncation)
 - **Other outputs**: Print raw texts, but NOT full (summary/truncated is fine)
 - Always print raw texts (not processed/formatted versions)
+- **File logging**: All debug output must be logged to `logs/` folder with timestamps
+- Discovery logs: `logs/discovery_YYYYMMDD_HHMMSS.log`
 
 ## State Management (LangGraph)
 - States defined in `states.py`
@@ -113,48 +131,64 @@ Example input:
 
 ## Output Format (Structured JSON)
 
-The subproject produces structured queries:
+The subproject produces structured queries with **full data source details** for downstream data fetching:
 ```json
 {
-  "query_group": "Fed_QT_Pause_Risk",
   "variables": [
     {
-      "name": "RDE",
-      "normalized_name": "reserve_demand_elasticity",
-      "threshold": 0.3,
-      "condition": "greater_than",
-      "interpretation": "indicates stress",
-      "source": "NY Fed"
+      "raw_name": "TGA",
+      "normalized_name": "tga",
+      "category": "direct",
+      "type": "needs_registration",
+      "data_id": "FRED:WTREGEN",
+      "source": "FRED",
+      "description": "Treasury General Account - U.S. Treasury deposits held at Federal Reserve Banks...",
+      "api_url": "https://api.stlouisfed.org/fred/series/observations?series_id=WTREGEN&api_key=YOUR_API_KEY&file_type=json",
+      "frequency": "weekly",
+      "notes": "Free API but requires registration for API key...",
+      "registration_url": "https://fred.stlouisfed.org/docs/api/api_key.html",
+      "api_docs_url": "https://fred.stlouisfed.org/docs/api/fred/series_observations.html",
+      "validated": true,
+      "discovered_at": "2026-01-14T04:25:25.117759+00:00"
     },
     {
-      "name": "TGA",
-      "normalized_name": "treasury_general_account",
-      "threshold": 500,
-      "unit": "billion_usd",
-      "condition": "less_than",
-      "interpretation": "drawdown pressure",
-      "source": "Daily Treasury Statement"
+      "raw_name": "WDI",
+      "normalized_name": "wdi",
+      "type": "api",
+      "data_id": "WorldBank:WDI",
+      "source": "WorldBank",
+      "description": "World Development Indicators - comprehensive database of global development indicators...",
+      "api_url": "https://api.worldbank.org/v2/country/all/indicator/{INDICATOR_CODE}?format=json",
+      "frequency": "annual",
+      "notes": "WDI is a database/collection, not a single indicator...",
+      "example_indicators": {
+        "gdp": "NY.GDP.MKTP.CD",
+        "population": "SP.POP.TOTL"
+      }
     }
   ],
-  "conditions": [
-    {
-      "if": "RDE > 0.3 AND TGA < $500B",
-      "then": "Fed likely to pause QT"
-    }
-  ],
+  "unmapped_variables": ["unknown_metric"],
+  "missing_variables": ["fci", "yield_curve"],
   "dependencies": [
-    {"from": "RDE", "to": "TGA", "relationship": "correlated"}
+    {"from": "tga", "to": "liquidity", "relationship": "causes"}
   ]
 }
 ```
 
-## Flexible Design Decisions (TBD)
-The following are intentionally left flexible for future decisions:
-- **Variable normalization strategy** - How to map various names to canonical forms
-- **Source mapping details** - Specific API endpoints and data sources
-- **Threshold parsing** - How to handle various threshold expressions
-- **State schema details** - Add as we go along
-- **Specific workflows** - Will be defined as needed
+**Key output fields per variable:**
+- `api_url` - Ready-to-use API endpoint (replace YOUR_API_KEY)
+- `description` - What this metric measures
+- `notes` - Usage notes, data availability, units
+- `frequency` - daily/weekly/monthly/annual
+- `example_indicators` - For collection-type sources (e.g., WDI)
+- `validated` - Whether API ping confirmed the data ID exists
+
+## Design Decisions (Implemented)
+
+- **Variable normalization**: Uses `liquidity_metrics_mapping.csv` from database_manager. Exact match first, then LLM fuzzy match via Claude Haiku.
+- **Source mapping**: Claude Agent SDK discovers data sources dynamically. Searches known APIs (FRED, World Bank, BLS, OECD, IMF) first, then web.
+- **Data ID storage**: JSON file (`mappings/discovered_data_ids.json`) stores discovered mappings persistently.
+- **Validation**: API ping test before accepting mappings (FRED, World Bank, BLS supported).
 
 ## Development Guidelines
 
@@ -192,6 +226,28 @@ load_dotenv('../.env')  # or appropriate path to root .env
 - Coordinates the workflow
 - (Details to be defined during development)
 
+## Bug Tracking for Liquidity Metrics CSV
+
+When processing variables, if ANY strange or incorrect entries are detected in `liquidity_metrics_mapping.csv`:
+1. **DO NOT** attempt to fix the CSV directly (it's in `subproject_database_manager`)
+2. **Log the issue** in `LIQUIDITY_METRICS_BUGS.md` in this subproject
+3. Use this format:
+   ```
+   ## [DATE] Issue Description
+   - **Row**: normalized name or variant
+   - **Problem**: What's wrong
+   - **Suggested Fix**: How to fix it
+   - **Detected During**: Which step/operation found this
+   ```
+4. Continue processing - don't block on CSV issues
+
+Examples of "strange" entries to log:
+- Duplicate normalized names
+- Missing or malformed variants
+- Wrong category assignments (direct vs indirect)
+- Variables that should exist but are missing
+- Typos in normalized names or descriptions
+
 ## Notes for AI Assistants
 - **Always read existing code** before suggesting modifications
 - **Follow the established patterns** strictly:
@@ -211,16 +267,56 @@ load_dotenv('../.env')  # or appropriate path to root .env
 - **Keep it minimal and focused** - Only implement exactly what is asked, nothing more
 - **Write all one-time test files to `tests/` folder** - Keep root directory clean
 
-## TODO
-- [ ] Set up initial project structure
-- [ ] Create `states.py` with basic state definitions
-- [ ] Implement `variable_mapper_orchestrator.py` skeleton
-- [ ] Create variable extraction module
-- [ ] Create threshold extraction module
-- [ ] Create source mapping module
-- [ ] Create query builder module
-- [ ] Test basic extraction workflow
-- (More items will be added as development progresses)
+## Current Implementation Status
+
+### Completed
+- [x] `states.py` - LangGraph state definitions
+- [x] `config.py` - Configuration with known APIs
+- [x] `variable_mapper_orchestrator.py` - LangGraph workflow
+- [x] Step 1: `variable_extraction.py` - Extract variables from text
+- [x] Step 2: `normalization.py` - Normalize using liquidity_metrics_mapping.csv
+- [x] Step 3: `missing_variable_detection.py` - Parse chains for missing variables
+- [x] Step 4: `data_id_mapping.py` - Map using discovered_data_ids.json
+- [x] `data_id_discovery.py` - Claude Agent SDK discovery (stand-alone)
+- [x] `data_id_validation.py` - API ping validation
+
+### TODO
+- [ ] End-to-end test with real synthesis input
+- [ ] Query builder module (optional, for structured output formatting)
+
+## Data ID Discovery
+
+Data ID discovery uses Claude Agent SDK to find data sources. It runs **automatically** in the pipeline when unmapped variables are detected (`AUTO_DISCOVER = True` in config.py).
+
+### Auto-Discovery (Default Behavior)
+When the pipeline encounters unmapped variables in Step 4:
+1. Automatically triggers discovery for each unmapped variable
+2. Saves results to `mappings/discovered_data_ids.json`
+3. Re-maps the variables with the newly discovered data IDs
+4. Logs full debug output to `logs/discovery_YYYYMMDD_HHMMSS.log`
+
+### Manual Discovery (Stand-alone)
+```bash
+# Discover data IDs for specific variables
+python data_id_discovery.py -v tga,vix,cpi
+
+# The agent will:
+# 1. Search known APIs (FRED, World Bank, BLS, OECD, IMF)
+# 2. If not found, search the web for alternatives
+# 3. Validate by pinging the APIs
+# 4. Save to mappings/discovered_data_ids.json
+```
+
+### Discovery Outcomes
+- `api` - Found in known API (e.g., FRED:WTREGEN)
+- `needs_registration` - Found API but requires API key registration
+- `scrape` - No API, but web scrapable (includes Python code)
+- `not_found` - No public data source found
+
+### Performance
+- ~30-45 seconds per variable
+- ~$0.10-0.15 per variable (Claude API cost)
+- Cached in JSON - only runs once per variable
 
 ## Related Files
 

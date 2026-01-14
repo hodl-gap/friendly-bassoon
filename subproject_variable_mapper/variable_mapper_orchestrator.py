@@ -8,16 +8,16 @@ This file contains ONLY:
 4. NO business logic or implementation details
 """
 
+import json
 from langgraph.graph import StateGraph, END
 from states import VariableMapperState
-from config import EXTRACTION_MODEL, SAMPLE_INPUT_FILE
+from config import SAMPLE_INPUT_FILE
 
-# Import function modules (uncomment as implemented)
+# Import function modules
 from variable_extraction import extract_variables
-# from normalization import normalize_variables
-# from missing_variable_detector import detect_missing_variables
-# from data_id_mapping import map_to_data_ids
-# from query_builder import build_query_output
+from normalization import normalize_variables
+from missing_variable_detection import detect_missing_variables
+from data_id_mapping import map_to_data_ids
 
 
 def build_graph() -> StateGraph:
@@ -26,22 +26,16 @@ def build_graph() -> StateGraph:
 
     # Add nodes (function modules)
     graph.add_node("extract_variables", extract_variables)
-    # graph.add_node("normalize_variables", normalize_variables)
-    # graph.add_node("detect_missing", detect_missing_variables)
-    # graph.add_node("map_data_ids", map_to_data_ids)
-    # graph.add_node("build_output", build_query_output)
+    graph.add_node("normalize_variables", normalize_variables)
+    graph.add_node("detect_missing", detect_missing_variables)
+    graph.add_node("map_data_ids", map_to_data_ids)
 
-    # Define edges - Step 1 only for now
+    # Wire edges - full 4-step workflow
     graph.set_entry_point("extract_variables")
-    graph.add_edge("extract_variables", END)
-
-    # Full workflow (uncomment as modules are implemented):
-    # graph.set_entry_point("extract_variables")
-    # graph.add_edge("extract_variables", "normalize_variables")
-    # graph.add_edge("normalize_variables", "detect_missing")
-    # graph.add_edge("detect_missing", "map_data_ids")
-    # graph.add_edge("map_data_ids", "build_output")
-    # graph.add_edge("build_output", END)
+    graph.add_edge("extract_variables", "normalize_variables")
+    graph.add_edge("normalize_variables", "detect_missing")
+    graph.add_edge("detect_missing", "map_data_ids")
+    graph.add_edge("map_data_ids", END)
 
     return graph.compile()
 
@@ -81,9 +75,16 @@ if __name__ == "__main__":
     result = run_variable_mapper(sample_text)
 
     print("-" * 50)
-    print("[orchestrator] Final Result:")
+    print("[orchestrator] Final Result Summary:")
     print(f"  Extracted variables: {len(result.get('extracted_variables', []))}")
+    print(f"  Normalized variables: {len(result.get('normalized_variables', []))}")
+    print(f"  Missing variables: {len(result.get('missing_variables', []))}")
+    print(f"  Unmapped variables: {len(result.get('unmapped_variables', []))}")
+    print(f"  Chain dependencies: {len(result.get('chain_dependencies', []))}")
 
-    # Print extracted variables
-    for var in result.get('extracted_variables', []):
-        print(f"    - {var}")
+    # Print final output
+    print("\n" + "=" * 50)
+    print("FINAL OUTPUT JSON:")
+    print("=" * 50)
+    final_output = result.get('final_output', {})
+    print(json.dumps(final_output, indent=2, default=str))

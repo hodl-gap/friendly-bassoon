@@ -191,6 +191,41 @@ CANONICAL_MAPPINGS = {
         'policy_rate_cuts',
         'global rate cuts',
         'Policy rate cuts YTD',
+        'policy_rate_cut_expectations',  # NEW: merge duplicate
+    ],
+
+    # NEW: Additional duplicate merges identified in validation
+    'carry_trade_unwind': [
+        'carry trade unwind',
+        'carry unwind (JPY)',
+        'carry trade positions',
+        'yen carry-trade unwind',
+        'carry_trade_unwinding_risk',  # NEW: merge duplicate
+    ],
+
+    'eurozone_banks_upside': [
+        'eurozone_banks_upside_potential',  # NEW: merge duplicate
+    ],
+
+    'ndx_spx_vol_spread': [
+        'ndx_spx_vol_spread_3m25d',  # NEW: merge duplicate
+    ],
+
+    'corporate_bond_price_yield': [
+        'corporate_bond_priceyield_core_weave',  # NEW: merge duplicate
+    ],
+
+    'ny_fed_balance_sheet': [
+        'ny_fed_balance_sheet_rebalancing',  # NEW: merge duplicate
+    ],
+
+    'spx_option_notional': [
+        'spx_option_notional_daily',  # NEW: merge duplicate
+    ],
+
+    'pension_fund_flows': [
+        'pension_fund_net_buy_kospi',  # NEW: merge regional into general
+        'pension_fund_net_buy_kosdaq',  # NEW: merge regional into general
     ],
 }
 
@@ -288,6 +323,15 @@ NON_LIQUIDITY_PATTERNS = [
     r'^KOSPI operating',      # OP forecasts
     r'^4Q25F OP',             # OP estimates
     r'^2026 OP',              # OP estimates
+    # NEW: Additional patterns from validation
+    r'_op_krw$',              # Operating profit KRW
+    r'_op_yo_y$',             # Operating profit YoY
+    r'_opm$',                 # Operating profit margin
+    r'_arr$',                 # Annual recurring revenue
+    r'^ai_arr',               # AI ARR
+    r'^adjusted_opm',         # Adjusted operating margin
+    r'^2026_op_',             # 2026 OP estimates
+    r'^4q25f_op',             # 4Q25F OP estimates
 ]
 
 def is_non_liquidity(normalized_name: str) -> bool:
@@ -296,6 +340,90 @@ def is_non_liquidity(normalized_name: str) -> bool:
         if re.search(pattern, normalized_name, re.IGNORECASE):
             return True
     return False
+
+# =============================================================================
+# CATEGORY FIXES (fix category column contamination)
+# =============================================================================
+
+CATEGORY_FIXES = {
+    'positioning_leverage': 'indirect',
+    'rate_expectations': 'indirect',
+    'equity_flows': 'indirect',
+    'fx_liquidity': 'indirect',
+}
+
+# =============================================================================
+# DIRECT LIQUIDITY KEYWORDS
+# =============================================================================
+
+DIRECT_KEYWORDS = ['tga', 'rrp', 'fed_balance', 'qt_', 'qe_', 'repo', 'sofr',
+                   'btfp', 'srf', 'qt_end', 'qt_pause', 'mbs_reinvestment',
+                   'reserve_management', 'iorb']
+
+def fix_category_contamination(rows: list) -> int:
+    """Fix category values that contain cluster names instead of direct/indirect."""
+    fixes = 0
+    for row in rows:
+        cat = row.get('category', '')
+        if cat in CATEGORY_FIXES:
+            row['category'] = CATEGORY_FIXES[cat]
+            fixes += 1
+    return fixes
+
+def fix_direct_indirect(rows: list) -> int:
+    """Fix metrics that should be direct but are marked indirect."""
+    fixes = 0
+    for row in rows:
+        name = row['normalized'].lower()
+        desc = row.get('description', '').lower()
+        cat = row.get('category', '')
+
+        # Skip if already direct or is non-liquidity
+        if cat == 'direct' or row.get('is_liquidity') == 'false':
+            continue
+
+        # Check if contains direct liquidity keywords
+        for kw in DIRECT_KEYWORDS:
+            if kw in name or kw in desc:
+                # Exclude false positives
+                if 'reserve' in name and 'gold' in desc:
+                    continue  # reserve_shift_to_gold is not direct
+                if 'loan_loss' in name:
+                    continue  # loan provisions
+                if 'equities' in name and 'reserve' not in name:
+                    continue  # equities_overweight false positive
+                row['category'] = 'direct'
+                fixes += 1
+                break
+    return fixes
+
+def assign_missing_clusters(rows: list) -> int:
+    """Assign clusters to metrics that have is_liquidity=true but no cluster."""
+    import sys
+    sys.path.append(os.path.dirname(SCRIPT_DIR))
+    from metrics_mapping_utils import assign_clusters_batch
+
+    unassigned = [r for r in rows
+                  if r.get('is_liquidity') == 'true'
+                  and not r.get('cluster', '').strip()]
+
+    if not unassigned:
+        print("  No unassigned metrics found")
+        return 0
+
+    print(f"  Found {len(unassigned)} metrics without clusters...")
+
+    # Batch assign clusters via LLM
+    assignments = assign_clusters_batch(unassigned, batch_size=50)
+
+    # Apply assignments
+    assigned_count = 0
+    for row in rows:
+        if row['normalized'] in assignments:
+            row['cluster'] = assignments[row['normalized']]
+            assigned_count += 1
+
+    return assigned_count
 
 # =============================================================================
 # NAME STANDARDIZATION
@@ -479,6 +607,12 @@ def cleanup_metrics(rows: list) -> tuple:
     # Sort by normalized name
     cleaned_rows.sort(key=lambda x: x['normalized'])
 
+    # Apply category fixes (fix contamination with cluster names)
+    category_fixes = fix_category_contamination(cleaned_rows)
+
+    # Fix direct/indirect classification
+    direct_indirect_fixes = fix_direct_indirect(cleaned_rows)
+
     # Build migration report
     report = {
         'original_count': len(rows),
@@ -489,6 +623,8 @@ def cleanup_metrics(rows: list) -> tuple:
         'unmapped_count': len(set(unmapped_metrics)),
         'non_liquidity_metrics': non_liquidity_metrics,
         'canonical_mappings_applied': list(CANONICAL_MAPPINGS.keys()),
+        'category_fixes': category_fixes,
+        'direct_indirect_fixes': direct_indirect_fixes,
     }
 
     return cleaned_rows, report
@@ -515,6 +651,10 @@ def print_report(report: dict):
     print(f"Liquidity metrics:     {report['liquidity_count']}")
     print(f"Non-liquidity (flagged): {report['non_liquidity_count']}")
     print(f"Unmapped (kept as-is): {report['unmapped_count']}")
+    print(f"Category fixes:        {report.get('category_fixes', 0)}")
+    print(f"Direct/indirect fixes: {report.get('direct_indirect_fixes', 0)}")
+    if 'clusters_assigned' in report:
+        print(f"Clusters assigned:     {report['clusters_assigned']}")
     print("=" * 60)
 
     if report['non_liquidity_metrics']:
@@ -542,12 +682,18 @@ def main(dry_run: bool = False):
     print("\nRunning cleanup...")
     cleaned_rows, report = cleanup_metrics(rows)
 
-    print_report(report)
-
     if dry_run:
+        print_report(report)
         print("\n[DRY RUN] No changes written to disk.")
         print("Run with --execute to apply changes.")
     else:
+        # Assign clusters to unassigned metrics (requires LLM calls)
+        print("\nAssigning clusters to unassigned metrics...")
+        clusters_assigned = assign_missing_clusters(cleaned_rows)
+        report['clusters_assigned'] = clusters_assigned
+
+        print_report(report)
+
         print("\nWriting cleaned CSV...")
         write_csv(cleaned_rows)
         print("\nCleanup complete!")

@@ -1,10 +1,11 @@
 # Project Status - Variable Extractor & Mapper
 
-**Last Updated**: 2025-12-11
+**Last Updated**: 2026-01-14
 
-## Current State: Initial Setup - Step 1 Implementation
+## Current State: 4-Step Pipeline Complete + Auto-Discovery
 
-New subproject for translating text-based logic chains into data queries with variable extraction, Data ID mapping, and missing variable identification.
+All 4 steps implemented. Data ID discovery uses Claude Agent SDK for dynamic source finding.
+**Auto-discovery enabled by default** - pipeline automatically discovers data sources for unmapped variables.
 
 ---
 
@@ -18,7 +19,7 @@ When the Retriever pulls a chain like `TGA up → Liquidity down`, this module s
 
 ## 4-Step Process
 
-### Step 1: Variable Extraction (CURRENT FOCUS)
+### Step 1: Variable Extraction (DONE)
 
 **Goal:** Extract WHAT variables are mentioned in the synthesis text.
 
@@ -39,7 +40,7 @@ When the Retriever pulls a chain like `TGA up → Liquidity down`, this module s
 
 ---
 
-### Step 2: Normalize Variables
+### Step 2: Normalize Variables (DONE)
 
 **Goal:** Match extracted variables against `liquidity_metrics_mapping.csv` to get canonical names.
 
@@ -53,7 +54,7 @@ When the Retriever pulls a chain like `TGA up → Liquidity down`, this module s
 
 ---
 
-### Step 3: Identify Missing Variables
+### Step 3: Identify Missing Variables (DONE)
 
 **Goal:** Analyze the logic chain to find variables required for prediction but not provided by user.
 
@@ -64,24 +65,38 @@ When the Retriever pulls a chain like `TGA up → Liquidity down`, this module s
 
 ---
 
-### Step 4: Map to Data IDs (LATER)
+### Step 4: Map to Data IDs (DONE + AUTO-DISCOVERY)
 
 **Goal:** Only after we know WHAT is needed, figure out WHERE to get it.
 
 **Input:** Normalized variable name `TGA`
 
-**Output:** Data ID `FRED:WTREGEN`
+**Output:** Full mapping with API URL and details:
+```json
+{
+  "data_id": "FRED:WTREGEN",
+  "api_url": "https://api.stlouisfed.org/fred/series/observations?series_id=WTREGEN&api_key=YOUR_API_KEY",
+  "description": "Treasury General Account...",
+  "frequency": "weekly",
+  "notes": "..."
+}
+```
 
-**Note:** This step requires a separate `variable_data_id_mapping.csv` (to be created later).
+**Implementation:**
+- First checks `mappings/discovered_data_ids.json` for cached mappings
+- If unmapped variables exist, **auto-triggers discovery** (Claude Agent SDK)
+- Validates by pinging APIs (FRED, World Bank, BLS)
+- Saves new mappings to JSON for future reuse
+- Full debug logs saved to `logs/discovery_YYYYMMDD_HHMMSS.log`
 
 ---
 
 ## Core Tasks Summary
 
-1. **Identify key variables** in the chain (e.g., "TGA", "FCI", "Short rates")
-2. **Normalize variables** using `liquidity_metrics_mapping.csv`
-3. **Identify missing variables** - If user provided "TGA" but the chain requires "FCI" to make a prediction, mark "FCI" as a required data fetch
-4. **Map variables to Data IDs** (e.g., TGA = `FRED:WTREGEN`) - LATER PHASE
+1. **Identify key variables** in the chain (e.g., "TGA", "FCI", "Short rates") - DONE
+2. **Normalize variables** using `liquidity_metrics_mapping.csv` - DONE
+3. **Identify missing variables** - If user provided "TGA" but the chain requires "FCI" to make a prediction, mark "FCI" as a required data fetch - DONE
+4. **Map variables to Data IDs** (e.g., TGA = `FRED:WTREGEN`) via Claude Agent SDK discovery - DONE
 
 ---
 
@@ -130,104 +145,65 @@ The input contains two main sections:
 - CPI target: 2%
 ```
 
-### Output (Structured JSON)
+### Output (Structured JSON with Full API Details)
 
-Example output based on the sample input:
+The output includes **complete data source details** for downstream data fetching:
 
 ```json
 {
-  "query_group": "Fed_Rate_Cuts_Equity_Impact",
   "variables": [
     {
-      "name": "TGA",
-      "normalized_name": "Treasury General Account",
+      "raw_name": "TGA",
+      "normalized_name": "tga",
+      "category": "direct",
+      "type": "needs_registration",
       "data_id": "FRED:WTREGEN",
-      "threshold": null,
-      "status": "identified"
+      "source": "FRED",
+      "description": "Treasury General Account - U.S. Treasury deposits held at Federal Reserve Banks...",
+      "api_url": "https://api.stlouisfed.org/fred/series/observations?series_id=WTREGEN&api_key=YOUR_API_KEY&file_type=json",
+      "frequency": "weekly",
+      "notes": "Free API but requires registration for API key...",
+      "registration_url": "https://fred.stlouisfed.org/docs/api/api_key.html",
+      "validated": true
     },
     {
-      "name": "FCI",
-      "normalized_name": "Financial Conditions Index",
-      "data_id": "BLOOMBERG:GSFCI",
-      "threshold": null,
-      "status": "identified"
+      "raw_name": "VIX",
+      "normalized_name": "vix",
+      "type": "api",
+      "data_id": "FRED:VIXCLS",
+      "source": "FRED",
+      "description": "CBOE Volatility Index (VIX) - measures market expectation of near-term volatility...",
+      "api_url": "https://api.stlouisfed.org/fred/series/observations?series_id=VIXCLS&api_key=YOUR_API_KEY&file_type=json",
+      "frequency": "daily",
+      "validated": true
     },
     {
-      "name": "Short rates",
-      "normalized_name": "2-Year Treasury Yield",
-      "data_id": "FRED:DGS2",
-      "threshold": null,
-      "status": "identified"
-    },
-    {
-      "name": "10-year Treasury yield",
-      "normalized_name": "10-Year Treasury Yield",
-      "data_id": "FRED:DGS10",
-      "threshold": null,
-      "status": "identified"
-    },
-    {
-      "name": "System reserves",
-      "normalized_name": "Total Reserves",
-      "data_id": "FRED:TOTRESNS",
-      "threshold": null,
-      "status": "identified"
-    },
-    {
-      "name": "DXY",
-      "normalized_name": "US Dollar Index",
-      "data_id": "ICE:DXY",
-      "threshold": -10,
-      "threshold_unit": "percent_ytd",
-      "status": "identified"
-    },
-    {
-      "name": "CPI",
-      "normalized_name": "Consumer Price Index",
-      "data_id": "FRED:CPIAUCSL",
-      "threshold": 2,
-      "threshold_unit": "percent",
-      "status": "identified"
-    },
-    {
-      "name": "VIX",
-      "normalized_name": "Volatility Index",
-      "data_id": "CBOE:VIX",
-      "threshold": null,
-      "status": "identified"
-    },
-    {
-      "name": "Jobs sentiment plentiful",
-      "normalized_name": "Conference Board Jobs Plentiful",
-      "data_id": null,
-      "threshold": 28,
-      "threshold_note": "down from 57% peak",
-      "status": "unmapped"
+      "raw_name": "WDI",
+      "normalized_name": "wdi",
+      "type": "api",
+      "data_id": "WorldBank:WDI",
+      "source": "WorldBank",
+      "api_url": "https://api.worldbank.org/v2/country/all/indicator/{INDICATOR_CODE}?format=json",
+      "example_indicators": {
+        "gdp": "NY.GDP.MKTP.CD",
+        "population": "SP.POP.TOTL"
+      }
     }
   ],
-  "logic_chains_parsed": [
-    {
-      "chain": "Fed rate cuts → short rates down → curve steepening → flows to duration/credit/alternatives",
-      "variables_in_chain": ["Fed funds rate", "Short rates", "Yield curve"]
-    },
-    {
-      "chain": "QT reduction + TGA drawdown + Fed cuts → December liquidity surge → year-end risk-on rally",
-      "variables_in_chain": ["QT", "TGA", "Fed funds rate", "System reserves"]
-    }
-  ],
-  "unmapped_variables": ["Jobs sentiment plentiful", "QT reduction magnitude"],
-  "data_queries": [
-    {"data_id": "FRED:WTREGEN", "variable": "TGA"},
-    {"data_id": "BLOOMBERG:GSFCI", "variable": "FCI"},
-    {"data_id": "FRED:DGS2", "variable": "Short rates"},
-    {"data_id": "FRED:DGS10", "variable": "10-year Treasury yield"},
-    {"data_id": "FRED:TOTRESNS", "variable": "System reserves"},
-    {"data_id": "ICE:DXY", "variable": "DXY"},
-    {"data_id": "FRED:CPIAUCSL", "variable": "CPI"},
-    {"data_id": "CBOE:VIX", "variable": "VIX"}
+  "unmapped_variables": ["unknown_metric"],
+  "missing_variables": ["fci", "yield_curve"],
+  "dependencies": [
+    {"from": "tga", "to": "liquidity", "relationship": "causes"}
   ]
 }
 ```
+
+**Key fields for data fetching:**
+- `api_url` - Ready-to-use endpoint (replace YOUR_API_KEY with actual key)
+- `description` - What this metric measures
+- `notes` - Usage notes, units, data availability
+- `frequency` - daily/weekly/monthly/annual
+- `example_indicators` - For collection-type sources (e.g., World Bank WDI)
 
 ---
 
@@ -256,15 +232,28 @@ Example output based on the sample input:
 
 ```
 subproject_variable_mapper/
-├── variable_mapper_orchestrator.py  # MAIN - orchestration only
-├── variable_extraction.py           # Extract variables from text
-├── data_id_mapping.py               # Map variables to Data IDs
-├── missing_variable_detector.py     # Identify required missing variables
-├── query_builder.py                 # Build final structured queries
-├── variable_extraction_prompts.py   # Prompts for extraction
+├── variable_mapper_orchestrator.py  # MAIN - LangGraph orchestration
 ├── states.py                        # LangGraph state definitions
+├── config.py                        # Configuration (AUTO_DISCOVER=True)
+│
+│  # 4-Step Pipeline
+├── variable_extraction.py           # Step 1: Extract variables from text
+├── variable_extraction_prompts.py
+├── normalization.py                 # Step 2: Normalize to canonical names
+├── normalization_prompts.py
+├── missing_variable_detection.py    # Step 3: Find missing chain variables
+├── missing_variable_detection_prompts.py
+├── data_id_mapping.py               # Step 4: Map to Data IDs (auto-discovers)
+│
+│  # Data ID Discovery
+├── data_id_discovery.py             # Claude Agent SDK discovery
+├── data_id_discovery_prompts.py
+├── data_id_validation.py            # API ping validation
+│
 ├── mappings/
-│   └── variable_data_id_mapping.csv # Variable → Data ID lookup table
+│   └── discovered_data_ids.json     # Cached data ID mappings
+├── logs/                            # Debug logs (timestamped)
+│   └── discovery_YYYYMMDD_HHMMSS.log
 └── tests/                           # Test files
 ```
 
@@ -277,30 +266,36 @@ Input (Retriever Synthesis)
     │
     ▼
 ┌─────────────────────────┐
-│  Variable Extraction    │  ← Extract all variable mentions from text
+│  Step 1: Extraction     │  ← Extract variable mentions from text
 │  (variable_extraction)  │     "TGA", "FCI", "short rates", etc.
 └──────────┬──────────────┘
            │
            ▼
 ┌─────────────────────────┐
-│  Data ID Mapping        │  ← Look up Data IDs for each variable
-│  (data_id_mapping)      │     TGA → FRED:WTREGEN
+│  Step 2: Normalization  │  ← Match to canonical names
+│  (normalization)        │     "Treasury General Account" → "tga"
 └──────────┬──────────────┘
            │
            ▼
 ┌─────────────────────────┐
-│  Missing Variable       │  ← Analyze chain completeness
-│  Detection              │     Chain needs FCI but user didn't provide it
+│  Step 3: Missing Vars   │  ← Find chain variables not provided
+│  (missing_variable_det) │     Chain needs FCI but user didn't provide
 └──────────┬──────────────┘
            │
            ▼
 ┌─────────────────────────┐
-│  Query Builder          │  ← Build structured JSON output
-│  (query_builder)        │     List all data queries needed
+│  Step 4: Data ID Map    │  ← Look up or discover data sources
+│  (data_id_mapping)      │     TGA → FRED:WTREGEN + full API details
 └──────────┬──────────────┘
            │
+           ├── If unmapped variables exist:
+           │   ┌─────────────────────────┐
+           │   │  AUTO-DISCOVERY         │  ← Claude Agent SDK
+           │   │  (data_id_discovery)    │     Web search → API validation
+           │   └─────────────────────────┘
+           │
            ▼
-Output (Structured JSON with Data Queries)
+Output (Structured JSON with Full API Details)
 ```
 
 ---
@@ -319,35 +314,57 @@ Output (Structured JSON with Data Queries)
 
 ---
 
-### Phase 1: Foundation & Step 1 (CURRENT)
+### Phase 1: Foundation & Step 1 (DONE)
 
 - [x] Create CLAUDE.md
 - [x] Create STATUS.md
-- [ ] Create `states.py` with basic state definitions
-- [ ] Create `config.py` with environment setup
-- [ ] Implement `variable_mapper_orchestrator.py` skeleton
-- [ ] Implement `variable_extraction.py` - Extract variables from text
-- [ ] Create `variable_extraction_prompts.py`
+- [x] Create `states.py` with basic state definitions
+- [x] Create `config.py` with environment setup
+- [x] Implement `variable_mapper_orchestrator.py` skeleton
+- [x] Implement `variable_extraction.py` - Extract variables from text
+- [x] Create `variable_extraction_prompts.py`
 - [ ] Test extraction on sample retriever output (`query_result.md`)
 
-### Phase 2: Normalization (Step 2)
+### Phase 2: Normalization (Step 2) (DONE)
 
-- [ ] Implement variable normalization using `liquidity_metrics_mapping.csv`
-- [ ] Handle variants (Korean + English aliases)
-- [ ] Flag new/unknown variables
+- [x] Implement variable normalization using `liquidity_metrics_mapping.csv`
+- [x] Handle variants (Korean + English aliases)
+- [x] Flag new/unknown variables
 
-### Phase 3: Missing Variable Detection (Step 3)
+### Phase 3: Missing Variable Detection (Step 3) (DONE)
 
-- [ ] Implement `missing_variable_detector.py`
-- [ ] Analyze logic chain dependencies
-- [ ] Identify variables required but not provided by user
+- [x] Implement `missing_variable_detection.py`
+- [x] Analyze logic chain dependencies
+- [x] Identify variables required but not provided by user
 
-### Phase 4: Data ID Mapping (Step 4 - LATER)
+### Phase 4: Data ID Mapping (Step 4) - IMPLEMENTED + AUTO-DISCOVERY
 
-- [ ] Create `mappings/variable_data_id_mapping.csv` with initial mappings
-- [ ] Implement `data_id_mapping.py` - Variable → Data ID lookup
-- [ ] Build initial mapping table (FRED, Bloomberg, etc.)
-- [ ] Handle unknown variables (flag for manual mapping)
+**Implementation:** Claude Agent SDK-based discovery with auto-trigger.
+
+- [x] `data_id_discovery.py` - Discovery function using Claude Agent SDK
+- [x] `data_id_discovery_prompts.py` - Agent prompts for data source discovery
+- [x] `data_id_validation.py` - API ping validation (FRED, World Bank, BLS)
+- [x] `data_id_mapping.py` - Maps variables, auto-triggers discovery for unmapped
+- [x] `mappings/discovered_data_ids.json` - Stores discovery results (cached)
+- [x] `logs/` - Full debug logs with timestamps
+- [x] Full mapping details in output (api_url, description, notes, etc.)
+
+**Auto-Discovery (Default):**
+When pipeline runs with unmapped variables, discovery triggers automatically.
+Set `AUTO_DISCOVER = False` in config.py to disable.
+
+**Manual Discovery:**
+```bash
+python data_id_discovery.py -v tga,vix,cpi
+```
+
+**Discovery Outcomes:**
+- `api` - Found in known API (e.g., FRED:WTREGEN)
+- `needs_registration` - Found API but requires registration
+- `scrape` - No API, but web scrapable
+- `not_found` - No public data source found
+
+**Performance:** ~30-45s per variable, ~$0.10-0.15 cost, cached after first discovery
 
 ### Phase 5: Query Builder & Integration
 
@@ -409,7 +426,8 @@ Output (Structured JSON with Data Queries)
 - All AI calls via parent's `models.py`
 - All prompts in `*_prompts.py` files
 - States in `states.py` for LangGraph
-- Debug prints: FULL for LLM responses, truncated for others
+- Debug prints: FULL for LLM responses (no truncation), truncated for others
+- File logging: All discovery logs saved to `logs/discovery_YYYYMMDD_HHMMSS.log`
 - Test files in `tests/` folder
 
 ---

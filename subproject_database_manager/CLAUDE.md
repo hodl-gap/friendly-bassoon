@@ -8,9 +8,9 @@ The entire project aims to produce an agentic research workflow. This subproject
 
 ## Technology Stack
 - **Vector Database**: Pinecone
-- **Embeddings**: OpenAI embeddings
-- **Framework**: LangGraph (workflow skeleton)
-- **AI Model Calls**: Via `models.py` in parent directory
+- **Embeddings**: OpenAI embeddings (text-embedding-3-large, 3072 dimensions)
+- **Framework**: Procedural Python (simple function calls, no complex framework)
+- **AI Model Calls**: Via `models.py` in parent directory (GPT-5 Mini, Claude Sonnet 4.5)
 - **Environment**: `.env` file in project root folder (use `python-dotenv` to load)
 
 ## Architecture Principles
@@ -42,7 +42,10 @@ subproject_database_manager/
 ├── metrics_mapping_utils.py          # Metrics dictionary management + clustering
 │
 ├── data/                             # Data folders (raw, processed, qa_logs)
-└── tests/                            # Test files + obsolete modules
+└── tests/
+    ├── enrich_data_opinions.py       # Post-mortem enrichment with data_update context
+    ├── cleanup_metrics.py            # Post-mortem metrics deduplication
+    └── ...                           # Test files + obsolete modules
 ```
 
 ### Main Orchestrator Structure (`telegram_workflow_orchestrator.py`)
@@ -183,8 +186,8 @@ CSV file tracking all liquidity metrics discovered during extraction.
 | `raw_data_source` | Raw data feed needed to reproduce |
 | `is_liquidity` | `true` or `false` - flags non-liquidity entries |
 
-### Cluster Examples
-`fed_balance_sheet`, `etf_flows`, `cta_positioning`, `fx_liquidity`, `equity_flows`, `rate_expectations`
+### Cluster Examples (15 clusters)
+`equity_flows`, `macro_indicators`, `corporate_fundamentals`, `fx_liquidity`, `rate_expectations`, `credit_spreads`, `positioning_leverage`, `volatility_metrics`, `market_microstructure`, `option_flows`, `sovereign_flows`, `etf_flows`, `money_markets`, `fed_balance_sheet`, `cta_positioning`
 
 ### Key Functions (metrics_mapping_utils.py)
 
@@ -207,16 +210,24 @@ CSV file tracking all liquidity metrics discovered during extraction.
 - One-to-one: each metric belongs to exactly one cluster
 
 ### Post-Mortem Cleanup (tests/cleanup_metrics.py)
-Automated deduplication script that:
-- Merges duplicates into canonical names (e.g., all CTA triggers → `cta_trigger_levels`)
-- Flags non-liquidity entries with `is_liquidity=false`
+Automated cleanup script that:
+- Merges duplicates into canonical names (26 canonical mappings)
+- Flags non-liquidity entries with `is_liquidity=false` (50+ regex patterns)
 - Standardizes all names to snake_case
-- Runs automatically at end of orchestrator workflow
+- Fixes category column contamination (cluster names → direct/indirect)
+- Fixes direct/indirect classification based on keywords
+- Auto-assigns clusters to unassigned metrics via LLM
+- Creates automatic backups before modification
 
 **Manual usage:**
 ```bash
-python3 tests/cleanup_metrics.py           # Dry run
-python3 tests/cleanup_metrics.py --execute # Apply changes
+python3 tests/cleanup_metrics.py           # Dry run (preview changes)
+python3 tests/cleanup_metrics.py --execute # Apply changes + assign clusters
+```
+
+**Validation tests:**
+```bash
+python3 tests/test_metrics_cleanup.py      # Verify cleanup results
 ```
 
 ## Flexible Design Decisions (TBD)
@@ -233,9 +244,9 @@ The following are intentionally left flexible for future decisions:
 1. Create a new function module file (e.g., `new_feature.py`)
 2. Create corresponding prompts file (e.g., `new_feature_prompts.py`)
 3. Define inputs and outputs clearly
-4. Update States if needed (in `states.py`)
-5. Add routing logic in `database_management.py`
-6. Use AI calls via parent's `models.py`
+4. Add routing logic in the appropriate orchestrator file
+5. Use AI calls via parent's `models.py`
+6. Write test files to `tests/` folder
 
 ### Code Style
 - Keep function modules simple and focused
@@ -266,6 +277,9 @@ Step 2: message_pipeline.py        → For each channel:
         ├── process_messages_v3.py     → Categorize, extract, update metrics
         └── qa_validation.py           → QA sampling validation
 Step 3: tests/cleanup_metrics.py   → Post-mortem deduplication
+
+Optional: tests/enrich_data_opinions.py → Enrich data_opinion with data_update context
+          (fills in exact numbers for ambiguous extractions using 7-day context)
 ```
 
 ### Vector DB Workflow (`vector_db_orchestrator.py`)
@@ -301,6 +315,8 @@ Step 3: Display index stats
 - [x] QA validation (sampling + full)
 - [x] Post-mortem metrics cleanup
 - [x] Vector DB embedding + Pinecone upload
+- [x] Trade opinion categorization (data_opinion captures trading actions in casual content)
+- [x] Post-mortem enrichment (fills exact numbers using data_update context)
 
 ## TODO
 - [ ] Incremental updates (don't re-fetch already processed messages)

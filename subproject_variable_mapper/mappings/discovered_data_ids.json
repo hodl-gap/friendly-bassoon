@@ -1,0 +1,72 @@
+{
+  "metadata": {
+    "last_updated": "2026-01-14T05:01:23.914803+00:00",
+    "total_mappings": 4,
+    "known_apis": [
+      "FRED",
+      "World Bank",
+      "BLS",
+      "OECD",
+      "IMF"
+    ]
+  },
+  "mappings": {
+    "tga": {
+      "normalized_name": "tga",
+      "type": "needs_registration",
+      "data_id": "FRED:WTREGEN",
+      "source": "FRED",
+      "description": "Treasury General Account - U.S. Treasury deposits held at Federal Reserve Banks (excluding reserve balances). Represents funds the Treasury maintains in its operational account at the Fed.",
+      "api_url": "https://api.stlouisfed.org/fred/series/observations?series_id=WTREGEN&api_key=YOUR_API_KEY&file_type=json",
+      "frequency": "weekly",
+      "notes": "Free API but requires registration for API key. Data is in millions of dollars, not seasonally adjusted. Week average ending Wednesday. Source: Board of Governors of the Federal Reserve System (H.4.1 Factors Affecting Reserve Balances).",
+      "registration_url": "https://fred.stlouisfed.org/docs/api/api_key.html",
+      "api_docs_url": "https://fred.stlouisfed.org/docs/api/fred/series_observations.html",
+      "discovered_at": "2026-01-14T04:25:25.117759+00:00"
+    },
+    "wdi": {
+      "normalized_name": "wdi",
+      "type": "api",
+      "data_id": "WorldBank:WDI",
+      "source": "WorldBank",
+      "description": "World Development Indicators - comprehensive database of global development indicators covering over 1,600 indicators for 217 economies including GDP, population, poverty, health, education, trade, environment, and infrastructure",
+      "api_url": "https://api.worldbank.org/v2/country/all/indicator/{INDICATOR_CODE}?format=json",
+      "frequency": "annual",
+      "notes": "WDI is a database/collection, not a single indicator. Users must specify individual indicator codes (e.g., NY.GDP.MKTP.CD for GDP, SP.POP.TOTL for population). API is completely free with no authentication required. Access to 16,000+ time series indicators. Data available through FRED as well with 7,379+ WDI-tagged series. Also accessible via R package 'WDI' and Python libraries.",
+      "example_indicators": {
+        "gdp": "NY.GDP.MKTP.CD",
+        "population": "SP.POP.TOTL",
+        "inflation": "FP.CPI.TOTL.ZG",
+        "unemployment": "SL.UEM.TOTL.ZS"
+      },
+      "api_docs_url": "https://datahelpdesk.worldbank.org/knowledgebase/articles/889392-about-the-indicators-api-documentation",
+      "indicator_search_url": "https://data.worldbank.org/indicator",
+      "databank_url": "https://databank.worldbank.org/source/world-development-indicators",
+      "discovered_at": "2026-01-14T04:55:01.853891+00:00",
+      "validated": false
+    },
+    "vix": {
+      "normalized_name": "vix",
+      "type": "api",
+      "data_id": "FRED:VIXCLS",
+      "source": "FRED",
+      "description": "CBOE Volatility Index (VIX) - measures market expectation of near-term volatility conveyed by S&P 500 stock index option prices",
+      "api_url": "https://api.stlouisfed.org/fred/series/observations?series_id=VIXCLS&api_key=YOUR_API_KEY&file_type=json",
+      "frequency": "daily",
+      "notes": "Free API requires registration at https://fred.stlouisfed.org/docs/api/api_key.html for API key. Data available from January 2, 1990 to present. Updated daily. Source: Chicago Board Options Exchange (CBOE). Units: Index (Not Seasonally Adjusted).",
+      "discovered_at": "2026-01-14T05:00:42.256163+00:00",
+      "validated": true
+    },
+    "unknown_xyz": {
+      "normalized_name": "unknown_xyz",
+      "type": "not_found",
+      "data_id": null,
+      "source": null,
+      "description": "This metric identifier does not exist in known public financial data sources",
+      "api_url": null,
+      "frequency": null,
+      "notes": "The term 'unknown_xyz' appears to be a placeholder or test query rather than an actual financial metric. No matching series was found in FRED, World Bank, BLS, OECD, or IMF databases. If you have a specific financial metric in mind, please provide: (1) the actual metric name or description, (2) the type of data (e.g., interest rates, GDP, employment), (3) geographic scope (US, global, specific country), and (4) any known alternative names. This will allow for accurate identification of the correct data source and series ID.",
+      "discovered_at": "2026-01-14T05:01:23.914095+00:00"
+    }
+  }
+}
