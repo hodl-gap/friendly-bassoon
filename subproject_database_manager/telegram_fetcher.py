@@ -160,7 +160,7 @@ async def download_message_images(client, messages, output_dir):
     return image_paths
 
 
-def convert_to_chatexport_format(channel, messages, image_paths):
+def convert_to_chatexport_format(channel, messages, image_paths, channel_identifier=None):
     """
     Convert Telethon messages to ChatExport JSON format
 
@@ -168,6 +168,7 @@ def convert_to_chatexport_format(channel, messages, image_paths):
         channel: Channel entity
         messages: List of message objects
         image_paths: Dict mapping message_id -> image path
+        channel_identifier: Original channel identifier passed by user (for consistent naming)
 
     Returns:
         dict: ChatExport-compatible JSON structure
@@ -176,6 +177,7 @@ def convert_to_chatexport_format(channel, messages, image_paths):
 
     export_data = {
         "name": channel.title,
+        "channel_id": channel_identifier or channel.title,  # Store original identifier for file naming
         "type": "public_channel" if hasattr(channel, 'broadcast') and channel.broadcast else "private_channel",
         "id": channel.id,
         "messages": []
@@ -266,9 +268,10 @@ async def fetch_and_export(channel_names, start_date, end_date, output_base_dir=
         channel = await client.get_entity(channel_name)
 
         # Create channel-specific export folder
-        # Format: ChatExport_<channel_name>_<end_date>
-        safe_channel_name = "".join(c for c in channel.title if c.isalnum() or c in (' ', '-', '_')).strip()
-        export_folder_name = f"ChatExport_{safe_channel_name}_{end_date.strftime('%Y-%m-%d')}"
+        # Format: ChatExport_<channel_id>_<end_date>
+        # Use the original channel identifier (user input) instead of channel.title for consistent naming
+        safe_channel_id = "".join(c for c in channel_name if c.isalnum() or c in (' ', '-', '_')).strip()
+        export_folder_name = f"ChatExport_{safe_channel_id}_{end_date.strftime('%Y-%m-%d')}"
         export_path = base_path / export_folder_name
         export_path.mkdir(parents=True, exist_ok=True)
 
@@ -277,7 +280,7 @@ async def fetch_and_export(channel_names, start_date, end_date, output_base_dir=
         image_paths = await download_message_images(client, messages, photos_path)
 
         # Convert to ChatExport format
-        export_data = convert_to_chatexport_format(channel, messages, image_paths)
+        export_data = convert_to_chatexport_format(channel, messages, image_paths, channel_name)
 
         # Save JSON file
         json_path = export_path / "result.json"
