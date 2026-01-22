@@ -12,7 +12,7 @@ from pathlib import Path
 # Add parent directory for models import
 sys.path.append(str(Path(__file__).parent.parent))
 
-from models import call_gpt5_mini, call_claude_sonnet
+from models import call_claude_sonnet, call_claude_haiku
 from states import VariableMapperState
 from variable_extraction_prompts import VARIABLE_EXTRACTION_PROMPT
 from config import EXTRACTION_MODEL, FALLBACK_MODEL
@@ -39,14 +39,14 @@ def extract_variables(state: VariableMapperState) -> VariableMapperState:
 
     # Call LLM
     try:
-        if EXTRACTION_MODEL == "gpt5_mini":
-            response = call_gpt5_mini(messages, temperature=0.2, max_tokens=4000)
-        else:
+        if EXTRACTION_MODEL == "claude_sonnet":
             response = call_claude_sonnet(messages, temperature=0.2, max_tokens=4000)
+        else:
+            response = call_claude_haiku(messages, temperature=0.2, max_tokens=4000)
     except Exception as e:
         print(f"[variable_extraction] Primary model failed: {e}")
         print(f"[variable_extraction] Trying fallback model...")
-        response = call_claude_sonnet(messages, temperature=0.2, max_tokens=4000)
+        response = call_claude_haiku(messages, temperature=0.2, max_tokens=4000)
 
     # Print full LLM response (as per CLAUDE.md guidelines)
     print(f"[variable_extraction] Full LLM response:\n{response}")

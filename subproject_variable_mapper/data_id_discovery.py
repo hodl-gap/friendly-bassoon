@@ -13,9 +13,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
-from claude_agent_sdk import (
+from claude_code_sdk import (
     query,
-    ClaudeAgentOptions,
+    ClaudeCodeOptions,
     AssistantMessage,
     UserMessage,
     SystemMessage,
@@ -94,6 +94,34 @@ def save_mappings(data: Dict[str, Any]) -> None:
     log(f"[discovery] Saved {len(data['mappings'])} mappings to {DISCOVERED_MAPPINGS_FILE}")
 
 
+def validate_discovery_result(result: dict) -> bool:
+    """
+    Validate discovery result has required fields including mapping_rationale.
+
+    Returns True if valid, False if missing required fields or rationale too short.
+    """
+    # Required fields for all discovery types
+    required_fields = ['normalized_name', 'type']
+
+    # For non-failed discoveries, also require data_id and mapping_rationale
+    if result.get('type') not in ['not_found', 'discovery_failed']:
+        required_fields.extend(['data_id', 'mapping_rationale'])
+
+    for field in required_fields:
+        if not result.get(field):
+            log(f"[validation] WARNING: Missing required field: {field}", "warning")
+            return False
+
+    # Rationale must be substantive (50+ characters) for successful discoveries
+    rationale = result.get('mapping_rationale', '')
+    if result.get('type') not in ['not_found', 'discovery_failed']:
+        if len(rationale) < 50:
+            log(f"[validation] WARNING: mapping_rationale too short ({len(rationale)} chars): {rationale}", "warning")
+            return False
+
+    return True
+
+
 def extract_json_from_response(text: str) -> Optional[Dict]:
     """Extract JSON from agent response, handling markdown code blocks."""
     # Try to find JSON in markdown code blocks
@@ -150,7 +178,7 @@ async def discover_single_variable(
     log(f"{full_prompt[:500]}...")
 
     # Configure Claude Agent SDK
-    options = ClaudeAgentOptions(
+    options = ClaudeCodeOptions(
         model="claude-sonnet-4-5",
         cwd=str(PROJECT_ROOT),
         permission_mode="bypassPermissions"
@@ -266,6 +294,13 @@ async def discover_single_variable(
             log(f"\n[discovery] OUTPUT (parsed JSON):")
             log(json.dumps(result, indent=2))
             result["discovered_at"] = datetime.now(timezone.utc).isoformat()
+
+            # Validate the discovery result
+            is_valid = validate_discovery_result(result)
+            result["rationale_validated"] = is_valid
+            if not is_valid:
+                log(f"[discovery] WARNING: Result failed validation (missing/short mapping_rationale)", "warning")
+
             return result
         else:
             log(f"\n[discovery] WARNING: Could not parse JSON from response")
@@ -344,7 +379,9 @@ async def discover_data_ids(
         "needs_registration": 0,
         "scrape": 0,
         "not_found": 0,
-        "discovery_failed": 0
+        "discovery_failed": 0,
+        "rationale_validated": 0,
+        "rationale_failed": 0
     }
 
     for i, var_name in enumerate(to_discover, 1):
@@ -372,6 +409,12 @@ async def discover_data_ids(
         if result_type in results:
             results[result_type] += 1
 
+        # Track rationale validation
+        if result.get("rationale_validated"):
+            results["rationale_validated"] += 1
+        elif result.get("type") not in ["not_found", "discovery_failed"]:
+            results["rationale_failed"] += 1
+
         # Save after each discovery (in case of interruption)
         save_mappings(data)
 
@@ -385,6 +428,9 @@ async def discover_data_ids(
     log(f"Scrapable:          {results['scrape']}")
     log(f"Not found:          {results['not_found']}")
     log(f"Failed:             {results['discovery_failed']}")
+    log(f"\nRationale Validation:")
+    log(f"Validated:          {results['rationale_validated']}")
+    log(f"Failed validation:  {results['rationale_failed']}")
     log(f"\nMappings saved to: {DISCOVERED_MAPPINGS_FILE}")
 
     return data
@@ -468,7 +514,12 @@ if __name__ == "__main__":
         if mapping.get("source"):
             log(f"Source: {mapping.get('source')}")
         if mapping.get("validated") is not None:
-            log(f"Validated: {mapping.get('validated')}")
+            log(f"API Validated: {mapping.get('validated')}")
+        if mapping.get("rationale_validated") is not None:
+            log(f"Rationale Validated: {mapping.get('rationale_validated')}")
+        if mapping.get("mapping_rationale"):
+            rationale = mapping.get('mapping_rationale', '')
+            log(f"Rationale: {rationale[:100]}{'...' if len(rationale) > 100 else ''}")
         if mapping.get("description"):
             log(f"Description: {mapping.get('description')}")
         if mapping.get("notes"):

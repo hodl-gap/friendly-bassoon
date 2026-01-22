@@ -13,6 +13,7 @@ class VariableMapperState(TypedDict, total=False):
 
     # Input
     synthesis_input: str  # Raw synthesis text from database_retriever
+    data_temporal_context: Dict[str, Any]  # Optional: temporal context from retriever (data_years, etc.)
 
     # Step 1: Variable Extraction
     extracted_variables: List[Dict[str, Any]]  # Variables found in text

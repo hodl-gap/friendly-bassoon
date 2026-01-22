@@ -32,7 +32,7 @@ subproject_variable_mapper/
 ├── data_id_mapping.py               # Step 4: Map to data source IDs (auto-discovers if unmapped)
 │
 │  # Data ID Discovery (auto-triggered or stand-alone)
-├── data_id_discovery.py             # Claude Agent SDK discovery
+├── data_id_discovery.py             # Claude Code SDK discovery
 ├── data_id_discovery_prompts.py
 ├── data_id_validation.py            # API ping validation
 │
@@ -138,6 +138,8 @@ The subproject produces structured queries with **full data source details** for
     {
       "raw_name": "TGA",
       "normalized_name": "tga",
+      "role": "trigger",
+      "role_reasoning": "mentioned as condition that initiates policy response",
       "category": "direct",
       "type": "needs_registration",
       "data_id": "FRED:WTREGEN",
@@ -176,6 +178,8 @@ The subproject produces structured queries with **full data source details** for
 ```
 
 **Key output fields per variable:**
+- `role` - Variable role classification (NEW): `indicator`, `trigger`, `confirmation`, or `null`
+- `role_reasoning` - Why this variable has this role (NEW)
 - `api_url` - Ready-to-use API endpoint (replace YOUR_API_KEY)
 - `description` - What this metric measures
 - `notes` - Usage notes, data availability, units
@@ -183,10 +187,26 @@ The subproject produces structured queries with **full data source details** for
 - `example_indicators` - For collection-type sources (e.g., WDI)
 - `validated` - Whether API ping confirmed the data ID exists
 
+### Variable Role Classification (NEW)
+
+Each variable is classified by its operational role:
+
+| Role | Description | Example |
+|------|-------------|---------|
+| `indicator` | Early warning signal to WATCH continuously | RDE trending up, Fed funds rate |
+| `trigger` | Hard constraint that CAUSES action when breached | Reserve floor, TGA < $500B |
+| `confirmation` | After-the-fact validation signal | ON RRP collapse confirms stress |
+| `null` | Role unclear from context | - |
+
+**Role inference from chain position:**
+- Variables in CAUSAL position (start of chain) → likely `indicator`
+- Variables in CONDITIONAL position ("if X then...") → likely `trigger`
+- Variables in VALIDATION position (confirms outcome) → likely `confirmation`
+
 ## Design Decisions (Implemented)
 
 - **Variable normalization**: Uses `liquidity_metrics_mapping.csv` from database_manager. Exact match first, then LLM fuzzy match via Claude Haiku.
-- **Source mapping**: Claude Agent SDK discovers data sources dynamically. Searches known APIs (FRED, World Bank, BLS, OECD, IMF) first, then web.
+- **Source mapping**: Claude Code SDK discovers data sources dynamically via WebSearch. Searches known APIs (FRED, World Bank, BLS, OECD, IMF) first, then web.
 - **Data ID storage**: JSON file (`mappings/discovered_data_ids.json`) stores discovered mappings persistently.
 - **Validation**: API ping test before accepting mappings (FRED, World Bank, BLS supported).
 
@@ -277,7 +297,7 @@ Examples of "strange" entries to log:
 - [x] Step 2: `normalization.py` - Normalize using liquidity_metrics_mapping.csv
 - [x] Step 3: `missing_variable_detection.py` - Parse chains for missing variables
 - [x] Step 4: `data_id_mapping.py` - Map using discovered_data_ids.json
-- [x] `data_id_discovery.py` - Claude Agent SDK discovery (stand-alone)
+- [x] `data_id_discovery.py` - Claude Code SDK discovery (stand-alone)
 - [x] `data_id_validation.py` - API ping validation
 
 ### TODO
@@ -286,7 +306,18 @@ Examples of "strange" entries to log:
 
 ## Data ID Discovery
 
-Data ID discovery uses Claude Agent SDK to find data sources. It runs **automatically** in the pipeline when unmapped variables are detected (`AUTO_DISCOVER = True` in config.py).
+Data ID discovery uses **Claude Code SDK** (`claude_code_sdk`) to spawn an agent with web search capabilities. It runs **automatically** in the pipeline when unmapped variables are detected (`AUTO_DISCOVER = True` in config.py).
+
+### Prerequisites
+```bash
+# Python SDK
+pip install claude-code-sdk
+
+# Claude Code CLI (required by SDK)
+npm install -g @anthropic-ai/claude-code
+# Or locally: npm install @anthropic-ai/claude-code --prefix ~/.local
+# Then: export PATH="$HOME/.local/node_modules/.bin:$PATH"
+```
 
 ### Auto-Discovery (Default Behavior)
 When the pipeline encounters unmapped variables in Step 4:
@@ -298,10 +329,10 @@ When the pipeline encounters unmapped variables in Step 4:
 ### Manual Discovery (Stand-alone)
 ```bash
 # Discover data IDs for specific variables
-python data_id_discovery.py -v tga,vix,cpi
+python data_id_discovery.py -v tga,vix,pmi
 
 # The agent will:
-# 1. Search known APIs (FRED, World Bank, BLS, OECD, IMF)
+# 1. Use WebSearch to find data sources in known APIs (FRED, World Bank, BLS, OECD, IMF)
 # 2. If not found, search the web for alternatives
 # 3. Validate by pinging the APIs
 # 4. Save to mappings/discovered_data_ids.json
@@ -313,9 +344,36 @@ python data_id_discovery.py -v tga,vix,cpi
 - `scrape` - No API, but web scrapable (includes Python code)
 - `not_found` - No public data source found
 
+### Mapping Rationale (NEW)
+
+Each discovery result now **REQUIRES** a `mapping_rationale` field to prevent silent mapping errors:
+
+```json
+{
+  "normalized_name": "tga",
+  "type": "api",
+  "data_id": "FRED:WTREGEN",
+  "mapping_rationale": "Found via FRED search for 'Treasury General Account'. WTREGEN is the official TGA balance published daily by US Treasury via FRED. Preferred over RRPONTSYTRSY (which is RRP, not TGA) and WTREGEN_DEPRECATED (discontinued 2020).",
+  "rationale_validated": true
+}
+```
+
+**Rationale Requirements:**
+1. Search queries used to find this data source
+2. WHY this specific series was chosen over alternatives
+3. Official source confirmation (documentation link or verified URL)
+4. Must be 50+ characters (substantive explanation)
+
+**Validation:** Discovery results are validated for:
+- Required fields present (`normalized_name`, `type`, `data_id`, `mapping_rationale`)
+- Rationale is substantive (50+ characters)
+- `rationale_validated` field tracks pass/fail status
+
+Discovery summary now includes rationale validation counts.
+
 ### Performance
-- ~30-45 seconds per variable
-- ~$0.10-0.15 per variable (Claude API cost)
+- ~40-45 seconds per variable
+- ~$0.30-0.35 per variable (Claude Sonnet + WebSearch)
 - Cached in JSON - only runs once per variable
 
 ## Related Files

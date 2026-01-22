@@ -14,7 +14,7 @@ from pathlib import Path
 # Add parent directory for models import
 sys.path.append(str(Path(__file__).parent.parent))
 
-from models import call_gpt5_mini
+from models import call_claude_haiku
 from states import VariableMapperState
 from missing_variable_detection_prompts import CHAIN_PARSING_PROMPT
 
@@ -52,7 +52,7 @@ def parse_chain_with_llm(chain: str) -> dict:
     messages = [{"role": "user", "content": prompt}]
 
     try:
-        response = call_gpt5_mini(messages, temperature=0.2, max_tokens=1000)
+        response = call_claude_haiku(messages, temperature=0.2, max_tokens=1000)
         print(f"[missing_detection] LLM response for chain:\n{response}")
 
         # Parse JSON response
@@ -125,7 +125,13 @@ def detect_missing_variables(state: VariableMapperState) -> VariableMapperState:
 
         # Collect all variables mentioned in chains
         for var in parsed.get("variables", []):
-            all_chain_variables.add(var.lower())
+            # Handle both string and dict formats
+            if isinstance(var, dict):
+                var_name = var.get("name", "")
+            else:
+                var_name = var
+            if var_name:
+                all_chain_variables.add(var_name.lower())
 
     print(f"[missing_detection] Found {len(all_chain_variables)} unique variables in chains")
 
