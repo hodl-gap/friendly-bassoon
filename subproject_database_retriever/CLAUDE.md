@@ -117,6 +117,152 @@ The retriever can:
 3. **Combine retrievals** - Merge results from multiple search passes
 4. **Self-assess** - Determine if retrieved context is sufficient
 5. **Route queries** - Direct different query types to appropriate handlers
+6. **Score confidence** - Compute confidence based on path count and source diversity
+7. **Detect contradictions** - Identify evidence that weakens consensus conclusions
+8. **LLM re-ranking** - Score retrieved chunks for causal relevance (NEW)
+
+### Answer Generation Pipeline (3 Stages)
+
+| Stage | Purpose | Output |
+|-------|---------|--------|
+| Stage 1 | Extract and organize logic chains | Grouped chains by theme |
+| Stage 2 | Synthesize consensus and variables | Confidence-scored conclusions |
+| Stage 3 | Identify contradicting evidence | Contradiction analysis |
+
+### Cross-Chunk Chain Linkage (NEW)
+
+The answer generation system now supports **explicit chain connection across chunks** using normalized variable names.
+
+**How it works:**
+1. Extraction adds `cause_normalized` and `effect_normalized` to each logic chain step
+2. `answer_generation.py` builds an effect map: `{effect_normalized: [chunk_ids]}`
+3. For each chunk's cause, check if it matches another chunk's effect
+4. Generate "## CHAIN CONNECTIONS" section listing linkable variables
+5. LLM uses these hints to build multi-hop chains
+
+**Example context sent to LLM:**
+```
+[Source 1: Goldman Sachs]
+Logic chains:
+  - JPY weakness [jpy_weakness] → carry trade unwind [carry_unwind]: funding currency appreciation...
+
+[Source 2: UBS]
+Logic chains:
+  - carry trade unwind [carry_unwind] → EM equity selling [em_selling]: deleveraging pressure...
+
+## CHAIN CONNECTIONS (use these for multi-hop reasoning):
+- carry_unwind: appears as effect in [chunk_1]
+```
+
+**Result:** LLM connects: `jpy_weakness → carry_unwind → em_selling` across sources.
+
+### Confidence Metadata (NEW)
+
+Each synthesis includes structured confidence metadata:
+```json
+{
+  "overall_score": 0.75,      // 0.0-1.0 numeric score
+  "path_count": 3,            // Number of supporting paths
+  "source_diversity": 2,      // Unique institutions supporting conclusion
+  "confidence_level": "High"  // High/Medium/Low
+}
+```
+
+**Confidence Guidelines:**
+- **High (0.8+)**: 3+ paths from 2+ independent sources
+- **Medium (0.5-0.8)**: 2 paths OR single source with strong logic
+- **Low (<0.5)**: Single path, weak support, or contradictory evidence
+
+### Contradiction Detection (NEW)
+
+Stage 3 runs on **every query** to identify evidence that contradicts or weakens consensus:
+- Sources that explicitly disagree
+- Conditions where logic chain breaks down
+- Historical examples where similar logic failed
+- Missing considerations that could invalidate conclusions
+
+Output includes impact assessment (High/Medium/Low) and recommendation.
+
+### Two-Stage Retrieval with LLM Re-Ranking (NEW)
+
+Addresses the risk of retrieving conceptually adjacent but causally unrelated content with a fixed similarity threshold.
+
+**Stage 1: Broad Semantic Recall**
+- Lower similarity threshold (0.40) for higher recall
+- Retrieves more candidates (top 20) to ensure coverage
+- Pure embedding-based semantic search
+
+**Stage 2: LLM Re-Ranking for Causal Relevance**
+- Claude Haiku scores each chunk for CAUSAL relevance (0.0-1.0)
+- Only high scores for chunks with actual causal reasoning relevant to query
+- Filters out surface-level keyword matches that lack causal logic
+- Returns top 10 after re-ranking
+
+**Configuration (`config.py`):**
+```python
+ENABLE_LLM_RERANK = True           # Toggle for cost control
+BROAD_RETRIEVAL_TOP_K = 20         # Stage 1: candidates to retrieve
+BROAD_SIMILARITY_THRESHOLD = 0.40  # Stage 1: lower threshold for recall
+RERANK_TOP_K = 10                  # Stage 2: keep top N after re-ranking
+```
+
+**Re-Ranking Scoring Guidelines:**
+| Score | Meaning |
+|-------|---------|
+| 0.9-1.0 | Directly answers query with explicit causal logic (cause → effect → mechanism) |
+| 0.7-0.8 | Contains relevant causal mechanisms or specific thresholds |
+| 0.5-0.6 | Conceptually related but no direct causal link |
+| 0.3-0.4 | Tangentially related, surface-level word overlap only |
+| 0.0-0.2 | Off-topic despite keyword match |
+
+**Cost:** ~$0.001-0.002 per query (Claude Haiku)
+
+### Hybrid Retrieval - Original Query Protection (NEW)
+
+Addresses query expansion dilution where expanded queries surface dimension-specific chunks that overtake the original query's holistic matches.
+
+**Problem**: Original query might rank the most relevant chunk #1, but after merging 7 queries (1 original + 6 expanded), that chunk drops to #10 because narrow-topic chunks score higher on specific dimensions.
+
+**Solution**: Guarantee original query's top-N chunks are preserved.
+
+**How it works**:
+1. **Stage 1A**: Get top-5 from original query (protected - always included)
+2. **Stage 1B**: Add expanded query results for breadth (max-score merge, skip protected)
+3. **Stage 2**: LLM re-ranking scores all candidates for causal relevance
+
+**Configuration (`config.py`):**
+```python
+ORIGINAL_QUERY_TOP_N = 5  # Guaranteed slots for original query's top results
+```
+
+**Result**: Holistic relevance from original query + nuance breadth from expanded queries.
+
+### Temporal Awareness for Logic Chain Focus (NEW)
+
+Addresses temporal validity of extracted data - system now distinguishes time-bound values from timeless structural relationships.
+
+**Problem**: If user queries about 2035 liquidity, system returns 2026-specific data ($1.26T QE, 83.4% prob). Absolute values become stale but structural relationships (QE → liquidity) remain valid.
+
+**Solution**: LLM-aware temporal context - LLM receives temporal information and reasons about what's timeless vs time-bound.
+
+**How it works**:
+1. `query_processing.py` extracts temporal reference from query (e.g., "2035" → reference_year=2035)
+2. `answer_generation.py` extracts `temporal_context` from each chunk's metadata
+3. Builds temporal summary across chunks (data_years, forward_looking_count, structural_count)
+4. Adds `## TEMPORAL GUIDANCE` section to context sent to LLM
+5. If temporal mismatch (query year ≠ data years), instructs LLM to focus on logic chains
+
+**LLM Behavior with Temporal Awareness**:
+- Prioritizes LOGIC CHAINS (cause → effect) - these are timeless and transferable
+- De-emphasizes ABSOLUTE VALUES ($1.26T, 83.4%) - these are time-bound
+- Adds `**TEMPORAL NOTE:**` annotations distinguishing mechanisms from specific values
+- Example: "The mechanism (QE → liquidity expansion) was projected at $1.26T scale in 2026 context"
+
+**State Fields Added**:
+- `query_temporal_reference`: {reference_year, reference_period, is_future, is_current}
+- `data_temporal_summary`: {data_years, forward_looking_count, time_bound_count, structural_count}
+
+**Use Case**: Query for future year → LLM extracts timeless logic chains → User can plug in current numbers and re-run the logic.
 
 ## Flexible Design Decisions (TBD)
 The following are intentionally left flexible for future decisions:

@@ -2,7 +2,9 @@
 
 **IMPORTANT**: Read `CLAUDE.md` first for project guidelines and patterns.
 
-## Current State: Initial Structure Complete
+**Last Updated**: 2026-01-22
+
+## Current State: Hybrid Retrieval + Temporal Awareness + Cross-Chunk Chain Linkage
 
 ### Completed
 - [x] Project structure set up
@@ -53,6 +55,163 @@ subproject_database_retriever/
 - [x] Logic chain extraction - answer generation now extracts `logic_chains` and connects chains
 - [x] Full context synthesis - includes what_happened, interpretation, used_data, and logic chains
 - [x] End-to-end workflow tested and working
+- [x] **Confidence metadata** - Numeric scoring with path_count, source_diversity (2026-01-16)
+- [x] **Contradiction detection** - Stage 3 identifies evidence that weakens consensus (2026-01-16)
+- [x] **Hybrid retrieval** - Guarantees original query's top-5 chunks preserved (2026-01-22)
+- [x] **Temporal awareness** - LLM distinguishes logic chains from time-bound values (2026-01-22)
+
+---
+
+## Session Summary: 2026-01-22
+
+### Fix: Query Expansion Dilution & Retrieval Improvements
+
+**Problem**: Query 1 (`"what features predict liquidity expansion in 2026?"`) missed the most relevant chunk despite it ranking #1 for the original query. After query expansion merge, it dropped to #10.
+
+**Root Causes Fixed**:
+1. **Merge strategy diluted results** - Max-score merge treated all queries equally
+2. **JSON parsing fragile** - Failed on markdown code blocks
+3. **Re-ranking non-deterministic** - temperature=0.1 allowed variation
+
+**Fixes Implemented**:
+
+| Fix | Change |
+|-----|--------|
+| Hybrid retrieval | Top-5 from original query protected, then add expanded query results |
+| Robust JSON parsing | Handles markdown code blocks (` ```json `) with fallback |
+| Deterministic re-ranking | temperature 0.1 → 0.0 |
+| Increased max_tokens | 3000 → 5000 for re-ranking (70 chunks was truncating) |
+
+**Configuration Added**:
+- `ORIGINAL_QUERY_TOP_N = 5` - Guaranteed slots for original query's top results
+
+**Files Updated**:
+- `vector_search.py` - Hybrid retrieval logic, robust JSON parsing, temperature fix
+- `config.py` - Added ORIGINAL_QUERY_TOP_N constant
+
+### Feature: Temporal Awareness for Logic Chain Focus
+
+**Problem**: System returns 2026-specific data ($1.26T QE, 83.4% prob) for any query, even if asking about 2035. Absolute values become stale but structural relationships remain valid.
+
+**Solution**: LLM-aware temporal context - passes temporal information to LLM so it can reason about what's timeless vs time-bound.
+
+**How It Works**:
+1. `query_processing.py` extracts temporal reference from query (e.g., "2035" → reference_year=2035)
+2. `answer_generation.py` extracts `temporal_context` from each chunk's metadata
+3. Builds temporal summary: data_years, forward_looking_count, structural_count
+4. Adds `## TEMPORAL GUIDANCE` section to context sent to LLM
+5. If temporal mismatch detected, instructs LLM to focus on logic chains over absolute values
+
+**LLM Now Outputs**:
+- `**TEMPORAL NOTE:** Mechanism valid across periods; $1.26T scale specific to 2026 forecast context`
+- `**TEMPORAL CAVEAT:** Specific magnitudes are 2025-2026 forecast context. The causal mechanisms are structural and predict liquidity expansion features across periods.`
+
+**Files Updated**:
+- `query_processing.py` - Added `extract_temporal_reference()`
+- `states.py` - Added `query_temporal_reference`, `data_temporal_summary` fields
+- `answer_generation.py` - Added `extract_chunk_temporal_context()`, `summarize_data_temporal_context()`, updated `synthesize_context()`
+- `answer_generation_prompts.py` - Added TEMPORAL AWARENESS section to prompts
+
+**Use Case**: Query for future year → LLM extracts timeless logic chains → User can plug in current numbers and re-run the logic.
+
+---
+
+## Session Summary: 2026-01-20
+
+### Cross-Chunk Chain Linkage Fix
+
+Fixed bug and enhanced chain connection during answer generation.
+
+**Bug Fixed**: `answer_generation.py` was accessing wrong structure (looking for cause/effect at chain level instead of steps array).
+
+**Enhancement**: Added explicit chain linkage using normalized variable names.
+
+**New functions:**
+- `find_chain_connections()` - Builds effect→chunk map for cross-chunk connections
+- Adds "## CHAIN CONNECTIONS" section to context for LLM
+
+**How it works:**
+1. Extract `effect_normalized` from each chunk's logic chains
+2. For each chunk's `cause_normalized`, check if it matches another chunk's effect
+3. Generate hints: "carry_unwind connects to chunks: [chunk_1, chunk_2]"
+4. LLM uses these to build multi-hop chains across sources
+
+**Files updated:**
+- `answer_generation.py` - Fixed bug + added `find_chain_connections()` + updated `synthesize_context()`
+- `answer_generation_prompts.py` - Updated LOGIC_CHAIN_PROMPT with chain connection rules
+
+---
+
+## Session Summary: 2026-01-17
+
+### Logic Flaw Issue 2: Two-Stage Retrieval with LLM Re-Ranking
+
+**Problem**: Pure semantic similarity retrieval may miss causally relevant chunks (surface-level keyword matches rank high).
+
+**Solution**: Two-stage retrieval:
+- Stage 1: Broad semantic recall (top_k × 2, lower threshold 0.40)
+- Stage 2: LLM re-ranks for CAUSAL relevance (not just semantic similarity)
+
+**Re-Ranking Scoring Guidelines:**
+| Score | Meaning |
+|-------|---------|
+| 0.9-1.0 | Directly answers query with explicit causal logic |
+| 0.7-0.8 | Contains relevant causal mechanisms |
+| 0.5-0.6 | Conceptually related but no direct causal link |
+| 0.3-0.4 | Tangentially related, surface-level overlap |
+| 0.0-0.2 | Off-topic despite keyword match |
+
+**Configuration:**
+- `ENABLE_LLM_RERANK = True` (toggle for cost control)
+- `BROAD_RETRIEVAL_TOP_K = 20`
+- `BROAD_SIMILARITY_THRESHOLD = 0.40`
+- `RERANK_TOP_K = 10`
+
+**Files created/updated:**
+- `vector_search.py` - Added `rerank_chunks()` function
+- `vector_search_prompts.py` - NEW: RERANK_PROMPT
+- `config.py` - Added re-ranking configuration
+
+---
+
+## Session Summary: 2026-01-16
+
+### Evaluation Response Implementation - Issues 3 & 4
+
+Implemented enhancements from external architecture evaluation.
+
+**Issue 3: Confidence & Consensus Scoring**
+
+Extended existing basic confidence (High/Medium) to include numeric scores:
+
+```json
+{
+  "overall_score": 0.75,
+  "path_count": 3,
+  "source_diversity": 2,
+  "confidence_level": "High"
+}
+```
+
+**Confidence guidelines:**
+- High (0.8+): 3+ paths from 2+ independent sources
+- Medium (0.5-0.8): 2 paths OR single source with strong logic
+- Low (<0.5): Single path, weak support, or contradictory evidence
+
+**Issue 4: Negative Evidence Handling**
+
+Added Stage 3 contradiction detection that runs on every query:
+- Sources that explicitly disagree with consensus
+- Conditions where logic chain breaks down
+- Historical examples where similar logic failed
+- Missing considerations that could invalidate conclusions
+
+**Files updated:**
+- `answer_generation_prompts.py` - Extended SYNTHESIS_PROMPT, added CONTRADICTION_PROMPT
+- `answer_generation.py` - Added `extract_confidence_metadata()`, `identify_contradictions()`, updated `synthesize_chains()` and `generate_answer()`
+- `states.py` - Added `confidence_metadata` and `contradictions` fields
+
+---
 
 ### Dependencies
 - Parent `models.py` for AI calls (call_claude_haiku, call_claude_sonnet, call_openai_embedding)

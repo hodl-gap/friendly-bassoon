@@ -5,7 +5,9 @@ Processes, expands, and refines user queries for better retrieval.
 """
 
 import sys
+import re
 from pathlib import Path
+from datetime import datetime
 
 # Add parent directory for models import
 sys.path.append(str(Path(__file__).parent.parent))
@@ -32,6 +34,10 @@ def process_query(state: RetrieverState) -> RetrieverState:
         # Classify query type
         query_type = classify_query(query)
 
+        # Extract temporal reference from query
+        temporal_ref = extract_temporal_reference(query)
+        print(f"[query_processing] Temporal reference: {temporal_ref}")
+
         # Expand query for better recall (layered approach)
         processed_query, variations, layered_results = expand_query(query)
 
@@ -42,7 +48,8 @@ def process_query(state: RetrieverState) -> RetrieverState:
             "processed_query": processed_query,
             "query_type": query_type,
             "query_variations": variations,
-            "query_dimensions": layered_results  # Full debug info with dimensions/reasoning
+            "query_dimensions": layered_results,  # Full debug info with dimensions/reasoning
+            "query_temporal_reference": temporal_ref
         }
 
     # Subsequent iterations: refine based on previous results
@@ -119,3 +126,59 @@ def refine_query(original_query: str, previous_chunks: list) -> str:
     # Simple refinement: just return original for now
     # TODO: Implement smarter refinement based on retrieved context
     return original_query
+
+
+def extract_temporal_reference(query: str) -> dict:
+    """
+    Extract temporal reference from user query.
+
+    Returns dict with:
+        - reference_year: Year mentioned in query (e.g., 2035) or None
+        - reference_period: More specific period if found (e.g., "Q1 2026", "Jan 2026")
+        - is_future: Whether the reference is in the future
+        - is_current: Whether query asks about "current", "now", "today"
+    """
+    current_year = datetime.now().year
+
+    result = {
+        "reference_year": None,
+        "reference_period": None,
+        "is_future": False,
+        "is_current": False
+    }
+
+    # Check for "current", "now", "today" references
+    current_patterns = r'\b(current|currently|now|today|present|latest|recent)\b'
+    if re.search(current_patterns, query, re.IGNORECASE):
+        result["is_current"] = True
+        result["reference_year"] = current_year
+
+    # Extract explicit year (4 digits, 2020-2099 range)
+    year_match = re.search(r'\b(20[2-9]\d)\b', query)
+    if year_match:
+        year = int(year_match.group(1))
+        result["reference_year"] = year
+        result["is_future"] = year > current_year
+        result["is_current"] = False  # Explicit year overrides "current"
+
+    # Extract more specific period (Q1/Q2/Q3/Q4, month names)
+    quarter_match = re.search(r'\b(Q[1-4])\s*(20[2-9]\d)?\b', query, re.IGNORECASE)
+    if quarter_match:
+        quarter = quarter_match.group(1).upper()
+        year = quarter_match.group(2) or result["reference_year"]
+        if year:
+            result["reference_period"] = f"{quarter} {year}"
+
+    month_match = re.search(
+        r'\b(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|'
+        r'Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)'
+        r'\s*(20[2-9]\d)?\b',
+        query, re.IGNORECASE
+    )
+    if month_match:
+        month = month_match.group(1)
+        year = month_match.group(2) or result["reference_year"]
+        if year:
+            result["reference_period"] = f"{month} {year}"
+
+    return result
