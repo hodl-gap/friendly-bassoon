@@ -9,20 +9,28 @@ Implements two-stage retrieval: broad recall + LLM re-ranking for causal relevan
 import sys
 import re
 import json
+import os
 from pathlib import Path
 
 # Add parent directory for models import
 sys.path.append(str(Path(__file__).parent.parent))
 
 from pinecone import Pinecone
+from anthropic import Anthropic
 from models import call_openai_embedding, call_openai_embedding_batch, call_claude_haiku
 from states import RetrieverState
 from config import (
     PINECONE_API_KEY, PINECONE_INDEX_NAME, DEFAULT_TOP_K, SIMILARITY_THRESHOLD,
     ENABLE_LLM_RERANK, BROAD_RETRIEVAL_TOP_K, BROAD_SIMILARITY_THRESHOLD, RERANK_TOP_K,
-    ORIGINAL_QUERY_TOP_N
+    ORIGINAL_QUERY_TOP_N, USE_STRUCTURED_RERANK
 )
-from vector_search_prompts import RE_RANK_PROMPT
+from vector_search_prompts import RE_RANK_PROMPT, RE_RANK_SYSTEM_PROMPT
+
+# Initialize Anthropic client for structured output
+from dotenv import load_dotenv
+env_path = Path(__file__).parent.parent / '.env'
+load_dotenv(env_path)
+_anthropic_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 # Pinecone index singleton
 _pinecone_index = None
@@ -158,20 +166,23 @@ def rerank_with_llm(query: str, candidates: list) -> list:
     Stage 2: Re-rank candidates using LLM causal relevance scoring.
 
     Uses Claude Haiku to score each chunk for causal relevance to the query.
+    Uses structured output (tool_use) for reliable JSON parsing when enabled.
     Returns candidates sorted by rerank_score (highest first).
     """
     # Format chunks for the prompt
     chunks_text = format_chunks_for_rerank(candidates)
+    chunk_ids = [c["id"] for c in candidates]
 
-    prompt = RE_RANK_PROMPT.format(query=query, chunks=chunks_text)
-    messages = [{"role": "user", "content": prompt}]
-
-    response = call_claude_haiku(messages, temperature=0.0, max_tokens=5000)
-
-    print(f"[vector_search] Re-rank LLM response:\n{response}")
-
-    # Parse scores from response
-    scores = parse_rerank_response(response)
+    if USE_STRUCTURED_RERANK:
+        # Use structured output with tool_use for guaranteed valid JSON
+        scores = rerank_with_structured_output(query, chunks_text, chunk_ids)
+    else:
+        # Legacy: free-form JSON parsing (less reliable)
+        prompt = RE_RANK_PROMPT.format(query=query, chunks=chunks_text)
+        messages = [{"role": "user", "content": prompt}]
+        response = call_claude_haiku(messages, temperature=0.0, max_tokens=5000)
+        print(f"[vector_search] Re-rank LLM response:\n{response}")
+        scores = parse_rerank_response(response)
 
     # Merge scores with candidates
     for candidate in candidates:
@@ -185,6 +196,96 @@ def rerank_with_llm(query: str, candidates: list) -> list:
     print(f"[vector_search] Stage 2 complete: re-ranked {len(candidates)} chunks")
 
     return candidates
+
+
+def rerank_with_structured_output(query: str, chunks_text: str, chunk_ids: list) -> dict:
+    """
+    Re-rank using Claude's tool_use for guaranteed structured output.
+
+    Returns dict of {chunk_id: score}
+    """
+    # Define the tool schema for structured output
+    rerank_tool = {
+        "name": "submit_rerank_scores",
+        "description": "Submit relevance scores for each chunk. Score 0.0-1.0 based on causal relevance to the query.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "scores": {
+                    "type": "array",
+                    "description": "Array of chunk scores",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "chunk_id": {
+                                "type": "string",
+                                "description": "The chunk ID being scored"
+                            },
+                            "relevance_score": {
+                                "type": "number",
+                                "description": "Causal relevance score 0.0-1.0"
+                            },
+                            "reasoning": {
+                                "type": "string",
+                                "description": "Brief explanation for the score"
+                            }
+                        },
+                        "required": ["chunk_id", "relevance_score"]
+                    }
+                }
+            },
+            "required": ["scores"]
+        }
+    }
+
+    user_prompt = f"""Score each chunk for CAUSAL RELEVANCE to this query.
+
+**Query:** {query}
+
+**Scoring Guidelines (0.0-1.0):**
+- 0.9-1.0: Directly answers query with explicit causal logic (cause → effect → mechanism)
+- 0.7-0.8: Contains relevant causal mechanisms or specific thresholds
+- 0.5-0.6: Conceptually related but no direct causal link
+- 0.3-0.4: Tangentially related, surface-level overlap only
+- 0.0-0.2: Off-topic despite keyword match
+
+**Be STRICT:** High scores ONLY for chunks with actual causal reasoning.
+
+**Chunks to evaluate:**
+{chunks_text}
+
+Use the submit_rerank_scores tool to submit your scores for ALL chunks."""
+
+    try:
+        response = _anthropic_client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=4000,
+            temperature=0.0,
+            system=RE_RANK_SYSTEM_PROMPT,
+            tools=[rerank_tool],
+            tool_choice={"type": "tool", "name": "submit_rerank_scores"},
+            messages=[{"role": "user", "content": user_prompt}]
+        )
+
+        # Extract tool use result
+        scores = {}
+        for content_block in response.content:
+            if content_block.type == "tool_use" and content_block.name == "submit_rerank_scores":
+                tool_input = content_block.input
+                for item in tool_input.get("scores", []):
+                    chunk_id = item.get("chunk_id", "")
+                    score = item.get("relevance_score", 0.5)
+                    scores[chunk_id] = float(score)
+
+                print(f"[vector_search] Structured re-rank: parsed {len(scores)} scores")
+                return scores
+
+        print(f"[vector_search] WARNING: No tool_use found in response, using fallback")
+        return {}
+
+    except Exception as e:
+        print(f"[vector_search] WARNING: Structured re-rank failed ({e}), using fallback")
+        return {}
 
 
 def format_chunks_for_rerank(candidates: list) -> str:

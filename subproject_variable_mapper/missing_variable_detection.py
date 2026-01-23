@@ -4,6 +4,12 @@ Missing Variable Detection Module
 Parses logic chains to identify variables that are required
 but weren't explicitly extracted.
 This is Step 3 of the 4-step process.
+
+Optimization: When BATCH_CHAIN_PARSING=True, all chains are parsed in a single
+LLM call instead of one call per chain.
+
+Note: This step is SKIPPED when USE_COMBINED_EXTRACTION=True because
+Step 1 already extracts implicit variables from chains.
 """
 
 import sys
@@ -17,6 +23,8 @@ sys.path.append(str(Path(__file__).parent.parent))
 from models import call_claude_haiku
 from states import VariableMapperState
 from missing_variable_detection_prompts import CHAIN_PARSING_PROMPT
+from variable_extraction_prompts import BATCH_CHAIN_PARSING_PROMPT
+from config import BATCH_CHAIN_PARSING
 
 
 def extract_chains_from_text(text: str) -> list:
@@ -80,6 +88,8 @@ def detect_missing_variables(state: VariableMapperState) -> VariableMapperState:
     Output (to State):
         - missing_variables: List[str] - variables in chains but not extracted
         - chain_dependencies: List[Dict] - dependency graph
+
+    Note: This step is SKIPPED when USE_COMBINED_EXTRACTION=True.
     """
     synthesis_text = state.get("synthesis_input", "")
     normalized_variables = state.get("normalized_variables", [])
@@ -115,23 +125,27 @@ def detect_missing_variables(state: VariableMapperState) -> VariableMapperState:
             "chain_dependencies": []
         }
 
-    # Parse each chain
-    chain_dependencies = []
-    all_chain_variables = set()
+    # Parse chains - use batch or individual parsing
+    if BATCH_CHAIN_PARSING and len(chains) > 1:
+        print(f"[missing_detection] Using BATCH parsing for {len(chains)} chains")
+        chain_dependencies, all_chain_variables = parse_chains_batch(chains)
+    else:
+        print(f"[missing_detection] Using individual parsing for {len(chains)} chains")
+        chain_dependencies = []
+        all_chain_variables = set()
 
-    for chain in chains:
-        parsed = parse_chain_with_llm(chain)
-        chain_dependencies.append(parsed)
+        for chain in chains:
+            parsed = parse_chain_with_llm(chain)
+            chain_dependencies.append(parsed)
 
-        # Collect all variables mentioned in chains
-        for var in parsed.get("variables", []):
-            # Handle both string and dict formats
-            if isinstance(var, dict):
-                var_name = var.get("name", "")
-            else:
-                var_name = var
-            if var_name:
-                all_chain_variables.add(var_name.lower())
+            # Collect all variables mentioned in chains
+            for var in parsed.get("variables", []):
+                if isinstance(var, dict):
+                    var_name = var.get("name", "")
+                else:
+                    var_name = var
+                if var_name:
+                    all_chain_variables.add(var_name.lower())
 
     print(f"[missing_detection] Found {len(all_chain_variables)} unique variables in chains")
 
@@ -160,6 +174,73 @@ def detect_missing_variables(state: VariableMapperState) -> VariableMapperState:
         "missing_variables": missing_variables,
         "chain_dependencies": chain_dependencies
     }
+
+
+def parse_chains_batch(chains: list) -> tuple:
+    """
+    Parse multiple chains in a single LLM call (batch parsing).
+
+    Returns:
+        tuple: (chain_dependencies, all_chain_variables)
+    """
+    # Format chains for batch prompt
+    chains_text = "\n".join([f"{i+1}. {chain}" for i, chain in enumerate(chains)])
+
+    prompt = BATCH_CHAIN_PARSING_PROMPT.format(chains=chains_text)
+    messages = [{"role": "user", "content": prompt}]
+
+    try:
+        response = call_claude_haiku(messages, temperature=0.2, max_tokens=3000)
+        print(f"[missing_detection] Batch parsing LLM response:\n{response}")
+
+        # Parse JSON response
+        clean_response = response.strip()
+        if clean_response.startswith("```"):
+            lines = clean_response.split("\n")
+            end_idx = len(lines) - 1
+            for i, line in enumerate(lines[1:], 1):
+                if line.strip() == "```":
+                    end_idx = i
+                    break
+            clean_response = "\n".join(lines[1:end_idx])
+
+        result = json.loads(clean_response)
+
+        chain_dependencies = result.get("parsed_chains", [])
+        all_vars_list = result.get("all_variables", [])
+        all_chain_variables = set(v.lower() for v in all_vars_list)
+
+        # Also extract variables from parsed_chains if all_variables is incomplete
+        for parsed in chain_dependencies:
+            for var in parsed.get("variables", []):
+                if isinstance(var, dict):
+                    var_name = var.get("name", "")
+                else:
+                    var_name = var
+                if var_name:
+                    all_chain_variables.add(var_name.lower())
+
+        return chain_dependencies, all_chain_variables
+
+    except Exception as e:
+        print(f"[missing_detection] Batch parsing failed: {e}, falling back to individual parsing")
+        # Fallback to individual parsing
+        chain_dependencies = []
+        all_chain_variables = set()
+
+        for chain in chains:
+            parsed = parse_chain_with_llm(chain)
+            chain_dependencies.append(parsed)
+
+            for var in parsed.get("variables", []):
+                if isinstance(var, dict):
+                    var_name = var.get("name", "")
+                else:
+                    var_name = var
+                if var_name:
+                    all_chain_variables.add(var_name.lower())
+
+        return chain_dependencies, all_chain_variables
 
 
 # For standalone testing

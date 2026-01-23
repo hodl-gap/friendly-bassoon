@@ -14,7 +14,12 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from models import call_claude_haiku
 from states import RetrieverState
-from query_processing_prompts import QUERY_EXPANSION_PROMPT, QUERY_TYPE_PROMPT
+from query_processing_prompts import (
+    QUERY_EXPANSION_PROMPT_SIMPLE,
+    QUERY_EXPANSION_PROMPT_COMPLEX,
+    QUERY_TYPE_PROMPT
+)
+from config import SIMPLE_QUERY_MAX_WORDS, SIMPLE_QUERY_DIMENSIONS, COMPLEX_QUERY_DIMENSIONS
 
 
 def process_query(state: RetrieverState) -> RetrieverState:
@@ -75,9 +80,65 @@ def classify_query(query: str) -> str:
     return "research_question"
 
 
+def is_simple_query(query: str) -> bool:
+    """
+    Determine if a query is "simple" (fewer dimensions needed).
+
+    Simple queries:
+    - Short (fewer words)
+    - Single concept
+    - Direct questions about one thing
+
+    Complex queries:
+    - Multiple concepts/relationships
+    - Temporal elements
+    - Causal chains
+    """
+    # Count words (simple heuristic)
+    words = len(query.split())
+
+    # Check for complexity indicators
+    complexity_indicators = [
+        " and ",
+        " or ",
+        " vs ",
+        " versus ",
+        " relationship ",
+        " between ",
+        " causes ",
+        " affects ",
+        " leads to ",
+        " →",
+        "->",
+    ]
+
+    has_complexity = any(indicator in query.lower() for indicator in complexity_indicators)
+
+    # Simple if short AND no complexity indicators
+    is_simple = words <= SIMPLE_QUERY_MAX_WORDS and not has_complexity
+
+    return is_simple
+
+
 def expand_query(query: str) -> tuple:
-    """Generate query variations using layered approach."""
-    messages = [{"role": "user", "content": QUERY_EXPANSION_PROMPT.format(query=query)}]
+    """
+    Generate query variations using layered approach.
+
+    Adaptive expansion: fewer dimensions for simple queries, more for complex.
+    """
+    # Determine query complexity
+    simple = is_simple_query(query)
+    num_dimensions = SIMPLE_QUERY_DIMENSIONS if simple else COMPLEX_QUERY_DIMENSIONS
+
+    print(f"[query_processing] Query complexity: {'simple' if simple else 'complex'} ({num_dimensions} dimensions)")
+
+    # Use appropriate prompt
+    if simple:
+        prompt = QUERY_EXPANSION_PROMPT_SIMPLE.format(query=query)
+    else:
+        prompt = QUERY_EXPANSION_PROMPT_COMPLEX.format(query=query)
+
+    messages = [{"role": "user", "content": prompt}]
     response = call_claude_haiku(messages, temperature=0.3, max_tokens=1500)
 
     print(f"[query_processing] Expansion response:\n{response}")
@@ -113,7 +174,7 @@ def expand_query(query: str) -> tuple:
                 current_reasoning = None
 
     # Debug print the layered breakdown
-    print(f"\n[query_processing] Parsed {len(queries)} dimension queries:")
+    print(f"\n[query_processing] Parsed {len(queries)} dimension queries (target: {num_dimensions}):")
     for item in layered_results:
         print(f"  [{item['dimension']}] {item['query']}")
         print(f"    -> {item['reasoning']}")

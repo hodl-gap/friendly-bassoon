@@ -23,8 +23,8 @@ LIQUIDITY_METRICS_CSV = PARENT_DIR / "subproject_database_manager" / "data" / "p
 SAMPLE_INPUT_FILE = PARENT_DIR / "subproject_database_retriever" / "tests" / "query_result.md"
 
 # Model settings
-EXTRACTION_MODEL = "claude_sonnet"  # Primary model for variable extraction
-FALLBACK_MODEL = "claude_haiku"  # Fallback if primary fails
+EXTRACTION_MODEL = "claude_haiku"  # Primary model for variable extraction (Haiku is sufficient, Sonnet overkill)
+FALLBACK_MODEL = "claude_sonnet"  # Fallback if primary fails (upgrade for quality)
 
 # Processing settings
 MAX_VARIABLES_PER_EXTRACTION = 50  # Reasonable limit for a single synthesis
@@ -35,6 +35,10 @@ BUGS_LOG_FILE = PROJECT_ROOT / "LIQUIDITY_METRICS_BUGS.md"
 # Step-specific model settings
 NORMALIZATION_MODEL = "claude_haiku"  # Fast, simple matching task
 CHAIN_PARSING_MODEL = "claude_haiku"  # Good for structured extraction
+
+# Combined extraction settings (Optimization: merge Steps 1 & 3)
+USE_COMBINED_EXTRACTION = True  # If True, Step 1 extracts both explicit AND implicit variables (skips Step 3)
+BATCH_CHAIN_PARSING = True  # If True and USE_COMBINED_EXTRACTION=False, batch all chains in single LLM call
 
 # Data ID Discovery settings
 DISCOVERED_MAPPINGS_FILE = PROJECT_ROOT / "mappings" / "discovered_data_ids.json"

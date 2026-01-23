@@ -22,12 +22,12 @@ subproject_variable_mapper/
 ├── states.py                        # LangGraph state definitions
 ├── config.py                        # Configuration management
 │
-│  # 4-Step Pipeline
-├── variable_extraction.py           # Step 1: Extract variables from text
-├── variable_extraction_prompts.py
+│  # Optimized Pipeline (Steps 1 & 3 merged when USE_COMBINED_EXTRACTION=True)
+├── variable_extraction.py           # Step 1: Extract variables (explicit + implicit)
+├── variable_extraction_prompts.py   # Contains COMBINED_EXTRACTION_PROMPT
 ├── normalization.py                 # Step 2: Normalize to canonical names
 ├── normalization_prompts.py
-├── missing_variable_detection.py    # Step 3: Find missing chain variables
+├── missing_variable_detection.py    # Step 3: Find missing chain variables (SKIPPED if combined)
 ├── missing_variable_detection_prompts.py
 ├── data_id_mapping.py               # Step 4: Map to data source IDs (auto-discovers if unmapped)
 │
@@ -43,6 +43,32 @@ subproject_variable_mapper/
 │   └── discovery_YYYYMMDD_HHMMSS.log
 │
 └── tests/                           # Test files
+```
+
+### Pipeline Workflow (Optimized)
+
+When `USE_COMBINED_EXTRACTION=True` (default), the workflow is:
+
+```
+Step 1: Combined Extraction [Haiku] ──► Step 2: Normalization ──► Step 4: Data ID Mapping
+           │
+           └─► Extracts explicit + implicit variables + chain_dependencies
+           └─► Sets skip_step3=True (Step 3 is SKIPPED)
+```
+
+When `USE_COMBINED_EXTRACTION=False` (legacy), the workflow is:
+
+```
+Step 1 ──► Step 2 ──► Step 3 ──► Step 4
+                        │
+                        └─► Parses chains (batch or individual)
+```
+
+**Configuration (`config.py`):**
+```python
+USE_COMBINED_EXTRACTION = True  # Merge Steps 1 & 3 (recommended)
+BATCH_CHAIN_PARSING = True      # If Step 3 runs, batch all chains in single call
+EXTRACTION_MODEL = "claude_haiku"  # Haiku is sufficient, Sonnet overkill
 ```
 
 ### Main File Structure (`variable_mapper_orchestrator.py`)

@@ -1,8 +1,8 @@
 # Project Status - Variable Extractor & Mapper
 
-**Last Updated**: 2026-01-14
+**Last Updated**: 2026-01-23
 
-## Current State: 4-Step Pipeline Complete + Auto-Discovery
+## Current State: Optimized Pipeline + Combined Extraction + Auto-Discovery + Role Classification
 
 All 4 steps implemented. Data ID discovery uses Claude Agent SDK for dynamic source finding.
 **Auto-discovery enabled by default** - pipeline automatically discovers data sources for unmapped variables.
@@ -432,9 +432,136 @@ python data_id_discovery.py -v tga,vix,cpi
 
 ---
 
+## Session Summary: 2026-01-17
+
+### Logic Flaw Issue 3: Auto-Discovery Mapping Rationale
+
+**Problem**: Data ID mappings could be silently wrong (e.g., mapping "TGA" to wrong FRED series).
+
+**Solution**: Added `mapping_rationale` field requiring:
+1. Search queries used to find the data source
+2. WHY this specific series was chosen over alternatives
+3. Official source confirmation
+
+**New structure in discovered_data_ids.json:**
+```json
+{
+  "normalized_name": "tga",
+  "type": "api",
+  "data_id": "FRED:WTREGEN",
+  "mapping_rationale": "Found via FRED search for 'Treasury General Account'. WTREGEN is the official TGA balance published daily by US Treasury via FRED. Preferred over RRPONTSYTRSY (which is RRP, not TGA) and WTREGEN_DEPRECATED (discontinued 2020).",
+  "rationale_validated": true
+}
+```
+
+**Validation Requirements:**
+- Required fields: `normalized_name`, `type`, `data_id`, `mapping_rationale`
+- Rationale must be 50+ characters (substantive explanation)
+- `rationale_validated` tracks pass/fail status
+
+**Files updated:**
+- `data_id_discovery.py` - Added mapping_rationale extraction and validation
+- `data_id_discovery_prompts.py` - Updated prompt to require substantive rationale
+
+---
+
+## Session Summary: 2026-01-16
+
+### Evaluation Response Implementation - Issue 2
+
+Implemented variable role classification from external architecture evaluation.
+
+**Issue 2: Variable Role Classification**
+
+Added `role` field to distinguish operational roles of variables:
+
+| Role | Description | Example |
+|------|-------------|---------|
+| `indicator` | Early warning signal to WATCH | RDE trending up |
+| `trigger` | Hard constraint that CAUSES action | TGA < $500B |
+| `confirmation` | After-the-fact validation | ON RRP collapse |
+| `null` | Role unclear from context | - |
+
+**Role inference from chain position:**
+- Variables in CAUSAL position → likely `indicator`
+- Variables in CONDITIONAL position ("if X then...") → likely `trigger`
+- Variables in VALIDATION position → likely `confirmation`
+
+**Files updated:**
+- `variable_extraction_prompts.py` - Added `role` and `role_reasoning` fields to output schema
+- `missing_variable_detection_prompts.py` - Added role inference from chain position
+
+---
+
 ## Development Timeline
 
+- **2026-01-23** - LLM efficiency optimizations (combined extraction, Haiku default, batch parsing)
+- **2026-01-20** - Updated STATUS.md with mapping rationale documentation
+- **2026-01-17** - Logic Flaw Issue 3: Mapping rationale for data ID discovery
+- **2026-01-16** - Added variable role classification (indicator/trigger/confirmation)
 - **2025-12-10** - Project setup, CLAUDE.md, STATUS.md created
+
+---
+
+## Session Summary: 2026-01-23
+
+### Optimization: LLM Efficiency Improvements
+
+Based on evaluation report, implemented 3 high-impact optimizations.
+
+**1. Combined Extraction (Merge Steps 1 & 3)**
+
+Single prompt now extracts BOTH explicit AND implicit variables:
+- Explicit: Variables with values/thresholds
+- Implicit: Variables found in logic chains (A → B → C)
+
+**Files updated:**
+- `variable_extraction_prompts.py` - Added `COMBINED_EXTRACTION_PROMPT`
+- `variable_extraction.py` - Added `extract_variables_combined()`
+- `variable_mapper_orchestrator.py` - Added conditional routing to skip Step 3
+- `config.py` - Added `USE_COMBINED_EXTRACTION = True`
+
+**Savings:** ~$0.003/query (eliminates Step 3)
+
+**2. Haiku for Extraction**
+
+Changed default from Sonnet to Haiku (with Sonnet fallback).
+
+**Files updated:**
+- `config.py` - Changed `EXTRACTION_MODEL = "claude_haiku"`
+
+**Savings:** ~$0.0075/query (16x cheaper)
+
+**3. Batch Chain Parsing**
+
+When Step 3 runs, all chains are parsed in single LLM call.
+
+**Files updated:**
+- `variable_extraction_prompts.py` - Added `BATCH_CHAIN_PARSING_PROMPT`
+- `missing_variable_detection.py` - Added `parse_chains_batch()`
+- `config.py` - Added `BATCH_CHAIN_PARSING = True`
+
+**Savings:** 6 calls → 1 call (when Step 3 is used)
+
+### New Workflow
+
+```
+Synthesis Text
+    │
+    ├─► Step 1: Combined Extraction [Haiku]
+    │       └─ Extracts explicit + implicit variables + chain_dependencies
+    │       └─ Sets skip_step3 = True
+    │
+    ├─► Step 2: Normalization [Haiku]
+    │       └─ Maps to canonical names
+    │
+    ├─► Step 3: SKIPPED (combined extraction already did this)
+    │
+    └─► Step 4: Data ID Mapping
+            └─ Maps to API endpoints
+```
+
+**Total savings:** ~$0.010/query (~80% reduction)
 
 ---
 

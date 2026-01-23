@@ -15,22 +15,28 @@ sys.path.append(str(Path(__file__).parent.parent))
 from models import call_claude_sonnet, call_claude_haiku
 from states import RetrieverState
 from answer_generation_prompts import LOGIC_CHAIN_PROMPT, SYNTHESIS_PROMPT, CONTRADICTION_PROMPT
-from config import MAX_CHUNKS_FOR_ANSWER
+from config import (
+    MAX_CHUNKS_FOR_ANSWER,
+    SKIP_CONTRADICTION_FOR_DATA_LOOKUP,
+    SKIP_CONTRADICTION_CONFIDENCE_THRESHOLD
+)
 
 
 def generate_answer(state: RetrieverState) -> RetrieverState:
     """
-    Generate logic chain answer from retrieved chunks (two-stage).
+    Generate logic chain answer from retrieved chunks (two-stage + conditional Stage 3).
 
     Stage 1: Extract and organize logic chains
     Stage 2: Synthesize consensus and extract variables
+    Stage 3: Identify contradicting evidence (conditional - skipped for data_lookup or high confidence)
 
-    Input: query, retrieved_chunks, query_temporal_reference
+    Input: query, retrieved_chunks, query_temporal_reference, query_type
     Output: synthesized_context, answer, synthesis, data_temporal_summary
     """
     query = state.get("query", "")
     chunks = state.get("retrieved_chunks", [])
     query_temporal_ref = state.get("query_temporal_reference", {})
+    query_type = state.get("query_type", "research_question")
 
     # Limit chunks to preserve LLM reasoning quality
     chunks = chunks[:MAX_CHUNKS_FOR_ANSWER]
@@ -65,11 +71,20 @@ def generate_answer(state: RetrieverState) -> RetrieverState:
 
     print(f"[answer_generation] Stage 2 complete: {synthesis_text[:200]}...")
 
-    # Stage 3: Identify contradicting evidence (runs on EVERY query per user decision)
-    print(f"[answer_generation] Stage 3: Identifying contradicting evidence...")
-    contradictions = identify_contradictions(query, synthesis_text, context)
+    # Stage 3: Identify contradicting evidence (CONDITIONAL)
+    # Skip if: (1) data_lookup query, or (2) high confidence score
+    should_skip_contradictions = should_skip_contradiction_detection(
+        query_type, confidence_metadata
+    )
 
-    print(f"[answer_generation] Stage 3 complete: {contradictions[:200]}...")
+    if should_skip_contradictions:
+        skip_reason = get_contradiction_skip_reason(query_type, confidence_metadata)
+        print(f"[answer_generation] Stage 3: SKIPPED - {skip_reason}")
+        contradictions = f"Skipped: {skip_reason}"
+    else:
+        print(f"[answer_generation] Stage 3: Identifying contradicting evidence...")
+        contradictions = identify_contradictions(query, synthesis_text, context)
+        print(f"[answer_generation] Stage 3 complete: {contradictions[:200]}...")
 
     return {
         **state,
@@ -80,6 +95,40 @@ def generate_answer(state: RetrieverState) -> RetrieverState:
         "contradictions": contradictions,
         "data_temporal_summary": data_temporal_summary
     }
+
+
+def should_skip_contradiction_detection(query_type: str, confidence_metadata: dict) -> bool:
+    """
+    Determine if Stage 3 (contradiction detection) should be skipped.
+
+    Skip conditions:
+    1. Query type is 'data_lookup' (simple factual queries don't need contradiction analysis)
+    2. Confidence score is above threshold (high confidence = low value from contradiction check)
+
+    Returns True if Stage 3 should be skipped.
+    """
+    # Condition 1: Skip for data_lookup queries
+    if SKIP_CONTRADICTION_FOR_DATA_LOOKUP and query_type == "data_lookup":
+        return True
+
+    # Condition 2: Skip for high confidence scores
+    confidence_score = confidence_metadata.get("overall_score", 0.0)
+    if confidence_score >= SKIP_CONTRADICTION_CONFIDENCE_THRESHOLD:
+        return True
+
+    return False
+
+
+def get_contradiction_skip_reason(query_type: str, confidence_metadata: dict) -> str:
+    """Get human-readable reason for skipping contradiction detection."""
+    if SKIP_CONTRADICTION_FOR_DATA_LOOKUP and query_type == "data_lookup":
+        return "data_lookup query (simple factual lookup)"
+
+    confidence_score = confidence_metadata.get("overall_score", 0.0)
+    if confidence_score >= SKIP_CONTRADICTION_CONFIDENCE_THRESHOLD:
+        return f"high confidence synthesis ({confidence_score:.2f} >= {SKIP_CONTRADICTION_CONFIDENCE_THRESHOLD})"
+
+    return "unknown"
 
 
 def parse_extracted_data(chunk: dict) -> dict:

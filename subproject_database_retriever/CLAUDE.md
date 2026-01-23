@@ -173,15 +173,25 @@ Each synthesis includes structured confidence metadata:
 - **Medium (0.5-0.8)**: 2 paths OR single source with strong logic
 - **Low (<0.5)**: Single path, weak support, or contradictory evidence
 
-### Contradiction Detection (NEW)
+### Contradiction Detection (Conditional)
 
-Stage 3 runs on **every query** to identify evidence that contradicts or weakens consensus:
+Stage 3 identifies evidence that contradicts or weakens consensus:
 - Sources that explicitly disagree
 - Conditions where logic chain breaks down
 - Historical examples where similar logic failed
 - Missing considerations that could invalidate conclusions
 
 Output includes impact assessment (High/Medium/Low) and recommendation.
+
+**Skip Conditions (for efficiency):**
+- `data_lookup` queries (simple factual lookups don't need contradiction analysis)
+- High confidence syntheses (>= 0.85 score)
+
+**Configuration (`config.py`):**
+```python
+SKIP_CONTRADICTION_FOR_DATA_LOOKUP = True  # Skip for data_lookup queries
+SKIP_CONTRADICTION_CONFIDENCE_THRESHOLD = 0.85  # Skip if confidence >= this
+```
 
 ### Two-Stage Retrieval with LLM Re-Ranking (NEW)
 
@@ -197,6 +207,7 @@ Addresses the risk of retrieving conceptually adjacent but causally unrelated co
 - Only high scores for chunks with actual causal reasoning relevant to query
 - Filters out surface-level keyword matches that lack causal logic
 - Returns top 10 after re-ranking
+- **Uses structured output (tool_use)** for guaranteed JSON parsing (no more regex failures)
 
 **Configuration (`config.py`):**
 ```python
@@ -204,6 +215,7 @@ ENABLE_LLM_RERANK = True           # Toggle for cost control
 BROAD_RETRIEVAL_TOP_K = 20         # Stage 1: candidates to retrieve
 BROAD_SIMILARITY_THRESHOLD = 0.40  # Stage 1: lower threshold for recall
 RERANK_TOP_K = 10                  # Stage 2: keep top N after re-ranking
+USE_STRUCTURED_RERANK = True       # Use tool_use for reliable JSON (recommended)
 ```
 
 **Re-Ranking Scoring Guidelines:**
@@ -263,6 +275,31 @@ Addresses temporal validity of extracted data - system now distinguishes time-bo
 - `data_temporal_summary`: {data_years, forward_looking_count, time_bound_count, structural_count}
 
 **Use Case**: Query for future year → LLM extracts timeless logic chains → User can plug in current numbers and re-run the logic.
+
+### Adaptive Query Expansion (NEW)
+
+Adjusts the number of expansion dimensions based on query complexity.
+
+**Problem**: Simple queries like "what is RDE?" don't need 6 expansion dimensions - wastes tokens and may dilute results.
+
+**Solution**: Detect query complexity and adapt:
+- **Simple queries** (≤10 words, single concept): 2-3 dimensions
+- **Complex queries** (multiple concepts, relationships): 4-6 dimensions
+
+**Complexity Detection:**
+```python
+complexity_indicators = [" and ", " or ", " relationship ", " between ", " causes ", " affects "]
+is_simple = words <= 10 and not any(indicator in query for indicator in complexity_indicators)
+```
+
+**Configuration (`config.py`):**
+```python
+SIMPLE_QUERY_MAX_WORDS = 10        # Queries with <= this many words are "simple"
+SIMPLE_QUERY_DIMENSIONS = 3       # Expansion dimensions for simple queries
+COMPLEX_QUERY_DIMENSIONS = 6      # Expansion dimensions for complex queries
+```
+
+**Savings:** 30-50% reduction in expansion tokens for simple queries
 
 ## Flexible Design Decisions (TBD)
 The following are intentionally left flexible for future decisions:

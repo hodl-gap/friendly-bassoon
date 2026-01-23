@@ -27,9 +27,19 @@ ENABLE_LLM_RERANK = True  # Toggle LLM re-ranking (disable for cost savings)
 BROAD_RETRIEVAL_TOP_K = 20  # Stage 1: Broad semantic recall (higher for better coverage)
 BROAD_SIMILARITY_THRESHOLD = 0.40  # Stage 1: Lower threshold for recall
 RERANK_TOP_K = 10  # Stage 2: Keep top N after LLM re-ranking
+USE_STRUCTURED_RERANK = True  # Use tool_use for guaranteed JSON parsing (more reliable)
 
 # Hybrid Retrieval Settings (addresses query expansion dilution)
 ORIGINAL_QUERY_TOP_N = 5  # Guaranteed slots for original query's top results
+
+# Adaptive Query Expansion Settings
+SIMPLE_QUERY_MAX_WORDS = 10  # Queries with <= this many words are "simple"
+SIMPLE_QUERY_DIMENSIONS = 3  # Number of expansion dimensions for simple queries
+COMPLEX_QUERY_DIMENSIONS = 6  # Number of expansion dimensions for complex queries
+
+# Conditional Contradiction Detection Settings
+SKIP_CONTRADICTION_FOR_DATA_LOOKUP = True  # Skip Stage 3 for data_lookup queries
+SKIP_CONTRADICTION_CONFIDENCE_THRESHOLD = 0.85  # Skip Stage 3 if confidence >= this
 
 # Embedding Configuration
 EMBEDDING_MODEL = "text-embedding-3-large"

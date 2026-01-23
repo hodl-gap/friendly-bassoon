@@ -6,12 +6,15 @@ This file contains ONLY:
 2. Calling other function modules
 3. Central router logic
 4. NO business logic or implementation details
+
+Optimization: When USE_COMBINED_EXTRACTION=True, Step 3 is skipped because
+Step 1 already extracts both explicit and implicit variables.
 """
 
 import json
 from langgraph.graph import StateGraph, END
 from states import VariableMapperState
-from config import SAMPLE_INPUT_FILE
+from config import SAMPLE_INPUT_FILE, USE_COMBINED_EXTRACTION
 
 # Import function modules
 from variable_extraction import extract_variables
@@ -20,8 +23,21 @@ from missing_variable_detection import detect_missing_variables
 from data_id_mapping import map_to_data_ids
 
 
+def should_skip_step3(state: VariableMapperState) -> str:
+    """
+    Router: decide whether to skip Step 3 (missing_variable_detection).
+
+    If combined extraction was used, Step 3 is redundant.
+    """
+    if state.get("skip_step3", False):
+        print("[orchestrator] Skipping Step 3 - combined extraction already parsed chains")
+        return "map_data_ids"
+    else:
+        return "detect_missing"
+
+
 def build_graph() -> StateGraph:
-    """Build the LangGraph workflow."""
+    """Build the LangGraph workflow with conditional Step 3."""
     graph = StateGraph(VariableMapperState)
 
     # Add nodes (function modules)
@@ -30,10 +46,20 @@ def build_graph() -> StateGraph:
     graph.add_node("detect_missing", detect_missing_variables)
     graph.add_node("map_data_ids", map_to_data_ids)
 
-    # Wire edges - full 4-step workflow
+    # Wire edges with conditional routing
     graph.set_entry_point("extract_variables")
     graph.add_edge("extract_variables", "normalize_variables")
-    graph.add_edge("normalize_variables", "detect_missing")
+
+    # Conditional edge: skip Step 3 if combined extraction was used
+    graph.add_conditional_edges(
+        "normalize_variables",
+        should_skip_step3,
+        {
+            "detect_missing": "detect_missing",
+            "map_data_ids": "map_data_ids"
+        }
+    )
+
     graph.add_edge("detect_missing", "map_data_ids")
     graph.add_edge("map_data_ids", END)
 

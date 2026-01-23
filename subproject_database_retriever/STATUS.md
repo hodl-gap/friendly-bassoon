@@ -2,9 +2,9 @@
 
 **IMPORTANT**: Read `CLAUDE.md` first for project guidelines and patterns.
 
-**Last Updated**: 2026-01-22
+**Last Updated**: 2026-01-23
 
-## Current State: Hybrid Retrieval + Temporal Awareness + Cross-Chunk Chain Linkage
+## Current State: Hybrid Retrieval + Temporal Awareness + Cross-Chunk Chain Linkage + Optimizations
 
 ### Completed
 - [x] Project structure set up
@@ -59,6 +59,57 @@ subproject_database_retriever/
 - [x] **Contradiction detection** - Stage 3 identifies evidence that weakens consensus (2026-01-16)
 - [x] **Hybrid retrieval** - Guarantees original query's top-5 chunks preserved (2026-01-22)
 - [x] **Temporal awareness** - LLM distinguishes logic chains from time-bound values (2026-01-22)
+- [x] **Structured re-ranking** - Uses tool_use for guaranteed JSON parsing (2026-01-23)
+- [x] **Conditional contradiction** - Skips Stage 3 for data_lookup or high-confidence (2026-01-23)
+- [x] **Adaptive query expansion** - 2-3 dims for simple queries, 4-6 for complex (2026-01-23)
+
+---
+
+## Session Summary: 2026-01-23
+
+### Optimization: LLM Efficiency Improvements
+
+Based on evaluation report, implemented 3 high-impact optimizations.
+
+**1. Structured Output for Re-Ranking (tool_use)**
+
+Replaced fragile JSON regex parsing with Claude's `tool_use` for guaranteed structure.
+
+```python
+# New: tool_use with forced tool choice
+rerank_tool = {"name": "submit_rerank_scores", "input_schema": {...}}
+tool_choice = {"type": "tool", "name": "submit_rerank_scores"}
+```
+
+**Files updated:**
+- `vector_search.py` - Added `rerank_with_structured_output()`
+- `vector_search_prompts.py` - Added `RE_RANK_SYSTEM_PROMPT`
+- `config.py` - Added `USE_STRUCTURED_RERANK = True`
+
+**2. Conditional Contradiction Detection**
+
+Stage 3 now skips for:
+- `data_lookup` queries (simple factual lookups)
+- High confidence syntheses (>= 0.85)
+
+**Files updated:**
+- `answer_generation.py` - Added `should_skip_contradiction_detection()`
+- `config.py` - Added `SKIP_CONTRADICTION_FOR_DATA_LOOKUP`, `SKIP_CONTRADICTION_CONFIDENCE_THRESHOLD`
+
+**Savings:** 30-50% of queries skip Stage 3 (~$0.002/query)
+
+**3. Adaptive Query Expansion**
+
+Detects query complexity and adjusts expansion dimensions:
+- Simple (≤10 words, single concept): 2-3 dimensions
+- Complex (multiple concepts, relationships): 4-6 dimensions
+
+**Files updated:**
+- `query_processing.py` - Added `is_simple_query()`, adaptive prompt selection
+- `query_processing_prompts.py` - Added `QUERY_EXPANSION_PROMPT_SIMPLE`, `QUERY_EXPANSION_PROMPT_COMPLEX`
+- `config.py` - Added `SIMPLE_QUERY_MAX_WORDS`, `SIMPLE_QUERY_DIMENSIONS`, `COMPLEX_QUERY_DIMENSIONS`
+
+**Savings:** 30-50% reduction in expansion tokens for simple queries
 
 ---
 
