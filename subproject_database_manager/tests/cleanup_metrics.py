@@ -352,14 +352,6 @@ CATEGORY_FIXES = {
     'fx_liquidity': 'indirect',
 }
 
-# =============================================================================
-# DIRECT LIQUIDITY KEYWORDS
-# =============================================================================
-
-DIRECT_KEYWORDS = ['tga', 'rrp', 'fed_balance', 'qt_', 'qe_', 'repo', 'sofr',
-                   'btfp', 'srf', 'qt_end', 'qt_pause', 'mbs_reinvestment',
-                   'reserve_management', 'iorb']
-
 def fix_category_contamination(rows: list) -> int:
     """Fix category values that contain cluster names instead of direct/indirect."""
     fixes = 0
@@ -368,33 +360,6 @@ def fix_category_contamination(rows: list) -> int:
         if cat in CATEGORY_FIXES:
             row['category'] = CATEGORY_FIXES[cat]
             fixes += 1
-    return fixes
-
-def fix_direct_indirect(rows: list) -> int:
-    """Fix metrics that should be direct but are marked indirect."""
-    fixes = 0
-    for row in rows:
-        name = row['normalized'].lower()
-        desc = row.get('description', '').lower()
-        cat = row.get('category', '')
-
-        # Skip if already direct or is non-liquidity
-        if cat == 'direct' or row.get('is_liquidity') == 'false':
-            continue
-
-        # Check if contains direct liquidity keywords
-        for kw in DIRECT_KEYWORDS:
-            if kw in name or kw in desc:
-                # Exclude false positives
-                if 'reserve' in name and 'gold' in desc:
-                    continue  # reserve_shift_to_gold is not direct
-                if 'loan_loss' in name:
-                    continue  # loan provisions
-                if 'equities' in name and 'reserve' not in name:
-                    continue  # equities_overweight false positive
-                row['category'] = 'direct'
-                fixes += 1
-                break
     return fixes
 
 def assign_missing_clusters(rows: list) -> int:
@@ -610,9 +575,6 @@ def cleanup_metrics(rows: list) -> tuple:
     # Apply category fixes (fix contamination with cluster names)
     category_fixes = fix_category_contamination(cleaned_rows)
 
-    # Fix direct/indirect classification
-    direct_indirect_fixes = fix_direct_indirect(cleaned_rows)
-
     # Build migration report
     report = {
         'original_count': len(rows),
@@ -624,7 +586,6 @@ def cleanup_metrics(rows: list) -> tuple:
         'non_liquidity_metrics': non_liquidity_metrics,
         'canonical_mappings_applied': list(CANONICAL_MAPPINGS.keys()),
         'category_fixes': category_fixes,
-        'direct_indirect_fixes': direct_indirect_fixes,
     }
 
     return cleaned_rows, report
@@ -667,7 +628,6 @@ def print_report(report: dict):
     print(f"Non-liquidity (flagged): {report['non_liquidity_count']}")
     print(f"Unmapped (kept as-is): {report['unmapped_count']}")
     print(f"Category fixes:        {report.get('category_fixes', 0)}")
-    print(f"Direct/indirect fixes: {report.get('direct_indirect_fixes', 0)}")
     if 'clusters_assigned' in report:
         print(f"Clusters assigned:     {report['clusters_assigned']}")
     print("=" * 60)

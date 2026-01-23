@@ -249,8 +249,7 @@ r'^4q25f_op',     # 4Q25F OP estimates
 
 **New cleanup features:**
 1. `fix_category_contamination()` - Fixes cluster names in category column
-2. `fix_direct_indirect()` - Corrects direct/indirect classification
-3. `assign_missing_clusters()` - Auto-assigns clusters via LLM (integrated into --execute)
+2. `assign_missing_clusters()` - Auto-assigns clusters via LLM (integrated into --execute)
 
 **New test file:** `tests/test_metrics_cleanup.py`
 - 6 validation tests (category, cluster coverage, duplicates, extraction structure, is_liquidity, direct classification)
