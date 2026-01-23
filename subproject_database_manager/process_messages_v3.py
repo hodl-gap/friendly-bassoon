@@ -4,13 +4,85 @@ import json
 import base64
 import time
 import asyncio
+import re
 sys.path.append('../')
 from models import call_claude_sonnet, call_gpt41_mini, call_gpt5, process_batch_parallel, process_batch_parallel_with_retry
 from categorization_prompts import get_categorization_prompt
 from data_opinion_prompts import get_data_opinion_extraction_prompt
 from interview_meeting_prompts import get_interview_extraction_prompt
-from image_extraction_prompts import get_image_summary_prompt, get_image_structured_extraction_prompt
+from image_extraction_prompts import get_image_summary_prompt, get_image_structured_extraction_prompt, get_combined_image_extraction_prompt
 from metrics_mapping_utils import append_new_metrics, collect_new_metrics_from_extractions, normalize_sources_in_csv
+
+
+# =============================================================================
+# RULE-BASED CATEGORIZATION PRE-FILTER
+# =============================================================================
+# Handles obvious categories without LLM, saving ~$0.0004 per matched message
+
+# Keywords/patterns for each category
+GREETING_PATTERNS = [
+    r'공유드립니다',
+    r'Daily recap',
+    r'일일\s*리캡',
+    r'^안녕하세요',
+    r'^좋은\s*(아침|저녁|오후)',
+]
+
+SCHEDULE_PATTERNS = [
+    r'\(월\)\s*\d{1,2}:\d{2}',  # (월) 22:30
+    r'\(화\)\s*\d{1,2}:\d{2}',
+    r'\(수\)\s*\d{1,2}:\d{2}',
+    r'\(목\)\s*\d{1,2}:\d{2}',
+    r'\(금\)\s*\d{1,2}:\d{2}',
+    r'경제\s*지표\s*일정',
+    r'금주\s*일정',
+    r'이번주\s*일정',
+]
+
+EVENT_PATTERNS = [
+    r'포럼\s*개최',
+    r'세미나\s*개최',
+    r'컨퍼런스\s*개최',
+    r'리서치\s*포럼',
+    r'참가\s*신청',
+    r'등록\s*링크',
+]
+
+
+def categorize_by_rules(text: str) -> tuple:
+    """
+    Attempt to categorize message using rule-based patterns.
+
+    Returns:
+        (category, confidence) if matched, (None, None) if LLM needed
+    """
+    if not text:
+        return None, None
+
+    text_lower = text.lower()
+    text_len = len(text)
+
+    # Greeting: Short message + contains greeting keywords
+    if text_len < 100:
+        for pattern in GREETING_PATTERNS:
+            if re.search(pattern, text, re.IGNORECASE):
+                return 'greeting', 'high'
+
+    # Schedule: Contains time patterns
+    schedule_match_count = 0
+    for pattern in SCHEDULE_PATTERNS:
+        if re.search(pattern, text, re.IGNORECASE):
+            schedule_match_count += 1
+    if schedule_match_count >= 2:  # Multiple time patterns = likely schedule
+        return 'schedule', 'high'
+
+    # Event announcement: Contains event keywords
+    for pattern in EVENT_PATTERNS:
+        if re.search(pattern, text, re.IGNORECASE):
+            return 'event_announcement', 'medium'
+
+    # No match - need LLM
+    return None, None
 
 # =============================================================================
 # CONFIGURATION
@@ -95,6 +167,63 @@ def extract_image_structured_data(image_path, message_text, message_date):
 
     response = call_claude_sonnet(messages)
     return response
+
+
+def extract_image_combined(image_path, message_text, message_date):
+    """
+    Extract BOTH summary and structured data from image in a single API call.
+
+    Returns:
+        dict with 'summary' and 'structured_data' keys, or None on failure
+    """
+    image_data = encode_image(image_path)
+    if not image_data:
+        return None
+
+    prompt = get_combined_image_extraction_prompt(message_text, message_date)
+
+    messages = [{
+        "role": "user",
+        "content": [
+            {
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": "image/jpeg",
+                    "data": image_data
+                }
+            },
+            {
+                "type": "text",
+                "text": prompt
+            }
+        ]
+    }]
+
+    response = call_claude_sonnet(messages)
+
+    # Parse JSON response
+    try:
+        response_text = response.strip()
+        if response_text.startswith("```"):
+            lines = response_text.split('\n')
+            response_text = '\n'.join(lines[1:-1]) if len(lines) > 2 else response_text
+            if response_text.startswith("json"):
+                response_text = response_text[4:].strip()
+
+        parsed = json.loads(response_text)
+        return {
+            'summary': parsed.get('summary', ''),
+            'structured_data': parsed.get('structured_data', {})
+        }
+    except json.JSONDecodeError as e:
+        print(f"  Error parsing combined extraction: {e}")
+        # Fall back to returning just the raw response as summary
+        return {
+            'summary': response[:200] if response else '',
+            'structured_data': {}
+        }
+
 
 def process_batch(messages_batch, category, channel_name, use_gpt5=True):
     """
@@ -375,30 +504,36 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
     step_times = {}
 
     print("=" * 80)
-    print("STEP 1: EXTRACT IMAGE SUMMARIES")
+    print("STEP 1: EXTRACT IMAGE SUMMARIES + STRUCTURED DATA (COMBINED)")
     print("=" * 80)
     step1_start = time.time()
 
-    # Step 1: Extract image summaries for categorization
+    # Step 1: Extract BOTH summary and structured data in one call
+    # This saves one API call per image for data_opinion/interview_meeting categories
     for i, msg in enumerate(messages, 1):
         if msg.get('photo'):
-            print(f"\nMessage {i}/{len(messages)}: Extracting image summary...")
+            print(f"\nMessage {i}/{len(messages)}: Extracting image (combined)...")
             print(f"  Photo: {msg['photo']}")
 
             photo_path = base_photo_path + msg['photo']
-            image_summary = extract_image_summary(photo_path, msg['text'])
-            api_costs['image_summaries'] += 1
+            combined_result = extract_image_combined(photo_path, msg['text'], msg['date'])
+            api_costs['image_summaries'] += 1  # Still track as 1 call (was 2 before)
 
-            if image_summary:
+            if combined_result:
+                image_summary = combined_result.get('summary', '')
                 print(f"  Summary: {image_summary[:150]}...")
                 msg['image_summary'] = image_summary
                 msg['combined_text'] = f"{msg['text']}\n\n[Image contains: {image_summary}]"
+                # Store structured data for later use in Step 3 (no second API call needed)
+                msg['image_structured_data_cached'] = combined_result.get('structured_data', {})
             else:
                 msg['image_summary'] = ""
                 msg['combined_text'] = msg['text']
+                msg['image_structured_data_cached'] = {}
         else:
             msg['image_summary'] = ""
             msg['combined_text'] = msg['text']
+            msg['image_structured_data_cached'] = {}
 
     step_times['step1_image_summaries'] = time.time() - step1_start
     print(f"\n⏱️  Step 1 completed in {step_times['step1_image_summaries']:.1f}s")
@@ -408,15 +543,29 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
     print("=" * 80)
     step2_start = time.time()
 
+    # Track rule-based vs LLM categorizations
+    rule_based_count = 0
+    llm_based_count = 0
+
     # Step 2: Categorize using combined text
     for i, msg in enumerate(messages, 1):
         print(f"\nCategorizing message {i}/{len(messages)}...")
 
-        # Use combined text for categorization
+        # Try rule-based categorization first (saves ~$0.0004 per match)
+        rule_category, rule_confidence = categorize_by_rules(msg['combined_text'])
+
+        if rule_category:
+            msg['category'] = rule_category
+            rule_based_count += 1
+            print(f"  → {msg['category']} (rule-based, {rule_confidence})")
+            continue
+
+        # Fall back to LLM for complex cases
         cat_prompt = get_categorization_prompt(msg['combined_text'], msg['date'])
         cat_messages = [{"role": "user", "content": cat_prompt}]
         cat_response = call_gpt41_mini(cat_messages)
         api_costs['categorizations'] += 1
+        llm_based_count += 1
 
         try:
             cat_text = cat_response.strip()
@@ -428,7 +577,7 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
 
             category_data = json.loads(cat_text)
             msg['category'] = category_data.get('category', 'unknown')
-            print(f"  → {msg['category']}")
+            print(f"  → {msg['category']} (LLM)")
 
         except json.JSONDecodeError as e:
             print(f"  → Error: {e}")
@@ -436,41 +585,30 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
 
     step_times['step2_categorization'] = time.time() - step2_start
     print(f"\n⏱️  Step 2 completed in {step_times['step2_categorization']:.1f}s")
+    print(f"    Rule-based: {rule_based_count}, LLM: {llm_based_count} ({rule_based_count/(rule_based_count+llm_based_count)*100:.0f}% saved)")
 
     print(f"\n{'=' * 80}")
-    print("STEP 3: EXTRACT STRUCTURED DATA FROM IMAGES")
+    print("STEP 3: USE CACHED STRUCTURED DATA FROM IMAGES")
     print("=" * 80)
     step3_start = time.time()
 
-    # Step 3: Extract structured data from images (for data_opinion/interview_meeting)
+    # Step 3: Use cached structured data from Step 1 (no additional API calls needed)
+    # Previously this made a SECOND API call per image - now we use cached data
+    cached_used = 0
     for i, msg in enumerate(messages, 1):
         if msg.get('photo') and msg['category'] in ['data_opinion', 'interview_meeting']:
-            print(f"\nMessage {i}/{len(messages)}: Extracting structured data from image...")
-
-            photo_path = base_photo_path + msg['photo']
-            image_response = extract_image_structured_data(photo_path, msg['text'], msg['date'])
-            api_costs['image_extractions'] += 1
-
-            if image_response:
-                try:
-                    img_text = image_response.strip()
-                    if img_text.startswith("```"):
-                        lines = img_text.split('\n')
-                        img_text = '\n'.join(lines[1:-1]) if len(lines) > 2 else img_text
-                        if img_text.startswith("json"):
-                            img_text = img_text[4:].strip()
-
-                    img_data = json.loads(img_text)
-                    msg['image_structured_data'] = json.dumps(img_data, ensure_ascii=False)
-                    print(f"  ✓ Extracted")
-                except json.JSONDecodeError as e:
-                    print(f"  Error parsing: {e}")
-                    msg['image_structured_data'] = ""
+            cached_data = msg.get('image_structured_data_cached', {})
+            if cached_data:
+                msg['image_structured_data'] = json.dumps(cached_data, ensure_ascii=False)
+                cached_used += 1
+                print(f"  Message {i}: ✓ Using cached structured data")
             else:
                 msg['image_structured_data'] = ""
+                print(f"  Message {i}: No cached data available")
+        # Note: api_costs['image_extractions'] no longer incremented - calls eliminated
 
     step_times['step3_image_extraction'] = time.time() - step3_start
-    print(f"\n⏱️  Step 3 completed in {step_times['step3_image_extraction']:.1f}s")
+    print(f"\n⏱️  Step 3 completed in {step_times['step3_image_extraction']:.1f}s (used {cached_used} cached extractions, 0 API calls)")
 
     print(f"\n{'=' * 80}")
     print("STEP 4: PROCESS BY CATEGORY WITH PARALLEL BATCHING")

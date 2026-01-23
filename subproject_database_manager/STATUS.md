@@ -1,10 +1,150 @@
 # Project Status - Telegram Financial Message Processing Workflow
 
-**Last Updated**: 2026-01-01
+**Last Updated**: 2026-01-20
 
 ## Current State: Production-Ready with Vector DB Integration
 
 Complete end-to-end workflow for fetching and processing financial research messages from Telegram channels with AI-powered analysis, categorization, structured data extraction, automated QA sampling, and vector database storage.
+
+---
+
+## Session Summary: 2026-01-20
+
+### Extraction Accuracy QA Implementation
+
+Added accuracy verification to check if extracted VALUES are correct (not just structure).
+
+**Problem**: Existing QA only validates structure/completeness, not whether extracted values match source.
+
+**Solution**: New accuracy QA module that:
+- Samples 10% of extractions (min 3, max 30)
+- Uses Claude Haiku to verify each field against source text
+- Records all results with full logs
+- Tracks error rates with threshold recommendations
+
+**Pipeline integration:**
+```
+Step 1: JSON → CSV
+Step 2: Process messages (extract)
+Step 3: QA Validation (structure)
+Step 4: Accuracy QA (values) ← NEW
+```
+
+**Error types tracked:**
+- `variable_wrong` - Wrong variable identified
+- `value_wrong` - Incorrect number/amount
+- `direction_wrong` - Up/down/stable incorrect
+- `cause_wrong` - Logic chain cause not in text
+- `effect_wrong` - Logic chain effect not in text
+- `evidence_mismatch` - Quote doesn't match source
+- `hallucination` - Extracted something not in source
+
+**Files created:**
+- `extraction_accuracy_qa.py` - Main accuracy QA module
+- `extraction_accuracy_qa_prompts.py` - Verification prompts
+
+**Files updated:**
+- `message_pipeline.py` - Added Step 4 accuracy QA integration
+
+---
+
+### Cross-Chunk Chain Linkage Implementation
+
+Added explicit chain connection across chunks using normalized variable names.
+
+**Problem**: Logic chains stored in separate chunks couldn't be explicitly connected.
+- Chunk A: "JPY weakness → carry trade unwind"
+- Chunk B: "carry trade unwind → EM equity selling"
+- Connection relied purely on LLM inference during synthesis
+
+**Solution**: Added `cause_normalized` and `effect_normalized` fields to each logic chain step.
+
+**New logic chain step structure:**
+```json
+{
+  "cause": "TGA drawdown",
+  "cause_normalized": "tga",
+  "effect": "bank reserves increase",
+  "effect_normalized": "bank_reserves",
+  "mechanism": "Treasury spending releases TGA funds",
+  "evidence_quote": "TGA 잔고가 750B로..."
+}
+```
+
+**Normalization Rules:**
+- Use existing names from `liquidity_metrics_mapping.csv` if available
+- Create snake_case version for new concepts (max 30 chars)
+- Common patterns: `tga`, `rrp`, `sofr`, `fed_funds`, `bank_reserves`, `carry_trade`, `risk_off`
+
+**Files updated:**
+- `data_opinion_prompts.py` - Added cause_normalized, effect_normalized to logic chain steps
+- `interview_meeting_prompts.py` - Same
+
+---
+
+## Session Summary: 2026-01-17
+
+### Logic Flaw Issue 1: Evidence Anchors
+
+**Problem**: Logic chains could be hallucinated by LLM during extraction - no way to verify claims.
+
+**Solution**: Added `evidence_quote` field to logic chain steps.
+
+**Evidence Quote Rules:**
+- Must be VERBATIM text from the source message (Korean or English OK)
+- Must contain the causal/threshold claim EXPLICITLY
+- Do NOT paraphrase - use exact wording from the message
+
+**Files updated:**
+- `data_opinion_prompts.py` - Added evidence_quote requirement to logic_chains schema
+- `interview_meeting_prompts.py` - Same
+- `qa_validation_prompts.py` - Added validation for evidence_quote field
+
+---
+
+## Session Summary: 2026-01-16
+
+### Evaluation Response Implementation - Issues 1 & 5
+
+Implemented enhancements from external architecture evaluation.
+
+**Issue 1: Temporal & Regime Awareness**
+
+Added `temporal_context` field to extraction schema for regime-aware retrieval:
+
+```json
+"temporal_context": {
+  "policy_regime": "QE" | "QT" | "hold" | "transition",
+  "liquidity_regime": "reserve_scarce" | "reserve_abundant" | "transitional",
+  "valid_from": "2022-06",
+  "valid_until": null,
+  "is_forward_looking": false
+}
+```
+
+**Key decision:** Empty object `{}` if regime context not clearly discernible. Do NOT infer from date alone.
+
+**Files updated:**
+- `data_opinion_prompts.py` - Added temporal_context field to extraction schema
+- `interview_meeting_prompts.py` - Same temporal_context changes
+- `qa_validation_prompts.py` - Added temporal_context validation to Completeness dimension
+
+**Issue 5: Metrics Dictionary Governance**
+
+Added lifecycle tracking columns to prevent dictionary drift:
+
+| Column | Purpose |
+|--------|---------|
+| `first_seen` | Date metric was first discovered |
+| `last_seen` | Date metric was last referenced |
+| `deprecated` | Marks inactive metrics |
+| `superseded_by` | Canonical name of replacement |
+
+**Key decision:** Leave first_seen/last_seen empty for legacy metrics (no backfill).
+
+**Files updated:**
+- `metrics_mapping_utils.py` - Added lifecycle columns, auto-update logic
+- `tests/cleanup_metrics.py` - Added `deprecate_metric()`, `find_stale_metrics()`, `list_deprecated_metrics()`
 
 ---
 
@@ -842,6 +982,9 @@ MAX_CONCURRENT_REQUESTS = 10        # Parallel API calls
 - **2025-12-29** - Metrics data quality overhaul: validation functions, post-mortem cleanup, stricter prompts; Codebase cleanup (obsolete files moved to tests/); Prompts extraction (image_extraction_prompts.py, metrics_mapping_prompts.py); Orchestrator refactor (message_pipeline.py)
 - **2025-12-30** - Cleanup validation: extended canonical mappings, NON_LIQUIDITY_PATTERNS, cluster assignment; 100% cluster coverage; test_metrics_cleanup.py validation suite
 - **2026-01-01** - Trade opinion categorization (data_opinion captures trading actions); Post-mortem enrichment script (fills exact numbers using 7-day data_update context)
+- **2026-01-16** - Evaluation response: Temporal/regime awareness, metrics lifecycle tracking
+- **2026-01-17** - Logic Flaw Issue 1: Evidence anchors (evidence_quote field)
+- **2026-01-20** - Cross-chunk chain linkage (cause_normalized, effect_normalized fields)
 
 ---
 

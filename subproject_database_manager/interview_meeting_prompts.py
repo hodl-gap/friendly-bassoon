@@ -89,11 +89,18 @@ For EACH message, extract structured information about who said what.
         "logic_chains": [
             {{
                 "steps": [
-                    {{"cause": "labor market cooling", "effect": "wage pressure easing", "mechanism": "fewer job openings reduce worker bargaining power"}},
-                    {{"cause": "wage pressure easing", "effect": "inflation decline", "mechanism": "lower wage growth reduces service inflation"}}
+                    {{"cause": "labor market cooling", "cause_normalized": "labor_market", "effect": "wage pressure easing", "effect_normalized": "wage_pressure", "mechanism": "fewer job openings reduce worker bargaining power", "evidence_quote": "The labor market has been cooling, with job openings declining significantly"}},
+                    {{"cause": "wage pressure easing", "cause_normalized": "wage_pressure", "effect": "inflation decline", "effect_normalized": "inflation", "mechanism": "lower wage growth reduces service inflation", "evidence_quote": "This should help bring down service sector inflation over time"}}
                 ]
             }}
-        ]
+        ],
+        "temporal_context": {{
+            "policy_regime": "QT",
+            "liquidity_regime": "reserve_scarce",
+            "valid_from": "2022-06",
+            "valid_until": null,
+            "is_forward_looking": false
+        }}
     }}
 ]
 ```
@@ -175,18 +182,53 @@ For EACH message, extract structured information about who said what.
 - Array of causal chains expressing policy logic (multi-step sequences)
 - Each chain represents: cause → effect → next effect
 - "steps": Array of ordered steps in the chain
-  - Each step has: "cause", "effect", "mechanism"
+  - Each step MUST have:
+    - "cause": Initial condition (natural language)
+    - "cause_normalized": Normalized variable name (snake_case, for cross-chunk linking)
+    - "effect": Resulting outcome (natural language)
+    - "effect_normalized": Normalized variable name (snake_case, for cross-chunk linking)
+    - "mechanism": How cause leads to effect
+    - "evidence_quote": 1-3 sentences from the original message that support this step (REQUIRED)
 - Chains should have 2+ steps when the logic continues
 - Single-step chains acceptable if no further effects
 - Empty array [] if no causal relationships
+
+**Normalization Rules (CRITICAL for cross-chunk chain linking):**
+- Check liquidity_metrics_mapping for existing normalized names (use exact match if found)
+- If no exact match, create snake_case version of the concept
+- Keep it short and standardized (max 30 chars)
+- Common patterns: tga, rrp, sofr, fed_funds, bank_reserves, inflation, rate_cut, labor_market
+- Examples:
+  - "inflation falls to 2%" → cause_normalized: "inflation"
+  - "rate cuts" → effect_normalized: "rate_cut"
+  - "labor market cooling" → cause_normalized: "labor_market"
+
+**Evidence Quote Rules (CRITICAL for preventing hallucination):**
+- Must be VERBATIM text from the source message (Korean or English OK)
+- Must contain the causal/threshold claim EXPLICITLY
+- Do NOT paraphrase - use exact wording from the message
+- If no clear quote available, include the most relevant sentence mentioning the cause or effect
+- 1-3 sentences max per step
 
 **Example chain from Fed speech:**
 "If inflation falls to 2%, we can normalize rates, which would support housing"
 → Chain: inflation down → rate cuts → housing recovery
 
 Structure as:
-- Step 1: cause="inflation falls to 2%", effect="rate cuts", mechanism="target achieved allows policy normalization"
-- Step 2: cause="rate cuts", effect="housing recovery", mechanism="lower mortgage rates increase affordability"
+- Step 1: cause="inflation falls to 2%", cause_normalized="inflation", effect="rate cuts", effect_normalized="rate_cut", mechanism="target achieved allows policy normalization", evidence_quote="If inflation falls to 2%, we can normalize rates"
+- Step 2: cause="rate cuts", cause_normalized="rate_cut", effect="housing recovery", effect_normalized="housing", mechanism="lower mortgage rates increase affordability", evidence_quote="which would support housing"
+
+**temporal_context field:**
+- Purpose: Enable retrieval filtering by policy/liquidity regime
+- Structure:
+  - "policy_regime": "QE" | "QT" | "hold" | "transition" - Current Fed policy stance
+  - "liquidity_regime": "reserve_scarce" | "reserve_abundant" | "transitional"
+  - "valid_from": Date when this logic became applicable (YYYY-MM format or null)
+  - "valid_until": Date when superseded (null if still valid)
+  - "is_forward_looking": true/false - Contains forecast/projection
+- Example: {{"policy_regime": "QT", "liquidity_regime": "reserve_scarce", "valid_from": "2022-06", "valid_until": null, "is_forward_looking": false}}
+- **IMPORTANT**: Empty object {{}} if regime context not clearly discernible from message content
+- Do NOT infer regime from date alone - only tag when explicitly mentioned or strongly implied
 
 ---
 

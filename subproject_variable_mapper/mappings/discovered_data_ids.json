@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "last_updated": "2026-01-22T08:54:18.802928+00:00",
+    "last_updated": "2026-01-22T09:20:15.878773+00:00",
     "total_mappings": 5,
     "known_apis": [
       "FRED",
@@ -70,19 +70,16 @@
     },
     "pmi": {
       "normalized_name": "pmi",
-      "type": "api",
-      "data_id": "FRED:NAPM",
-      "source": "FRED",
-      "description": "ISM Manufacturing: PMI Composite Index - Purchasing Managers' Index measuring manufacturing sector health based on new orders, inventory levels, production, supplier deliveries, and employment. Values above 50 indicate expansion, below 50 indicate contraction.",
-      "api_url": "https://api.stlouisfed.org/fred/series/observations?series_id=NAPM&api_key=YOUR_API_KEY&file_type=json",
+      "type": "not_found",
+      "data_id": "N/A",
+      "source": "ISM (Institute for Supply Management)",
+      "description": "Purchasing Managers' Index - A composite indicator measuring manufacturing sector activity based on new orders (30%), production (25%), employment (20%), supplier deliveries (15%), and inventories (10%). A reading above 50 indicates expansion, below 50 indicates contraction.",
+      "api_url": "N/A",
       "frequency": "monthly",
-      "notes": "Free API but requires registration for API key. Released on first business day of each month at 10:00 AM EST by Institute for Supply Management (ISM). Series code NAPM stands for National Association of Purchasing Management (former name of ISM before Sept 2001).",
-      "registration_url": "https://fred.stlouisfed.org/docs/api/api_key.html",
-      "api_docs_url": "https://fred.stlouisfed.org/docs/api/fred/series_observations.html",
-      "mapping_rationale": "Searched FRED for 'PMI Purchasing Managers Index' and found series ID NAPM. This is the official ISM Manufacturing PMI Composite Index published by the Institute for Supply Management via FRED. Verified at fred.stlouisfed.org/series/NAPM and confirmed in FRED-MD database documentation. NAPM is the primary US manufacturing PMI series, preferred over component indices (NAPMNOI for new orders, NAPMSDI for supplier deliveries) as it represents the composite headline index most commonly referenced in financial analysis.",
-      "discovered_at": "2026-01-22T08:54:18.420435+00:00",
-      "rationale_validated": true,
-      "validated": false
+      "notes": "ISM PMI data was removed from FRED in June 2016 and is no longer freely available via public APIs. The official ISM PMI requires subscription from ISM (https://www.ismworld.org) or paid data vendors (Bloomberg, Trading Economics, etc.). S&P Global Markit also publishes a US Manufacturing PMI, but this also requires subscription. Free alternatives: OECD CLI (Composite Leading Indicator) is available on FRED as USALOLITONOSTSAM, though this is a broader economic indicator and not specifically PMI.",
+      "mapping_rationale": "Searched FRED for 'PMI Purchasing Managers Index series ID' and 'ISM Manufacturing PMI'. Found historical series NAPM (ISM Manufacturing PMI Composite Index) which redirected to https://news.research.stlouisfed.org/2016/06/institute-for-supply-management-data-to-be-removed-from-fred/ confirming all 22 ISM series were deleted from FRED on June 24, 2016. Searched for S&P Global Markit PMI on FRED - no free series found. Verified via WebFetch that USPMIMFG does not exist (404 error). Searched Trading Economics API - requires paid subscription. Conclusion: No public free API exists for ISM or S&P Global PMI data. Only paid sources available (ISM subscription, Bloomberg, Trading Economics).",
+      "discovered_at": "2026-01-22T09:20:15.878732+00:00",
+      "rationale_validated": true
     }
   }
 }

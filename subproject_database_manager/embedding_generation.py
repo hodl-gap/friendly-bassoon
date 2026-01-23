@@ -24,16 +24,21 @@ def generate_embeddings_from_csv(csv_path: str) -> list[dict]:
     Returns:
         List of dicts:
         {
-            "id": "{tg_channel}_{opinion_id}_{row_num}",
+            "id": "{hash}_{row_num}",
             "embedding": [float, ...],
             "metadata": {
                 "date": "...",
                 "tg_channel": "...",
                 "category": "...",
-                "raw_text": "...",
-                "extracted_data": "..."
+                "source": "...",           # Extracted to top level for direct access
+                "what_happened": "...",    # Extracted to top level for direct access
+                "interpretation": "...",   # Extracted to top level for direct access
+                "extracted_data": "..."    # Full JSON for logic_chains access
             }
         }
+
+    Note: raw_text removed from metadata to reduce bloat (~1KB savings per record).
+          Key fields extracted to top level for efficient retriever access.
     """
     print(f"Reading CSV: {csv_path}")
     df = pd.read_csv(csv_path)
@@ -63,15 +68,29 @@ def generate_embeddings_from_csv(csv_path: str) -> list[dict]:
         raw_id = f"{row.get('tg_channel', '')}_{row.get('opinion_id', '')}_{idx}"
         unique_id = hashlib.md5(raw_id.encode()).hexdigest()[:16] + f"_{idx}"
 
+        # Parse extracted_data to get key fields for direct access
+        import json
+        extracted_data_str = str(row.get('extracted_data', '{}'))
+        try:
+            extracted_dict = json.loads(extracted_data_str) if extracted_data_str else {}
+        except json.JSONDecodeError:
+            extracted_dict = {}
+
         results.append({
             "id": unique_id,
             "embedding": embeddings[idx],
             "metadata": {
+                # Core fields for filtering
                 "date": str(row.get('date', '')),
                 "tg_channel": str(row.get('tg_channel', '')),
                 "category": str(row.get('category', '')),
-                "raw_text": str(row.get('raw_text', ''))[:1000],  # Truncate for metadata limit
-                "extracted_data": str(row.get('extracted_data', ''))
+                # Key fields extracted to top level for efficient access (fixes vector_search.py bug)
+                "source": extracted_dict.get('source', ''),
+                "what_happened": extracted_dict.get('what_happened', ''),
+                "interpretation": extracted_dict.get('interpretation', ''),
+                # Full extracted_data for logic_chains access (required by answer_generation)
+                "extracted_data": extracted_data_str
+                # NOTE: raw_text removed - not used by retriever, saves ~1KB per record
             }
         })
 

@@ -87,11 +87,23 @@ Check for:
 - **Causality**: Because/due to/driven by relationships
 - **Context dependencies**: What makes this significant?
 - **logic_chains field**: Are causal chains properly structured?
-  - Each chain should have "steps" array with cause → effect → mechanism
+  - Each chain should have "steps" array with cause → effect → mechanism → evidence_quote
   - Multi-step chains (2+ steps) preferred when logic continues
   - Example: "TGA decline → bank reserves increase → funding conditions ease"
   - Check: Are chains connected (step N's effect = step N+1's cause)?
   - Check: Does each step have a mechanism explaining the link?
+  - **CRITICAL - evidence_quote validation**:
+    - Each step MUST have an evidence_quote field (not empty)
+    - Quote must be VERBATIM from the source message (no paraphrasing)
+    - Quote must support the causal claim made in that step
+    - Missing/empty evidence_quote is a validation failure
+    - Paraphrased quotes (not exact text from message) should be flagged
+- **temporal_context field**: Is regime context captured when applicable?
+  - Policy regime (QE/QT/hold/transition) specified when discussing Fed policy?
+  - Liquidity regime (reserve_scarce/abundant/transitional) tagged for funding insights?
+  - Forward-looking flag set for projections and forecasts?
+  - NOTE: Empty {{}} is acceptable when regime not clearly discernible from content
+  - Check: If message explicitly mentions QT, rate hikes, or regime shifts, is it captured?
 
 **DIMENSION 3: Answerability**
 Question: Can this extraction answer real financial research questions?
@@ -129,7 +141,9 @@ Check:
             "score": 0.0-1.0,
             "analysis": "Analysis of if-then logic and context",
             "missing_pieces": ["No threshold value specified", "Causality unclear"],
-            "logic_chains_quality": "Assessment of logic_chains: connected steps? mechanisms present? multi-step where appropriate?"
+            "logic_chains_quality": "Assessment of logic_chains: connected steps? mechanisms present? multi-step where appropriate?",
+            "evidence_quote_quality": "Assessment of evidence_quote in each logic chain step: present? verbatim from source? supports the claim?",
+            "temporal_context_quality": "Assessment of temporal_context: regime tagged when clearly applicable? forward-looking flag correct?"
         }},
         "answerability": {{
             "score": 0.0-1.0,

@@ -44,8 +44,22 @@ OUTPUT FORMAT (JSON only, no markdown):
   "description": "What this data series measures",
   "api_url": "Full API endpoint URL",
   "frequency": "daily|weekly|monthly|quarterly|annual",
-  "notes": "Any important notes about access or limitations"
+  "notes": "Any important notes about access or limitations",
+  "mapping_rationale": "REQUIRED - Human-verifiable explanation of WHY this data_id was chosen"
 }
+
+**MAPPING_RATIONALE REQUIREMENTS (CRITICAL):**
+The mapping_rationale field MUST include:
+1. The search queries used to find this data source
+2. WHY this specific series was chosen over alternatives
+3. Official source confirmation (documentation link or verified URL)
+
+Example mapping_rationale values:
+- "Found via FRED search for 'Treasury General Account'. WTREGEN is the official TGA balance published daily by US Treasury via FRED. Preferred over RRPONTSYTRSY (which is RRP, not TGA) and WTREGEN_DEPRECATED (discontinued 2020)."
+- "Searched BLS for 'Consumer Price Index'. CUSR0000SA0 is the official CPI-U All Items series. Verified at bls.gov/cpi/."
+- "No public API found. Searched FRED, BLS, and web for 'dealer gamma'. Only available via Bloomberg terminal or proprietary data vendors."
+
+Without a substantive mapping_rationale (50+ characters), the discovery is considered incomplete.
 
 For "needs_registration" type, also include:
 {
@@ -60,11 +74,15 @@ For "scrape" type, also include:
 }
 
 IMPORTANT:
-- Only return series IDs you have VERIFIED exist in the documentation
-- For FRED, verify by searching fred.stlouisfed.org/series/SERIES_ID
-- Do NOT guess or hallucinate series IDs
+- Do NOT use your training knowledge to guess series IDs. Only use data_ids that appear directly in WebSearch or WebFetch results.
+- You MUST use WebFetch to verify the series exists before returning it:
+  - For FRED: WebFetch https://fred.stlouisfed.org/series/SERIES_ID and confirm the page loads (not 404)
+  - For World Bank: WebFetch the indicator page to confirm it exists
+- If WebFetch fails or returns 404/error, the series does NOT exist - try a different one
 - Be explicit about API key requirements
 - For scraping, provide working Python code
+- ALWAYS include mapping_rationale explaining WHY you chose this data_id
+- mapping_rationale must be 50+ characters with search queries and justification
 """
 
 # User prompt template for variable discovery

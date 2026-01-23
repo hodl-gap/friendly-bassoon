@@ -630,8 +630,23 @@ def cleanup_metrics(rows: list) -> tuple:
     return cleaned_rows, report
 
 def write_csv(rows: list):
-    """Write cleaned CSV."""
-    fieldnames = ['normalized', 'variants', 'category', 'description', 'sources', 'cluster', 'raw_data_source', 'is_liquidity']
+    """Write cleaned CSV with lifecycle columns."""
+    fieldnames = [
+        'normalized', 'variants', 'category', 'description', 'sources',
+        'cluster', 'raw_data_source', 'is_liquidity',
+        'first_seen', 'last_seen', 'deprecated', 'superseded_by'  # Lifecycle columns
+    ]
+
+    # Ensure all rows have lifecycle columns
+    for row in rows:
+        if 'first_seen' not in row:
+            row['first_seen'] = ''
+        if 'last_seen' not in row:
+            row['last_seen'] = ''
+        if 'deprecated' not in row:
+            row['deprecated'] = 'false'
+        if 'superseded_by' not in row:
+            row['superseded_by'] = ''
 
     with open(CSV_PATH, 'w', encoding='utf-8', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -668,6 +683,105 @@ def print_report(report: dict):
     for canonical in sorted(report['canonical_mappings_applied']):
         variants = CANONICAL_MAPPINGS[canonical]
         print(f"  {canonical} <- {len(variants)} variants")
+
+# =============================================================================
+# LIFECYCLE / DEPRECATION UTILITIES (Issue 4: Metrics Governance)
+# =============================================================================
+
+def deprecate_metric(normalized_name: str, superseded_by: str = '') -> bool:
+    """
+    Mark a metric as deprecated, optionally with a replacement.
+
+    Args:
+        normalized_name: The normalized name of the metric to deprecate
+        superseded_by: The normalized name of the replacement metric (optional)
+
+    Returns:
+        True if metric was found and deprecated, False otherwise
+    """
+    rows = load_csv()
+
+    found = False
+    for row in rows:
+        if row['normalized'].lower() == normalized_name.lower():
+            row['deprecated'] = 'true'
+            row['superseded_by'] = superseded_by
+            found = True
+            break
+
+    if found:
+        write_csv(rows)
+        print(f"Deprecated metric: {normalized_name}")
+        if superseded_by:
+            print(f"  Superseded by: {superseded_by}")
+    else:
+        print(f"Metric not found: {normalized_name}")
+
+    return found
+
+
+def find_stale_metrics(days_threshold: int = 180) -> list:
+    """
+    Find metrics not seen in the last N days.
+
+    Args:
+        days_threshold: Number of days to consider a metric stale
+
+    Returns:
+        List of dicts with normalized name and last_seen date
+    """
+    from datetime import datetime, timedelta
+
+    rows = load_csv()
+    cutoff_date = datetime.now() - timedelta(days=days_threshold)
+    stale_metrics = []
+
+    for row in rows:
+        last_seen = row.get('last_seen', '')
+        if not last_seen:
+            # Legacy metric with no last_seen - skip (can't determine staleness)
+            continue
+
+        try:
+            last_seen_date = datetime.fromisoformat(last_seen)
+            if last_seen_date < cutoff_date:
+                stale_metrics.append({
+                    'normalized': row['normalized'],
+                    'last_seen': last_seen,
+                    'days_since_seen': (datetime.now() - last_seen_date).days,
+                    'is_liquidity': row.get('is_liquidity', 'true'),
+                    'deprecated': row.get('deprecated', 'false'),
+                })
+        except ValueError:
+            # Invalid date format - skip
+            continue
+
+    # Sort by days_since_seen descending
+    stale_metrics.sort(key=lambda x: x['days_since_seen'], reverse=True)
+
+    return stale_metrics
+
+
+def list_deprecated_metrics() -> list:
+    """
+    List all deprecated metrics.
+
+    Returns:
+        List of dicts with normalized name and superseded_by
+    """
+    rows = load_csv()
+    deprecated = []
+
+    for row in rows:
+        if row.get('deprecated', 'false') == 'true':
+            deprecated.append({
+                'normalized': row['normalized'],
+                'superseded_by': row.get('superseded_by', ''),
+                'is_liquidity': row.get('is_liquidity', 'true'),
+            })
+
+    return deprecated
+
 
 def main(dry_run: bool = False):
     """Main entry point."""

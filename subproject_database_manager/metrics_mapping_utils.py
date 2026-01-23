@@ -8,6 +8,7 @@ import json
 import os
 import re
 import sys
+from datetime import date
 from typing import List, Dict, Optional
 
 # Add parent directory for models.py import
@@ -256,20 +257,32 @@ def _levenshtein_distance(s1: str, s2: str) -> int:
 # Default path to mapping file
 DEFAULT_MAPPING_PATH = os.path.join(os.path.dirname(__file__), "data", "processed", "liquidity_metrics", "liquidity_metrics_mapping.csv")
 
+# Cache for load_metrics_mapping to avoid repeated file I/O
+_metrics_mapping_cache = {}
 
-def load_metrics_mapping(csv_path: str = None) -> str:
+
+def load_metrics_mapping(csv_path: str = None, force_reload: bool = False) -> str:
     """
     Load mapping CSV and format as text for prompt injection.
     Includes cluster column for grouping context.
 
+    Results are cached to avoid repeated file I/O during batch processing.
+
     Args:
         csv_path: Path to the CSV file. Uses default if not provided.
+        force_reload: If True, bypass cache and reload from disk.
 
     Returns:
         Formatted string of the mapping table for LLM context.
     """
+    global _metrics_mapping_cache
+
     if csv_path is None:
         csv_path = DEFAULT_MAPPING_PATH
+
+    # Return cached result if available and not forcing reload
+    if csv_path in _metrics_mapping_cache and not force_reload:
+        return _metrics_mapping_cache[csv_path]
 
     if not os.path.exists(csv_path):
         return "No mapping file found. Extract metrics with is_new=true for all."
@@ -293,7 +306,12 @@ def load_metrics_mapping(csv_path: str = None) -> str:
     lines.append("- If a metric matches any variant above, use the corresponding 'normalized' name")
     lines.append("- If a metric is NOT in this table, set is_new=true and suggest normalized name, category, description, and cluster")
 
-    return "\n".join(lines)
+    result = "\n".join(lines)
+
+    # Cache the result
+    _metrics_mapping_cache[csv_path] = result
+
+    return result
 
 
 def get_existing_clusters(csv_path: str = None) -> List[str]:
@@ -450,8 +468,12 @@ def append_new_metrics(metrics: List[Dict], csv_path: str = None) -> List[Dict]:
     if not metrics:
         return []
 
-    # Define fieldnames with new columns (including is_liquidity)
-    fieldnames = ['normalized', 'variants', 'category', 'description', 'sources', 'cluster', 'raw_data_source', 'is_liquidity']
+    # Define fieldnames with lifecycle columns (Issue 4: Metrics Governance)
+    fieldnames = [
+        'normalized', 'variants', 'category', 'description', 'sources',
+        'cluster', 'raw_data_source', 'is_liquidity',
+        'first_seen', 'last_seen', 'deprecated', 'superseded_by'  # Lifecycle tracking
+    ]
 
     # Load existing data for deduplication and source updates
     existing_rows = []
@@ -468,6 +490,15 @@ def append_new_metrics(metrics: List[Dict], csv_path: str = None) -> List[Dict]:
                     row['raw_data_source'] = ''
                 if 'is_liquidity' not in row:
                     row['is_liquidity'] = 'true'  # Default to true for legacy entries
+                # Lifecycle columns - leave empty for legacy metrics (per user decision, no backfill)
+                if 'first_seen' not in row:
+                    row['first_seen'] = ''  # Empty for legacy - no backfill
+                if 'last_seen' not in row:
+                    row['last_seen'] = ''   # Empty for legacy - no backfill
+                if 'deprecated' not in row:
+                    row['deprecated'] = 'false'
+                if 'superseded_by' not in row:
+                    row['superseded_by'] = ''
                 existing_rows.append(row)
                 existing_normalized_map[row.get('normalized', '').lower()] = i
 
@@ -497,6 +528,8 @@ def append_new_metrics(metrics: List[Dict], csv_path: str = None) -> List[Dict]:
                     sources_updated = True
 
             existing_rows[row_idx]['sources'] = ' | '.join(existing_sources)
+            # Update last_seen timestamp for lifecycle tracking
+            existing_rows[row_idx]['last_seen'] = date.today().isoformat()
 
         elif metric.get('is_new', False):
             # === VALIDATION STEP 1: Check if it's actually a liquidity metric ===
@@ -550,6 +583,7 @@ def append_new_metrics(metrics: List[Dict], csv_path: str = None) -> List[Dict]:
 
             added_metrics.append(metric)
             existing_normalized_map[normalized_lower] = len(existing_rows)
+            today_str = date.today().isoformat()
             existing_rows.append({
                 'normalized': normalized,
                 'variants': metric.get('raw', ''),
@@ -558,7 +592,11 @@ def append_new_metrics(metrics: List[Dict], csv_path: str = None) -> List[Dict]:
                 'sources': ' | '.join(new_sources) if new_sources else '',
                 'cluster': cluster,
                 'raw_data_source': raw_data_source,
-                'is_liquidity': 'true'  # New metrics are validated as liquidity metrics
+                'is_liquidity': 'true',  # New metrics are validated as liquidity metrics
+                'first_seen': today_str,   # Lifecycle: when first discovered
+                'last_seen': today_str,    # Lifecycle: when last seen (same as first for new)
+                'deprecated': 'false',     # Lifecycle: not deprecated
+                'superseded_by': ''        # Lifecycle: no replacement
             })
 
     # Print summary of validation
@@ -715,7 +753,11 @@ def normalize_sources_in_csv(csv_path: str = None) -> int:
         row['sources'] = ' | '.join(deduped)
 
     # Write back with all columns including new ones
-    fieldnames = ['normalized', 'variants', 'category', 'description', 'sources', 'cluster', 'raw_data_source', 'is_liquidity']
+    fieldnames = [
+        'normalized', 'variants', 'category', 'description', 'sources',
+        'cluster', 'raw_data_source', 'is_liquidity',
+        'first_seen', 'last_seen', 'deprecated', 'superseded_by'
+    ]
     # Ensure all rows have the new columns
     for row in rows:
         if 'cluster' not in row:
@@ -724,6 +766,15 @@ def normalize_sources_in_csv(csv_path: str = None) -> int:
             row['raw_data_source'] = ''
         if 'is_liquidity' not in row:
             row['is_liquidity'] = 'true'
+        # Lifecycle columns - leave empty for legacy (no backfill)
+        if 'first_seen' not in row:
+            row['first_seen'] = ''
+        if 'last_seen' not in row:
+            row['last_seen'] = ''
+        if 'deprecated' not in row:
+            row['deprecated'] = 'false'
+        if 'superseded_by' not in row:
+            row['superseded_by'] = ''
 
     with open(csv_path, 'w', encoding='utf-8', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)

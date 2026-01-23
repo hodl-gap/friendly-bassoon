@@ -279,6 +279,139 @@ def call_claude_haiku(messages, temperature=0.7, max_tokens=4000):
     )
     return response.content[0].text
 
+
+# =============================================================================
+# ANTHROPIC PROMPT CACHING
+# =============================================================================
+# Claude supports prompt caching for large static prompts.
+# Cache lasts 5 minutes, providing ~90% cost reduction on cached tokens.
+# Best for: Large system prompts, metrics mappings, instruction templates
+#
+# Usage:
+#   result = call_claude_with_cache(system_prompt, user_message, model="sonnet")
+#
+# The system_prompt is cached; user_message changes per request.
+# =============================================================================
+
+def call_claude_with_cache(
+    system_prompt: str,
+    user_message: str,
+    model: str = "sonnet",
+    temperature: float = 0.7,
+    max_tokens: int = 8000
+) -> tuple:
+    """
+    Call Claude with prompt caching enabled for the system prompt.
+
+    The system prompt is marked for caching (lasts 5 minutes).
+    This is ideal for large static prompts like instruction templates
+    with embedded metrics mappings (~200KB+).
+
+    Args:
+        system_prompt: Large static prompt to cache (instructions, mappings)
+        user_message: Dynamic per-request content (messages to process)
+        model: "sonnet", "haiku", or "opus"
+        temperature: Model temperature
+        max_tokens: Max tokens per response
+
+    Returns:
+        tuple: (response_text, cache_stats)
+        cache_stats: dict with cache_creation_input_tokens, cache_read_input_tokens
+
+    Pricing with caching:
+    - Cache write: 25% more than base input price (one-time)
+    - Cache read: 90% less than base input price (subsequent)
+    - Cache TTL: 5 minutes
+
+    Example:
+        system = get_data_opinion_system_prompt()  # ~200KB with metrics
+        user = get_data_opinion_user_prompt(messages, channel)  # Dynamic
+        response, stats = call_claude_with_cache(system, user, model="sonnet")
+        print(f"Cache hits: {stats.get('cache_read_input_tokens', 0)}")
+    """
+    model_map = {
+        "sonnet": "claude-sonnet-4-5-20250929",
+        "haiku": "claude-haiku-4-5-20251001",
+        "opus": "claude-opus-4-5-20251101",
+    }
+
+    if model not in model_map:
+        raise ValueError(f"Unknown model: {model}. Available: {list(model_map.keys())}")
+
+    response = anthropic_client.messages.create(
+        model=model_map[model],
+        max_tokens=max_tokens,
+        temperature=temperature,
+        system=[
+            {
+                "type": "text",
+                "text": system_prompt,
+                "cache_control": {"type": "ephemeral"}
+            }
+        ],
+        messages=[
+            {"role": "user", "content": user_message}
+        ]
+    )
+
+    # Extract cache statistics from usage
+    cache_stats = {
+        "cache_creation_input_tokens": getattr(response.usage, 'cache_creation_input_tokens', 0),
+        "cache_read_input_tokens": getattr(response.usage, 'cache_read_input_tokens', 0),
+        "input_tokens": response.usage.input_tokens,
+        "output_tokens": response.usage.output_tokens,
+    }
+
+    return response.content[0].text, cache_stats
+
+
+async def call_claude_with_cache_async(
+    system_prompt: str,
+    user_message: str,
+    model: str = "sonnet",
+    temperature: float = 0.7,
+    max_tokens: int = 8000
+) -> tuple:
+    """
+    Async version of call_claude_with_cache for parallel processing.
+
+    Returns:
+        tuple: (response_text, cache_stats)
+    """
+    model_map = {
+        "sonnet": "claude-sonnet-4-5-20250929",
+        "haiku": "claude-haiku-4-5-20251001",
+        "opus": "claude-opus-4-5-20251101",
+    }
+
+    if model not in model_map:
+        raise ValueError(f"Unknown model: {model}. Available: {list(model_map.keys())}")
+
+    response = await async_anthropic_client.messages.create(
+        model=model_map[model],
+        max_tokens=max_tokens,
+        temperature=temperature,
+        system=[
+            {
+                "type": "text",
+                "text": system_prompt,
+                "cache_control": {"type": "ephemeral"}
+            }
+        ],
+        messages=[
+            {"role": "user", "content": user_message}
+        ]
+    )
+
+    cache_stats = {
+        "cache_creation_input_tokens": getattr(response.usage, 'cache_creation_input_tokens', 0),
+        "cache_read_input_tokens": getattr(response.usage, 'cache_read_input_tokens', 0),
+        "input_tokens": response.usage.input_tokens,
+        "output_tokens": response.usage.output_tokens,
+    }
+
+    return response.content[0].text, cache_stats
+
 # =============================================================================
 # ASYNC VERSIONS FOR PARALLEL PROCESSING
 # =============================================================================

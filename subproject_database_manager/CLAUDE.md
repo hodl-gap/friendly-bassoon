@@ -141,6 +141,77 @@ From Telegram workflow (see STATUS.md):
 - **data_opinion**: Research interpretations of economic data
 - **interview_meeting**: Fed statements, FOMC minutes, official commentary
 
+### Evidence Anchors in Logic Chains
+
+Each step in a logic chain now **REQUIRES** an `evidence_quote` field to prevent LLM hallucination:
+
+```json
+"logic_chains": [
+  {
+    "steps": [
+      {
+        "cause": "TGA drawdown",
+        "cause_normalized": "tga",
+        "effect": "bank reserves increase",
+        "effect_normalized": "bank_reserves",
+        "mechanism": "Treasury spending releases TGA funds into banking system",
+        "evidence_quote": "TGA 잔고가 750B로 감소하면서 시스템 유동성이 증가"
+      }
+    ]
+  }
+]
+```
+
+**Evidence Quote Rules:**
+- Must be **VERBATIM** text from the source message (Korean or English OK)
+- Must contain the causal/threshold claim **EXPLICITLY**
+- Do NOT paraphrase - use exact wording from the message
+- If no clear quote available, include the most relevant sentence mentioning the cause or effect
+
+**QA Validation:** The QA agent now validates that:
+1. Each logic chain step has an `evidence_quote` field (not empty)
+2. Quote is verbatim from source (no paraphrasing)
+3. Quote supports the causal claim made in that step
+
+Missing or paraphrased evidence_quote is a validation failure.
+
+### Cross-Chunk Chain Linkage (NEW)
+
+Each logic chain step now includes **normalized variable names** for explicit cross-chunk chain connection:
+
+**New fields:**
+- `cause_normalized`: Snake_case normalized name for the cause (e.g., "tga", "jpy_weakness")
+- `effect_normalized`: Snake_case normalized name for the effect (e.g., "bank_reserves", "carry_unwind")
+
+**Normalization Rules:**
+- Use existing names from `liquidity_metrics_mapping.csv` if available
+- Create snake_case version for new concepts (max 30 chars)
+- Common patterns: `tga`, `rrp`, `sofr`, `fed_funds`, `bank_reserves`, `carry_trade`, `risk_off`
+
+**Purpose:** Enables the retrieval system to explicitly connect chains across different chunks:
+- Chunk A: `jpy_weakness` → `carry_unwind`
+- Chunk B: `carry_unwind` → `em_selling`
+- Connection: `jpy_weakness` → `carry_unwind` → `em_selling` (multi-hop)
+
+### Temporal & Regime Context
+
+Extracted logic chains now include `temporal_context` for regime-aware retrieval:
+
+```json
+"temporal_context": {
+  "policy_regime": "QE" | "QT" | "hold" | "transition",
+  "liquidity_regime": "reserve_scarce" | "reserve_abundant" | "transitional",
+  "valid_from": "2022-06",
+  "valid_until": null,
+  "is_forward_looking": false
+}
+```
+
+**Rules:**
+- Empty object `{}` if regime context not clearly discernible from message
+- Do NOT infer regime from date alone - only tag when explicitly mentioned
+- Enables filtering/weighting at retrieval time by current policy regime
+
 ### Real-World Use Cases
 
 Questions the structured output should be able to answer:
@@ -170,6 +241,36 @@ All structured outputs are validated by a QA agent that checks:
 
 See `qa_validation.py` for implementation details.
 
+### Extraction Accuracy QA (NEW)
+
+After structure validation, a separate accuracy check verifies extracted VALUES are correct:
+
+**What it checks:**
+- Variable names match source text
+- Values/amounts are correct
+- Directions (up/down) are correct
+- Logic chain causes/effects actually appear in source
+- Evidence quotes are verbatim
+
+**Sampling:** 10% of extractions (min 3, max 30)
+
+**Output:** `data/qa_logs/accuracy_qa_{filename}_{timestamp}.json`
+
+**Error rate thresholds:**
+| Error Rate | Status | Action |
+|------------|--------|--------|
+| <5% | ✅ Excellent | No action needed |
+| 5-10% | ✅ Acceptable | Monitor trends |
+| 10-20% | ⚠️ Warning | Consider targeted verification |
+| >20% | ❌ High | Review extraction prompts |
+
+**Standalone usage:**
+```bash
+python extraction_accuracy_qa.py --input data/processed/processed_xxx.csv
+```
+
+See `extraction_accuracy_qa.py` for implementation details.
+
 ## Metrics Dictionary (liquidity_metrics_mapping.csv)
 
 CSV file tracking all liquidity metrics discovered during extraction.
@@ -185,6 +286,15 @@ CSV file tracking all liquidity metrics discovered during extraction.
 | `cluster` | Semantic grouping for data reproduction |
 | `raw_data_source` | Raw data feed needed to reproduce |
 | `is_liquidity` | `true` or `false` - flags non-liquidity entries |
+| `first_seen` | Date metric was first discovered (YYYY-MM-DD) |
+| `last_seen` | Date metric was last referenced (YYYY-MM-DD) |
+| `deprecated` | `true` or `false` - marks inactive metrics |
+| `superseded_by` | Canonical name of replacement metric (if deprecated) |
+
+**Lifecycle Tracking (NEW):**
+- `first_seen` / `last_seen` auto-update during extraction pipeline
+- Legacy metrics have empty dates (no backfill)
+- Stale metrics (not seen in 180+ days) can be identified via `find_stale_metrics()`
 
 ### Cluster Examples (15 clusters)
 `equity_flows`, `macro_indicators`, `corporate_fundamentals`, `fx_liquidity`, `rate_expectations`, `credit_spreads`, `positioning_leverage`, `volatility_metrics`, `market_microstructure`, `option_flows`, `sovereign_flows`, `etf_flows`, `money_markets`, `fed_balance_sheet`, `cta_positioning`
@@ -218,6 +328,11 @@ Automated cleanup script that:
 - Fixes direct/indirect classification based on keywords
 - Auto-assigns clusters to unassigned metrics via LLM
 - Creates automatic backups before modification
+
+**Deprecation utilities (NEW):**
+- `deprecate_metric(name, superseded_by)` - Mark metric as deprecated with optional replacement
+- `find_stale_metrics(days=180)` - Find metrics not seen in N days
+- `list_deprecated_metrics()` - List all deprecated metrics with their replacements
 
 **Manual usage:**
 ```bash
