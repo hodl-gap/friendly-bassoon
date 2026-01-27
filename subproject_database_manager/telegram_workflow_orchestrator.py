@@ -117,6 +117,20 @@ async def run_workflow(channel_names, start_date, end_date, auto_process=True, m
     print(f"Auto-process: {auto_process}")
     print("="*80)
 
+    # Sync processing tracker with Pinecone (startup check)
+    print("\n🔄 Syncing processing tracker...")
+    from processing_tracker import sync_with_pinecone, get_stats
+    sync_with_pinecone()
+
+    # Show current tracking stats for requested channels
+    stats = get_stats()
+    for ch in channel_names:
+        if ch in stats:
+            ch_stats = stats[ch]
+            print(f"   {ch}: {ch_stats.get('extracted', 0)} extracted, {ch_stats.get('uploaded', 0)} uploaded")
+        else:
+            print(f"   {ch}: no prior processing history")
+
     # Step 1: Fetch messages
     export_folders = await fetch_telegram_messages(channel_names, start_date, end_date)
 

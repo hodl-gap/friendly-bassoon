@@ -271,6 +271,7 @@ def process_batch(messages_batch, category, channel_name, use_gpt5=True):
 
                     # Text entry
                     text_entry = {
+                        'telegram_msg_id': original_msg.get('telegram_msg_id', ''),
                         'original_message_num': original_msg.get('original_num'),
                         'date': original_msg['date'],
                         'tg_channel': channel_name,
@@ -286,6 +287,7 @@ def process_batch(messages_batch, category, channel_name, use_gpt5=True):
                     # Image entry if photo exists (using pre-extracted data)
                     if original_msg.get('photo') and original_msg.get('image_structured_data'):
                         image_entry = {
+                            'telegram_msg_id': original_msg.get('telegram_msg_id', ''),
                             'original_message_num': original_msg.get('original_num'),
                             'date': original_msg['date'],
                             'tg_channel': channel_name,
@@ -333,6 +335,7 @@ def process_batch(messages_batch, category, channel_name, use_gpt5=True):
                     original_msg = messages_batch[msg_idx]
 
                     text_entry = {
+                        'telegram_msg_id': original_msg.get('telegram_msg_id', ''),
                         'original_message_num': original_msg.get('original_num'),
                         'date': original_msg['date'],
                         'tg_channel': channel_name,
@@ -428,6 +431,7 @@ async def process_batches_parallel(all_batches, channel_name):
 
                     # Text entry
                     text_entry = {
+                        'telegram_msg_id': original_msg.get('telegram_msg_id', ''),
                         'original_message_num': original_msg.get('original_num'),
                         'date': original_msg['date'],
                         'tg_channel': channel_name,
@@ -443,6 +447,7 @@ async def process_batches_parallel(all_batches, channel_name):
                     # Image entry if photo exists (using pre-extracted data)
                     if original_msg.get('photo') and original_msg.get('image_structured_data'):
                         image_entry = {
+                            'telegram_msg_id': original_msg.get('telegram_msg_id', ''),
                             'original_message_num': original_msg.get('original_num'),
                             'date': original_msg['date'],
                             'tg_channel': channel_name,
@@ -688,6 +693,7 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
     for msg in messages:
         if msg['category'] in ['schedule', 'data_update']:
             all_results.append({
+                'telegram_msg_id': msg.get('telegram_msg_id', ''),
                 'original_message_num': msg['original_num'],
                 'date': msg['date'],
                 'tg_channel': channel_name,
@@ -722,13 +728,27 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
     all_results = deduped_results
 
     with open(output_csv, 'w', encoding='utf-8', newline='') as f:
-        fieldnames = ['original_message_num', 'date', 'tg_channel', 'category',
+        fieldnames = ['telegram_msg_id', 'original_message_num', 'date', 'tg_channel', 'category',
                      'entry_type', 'opinion_id', 'raw_text', 'has_photo', 'extracted_data']
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(all_results)
 
     print(f"Wrote {len(all_results)} entries to {output_csv}")
+
+    # Track extracted messages in processing tracker
+    from processing_tracker import mark_extracted
+    tracked_count = 0
+    for result in all_results:
+        telegram_msg_id = result.get('telegram_msg_id')
+        if telegram_msg_id:
+            try:
+                mark_extracted(result['tg_channel'], int(telegram_msg_id))
+                tracked_count += 1
+            except (ValueError, TypeError):
+                pass  # Skip if telegram_msg_id is not a valid integer
+    if tracked_count > 0:
+        print(f"Tracked {tracked_count} messages in processing state DB")
 
     # Collect and append new metrics to mapping file
     all_extractions = []

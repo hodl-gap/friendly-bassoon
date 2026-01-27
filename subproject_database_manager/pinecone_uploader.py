@@ -54,11 +54,25 @@ def upsert_embeddings(embeddings_data: list[dict], index_name: str, namespace: s
     batch_size = 100
     total_upserted = 0
 
+    # Import tracker for marking uploads
+    from processing_tracker import mark_uploaded
+
     for i in range(0, len(vectors), batch_size):
         batch = vectors[i:i + batch_size]
         response = index.upsert(vectors=batch, namespace=namespace)
         total_upserted += response.upserted_count
         print(f"  Upserted batch {i // batch_size + 1}: {response.upserted_count} vectors")
+
+        # Track successful uploads in processing state DB
+        for vec in batch:
+            metadata = vec.get("metadata", {})
+            telegram_msg_id = metadata.get("telegram_msg_id", "")
+            tg_channel = metadata.get("tg_channel", "")
+            if telegram_msg_id and tg_channel:
+                try:
+                    mark_uploaded(tg_channel, int(telegram_msg_id))
+                except (ValueError, TypeError):
+                    pass  # Skip if telegram_msg_id is not a valid integer
 
     print(f"Total upserted: {total_upserted} vectors")
     return {"upserted_count": total_upserted}

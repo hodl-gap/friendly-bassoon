@@ -69,13 +69,30 @@ def _convert_json_to_csv(json_file, raw_dir, channel_name, max_messages):
     print(f"🔄 Converting JSON to CSV...")
     df = extract_telegram_messages(str(json_file))
 
+    # Deduplication: Skip messages already processed
+    from processing_tracker import get_processed_msg_ids
+    processed_ids = get_processed_msg_ids(channel_name)
+
+    if processed_ids and 'telegram_msg_id' in df.columns:
+        original_count = len(df)
+        # Convert to numeric for comparison (telegram_msg_id may be string or int)
+        df['telegram_msg_id'] = df['telegram_msg_id'].apply(lambda x: int(x) if x and str(x).isdigit() else x)
+        df = df[~df['telegram_msg_id'].isin(processed_ids)]
+        skipped = original_count - len(df)
+
+        if skipped > 0:
+            print(f"   ⏭️  Skipped {skipped} already-processed messages (deduplication)")
+
     if max_messages:
         df = df.head(max_messages)
         print(f"   Limiting to {max_messages} messages")
 
+    if len(df) == 0:
+        print(f"   ℹ️  No new messages to process")
+
     intermediate_csv = raw_dir / f"{channel_name}_messages.csv"
     df.to_csv(intermediate_csv, index=False)
-    print(f"   ✅ CSV created: {intermediate_csv}")
+    print(f"   ✅ CSV created: {intermediate_csv} ({len(df)} messages)")
     return intermediate_csv
 
 
