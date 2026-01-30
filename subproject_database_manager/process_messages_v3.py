@@ -1,4 +1,5 @@
 import sys
+import os
 import csv
 import json
 import base64
@@ -6,7 +7,7 @@ import time
 import asyncio
 import re
 sys.path.append('../')
-from models import call_claude_sonnet, call_gpt41_mini, call_gpt5, process_batch_parallel, process_batch_parallel_with_retry
+from models import call_claude_sonnet, call_gpt41_mini, call_gpt5, process_batch_parallel, process_batch_parallel_with_retry, process_batch_parallel_with_retry_sync
 from categorization_prompts import get_categorization_prompt
 from data_opinion_prompts import get_data_opinion_extraction_prompt
 from interview_meeting_prompts import get_interview_extraction_prompt
@@ -381,8 +382,8 @@ async def process_batches_parallel(all_batches, channel_name):
     if not messages_list:
         return []
 
-    print(f"\n  🚀 Processing {len(messages_list)} batches in parallel (max {MAX_CONCURRENT_REQUESTS} concurrent)...")
-    print(f"     Primary: {EXTRACTION_MODEL} | Fallback: {FALLBACK_MODEL}")
+    print(f"\n  🚀 Processing {len(messages_list)} batches in parallel (max {MAX_CONCURRENT_REQUESTS} concurrent)...", flush=True)
+    print(f"     Primary: {EXTRACTION_MODEL} | Fallback: {FALLBACK_MODEL}", flush=True)
     parallel_start = time.time()
 
     # Process all batches in parallel with retry and fallback
@@ -397,20 +398,20 @@ async def process_batches_parallel(all_batches, channel_name):
     )
 
     parallel_time = time.time() - parallel_start
-    print(f"  ✓ Parallel processing completed in {parallel_time:.1f}s")
+    print(f"  ✓ Parallel processing completed in {parallel_time:.1f}s", flush=True)
 
     # Parse all responses
     all_results = []
     for idx, response in enumerate(responses):
         if response is None:
-            print(f"  ⚠️  Batch {idx+1} failed, skipping...")
+            print(f"  ⚠️  Batch {idx+1} failed, skipping...", flush=True)
             continue
 
         _, messages_batch, category = batch_info[idx]
 
-        print(f"\n=== RAW EXTRACTION RESPONSE (Batch {idx+1}) ===")
-        print(response[:300] + "..." if len(response) > 300 else response)
-        print(f"=== END ===")
+        print(f"\n=== RAW EXTRACTION RESPONSE (Batch {idx+1}) ===", flush=True)
+        print(response[:300] + "..." if len(response) > 300 else response, flush=True)
+        print(f"=== END ===", flush=True)
 
         # Parse response
         try:
@@ -461,9 +462,21 @@ async def process_batches_parallel(all_batches, channel_name):
                         all_results.append(image_entry)
 
         except json.JSONDecodeError as e:
-            print(f"  ⚠️  Error parsing batch {idx+1}: {e}")
+            print(f"  ⚠️  Error parsing batch {idx+1}: {e}", flush=True)
 
     return all_results
+
+
+def process_batches_parallel_sync(all_batches, channel_name):
+    """
+    Synchronous wrapper for process_batches_parallel.
+    Uses asyncio.run() which safely creates and manages its own event loop.
+
+    This avoids event loop conflicts when called from background processes
+    or other async contexts.
+    """
+    return asyncio.run(process_batches_parallel(all_batches, channel_name))
+
 
 def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base_photo_path=None):
     """
@@ -508,40 +521,87 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
     # Track timing for each step
     step_times = {}
 
-    print("=" * 80)
-    print("STEP 1: EXTRACT IMAGE SUMMARIES + STRUCTURED DATA (COMBINED)")
-    print("=" * 80)
-    step1_start = time.time()
+    # Checkpoint setup for resume capability
+    from pathlib import Path
+    checkpoint_dir = Path(__file__).parent / "data" / "checkpoints"
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    # Use input CSV name to create unique checkpoint file
+    csv_name = Path(input_csv).stem
+    checkpoint_file = checkpoint_dir / f"{csv_name}_step1.json"
 
-    # Step 1: Extract BOTH summary and structured data in one call
-    # This saves one API call per image for data_opinion/interview_meeting categories
-    for i, msg in enumerate(messages, 1):
-        if msg.get('photo'):
-            print(f"\nMessage {i}/{len(messages)}: Extracting image (combined)...")
-            print(f"  Photo: {msg['photo']}")
+    # Check for Step 1 checkpoint (resume after crash)
+    skip_step1 = False
+    if checkpoint_file.exists():
+        print(f"\n🔄 Found Step 1 checkpoint: {checkpoint_file}")
+        print("   Resuming from checkpoint (skipping Step 1 image extraction)...")
+        try:
+            with open(checkpoint_file, 'r', encoding='utf-8') as f:
+                checkpoint_data = json.load(f)
+            # Restore message data from checkpoint
+            for i, msg in enumerate(messages):
+                if i < len(checkpoint_data):
+                    msg['image_summary'] = checkpoint_data[i].get('image_summary', '')
+                    msg['combined_text'] = checkpoint_data[i].get('combined_text', msg['text'])
+                    msg['image_structured_data_cached'] = checkpoint_data[i].get('image_structured_data_cached', {})
+            step_times['step1_image_summaries'] = checkpoint_data[0].get('_step1_time', 0) if checkpoint_data else 0
+            api_costs['image_summaries'] = checkpoint_data[0].get('_api_calls', 0) if checkpoint_data else 0
+            skip_step1 = True
+            print(f"   ✅ Restored {len(messages)} messages from checkpoint")
+        except Exception as e:
+            print(f"   ⚠️ Failed to load checkpoint: {e}")
+            print("   Running Step 1 from scratch...")
+            skip_step1 = False
 
-            photo_path = base_photo_path + msg['photo']
-            combined_result = extract_image_combined(photo_path, msg['text'], msg['date'])
-            api_costs['image_summaries'] += 1  # Still track as 1 call (was 2 before)
+    if not skip_step1:
+        print("=" * 80)
+        print("STEP 1: EXTRACT IMAGE SUMMARIES + STRUCTURED DATA (COMBINED)")
+        print("=" * 80)
+        step1_start = time.time()
 
-            if combined_result:
-                image_summary = combined_result.get('summary', '')
-                print(f"  Summary: {image_summary[:150]}...")
-                msg['image_summary'] = image_summary
-                msg['combined_text'] = f"{msg['text']}\n\n[Image contains: {image_summary}]"
-                # Store structured data for later use in Step 3 (no second API call needed)
-                msg['image_structured_data_cached'] = combined_result.get('structured_data', {})
+        # Step 1: Extract BOTH summary and structured data in one call
+        # This saves one API call per image for data_opinion/interview_meeting categories
+        for i, msg in enumerate(messages, 1):
+            if msg.get('photo'):
+                print(f"\nMessage {i}/{len(messages)}: Extracting image (combined)...")
+                print(f"  Photo: {msg['photo']}")
+
+                photo_path = base_photo_path + msg['photo']
+                combined_result = extract_image_combined(photo_path, msg['text'], msg['date'])
+                api_costs['image_summaries'] += 1  # Still track as 1 call (was 2 before)
+
+                if combined_result:
+                    image_summary = combined_result.get('summary', '')
+                    print(f"  Summary: {image_summary[:150]}...")
+                    msg['image_summary'] = image_summary
+                    msg['combined_text'] = f"{msg['text']}\n\n[Image contains: {image_summary}]"
+                    # Store structured data for later use in Step 3 (no second API call needed)
+                    msg['image_structured_data_cached'] = combined_result.get('structured_data', {})
+                else:
+                    msg['image_summary'] = ""
+                    msg['combined_text'] = msg['text']
+                    msg['image_structured_data_cached'] = {}
             else:
                 msg['image_summary'] = ""
                 msg['combined_text'] = msg['text']
                 msg['image_structured_data_cached'] = {}
-        else:
-            msg['image_summary'] = ""
-            msg['combined_text'] = msg['text']
-            msg['image_structured_data_cached'] = {}
 
-    step_times['step1_image_summaries'] = time.time() - step1_start
-    print(f"\n⏱️  Step 1 completed in {step_times['step1_image_summaries']:.1f}s")
+        step_times['step1_image_summaries'] = time.time() - step1_start
+        print(f"\n⏱️  Step 1 completed in {step_times['step1_image_summaries']:.1f}s")
+
+        # Save Step 1 checkpoint for resume capability
+        print(f"   💾 Saving checkpoint to {checkpoint_file}...")
+        checkpoint_data = []
+        for msg in messages:
+            checkpoint_data.append({
+                'image_summary': msg.get('image_summary', ''),
+                'combined_text': msg.get('combined_text', ''),
+                'image_structured_data_cached': msg.get('image_structured_data_cached', {}),
+                '_step1_time': step_times['step1_image_summaries'],
+                '_api_calls': api_costs['image_summaries']
+            })
+        with open(checkpoint_file, 'w', encoding='utf-8') as f:
+            json.dump(checkpoint_data, f, ensure_ascii=False)
+        print(f"   ✅ Checkpoint saved")
 
     print(f"\n{'=' * 80}")
     print("STEP 2: CATEGORIZE USING TEXT + IMAGE")
@@ -592,9 +652,9 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
     print(f"\n⏱️  Step 2 completed in {step_times['step2_categorization']:.1f}s")
     print(f"    Rule-based: {rule_based_count}, LLM: {llm_based_count} ({rule_based_count/(rule_based_count+llm_based_count)*100:.0f}% saved)")
 
-    print(f"\n{'=' * 80}")
-    print("STEP 3: USE CACHED STRUCTURED DATA FROM IMAGES")
-    print("=" * 80)
+    print(f"\n{'=' * 80}", flush=True)
+    print("STEP 3: USE CACHED STRUCTURED DATA FROM IMAGES", flush=True)
+    print("=" * 80, flush=True)
     step3_start = time.time()
 
     # Step 3: Use cached structured data from Step 1 (no additional API calls needed)
@@ -606,19 +666,19 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
             if cached_data:
                 msg['image_structured_data'] = json.dumps(cached_data, ensure_ascii=False)
                 cached_used += 1
-                print(f"  Message {i}: ✓ Using cached structured data")
+                print(f"  Message {i}: ✓ Using cached structured data", flush=True)
             else:
                 msg['image_structured_data'] = ""
-                print(f"  Message {i}: No cached data available")
+                print(f"  Message {i}: No cached data available", flush=True)
         # Note: api_costs['image_extractions'] no longer incremented - calls eliminated
 
     step_times['step3_image_extraction'] = time.time() - step3_start
-    print(f"\n⏱️  Step 3 completed in {step_times['step3_image_extraction']:.1f}s (used {cached_used} cached extractions, 0 API calls)")
+    print(f"\n⏱️  Step 3 completed in {step_times['step3_image_extraction']:.1f}s (used {cached_used} cached extractions, 0 API calls)", flush=True)
 
-    print(f"\n{'=' * 80}")
-    print("STEP 4: PROCESS BY CATEGORY WITH PARALLEL BATCHING")
-    print(f"  Model: {EXTRACTION_MODEL} | Max concurrent: {MAX_CONCURRENT_REQUESTS}")
-    print("=" * 80)
+    print(f"\n{'=' * 80}", flush=True)
+    print("STEP 4: PROCESS BY CATEGORY WITH PARALLEL BATCHING", flush=True)
+    print(f"  Model: {EXTRACTION_MODEL} | Max concurrent: {MAX_CONCURRENT_REQUESTS}", flush=True)
+    print("=" * 80, flush=True)
     step4_start = time.time()
 
     channel_name = messages[0]['name'] if messages else "Unknown"
@@ -630,7 +690,7 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
     # Process data_opinion messages
     data_opinion_msgs = [m for m in messages if m['category'] == 'data_opinion']
     if data_opinion_msgs:
-        print(f"\nPreparing {len(data_opinion_msgs)} data_opinion messages for parallel processing...")
+        print(f"\nPreparing {len(data_opinion_msgs)} data_opinion messages for parallel processing...", flush=True)
         i = 0
         while i < len(data_opinion_msgs):
             batch_end = min(i + batch_size, len(data_opinion_msgs))
@@ -645,7 +705,7 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
     # Process interview_meeting messages
     interview_msgs = [m for m in messages if m['category'] == 'interview_meeting']
     if interview_msgs:
-        print(f"Preparing {len(interview_msgs)} interview_meeting messages for parallel processing...")
+        print(f"Preparing {len(interview_msgs)} interview_meeting messages for parallel processing...", flush=True)
         i = 0
         while i < len(interview_msgs):
             batch_end = min(i + batch_size, len(interview_msgs))
@@ -657,35 +717,10 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
             else:
                 break
 
-    # Process all batches in parallel
+    # Process all batches in parallel using sync wrapper (avoids event loop conflicts)
     if all_batches:
-        print(f"\nTotal batches to process: {len(all_batches)}")
-
-        # Check if we're already in an async context
-        try:
-            loop = asyncio.get_running_loop()
-            # We're in an async context - use loop.run_until_complete with a new task
-            # Create a new task to run the parallel processing
-            print(f"  🚀 Processing {len(all_batches)} batches in parallel (async context detected)...")
-            import concurrent.futures
-
-            # Use ThreadPoolExecutor to run async code from sync context within async
-            def run_parallel():
-                new_loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(new_loop)
-                try:
-                    return new_loop.run_until_complete(process_batches_parallel(all_batches, channel_name))
-                finally:
-                    new_loop.close()
-
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                future = executor.submit(run_parallel)
-                parallel_results = future.result()
-
-        except RuntimeError:
-            # No running loop - safe to use asyncio.run() for parallel processing
-            parallel_results = asyncio.run(process_batches_parallel(all_batches, channel_name))
-
+        print(f"\nTotal batches to process: {len(all_batches)}", flush=True)
+        parallel_results = process_batches_parallel_sync(all_batches, channel_name)
         all_results.extend(parallel_results)
         api_costs['batch_extractions'] += len(all_batches)
 
@@ -706,10 +741,10 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
             })
 
     step_times['step4_batch_extraction'] = time.time() - step4_start
-    print(f"\n⏱️  Step 4 completed in {step_times['step4_batch_extraction']:.1f}s")
+    print(f"\n⏱️  Step 4 completed in {step_times['step4_batch_extraction']:.1f}s", flush=True)
 
     # Write results
-    print(f"\n{'=' * 80}")
+    print(f"\n{'=' * 80}", flush=True)
     print("WRITING RESULTS")
     print("=" * 80)
 
@@ -851,6 +886,11 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
         pct = (step_time / total_time * 100) if total_time > 0 else 0
         print(f"  {step_name}: {step_time:.1f}s ({pct:.1f}%)")
     print(f"  TOTAL: {total_time:.1f}s")
+
+    # Clean up checkpoint after successful completion
+    if checkpoint_file.exists():
+        checkpoint_file.unlink()
+        print(f"\n🗑️  Checkpoint cleaned up (processing completed successfully)")
 
     return all_results
 
