@@ -652,6 +652,22 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
     print(f"\n⏱️  Step 2 completed in {step_times['step2_categorization']:.1f}s")
     print(f"    Rule-based: {rule_based_count}, LLM: {llm_based_count} ({rule_based_count/(rule_based_count+llm_based_count)*100:.0f}% saved)")
 
+    # Track filtered messages (categories that won't be extracted) to avoid re-categorization
+    from processing_tracker import mark_filtered
+    extractable_categories = {'data_opinion', 'interview_meeting'}
+    filtered_count = 0
+    for msg in messages:
+        if msg.get('category') not in extractable_categories:
+            telegram_msg_id = msg.get('telegram_msg_id')
+            if telegram_msg_id:
+                try:
+                    mark_filtered(channel_name, int(telegram_msg_id))
+                    filtered_count += 1
+                except (ValueError, TypeError):
+                    pass
+    if filtered_count > 0:
+        print(f"    Tracked {filtered_count} filtered messages (won't re-categorize on next run)")
+
     print(f"\n{'=' * 80}", flush=True)
     print("STEP 3: USE CACHED STRUCTURED DATA FROM IMAGES", flush=True)
     print("=" * 80, flush=True)

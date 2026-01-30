@@ -99,6 +99,29 @@ def mark_extracted(tg_channel: str, telegram_msg_id: int):
         conn.commit()
 
 
+def mark_filtered(tg_channel: str, telegram_msg_id: int):
+    """
+    Mark message as filtered (categorized but not extracted).
+
+    Used for messages categorized as greeting, other, schedule, data_update, etc.
+    that don't produce extractions but should still be tracked to avoid
+    re-categorization on subsequent runs.
+
+    Args:
+        tg_channel: Channel name
+        telegram_msg_id: Telegram's message ID
+    """
+    init_db()
+    now = datetime.now(timezone.utc).isoformat()
+    with get_connection() as conn:
+        conn.execute("""
+            INSERT INTO message_state (tg_channel, telegram_msg_id, status, extracted_at)
+            VALUES (?, ?, 'filtered', ?)
+            ON CONFLICT(tg_channel, telegram_msg_id) DO NOTHING
+        """, (tg_channel, telegram_msg_id, now))
+        conn.commit()
+
+
 def mark_uploaded(tg_channel: str, telegram_msg_id: int):
     """
     Mark message as uploaded to Pinecone.
@@ -206,7 +229,7 @@ def get_stats() -> dict:
         for row in cursor.fetchall():
             channel = row[0]
             if channel not in stats:
-                stats[channel] = {"extracted": 0, "uploaded": 0}
+                stats[channel] = {"extracted": 0, "uploaded": 0, "filtered": 0}
             stats[channel][row[1]] = row[2]
 
         return stats
