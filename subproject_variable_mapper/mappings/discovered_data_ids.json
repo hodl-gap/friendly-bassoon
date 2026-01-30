@@ -1,13 +1,16 @@
 {
   "metadata": {
-    "last_updated": "2026-01-22T09:20:15.878773+00:00",
-    "total_mappings": 5,
+    "last_updated": "2026-01-30T03:30:00.000000+00:00",
+    "total_mappings": 13,
     "known_apis": [
       "FRED",
       "World Bank",
       "BLS",
       "OECD",
-      "IMF"
+      "IMF",
+      "Dealogic",
+      "LSEG",
+      "Bank IR"
     ]
   },
   "mappings": {
@@ -80,6 +83,97 @@
       "mapping_rationale": "Searched FRED for 'PMI Purchasing Managers Index series ID' and 'ISM Manufacturing PMI'. Found historical series NAPM (ISM Manufacturing PMI Composite Index) which redirected to https://news.research.stlouisfed.org/2016/06/institute-for-supply-management-data-to-be-removed-from-fred/ confirming all 22 ISM series were deleted from FRED on June 24, 2016. Searched for S&P Global Markit PMI on FRED - no free series found. Verified via WebFetch that USPMIMFG does not exist (404 error). Searched Trading Economics API - requires paid subscription. Conclusion: No public free API exists for ISM or S&P Global PMI data. Only paid sources available (ISM subscription, Bloomberg, Trading Economics).",
       "discovered_at": "2026-01-22T09:20:15.878732+00:00",
       "rationale_validated": true
+    },
+    "ib_revenue_jpm": {
+      "normalized_name": "ib_revenue_jpm",
+      "type": "scrape",
+      "data_id": "BankIR:JPM",
+      "source": "JPMorgan IR",
+      "description": "JPMorgan Chase investment banking revenue - includes Advisory, ECM, DCM fees from quarterly earnings supplements",
+      "api_url": null,
+      "ir_url": "https://www.jpmorganchase.com/ir/quarterly-earnings",
+      "earnings_pdf_example": "https://www.jpmorganchase.com/content/dam/jpmc/jpmorgan-chase-and-co/investor-relations/documents/quarterly-earnings/2025/4th-quarter/d868c7ef-1670-465d-ba75-c2b36ddbcc6b.pdf",
+      "frequency": "quarterly",
+      "notes": "Free PDF download. Earnings supplement contains detailed IB fee breakdown by segment. Released mid-January (Q4), mid-April (Q1), mid-July (Q2), mid-October (Q3).",
+      "discovered_at": "2026-01-30T03:30:00.000000+00:00"
+    },
+    "ib_revenue_gs": {
+      "normalized_name": "ib_revenue_gs",
+      "type": "scrape",
+      "data_id": "BankIR:GS",
+      "source": "Goldman Sachs IR",
+      "description": "Goldman Sachs investment banking revenue - includes Advisory, Underwriting (ECM/DCM) from quarterly earnings",
+      "api_url": null,
+      "ir_url": "https://www.goldmansachs.com/investor-relations",
+      "earnings_pdf_example": "https://www.goldmansachs.com/pressroom/press-releases/current/pdfs/2025-q3-results.pdf",
+      "frequency": "quarterly",
+      "notes": "Free PDF download. Global Banking & Markets segment breakdown available. Released ~2 days after JPM earnings.",
+      "discovered_at": "2026-01-30T03:30:00.000000+00:00"
+    },
+    "ib_revenue_bac": {
+      "normalized_name": "ib_revenue_bac",
+      "type": "scrape",
+      "data_id": "BankIR:BAC",
+      "source": "Bank of America IR",
+      "description": "Bank of America investment banking revenue from quarterly earnings and SEC filings",
+      "api_url": null,
+      "ir_url": "https://investor.bankofamerica.com/quarterly-earnings",
+      "sec_filings_url": "https://last10k.com/sec-filings/bac",
+      "frequency": "quarterly",
+      "notes": "Free PDF/SEC filings. Global Banking segment includes IB fees.",
+      "discovered_at": "2026-01-30T03:30:00.000000+00:00"
+    },
+    "ma_volume_dealogic": {
+      "normalized_name": "ma_volume_dealogic",
+      "type": "scrape",
+      "data_id": "Dealogic:MA",
+      "source": "Dealogic",
+      "description": "Global M&A deal volume and value - league tables, rankings by advisor, region, sector",
+      "api_url": null,
+      "scorecard_url": "https://dealogic.com/investment-banking-scorecard/",
+      "insights_url": "https://dealogic.com/insight/ma-highlights-fy25/",
+      "global_rankings_url": "https://dealogic.com/insight/global-markets-rankings-fy2025/",
+      "frequency": "quarterly",
+      "notes": "Free summary reports available. Full data requires subscription. Covers M&A, ECM, DCM, Loans league tables.",
+      "discovered_at": "2026-01-30T03:30:00.000000+00:00"
+    },
+    "ma_volume_lseg": {
+      "normalized_name": "ma_volume_lseg",
+      "type": "scrape",
+      "data_id": "LSEG:MA",
+      "source": "LSEG (Refinitiv)",
+      "description": "M&A and investment banking league tables - deal volume, value, advisor rankings",
+      "api_url": null,
+      "league_tables_url": "https://www.lseg.com/en/data-analytics/financial-data/deals-data/investment-banking-league-tables",
+      "deals_reports_url": "https://solutions.lseg.com/DealsReports2025",
+      "frequency": "quarterly",
+      "notes": "Free quarterly reports available. Industry standard league tables. 3.3M+ transactions since 1970s.",
+      "discovered_at": "2026-01-30T03:30:00.000000+00:00"
+    },
+    "ma_analysis_bain": {
+      "normalized_name": "ma_analysis_bain",
+      "type": "scrape",
+      "data_id": "Bain:MA",
+      "source": "Bain & Company",
+      "description": "Annual M&A market analysis - deal value trends, megadeal activity, sector breakdown",
+      "api_url": null,
+      "report_url": "https://www.bain.com/insights/looking-back-m-and-a-report-2026/",
+      "press_release_url": "https://www.bain.com/about/media-center/press-releases/20252/global-ma-stages-great-rebound-in-2025-with-$4.8-trillion-deal-value-to-mark-second-highest-total-on-record",
+      "frequency": "annual",
+      "notes": "Free comprehensive reports with charts. Published early each year for prior year review.",
+      "discovered_at": "2026-01-30T03:30:00.000000+00:00"
+    },
+    "ma_analysis_pwc": {
+      "normalized_name": "ma_analysis_pwc",
+      "type": "scrape",
+      "data_id": "PwC:MA",
+      "source": "PwC",
+      "description": "Global M&A industry trends and outlook reports",
+      "api_url": null,
+      "report_url": "https://www.pwc.com/gx/en/services/deals/trends.html",
+      "frequency": "quarterly",
+      "notes": "Free reports on M&A trends, outlook, and sector analysis.",
+      "discovered_at": "2026-01-30T03:30:00.000000+00:00"
     }
   }
 }
