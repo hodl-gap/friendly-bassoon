@@ -48,6 +48,18 @@ ADDITIONAL_FRED_SERIES = {
     "fed_funds": "FEDFUNDS",
 }
 
+# FRED series that are released monthly (need extended lookback for change calculations)
+# Monthly series need ~90 days lookback to get 3 data points for proper change calc
+MONTHLY_FRED_SERIES = {
+    "TOTRESNS",    # Total Reserves - monthly
+    "FEDFUNDS",    # Fed Funds Rate - monthly
+    "M2SL",        # M2 Money Supply - monthly
+}
+
+# Default lookback days (45 for daily/weekly, 120 for monthly)
+DEFAULT_LOOKBACK_DAYS = 45
+MONTHLY_LOOKBACK_DAYS = 120
+
 
 def resolve_variable(variable: str) -> Optional[Dict[str, Any]]:
     """
@@ -165,44 +177,75 @@ def calculate_changes(history: List[Tuple[str, float]]) -> Dict[str, Any]:
     Calculate period-over-period changes from history.
 
     Returns:
-        - change_1w: (absolute, percentage, direction)
+        - change_1w: (absolute, percentage, direction) - or previous period for monthly data
         - change_1m: (absolute, percentage, direction)
     """
     if not history or len(history) < 2:
+        # Even with only 1 point, we can't calculate changes
         return {}
 
     latest_value = history[-1][1]
-    latest_date = datetime.strptime(history[-1][0], "%Y-%m-%d")
+    latest_date_str = history[-1][0]
+    latest_date = datetime.strptime(latest_date_str, "%Y-%m-%d")
 
     changes = {}
 
-    # Find value from ~1 week ago (5-9 days)
+    # Detect if this is monthly data (few points over long period)
+    is_monthly = len(history) <= 3
+
+    # Find value from ~1 week ago (5-10 days) for weekly data
+    # For monthly data, use previous data point as "prior period"
     week_ago_value = None
-    for date_str, value in reversed(history):
-        date = datetime.strptime(date_str, "%Y-%m-%d")
-        days_diff = (latest_date - date).days
-        if 5 <= days_diff <= 10:
-            week_ago_value = value
-            break
+    week_ago_date = None
+
+    if is_monthly:
+        # For monthly series, use the previous data point
+        if len(history) >= 2:
+            week_ago_value = history[-2][1]
+            week_ago_date = history[-2][0]
+    else:
+        # For weekly/daily series, look for data 5-10 days ago
+        for date_str, value in reversed(history):
+            date = datetime.strptime(date_str, "%Y-%m-%d")
+            days_diff = (latest_date - date).days
+            if 5 <= days_diff <= 10:
+                week_ago_value = value
+                week_ago_date = date_str
+                break
 
     if week_ago_value and week_ago_value != 0:
         abs_change = latest_value - week_ago_value
         pct_change = (abs_change / week_ago_value) * 100
         direction = "↑" if abs_change > 0 else "↓" if abs_change < 0 else "→"
-        changes["change_1w"] = {
+        label = "prev" if is_monthly else "1w"
+        changes[f"change_{label}"] = {
             "absolute": abs_change,
             "percentage": pct_change,
-            "direction": direction
+            "direction": direction,
+            "from_date": week_ago_date
         }
+        # Also store as change_1w for compatibility
+        if is_monthly:
+            changes["change_1w"] = changes[f"change_{label}"]
 
-    # Find value from ~1 month ago (25-35 days)
+    # Find value from ~1 month ago (25-40 days)
+    # For monthly data, try to find data 2 periods back
     month_ago_value = None
-    for date_str, value in reversed(history):
-        date = datetime.strptime(date_str, "%Y-%m-%d")
-        days_diff = (latest_date - date).days
-        if 25 <= days_diff <= 40:
-            month_ago_value = value
-            break
+    month_ago_date = None
+
+    if is_monthly:
+        # For monthly series, use 2 periods back if available
+        if len(history) >= 3:
+            month_ago_value = history[-3][1]
+            month_ago_date = history[-3][0]
+    else:
+        for date_str, value in reversed(history):
+            date = datetime.strptime(date_str, "%Y-%m-%d")
+            days_diff = (latest_date - date).days
+            if 25 <= days_diff <= 40:
+                month_ago_value = value
+                month_ago_date = date_str
+                break
 
     if month_ago_value and month_ago_value != 0:
         abs_change = latest_value - month_ago_value
@@ -211,7 +254,8 @@ def calculate_changes(history: List[Tuple[str, float]]) -> Dict[str, Any]:
         changes["change_1m"] = {
             "absolute": abs_change,
             "percentage": pct_change,
-            "direction": direction
+            "direction": direction,
+            "from_date": month_ago_date
         }
 
     return changes
@@ -251,11 +295,14 @@ def fetch_current_data(state: BTCImpactState) -> BTCImpactState:
         source = mapping["source"]
         series_id = mapping["series_id"]
 
+        # Use extended lookback for monthly FRED series
+        lookback = MONTHLY_LOOKBACK_DAYS if series_id in MONTHLY_FRED_SERIES else DEFAULT_LOOKBACK_DAYS
+
         result = None
         if source == "FRED":
-            result = fetch_fred_with_history(series_id)
+            result = fetch_fred_with_history(series_id, lookback)
         elif source == "Yahoo":
-            result = fetch_yahoo_with_history(series_id)
+            result = fetch_yahoo_with_history(series_id, lookback)
 
         if result:
             # Calculate changes

@@ -38,13 +38,20 @@ def extract_logic_chains(retrieved_chunks: List[Dict]) -> List[Dict]:
     """
     Extract logic_chains from retrieved chunks.
 
-    Each chunk's extracted_data may contain a logic_chains field.
+    Each chunk's metadata.extracted_data may contain a logic_chains field.
+    Note: logic_chains may not be present in older data - they are generated
+    by answer_generation.py Stage 1 at query time for chunks without them.
     """
     all_chains = []
 
     for chunk in retrieved_chunks:
-        # Try to get extracted_data (may be string or dict)
-        extracted = chunk.get("extracted_data")
+        # Get extracted_data from metadata (correct path)
+        metadata = chunk.get("metadata", {})
+        extracted = metadata.get("extracted_data")
+
+        # Also check direct path for backward compatibility
+        if extracted is None:
+            extracted = chunk.get("extracted_data")
 
         if isinstance(extracted, str):
             try:
@@ -57,7 +64,7 @@ def extract_logic_chains(retrieved_chunks: List[Dict]) -> List[Dict]:
             for chain in chains:
                 # Add source attribution
                 chain_with_source = dict(chain)
-                chain_with_source["source"] = extracted.get("source", "Unknown")
+                chain_with_source["source"] = extracted.get("source", metadata.get("source", "Unknown"))
                 all_chains.append(chain_with_source)
 
     return all_chains
