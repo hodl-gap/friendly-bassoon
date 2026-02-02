@@ -66,7 +66,11 @@ def build_graph() -> StateGraph:
     return graph.compile()
 
 
-def run_variable_mapper(synthesis_text: str, data_temporal_context: dict = None) -> dict:
+def run_variable_mapper(
+    synthesis_text: str,
+    data_temporal_context: dict = None,
+    logic_chains: list = None
+) -> dict:
     """
     Main entry point for variable mapping.
 
@@ -74,6 +78,9 @@ def run_variable_mapper(synthesis_text: str, data_temporal_context: dict = None)
         synthesis_text: Raw synthesis text from database_retriever
         data_temporal_context: Optional temporal context from retriever
             (e.g., {"data_years": ["2025", "2026"], "forward_looking_count": 3})
+        logic_chains: Optional structured logic_chains from retriever
+            If provided, variables are first extracted from structure (no LLM needed),
+            then supplemented with LLM extraction for additional variables.
 
     Returns:
         Final state with extracted/mapped variables
@@ -82,11 +89,14 @@ def run_variable_mapper(synthesis_text: str, data_temporal_context: dict = None)
     print(f"[orchestrator] Input length: {len(synthesis_text)} chars")
     if data_temporal_context:
         print(f"[orchestrator] Temporal context: {data_temporal_context.get('data_years', 'unknown')}")
+    if logic_chains:
+        print(f"[orchestrator] Logic chains provided: {len(logic_chains)} chains")
 
     graph = build_graph()
     initial_state = VariableMapperState(
         synthesis_input=synthesis_text,
-        data_temporal_context=data_temporal_context or {}
+        data_temporal_context=data_temporal_context or {},
+        logic_chains=logic_chains or []
     )
     final_state = graph.invoke(initial_state)
 

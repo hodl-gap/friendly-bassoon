@@ -26,7 +26,10 @@ from .relationship_store import (
     load_chains,
     store_chains,
     get_relevant_historical_chains,
-    format_historical_chains_for_prompt
+    format_historical_chains_for_prompt,
+    load_regime_state,
+    update_regime_from_analysis,
+    get_regime_context_for_prompt
 )
 from . import config
 
@@ -165,7 +168,8 @@ def run_btc_impact_analysis(
     query: str,
     output_json: bool = False,
     skip_data_fetch: bool = False,
-    skip_chain_store: bool = False
+    skip_chain_store: bool = False,
+    use_integrated_pipeline: bool = False
 ) -> Dict[str, Any]:
     """
     Main entry point for BTC impact analysis.
@@ -175,6 +179,8 @@ def run_btc_impact_analysis(
         output_json: If True, return JSON-formatted output
         skip_data_fetch: If True, skip fetching current data (Phase 1 mode)
         skip_chain_store: If True, skip loading/storing logic chains (Phase 3)
+        use_integrated_pipeline: If True, use shared/integration.py for
+            Variable Mapper → Data Collection wiring instead of standalone fetching
 
     Returns:
         Final state dict with analysis results
@@ -183,20 +189,31 @@ def run_btc_impact_analysis(
     print("BTC IMPACT ANALYSIS")
     print("=" * 60)
 
+    # Step 0: Load regime state (provides context for analysis)
+    regime_state = load_regime_state()
+    if regime_state.get("liquidity_regime"):
+        print(f"[Regime] Current: {regime_state.get('liquidity_regime')} (driver: {regime_state.get('dominant_driver')})")
+
     # Step 1: Retrieve context
     state = retrieve_context(query)
+
+    # Add regime context to state for use in analysis
+    state["regime_state"] = regime_state
 
     # Step 2: Load historical chains (Phase 3)
     if not skip_chain_store:
         state = load_chains(state)
 
-    # Step 3: Extract variables from retrieved context (Phase 2)
+    # Step 3 & 4: Variable extraction and data fetching
     if not skip_data_fetch:
-        state = extract_variables(state)
-
-    # Step 4: Fetch current data for extracted variables (Phase 2)
-    if not skip_data_fetch and state.get("extracted_variables"):
-        state = fetch_current_data(state)
+        if use_integrated_pipeline:
+            # Use integrated Mapper → Collection pipeline
+            state = _run_integrated_pipeline(state)
+        else:
+            # Original standalone approach
+            state = extract_variables(state)
+            if state.get("extracted_variables"):
+                state = fetch_current_data(state)
 
     # Step 5: Validate research patterns against current data
     if not skip_data_fetch:
@@ -209,11 +226,151 @@ def run_btc_impact_analysis(
     if not skip_chain_store:
         state = store_chains(state)
 
+    # Step 8: Update regime state based on analysis results
+    if not skip_chain_store:
+        new_regime = update_regime_from_analysis(dict(state))
+        if new_regime:
+            state["regime_state"] = new_regime
+            print(f"[Regime] Updated to: {new_regime.get('liquidity_regime')}")
+
     # Format and print output
     output = format_output(state, as_json=output_json)
     print("\n" + output)
 
     return dict(state)
+
+
+def _run_integrated_pipeline(state: BTCImpactState) -> BTCImpactState:
+    """
+    Run the integrated Variable Mapper → Data Collection pipeline.
+
+    Uses shared/integration.py to:
+    1. Run Variable Mapper on synthesis text
+    2. Fetch data via appropriate adapters for each mapped variable
+
+    Args:
+        state: Current BTC impact state
+
+    Returns:
+        Updated state with extracted_variables, current_values, etc.
+    """
+    print("\n[Integrated] Running Mapper → Collection pipeline...")
+
+    try:
+        from shared.integration import map_and_fetch_variables
+
+        synthesis = state.get("retrieval_synthesis", "")
+        logic_chains = state.get("logic_chains", [])
+
+        # Run integrated pipeline
+        result = map_and_fetch_variables(
+            synthesis=synthesis,
+            logic_chains=logic_chains,
+            temporal_context=None,  # Could pass data_temporal_summary if available
+            lookback_days=45
+        )
+
+        # Update state with results
+        mapped_vars = result.get("mapped_variables", [])
+        fetched_data = result.get("fetched_data", {})
+        unmapped = result.get("unmapped_variables", [])
+        errors = result.get("errors", [])
+
+        print(f"[Integrated] Mapped {len(mapped_vars)} variables")
+        print(f"[Integrated] Fetched data for {len(fetched_data)} variables")
+        if unmapped:
+            print(f"[Integrated] Unmapped: {unmapped}")
+        if errors:
+            print(f"[Integrated] Errors: {errors}")
+
+        # Convert to expected state format
+        state["extracted_variables"] = [
+            {"normalized": v["name"], "raw": v.get("raw_name", v["name"])}
+            for v in mapped_vars
+        ]
+
+        # Convert fetched_data to current_values format
+        current_values = {}
+        for var_name, data in fetched_data.items():
+            history = data.get("data", [])
+            if history:
+                latest = history[-1]
+                current_values[var_name] = {
+                    "value": latest[1],
+                    "date": latest[0],
+                    "source": data.get("source", ""),
+                    "series_id": data.get("series_id", ""),
+                    "changes": _calculate_changes(history)
+                }
+
+        state["current_values"] = current_values
+        state["fetch_errors"] = unmapped + [e for e in errors]
+
+        # Set BTC price if available
+        if "btc" in current_values:
+            state["btc_price"] = current_values["btc"]["value"]
+
+    except ImportError as e:
+        print(f"[Integrated] Integration module not available: {e}")
+        # Fall back to original approach
+        state = extract_variables(state)
+        if state.get("extracted_variables"):
+            state = fetch_current_data(state)
+    except Exception as e:
+        print(f"[Integrated] Pipeline error: {e}")
+        # Fall back to original approach
+        state = extract_variables(state)
+        if state.get("extracted_variables"):
+            state = fetch_current_data(state)
+
+    return state
+
+
+def _calculate_changes(history: list) -> dict:
+    """Calculate period-over-period changes from history."""
+    if not history or len(history) < 2:
+        return {}
+
+    from datetime import datetime
+
+    latest_value = history[-1][1]
+    latest_date = datetime.strptime(history[-1][0], "%Y-%m-%d")
+
+    changes = {}
+
+    # Find value from ~1 week ago (5-9 days)
+    for date_str, value in reversed(history):
+        date = datetime.strptime(date_str, "%Y-%m-%d")
+        days_diff = (latest_date - date).days
+        if 5 <= days_diff <= 10:
+            if value != 0:
+                abs_change = latest_value - value
+                pct_change = (abs_change / value) * 100
+                direction = "↑" if abs_change > 0 else "↓" if abs_change < 0 else "→"
+                changes["change_1w"] = {
+                    "absolute": abs_change,
+                    "percentage": pct_change,
+                    "direction": direction
+                }
+            break
+
+    # Find value from ~1 month ago (25-35 days)
+    for date_str, value in reversed(history):
+        date = datetime.strptime(date_str, "%Y-%m-%d")
+        days_diff = (latest_date - date).days
+        if 25 <= days_diff <= 40:
+            if value != 0:
+                abs_change = latest_value - value
+                pct_change = (abs_change / value) * 100
+                direction = "↑" if abs_change > 0 else "↓" if abs_change < 0 else "→"
+                changes["change_1m"] = {
+                    "absolute": abs_change,
+                    "percentage": pct_change,
+                    "direction": direction
+                }
+            break
+
+    return changes
 
 
 if __name__ == "__main__":

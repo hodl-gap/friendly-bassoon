@@ -12,6 +12,7 @@ load_dotenv(PARENT_DIR / ".env")
 # Paths
 DATA_DIR = PROJECT_ROOT / "data"
 RELATIONSHIPS_FILE = DATA_DIR / "btc_relationships.json"
+REGIME_STATE_FILE = DATA_DIR / "regime_state.json"
 
 # Sibling subprojects
 RETRIEVER_DIR = PARENT_DIR / "subproject_database_retriever"

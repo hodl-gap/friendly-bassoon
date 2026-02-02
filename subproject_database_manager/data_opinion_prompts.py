@@ -163,6 +163,10 @@ For EACH message, extract the following fields:
    - "normalized": Standardized name from mapping table (use snake_case for new)
    - "value": Specific value (e.g., "750B", "4.5%"), empty if none
    - "direction": "up" | "down" | "stable" | ""
+   - "epistemic_type": Type of knowledge - REQUIRED for all metrics:
+     - "observed": Direct measurement from official data (e.g., "TGA balance from Treasury: $750B")
+     - "inferred": Analyst calculation or derived value (e.g., "implied liquidity injection: ~$200B")
+     - "forecasted": Prediction or projection (e.g., "expected QE: $1.26T by year-end")
    - "is_new": true ONLY if NOT in mapping table after checking variants
    - If is_new=true:
      - "suggested_category": "direct" | "indirect"
@@ -244,6 +248,7 @@ For EACH message, extract the following fields:
                 "normalized": "TGA",
                 "value": "750B",
                 "direction": "down",
+                "epistemic_type": "observed",
                 "is_new": false
             }
         ],
@@ -461,6 +466,10 @@ For EACH message, extract the following fields:
    - "normalized": Standardized name from mapping table (use snake_case for new)
    - "value": Specific value (e.g., "750B", "4.5%"), empty if none
    - "direction": "up" | "down" | "stable" | ""
+   - "epistemic_type": Type of knowledge - REQUIRED for all metrics:
+     - "observed": Direct measurement from official data (e.g., "TGA balance from Treasury: $750B")
+     - "inferred": Analyst calculation or derived value (e.g., "implied liquidity injection: ~$200B")
+     - "forecasted": Prediction or projection (e.g., "expected QE: $1.26T by year-end")
    - "is_new": true ONLY if NOT in mapping table after checking variants
    - If is_new=true:
      - "suggested_category": "direct" | "indirect"
@@ -549,6 +558,7 @@ For EACH message, extract the following fields:
                 "normalized": "RDE",
                 "value": "-0.2→0.5",
                 "direction": "up",
+                "epistemic_type": "observed",
                 "is_new": true,
                 "suggested_category": "direct",
                 "suggested_description": "Reserve Demand Elasticity, Fed liquidity sensitivity",

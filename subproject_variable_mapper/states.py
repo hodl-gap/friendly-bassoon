@@ -14,10 +14,13 @@ class VariableMapperState(TypedDict, total=False):
     # Input
     synthesis_input: str  # Raw synthesis text from database_retriever
     data_temporal_context: Dict[str, Any]  # Optional: temporal context from retriever (data_years, etc.)
+    logic_chains: List[Dict[str, Any]]  # Optional: structured logic_chains from retriever
 
     # Step 1: Variable Extraction
     extracted_variables: List[Dict[str, Any]]  # Variables found in text
     # Example: [{"name": "TGA", "context": "TGA drawdown", "threshold": null}]
+    implicit_variables: List[Dict[str, Any]]  # Variables extracted from chain structure
+    skip_step3: bool  # Flag to skip Step 3 if combined extraction was used
 
     # Step 2: Normalization
     normalized_variables: List[Dict[str, Any]]  # Variables with canonical names

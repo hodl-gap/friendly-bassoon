@@ -3,9 +3,13 @@ Current Data Fetcher Module
 
 Fetches current/latest values for extracted variables with period-over-period changes.
 Self-contained implementation using requests/yfinance directly.
+
+Uses shared/variable_resolver.py for centralized variable resolution
+instead of hard-coded mappings.
 """
 
 import os
+import sys
 import requests
 import time
 from pathlib import Path
@@ -13,6 +17,10 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional, Tuple
 from dotenv import load_dotenv
 
+# Add parent directory for shared imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from shared.variable_resolver import resolve_variable as _resolve_variable
 from .states import BTCImpactState
 
 # Load environment
@@ -21,11 +29,15 @@ FRED_API_KEY = os.getenv("FRED_API_KEY", "")
 
 
 # ============================================================================
-# Variable to Data Source Mappings
+# Variable Resolution (uses shared/variable_resolver.py)
 # ============================================================================
+# Hard-coded FRED_SERIES and YAHOO_TICKERS dictionaries have been removed.
+# Resolution now uses discovered_data_ids.json as the source of truth.
+# See shared/variable_resolver.py for the centralized implementation.
 
-FRED_SERIES = {
-    "tga": "WTREGEN",
+# Additional FRED series not in discovered_data_ids.json
+# These are common series used in BTC analysis but not yet discovered
+ADDITIONAL_FRED_SERIES = {
     "rrp": "RRPONTSYD",
     "fed_balance_sheet": "WALCL",
     "reserves": "TOTRESNS",
@@ -34,33 +46,26 @@ FRED_SERIES = {
     "us10y": "DGS10",
     "sofr": "SOFR",
     "fed_funds": "FEDFUNDS",
-    "vix": "VIXCLS",
-}
-
-YAHOO_TICKERS = {
-    "spy": "SPY",
-    "qqq": "QQQ",
-    "gld": "GLD",
-    "tlt": "TLT",
-    "sp500": "^GSPC",
-    "nasdaq": "^IXIC",
-    "dxy": "DX-Y.NYB",
-    "btc": "BTC-USD",
-    "eth": "ETH-USD",
-    "gold": "GC=F",
-    "usdjpy": "USDJPY=X",
 }
 
 
 def resolve_variable(variable: str) -> Optional[Dict[str, Any]]:
-    """Resolve variable name to data source and series ID."""
+    """
+    Resolve variable name to data source and series ID.
+
+    Uses shared/variable_resolver.py as primary source (discovered_data_ids.json).
+    Falls back to ADDITIONAL_FRED_SERIES for common series not yet discovered.
+    """
     var_lower = variable.lower().strip()
 
-    if var_lower in FRED_SERIES:
-        return {"source": "FRED", "series_id": FRED_SERIES[var_lower]}
+    # Try shared resolver first (uses discovered_data_ids.json + Yahoo fallback)
+    result = _resolve_variable(var_lower)
+    if result:
+        return {"source": result["source"], "series_id": result["series_id"]}
 
-    if var_lower in YAHOO_TICKERS:
-        return {"source": "Yahoo", "series_id": YAHOO_TICKERS[var_lower]}
+    # Fallback for additional FRED series not yet in discovered_data_ids.json
+    if var_lower in ADDITIONAL_FRED_SERIES:
+        return {"source": "FRED", "series_id": ADDITIONAL_FRED_SERIES[var_lower]}
 
     return None
 

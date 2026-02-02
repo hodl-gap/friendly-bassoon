@@ -22,7 +22,8 @@ from states import RetrieverState
 from config import (
     PINECONE_API_KEY, PINECONE_INDEX_NAME, DEFAULT_TOP_K, SIMILARITY_THRESHOLD,
     ENABLE_LLM_RERANK, BROAD_RETRIEVAL_TOP_K, BROAD_SIMILARITY_THRESHOLD, RERANK_TOP_K,
-    ORIGINAL_QUERY_TOP_N, USE_STRUCTURED_RERANK
+    ORIGINAL_QUERY_TOP_N, USE_STRUCTURED_RERANK,
+    FOLLOWUP_TOP_K, FOLLOWUP_THRESHOLD
 )
 from vector_search_prompts import RE_RANK_PROMPT, RE_RANK_SYSTEM_PROMPT
 
@@ -377,31 +378,148 @@ def parse_rerank_response(response: str) -> dict:
     return scores
 
 
-def search_single_query(query_text: str) -> list:
+def search_single_query(
+    query_text: str,
+    top_k: int = None,
+    threshold: float = None
+) -> list:
     """
-    Simple single-query search (utility function).
+    Simple single-query search for follow-up retrievals.
+    No re-ranking, no query expansion - just semantic search.
 
-    Returns list of chunk dicts with id, score, metadata.
+    Args:
+        query_text: The search query
+        top_k: Number of results (default: FOLLOWUP_TOP_K)
+        threshold: Similarity threshold (default: FOLLOWUP_THRESHOLD)
+
+    Returns: List of chunks with id, score, metadata
     """
-    print(f"[vector_search] Single search: {query_text[:100]}...")
+    top_k = top_k or FOLLOWUP_TOP_K
+    threshold = threshold or FOLLOWUP_THRESHOLD
+
+    print(f"[vector_search] Single query: '{query_text[:80]}...' (top_k={top_k}, threshold={threshold})")
 
     embedding = call_openai_embedding(query_text)
     index = get_pinecone_index()
 
     results = index.query(
         vector=embedding,
-        top_k=DEFAULT_TOP_K,
+        top_k=top_k,
         include_metadata=True
     )
 
     chunks = []
     for match in results.matches:
-        if match.score >= SIMILARITY_THRESHOLD:
+        if match.score >= threshold:
             chunks.append({
                 "id": match.id,
                 "score": match.score,
                 "metadata": match.metadata
             })
 
-    print(f"[vector_search] Retrieved {len(chunks)} chunks")
+    print(f"[vector_search] Single query retrieved {len(chunks)} chunks")
     return chunks
+
+
+def search_by_cause_normalized(
+    cause_norm: str,
+    top_k: int = 5
+) -> list:
+    """
+    Search for chunks where a specific cause_normalized appears.
+
+    Uses Pinecone metadata filtering for deterministic (symbolic) match
+    instead of semantic search. This is more reliable for chain expansion
+    when we know the exact normalized variable name.
+
+    Args:
+        cause_norm: Normalized cause variable name (e.g., "carry_unwind", "bank_reserves")
+        top_k: Maximum results to return
+
+    Returns:
+        List of chunks with id, score, metadata, and match_type="metadata"
+
+    Note:
+        Requires cause_normalized to be indexed in Pinecone metadata.
+        If not indexed, returns empty list and falls back to semantic search.
+    """
+    print(f"[vector_search] Metadata search for cause_normalized='{cause_norm}'")
+
+    try:
+        index = get_pinecone_index()
+
+        # Query with metadata filter
+        # Note: This requires cause_normalized to be indexed in Pinecone
+        # Pinecone filter syntax: {"field": {"$eq": "value"}}
+        results = index.query(
+            vector=[0.0] * 3072,  # Dummy vector (metadata-only query)
+            top_k=top_k,
+            include_metadata=True,
+            filter={"cause_normalized": {"$eq": cause_norm}}
+        )
+
+        chunks = []
+        for match in results.matches:
+            chunks.append({
+                "id": match.id,
+                "score": match.score,
+                "metadata": match.metadata,
+                "match_type": "metadata"  # Tag for downstream processing
+            })
+
+        print(f"[vector_search] Metadata search found {len(chunks)} chunks for '{cause_norm}'")
+        return chunks
+
+    except Exception as e:
+        # Filter may fail if cause_normalized is not indexed
+        print(f"[vector_search] Metadata filter failed ({e}), returning empty")
+        return []
+
+
+def search_for_chain_continuation(
+    effect_norm: str,
+    top_k: int = 5
+) -> list:
+    """
+    Search for chunks where a given effect appears as a cause (chain continuation).
+
+    First tries metadata filter (deterministic), then falls back to semantic search.
+    This is the main function for chain expansion in answer_generation.py.
+
+    Args:
+        effect_norm: The effect to find as a cause in other chunks
+        top_k: Maximum results to return
+
+    Returns:
+        List of chunks with match_type ("metadata" or "semantic")
+    """
+    # Step 1: Try deterministic metadata match first
+    metadata_chunks = search_by_cause_normalized(effect_norm, top_k=top_k)
+
+    if len(metadata_chunks) >= 2:
+        # Good coverage from metadata - return these
+        print(f"[vector_search] Chain continuation: {len(metadata_chunks)} metadata matches for '{effect_norm}'")
+        return metadata_chunks
+
+    # Step 2: Fall back to semantic search if insufficient metadata matches
+    print(f"[vector_search] Insufficient metadata matches ({len(metadata_chunks)}), adding semantic search")
+
+    # Build semantic query
+    query = f"What is the impact of {effect_norm.replace('_', ' ')}?"
+    semantic_chunks = search_single_query(query, top_k=top_k)
+
+    # Tag semantic chunks
+    for chunk in semantic_chunks:
+        chunk["match_type"] = "semantic"
+
+    # Merge: metadata first, then semantic (deduplicated)
+    seen_ids = {c["id"] for c in metadata_chunks}
+    merged = list(metadata_chunks)
+
+    for chunk in semantic_chunks:
+        if chunk["id"] not in seen_ids:
+            merged.append(chunk)
+            seen_ids.add(chunk["id"])
+
+    print(f"[vector_search] Chain continuation total: {len(merged)} chunks ({len(metadata_chunks)} metadata + {len(merged) - len(metadata_chunks)} semantic)")
+    return merged[:top_k]

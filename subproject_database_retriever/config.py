@@ -44,3 +44,14 @@ SKIP_CONTRADICTION_CONFIDENCE_THRESHOLD = 0.85  # Skip Stage 3 if confidence >= 
 # Embedding Configuration
 EMBEDDING_MODEL = "text-embedding-3-large"
 EMBEDDING_DIMENSIONS = 3072
+
+# Chain Expansion Settings (follow dangling effects)
+ENABLE_CHAIN_EXPANSION = True       # Toggle feature
+MAX_CHAIN_DEPTH = 1                 # Follow-up depth (1 = single follow-up)
+MAX_DANGLING_TO_FOLLOW = 3          # Limit follow-up queries per run
+MIN_CHUNKS_BEFORE_EXPANSION = 3     # Only expand if we have enough initial context
+FOLLOWUP_TOP_K = 5                  # Chunks per follow-up query
+FOLLOWUP_THRESHOLD = 0.40           # Similarity threshold for follow-ups
+
+# Structured Synthesis Settings (Issue 4: replaces regex parsing with tool_use)
+USE_STRUCTURED_SYNTHESIS = True     # Use tool_use for guaranteed JSON confidence metadata

@@ -26,25 +26,149 @@ def extract_variables(state: VariableMapperState) -> VariableMapperState:
     Extract variables from synthesis text.
 
     Input: synthesis_input (raw text from database_retriever)
+           logic_chains (optional): structured chains for efficient extraction
     Output: extracted_variables (list of variable dicts)
 
     If USE_COMBINED_EXTRACTION=True, also outputs:
         - implicit_variables: variables found in logic chains
         - chain_dependencies: parsed chain relationships
         - skip_step3: flag to skip missing_variable_detection
+
+    If logic_chains are provided, extracts from structure first (no LLM needed),
+    then supplements with LLM extraction for variables not in structure.
     """
     synthesis_text = state.get("synthesis_input", "")
+    logic_chains = state.get("logic_chains", [])
 
-    if not synthesis_text:
-        print("[variable_extraction] No input text provided")
+    if not synthesis_text and not logic_chains:
+        print("[variable_extraction] No input text or chains provided")
         return {**state, "extracted_variables": [], "skip_step3": False}
 
-    print(f"[variable_extraction] Processing {len(synthesis_text)} chars...")
+    # Step 1: Extract from structured logic_chains first (if available)
+    structure_vars = []
+    if logic_chains:
+        print(f"[variable_extraction] Extracting from {len(logic_chains)} logic chains...")
+        structure_vars = extract_from_structure(logic_chains)
+        print(f"[variable_extraction] Found {len(structure_vars)} variables from structure")
+
+    # If we got enough from structure, we may skip LLM extraction
+    if structure_vars and len(structure_vars) >= 5:
+        print("[variable_extraction] Sufficient variables from structure, skipping LLM extraction")
+        return {
+            **state,
+            "extracted_variables": structure_vars,
+            "implicit_variables": structure_vars,
+            "chain_dependencies": _extract_chain_deps(logic_chains),
+            "skip_step3": True  # Structure already has chain variables
+        }
+
+    # Step 2: LLM extraction for additional variables
+    print(f"[variable_extraction] Processing {len(synthesis_text)} chars with LLM...")
 
     if USE_COMBINED_EXTRACTION:
-        return extract_variables_combined(state, synthesis_text)
+        llm_result = extract_variables_combined(state, synthesis_text)
     else:
-        return extract_variables_simple(state, synthesis_text)
+        llm_result = extract_variables_simple(state, synthesis_text)
+
+    # Step 3: Merge structure vars with LLM vars (structure vars already normalized)
+    llm_vars = llm_result.get("extracted_variables", [])
+    all_variables = _merge_variables(structure_vars, llm_vars)
+
+    print(f"[variable_extraction] Total: {len(all_variables)} variables ({len(structure_vars)} from structure + {len(all_variables) - len(structure_vars)} from LLM)")
+
+    return {
+        **llm_result,
+        "extracted_variables": all_variables,
+    }
+
+
+def extract_from_structure(logic_chains: list) -> list:
+    """
+    Extract variables from structured logic_chains.
+
+    Iterates through chain.steps[].cause_normalized and effect_normalized
+    to extract variables that are already in normalized form.
+
+    Args:
+        logic_chains: List of logic chain dicts with steps
+
+    Returns:
+        List of variable dicts with:
+        - name: normalized variable name
+        - raw_name: original text (cause or effect field)
+        - already_normalized: True (skip normalization step)
+        - source_type: "structure"
+    """
+    variables = []
+    seen = set()
+
+    for chain in (logic_chains or []):
+        # Handle both formats: {steps: [...]} or {logic_chain: {steps: [...]}}
+        steps = chain.get("steps", [])
+        if not steps:
+            steps = chain.get("logic_chain", {}).get("steps", [])
+
+        for step in steps:
+            cause_norm = step.get("cause_normalized", "")
+            effect_norm = step.get("effect_normalized", "")
+            cause_raw = step.get("cause", "")
+            effect_raw = step.get("effect", "")
+
+            if cause_norm and cause_norm not in seen:
+                variables.append({
+                    "name": cause_norm,
+                    "raw_name": cause_raw or cause_norm,
+                    "already_normalized": True,
+                    "source_type": "structure"
+                })
+                seen.add(cause_norm)
+
+            if effect_norm and effect_norm not in seen:
+                variables.append({
+                    "name": effect_norm,
+                    "raw_name": effect_raw or effect_norm,
+                    "already_normalized": True,
+                    "source_type": "structure"
+                })
+                seen.add(effect_norm)
+
+    return variables
+
+
+def _extract_chain_deps(logic_chains: list) -> list:
+    """Extract chain dependencies from logic_chains structure."""
+    dependencies = []
+    for chain in (logic_chains or []):
+        steps = chain.get("steps", [])
+        if not steps:
+            steps = chain.get("logic_chain", {}).get("steps", [])
+
+        for step in steps:
+            cause_norm = step.get("cause_normalized", "")
+            effect_norm = step.get("effect_normalized", "")
+            if cause_norm and effect_norm:
+                dependencies.append({
+                    "from": cause_norm,
+                    "to": effect_norm,
+                    "relationship": "causes"
+                })
+
+    return dependencies
+
+
+def _merge_variables(structure_vars: list, llm_vars: list) -> list:
+    """Merge structure variables with LLM variables, avoiding duplicates."""
+    # Structure vars take precedence (already normalized)
+    seen_names = {v.get("name", "").lower() for v in structure_vars}
+    merged = list(structure_vars)
+
+    for var in llm_vars:
+        var_name = var.get("name", "").lower()
+        if var_name and var_name not in seen_names:
+            merged.append(var)
+            seen_names.add(var_name)
+
+    return merged
 
 
 def extract_variables_simple(state: VariableMapperState, synthesis_text: str) -> VariableMapperState:

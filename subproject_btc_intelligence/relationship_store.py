@@ -322,3 +322,166 @@ def format_historical_chains_for_prompt(chains: List[Dict]) -> str:
         lines.append(f"{i}. {summary} ({rel_type}, conf: {conf:.2f})")
 
     return "\n".join(lines)
+
+
+# ============================================================================
+# Regime State Persistence
+# ============================================================================
+
+def load_regime_state() -> Dict[str, Any]:
+    """
+    Load the regime state from disk.
+
+    Returns:
+        Dict with regime state:
+        - liquidity_regime: "reserve_scarce" | "reserve_abundant" | "transitional"
+        - dominant_driver: Primary driver affecting BTC (e.g., "tga", "fed_policy")
+        - last_updated: ISO timestamp
+        - confidence: 0.0-1.0 confidence in the assessment
+        - assessment_source: Where this was determined (e.g., "impact_analysis")
+    """
+    if not config.REGIME_STATE_FILE.exists():
+        return {
+            "liquidity_regime": None,
+            "dominant_driver": None,
+            "last_updated": None,
+            "confidence": 0.0,
+            "assessment_source": None
+        }
+
+    try:
+        with open(config.REGIME_STATE_FILE, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"[Regime State] Error loading: {e}")
+        return {
+            "liquidity_regime": None,
+            "dominant_driver": None,
+            "last_updated": None,
+            "confidence": 0.0,
+            "assessment_source": None
+        }
+
+
+def save_regime_state(state: Dict[str, Any]) -> bool:
+    """
+    Save the regime state to disk.
+
+    Args:
+        state: Dict with liquidity_regime, dominant_driver, confidence, etc.
+
+    Returns:
+        True if successful
+    """
+    try:
+        # Update timestamp
+        state["last_updated"] = datetime.now().isoformat()
+
+        # Ensure directory exists
+        config.DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+        with open(config.REGIME_STATE_FILE, 'w') as f:
+            json.dump(state, f, indent=2, ensure_ascii=False)
+
+        print(f"[Regime State] Saved: {state.get('liquidity_regime')} (conf: {state.get('confidence', 0):.2f})")
+        return True
+    except Exception as e:
+        print(f"[Regime State] Error saving: {e}")
+        return False
+
+
+def update_regime_from_analysis(
+    analysis_result: Dict[str, Any],
+    threshold: float = 0.7
+) -> Optional[Dict[str, Any]]:
+    """
+    Update regime state based on impact analysis results.
+
+    Only updates if the analysis has high enough confidence and indicates
+    a regime that differs from the current state.
+
+    Args:
+        analysis_result: Result from impact analysis containing direction, confidence, etc.
+        threshold: Minimum confidence required to update regime (default: 0.7)
+
+    Returns:
+        New regime state if updated, None otherwise
+    """
+    confidence = analysis_result.get("confidence", {}).get("score", 0)
+
+    if confidence < threshold:
+        print(f"[Regime State] Not updating: confidence {confidence:.2f} below threshold {threshold}")
+        return None
+
+    # Load current state
+    current = load_regime_state()
+
+    # Determine new regime from analysis
+    direction = analysis_result.get("direction", "").upper()
+    strongest_chain = analysis_result.get("confidence", {}).get("strongest_chain", "")
+
+    # Simple heuristic: extract dominant driver from strongest chain
+    dominant_driver = None
+    if strongest_chain:
+        # First part of chain is typically the dominant driver
+        parts = strongest_chain.replace(" -> ", "->").split("->")
+        if parts:
+            dominant_driver = parts[0].strip()
+
+    # Determine liquidity regime from direction and context
+    # This is a simplified heuristic - could be enhanced
+    liquidity_regime = current.get("liquidity_regime")
+    if "tga" in strongest_chain.lower() and direction == "BEARISH":
+        liquidity_regime = "reserve_scarce"
+    elif "qe" in strongest_chain.lower() or direction == "BULLISH":
+        liquidity_regime = "reserve_abundant"
+    elif "qt" in strongest_chain.lower():
+        liquidity_regime = "transitional"
+
+    # Check if regime changed significantly
+    regime_changed = (
+        liquidity_regime != current.get("liquidity_regime") or
+        dominant_driver != current.get("dominant_driver")
+    )
+
+    if not regime_changed and confidence <= current.get("confidence", 0):
+        print("[Regime State] No significant change detected")
+        return None
+
+    # Build new state
+    new_state = {
+        "liquidity_regime": liquidity_regime,
+        "dominant_driver": dominant_driver,
+        "confidence": confidence,
+        "assessment_source": "impact_analysis",
+        "direction": direction,
+        "strongest_chain": strongest_chain
+    }
+
+    # Save if changed or higher confidence
+    save_regime_state(new_state)
+
+    return new_state
+
+
+def get_regime_context_for_prompt() -> str:
+    """
+    Format regime state for inclusion in LLM prompt.
+
+    Returns:
+        String describing current regime state, or empty if no state.
+    """
+    state = load_regime_state()
+
+    if not state.get("liquidity_regime"):
+        return ""
+
+    lines = [
+        "Current Regime Assessment:",
+        f"- Liquidity Regime: {state.get('liquidity_regime', 'unknown')}",
+        f"- Dominant Driver: {state.get('dominant_driver', 'unknown')}",
+        f"- Confidence: {state.get('confidence', 0):.2f}",
+        f"- Last Updated: {state.get('last_updated', 'unknown')}"
+    ]
+
+    return "\n".join(lines)

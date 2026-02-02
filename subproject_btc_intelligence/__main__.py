@@ -4,6 +4,7 @@ Usage:
     python -m subproject_btc_intelligence "What is the impact of TGA drawdown on BTC?"
     python -m subproject_btc_intelligence --json "What is the impact of DXY strength on BTC?"
     python -m subproject_btc_intelligence --skip-data "Query without live data fetch"
+    python -m subproject_btc_intelligence --use-integrated "Test TGA impact"
 """
 
 import argparse
@@ -42,6 +43,11 @@ def main():
         action="store_true",
         help="Skip loading/storing logic chains (disable Phase 3)"
     )
+    parser.add_argument(
+        "--use-integrated",
+        action="store_true",
+        help="Use integrated Variable Mapper → Data Collection pipeline"
+    )
 
     args = parser.parse_args()
 
@@ -53,6 +59,7 @@ def main():
         print("  python -m subproject_btc_intelligence \"What is the impact of Fed rate cuts on BTC?\"")
         print("  python -m subproject_btc_intelligence --json \"What is the impact of DXY strength on BTC?\"")
         print("  python -m subproject_btc_intelligence --skip-data \"Query without live data\"")
+        print("  python -m subproject_btc_intelligence --use-integrated \"Test TGA impact\"")
         sys.exit(1)
 
     # Set verbose mode
@@ -64,7 +71,8 @@ def main():
         args.query,
         output_json=args.json,
         skip_data_fetch=args.skip_data,
-        skip_chain_store=args.skip_chains
+        skip_chain_store=args.skip_chains,
+        use_integrated_pipeline=args.use_integrated
     )
 
     # Exit with appropriate code

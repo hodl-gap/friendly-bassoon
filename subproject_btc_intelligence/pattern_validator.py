@@ -25,8 +25,7 @@ from .states import BTCImpactState
 from .current_data_fetcher import (
     fetch_fred_with_history,
     fetch_yahoo_with_history,
-    FRED_SERIES,
-    YAHOO_TICKERS
+    resolve_variable,
 )
 
 
@@ -133,14 +132,21 @@ def fetch_historical_for_pattern(variable: str, timeframe_days: int) -> Optional
     """
     lookback = max(timeframe_days + 14, 45)  # Extra buffer for data gaps
 
-    # Determine source and fetch
+    # Resolve variable to source and series_id
     var_lower = variable.lower()
+    resolution = resolve_variable(var_lower)
+
+    if not resolution:
+        return None
+
+    source = resolution["source"]
+    series_id = resolution["series_id"]
 
     result = None
-    if var_lower in FRED_SERIES:
-        result = fetch_fred_with_history(FRED_SERIES[var_lower], lookback)
-    elif var_lower in YAHOO_TICKERS:
-        result = fetch_yahoo_with_history(YAHOO_TICKERS[var_lower], lookback)
+    if source == "FRED":
+        result = fetch_fred_with_history(series_id, lookback)
+    elif source == "Yahoo":
+        result = fetch_yahoo_with_history(series_id, lookback)
 
     if not result or not result.get("history"):
         return None
@@ -238,6 +244,17 @@ def evaluate_pattern(pattern: Dict[str, Any], data: Dict[str, Any]) -> Dict[str,
     raw_condition_value = pattern.get("condition_value")
     condition_value = normalize_threshold(variable, raw_condition_value)
     condition_direction = pattern.get("condition_direction", "")
+
+    # Guard against None condition values
+    if condition_value is None and condition_type not in ["new_high", "new_low"]:
+        return {
+            "pattern": pattern,
+            "triggered": False,
+            "current_metric": None,
+            "threshold": None,
+            "explanation": "No threshold value provided",
+            "data": data
+        }
 
     triggered = False
     current_metric = None

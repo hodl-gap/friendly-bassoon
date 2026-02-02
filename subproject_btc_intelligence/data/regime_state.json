@@ -1,0 +1,9 @@
+{
+  "liquidity_regime": "reserve_scarce",
+  "dominant_driver": "tga_rebuild",
+  "confidence": 0.72,
+  "assessment_source": "impact_analysis",
+  "direction": "BEARISH",
+  "strongest_chain": "tga_rebuild -> treasury_issuance -> bank_reserves_drain -> repo_spike -> btc_downside",
+  "last_updated": "2026-02-02T08:45:36.310206"
+}

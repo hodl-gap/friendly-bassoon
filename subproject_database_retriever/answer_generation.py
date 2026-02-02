@@ -18,7 +18,11 @@ from answer_generation_prompts import LOGIC_CHAIN_PROMPT, SYNTHESIS_PROMPT, CONT
 from config import (
     MAX_CHUNKS_FOR_ANSWER,
     SKIP_CONTRADICTION_FOR_DATA_LOOKUP,
-    SKIP_CONTRADICTION_CONFIDENCE_THRESHOLD
+    SKIP_CONTRADICTION_CONFIDENCE_THRESHOLD,
+    ENABLE_CHAIN_EXPANSION,
+    MIN_CHUNKS_BEFORE_EXPANSION,
+    MAX_DANGLING_TO_FOLLOW,
+    USE_STRUCTURED_SYNTHESIS
 )
 
 
@@ -40,6 +44,33 @@ def generate_answer(state: RetrieverState) -> RetrieverState:
 
     # Limit chunks to preserve LLM reasoning quality
     chunks = chunks[:MAX_CHUNKS_FOR_ANSWER]
+
+    # Chain expansion: detect and follow dangling effects
+    dangling_followed = []
+    if ENABLE_CHAIN_EXPANSION and len(chunks) >= MIN_CHUNKS_BEFORE_EXPANSION:
+        print(f"[answer_generation] Detecting dangling chains...")
+        dangling = detect_dangling_chains(chunks)
+
+        if dangling:
+            print(f"[answer_generation] Found {len(dangling)} dangling effects: {dangling[:5]}...")
+            additional_chunks, dangling_followed = expand_dangling_chains(
+                dangling,
+                chunks,
+                max_to_follow=MAX_DANGLING_TO_FOLLOW
+            )
+
+            if additional_chunks:
+                chunks = chunks + additional_chunks
+                # Allow slightly more chunks for follow-ups
+                chunks = chunks[:MAX_CHUNKS_FOR_ANSWER + 5]
+                print(f"[answer_generation] Expanded to {len(chunks)} total chunks")
+        else:
+            print(f"[answer_generation] No dangling chains detected")
+    else:
+        if not ENABLE_CHAIN_EXPANSION:
+            print(f"[answer_generation] Chain expansion disabled")
+        else:
+            print(f"[answer_generation] Too few chunks ({len(chunks)}) for chain expansion")
 
     print(f"[answer_generation] Stage 1: Extracting logic chains from {len(chunks)} chunks...")
 
@@ -93,7 +124,8 @@ def generate_answer(state: RetrieverState) -> RetrieverState:
         "synthesis": synthesis_text,
         "confidence_metadata": confidence_metadata,
         "contradictions": contradictions,
-        "data_temporal_summary": data_temporal_summary
+        "data_temporal_summary": data_temporal_summary,
+        "dangling_effects_followed": dangling_followed
     }
 
 
@@ -246,6 +278,99 @@ def find_chain_connections(chunks: list) -> dict:
                         effect_map[effect_norm].append(chunk_id)
 
     return effect_map
+
+
+def detect_dangling_chains(chunks: list) -> list:
+    """
+    Find effects that aren't explained in retrieved chunks.
+    Returns effects sorted by frequency (most common first).
+
+    A chain is "dangling" if:
+    - An effect_normalized appears in retrieved chunks
+    - But NO chunk has that effect as a cause_normalized
+
+    This enables chain-of-retrievals: follow up on unexplained effects
+    to get complete causal chains.
+    """
+    effect_counts = {}  # Track frequency of each effect
+    causes = set()      # Track all causes
+
+    for chunk in chunks:
+        extracted_data = parse_extracted_data(chunk)
+        for chain in extracted_data.get("logic_chains", []):
+            for step in chain.get("steps", []):
+                effect_norm = step.get("effect_normalized", "")
+                cause_norm = step.get("cause_normalized", "")
+                if effect_norm:
+                    effect_counts[effect_norm] = effect_counts.get(effect_norm, 0) + 1
+                if cause_norm:
+                    causes.add(cause_norm)
+
+    # Dangling = effects that don't appear as causes anywhere
+    dangling = {e: count for e, count in effect_counts.items() if e not in causes}
+
+    # Sort by frequency (descending) - prioritize most common effects
+    sorted_dangling = sorted(dangling.keys(), key=lambda e: dangling[e], reverse=True)
+    return sorted_dangling
+
+
+def expand_dangling_chains(
+    dangling_effects: list,
+    original_chunks: list,
+    max_to_follow: int = 3
+) -> tuple:
+    """
+    Run follow-up queries for dangling effects (already sorted by frequency).
+
+    Uses metadata-first search: queries by exact cause_normalized metadata match
+    first, then falls back to semantic search if insufficient matches.
+
+    Args:
+        dangling_effects: List of effect names to follow up on (sorted by frequency)
+        original_chunks: Original retrieved chunks (for deduplication)
+        max_to_follow: Maximum number of effects to follow up on
+
+    Returns: (additional_chunks, effects_followed)
+    """
+    from vector_search import search_for_chain_continuation
+
+    additional_chunks = []
+    effects_followed = []
+    seen_ids = {c["id"] for c in original_chunks}
+
+    # Take top N by frequency (already sorted)
+    effects_to_follow = dangling_effects[:max_to_follow]
+
+    for effect in effects_to_follow:
+        print(f"[chain_expansion] Following dangling effect '{effect}'")
+
+        # Use metadata-first search (deterministic match before semantic fallback)
+        new_chunks = search_for_chain_continuation(effect)
+
+        chunks_added = 0
+        metadata_count = 0
+        semantic_count = 0
+
+        for chunk in new_chunks:
+            if chunk["id"] not in seen_ids:
+                chunk["is_followup"] = True
+                chunk["followed_effect"] = effect
+                additional_chunks.append(chunk)
+                seen_ids.add(chunk["id"])
+                chunks_added += 1
+
+                # Track match types for logging
+                if chunk.get("match_type") == "metadata":
+                    metadata_count += 1
+                else:
+                    semantic_count += 1
+
+        if chunks_added > 0:
+            effects_followed.append(effect)
+            print(f"[chain_expansion] Added {chunks_added} chunks for '{effect}' ({metadata_count} metadata, {semantic_count} semantic)")
+
+    print(f"[chain_expansion] Total: {len(additional_chunks)} new chunks from {len(effects_followed)} follow-ups")
+    return additional_chunks, effects_followed
 
 
 def synthesize_context(chunks: list, query_temporal_ref: dict = None) -> str:
@@ -401,6 +526,11 @@ def synthesize_chains(query: str, chains: str) -> dict:
             "confidence_metadata": {"overall_score": 0.0, "path_count": 0, "source_diversity": 0}
         }
 
+    # Use structured output if enabled (replaces fragile regex parsing)
+    if USE_STRUCTURED_SYNTHESIS:
+        return synthesize_chains_structured(query, chains)
+
+    # Legacy: Free-form synthesis with regex extraction
     prompt = SYNTHESIS_PROMPT.format(query=query, chains=chains)
     messages = [{"role": "user", "content": prompt}]
 
@@ -409,6 +539,151 @@ def synthesize_chains(query: str, chains: str) -> dict:
     print(f"[answer_generation] Synthesis response:\n{response}")
 
     # Extract confidence metadata from response
+    confidence_metadata = extract_confidence_metadata(response)
+
+    return {
+        "synthesis_text": response,
+        "confidence_metadata": confidence_metadata
+    }
+
+
+def synthesize_chains_structured(query: str, chains: str) -> dict:
+    """
+    Stage 2: Synthesize consensus using tool_use for guaranteed structured output.
+
+    Uses Claude's tool_use feature to ensure confidence metadata is returned
+    as valid JSON, replacing fragile regex parsing.
+
+    Returns dict with:
+        - synthesis_text: The full synthesis response
+        - confidence_metadata: Extracted confidence scores (guaranteed JSON)
+    """
+    import os
+    from anthropic import Anthropic
+    from dotenv import load_dotenv
+
+    # Load API key
+    env_path = Path(__file__).parent.parent / '.env'
+    load_dotenv(env_path)
+    client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+
+    # Define tool schema for structured output
+    synthesis_tool = {
+        "name": "submit_synthesis",
+        "description": "Submit the synthesis of logic chains with confidence metadata.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "synthesis_text": {
+                    "type": "string",
+                    "description": "The full synthesis text including consensus conclusions and key variables to monitor"
+                },
+                "overall_score": {
+                    "type": "number",
+                    "description": "Confidence score from 0.0 to 1.0. High (0.8+): 3+ paths from 2+ sources. Medium (0.5-0.8): 2 paths OR single source. Low (<0.5): Single path or weak support."
+                },
+                "path_count": {
+                    "type": "integer",
+                    "description": "Number of supporting paths/chains that converge on the main conclusion"
+                },
+                "source_diversity": {
+                    "type": "integer",
+                    "description": "Number of unique institutions/sources supporting the conclusion"
+                },
+                "confidence_level": {
+                    "type": "string",
+                    "enum": ["High", "Medium", "Low"],
+                    "description": "Categorical confidence level based on path count and source diversity"
+                },
+                "strongest_chain": {
+                    "type": "string",
+                    "description": "The most well-supported logic chain, formatted as 'A → B → C'"
+                }
+            },
+            "required": ["synthesis_text", "overall_score", "path_count", "source_diversity", "confidence_level"]
+        }
+    }
+
+    user_prompt = f"""You are synthesizing logic chains to identify consensus patterns and key monitoring variables.
+
+Query: {query}
+
+Logic Chains:
+{chains}
+
+Instructions:
+
+## Part 1: Consensus Chains
+Identify where MULTIPLE chains converge on the same conclusion through different paths.
+- Look for different starting points that lead to the same end effect
+- These represent higher-conviction conclusions supported by multiple reasoning paths
+- Only include if 2+ chains support the same conclusion
+
+## Part 2: Key Variables to Monitor
+Extract specific, actionable variables/indicators mentioned across the chains.
+- Group by category (e.g., Liquidity, Labor Market, Positioning)
+- Include specific thresholds or levels if mentioned
+- Note which chains reference each variable
+
+## Confidence Scoring
+Score the overall confidence based on:
+- High (0.8+): 3+ paths from 2+ independent sources
+- Medium (0.5-0.8): 2 paths OR single source with strong logic
+- Low (<0.5): Single path, weak support, or contradictory evidence
+
+Use the submit_synthesis tool to submit your analysis with confidence metadata."""
+
+    try:
+        response = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=4000,
+            temperature=0.3,
+            tools=[synthesis_tool],
+            tool_choice={"type": "tool", "name": "submit_synthesis"},
+            messages=[{"role": "user", "content": user_prompt}]
+        )
+
+        # Extract tool use result
+        for content_block in response.content:
+            if content_block.type == "tool_use" and content_block.name == "submit_synthesis":
+                tool_input = content_block.input
+
+                synthesis_text = tool_input.get("synthesis_text", "")
+                confidence_metadata = {
+                    "overall_score": float(tool_input.get("overall_score", 0.0)),
+                    "path_count": int(tool_input.get("path_count", 0)),
+                    "source_diversity": int(tool_input.get("source_diversity", 0)),
+                    "confidence_level": tool_input.get("confidence_level", "Low"),
+                    "strongest_chain": tool_input.get("strongest_chain", "")
+                }
+
+                print(f"[answer_generation] Structured synthesis complete:")
+                print(f"[answer_generation] Confidence: {confidence_metadata}")
+                print(f"[answer_generation] Synthesis text (first 300 chars): {synthesis_text[:300]}...")
+
+                return {
+                    "synthesis_text": synthesis_text,
+                    "confidence_metadata": confidence_metadata
+                }
+
+        # Fallback if no tool_use found
+        print("[answer_generation] WARNING: No tool_use in response, falling back to regex")
+        return _fallback_synthesis(query, chains)
+
+    except Exception as e:
+        print(f"[answer_generation] Structured synthesis error: {e}, falling back to regex")
+        return _fallback_synthesis(query, chains)
+
+
+def _fallback_synthesis(query: str, chains: str) -> dict:
+    """Fallback to regex-based extraction when structured output fails."""
+    prompt = SYNTHESIS_PROMPT.format(query=query, chains=chains)
+    messages = [{"role": "user", "content": prompt}]
+
+    response = call_claude_sonnet(messages, temperature=0.3, max_tokens=3000)
+
+    print(f"[answer_generation] Fallback synthesis response:\n{response}")
+
     confidence_metadata = extract_confidence_metadata(response)
 
     return {
