@@ -1,0 +1,27 @@
+"""Configuration for BTC Impact Module."""
+
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment from parent directory
+PROJECT_ROOT = Path(__file__).parent
+PARENT_DIR = PROJECT_ROOT.parent
+load_dotenv(PARENT_DIR / ".env")
+
+# Paths
+DATA_DIR = PROJECT_ROOT / "data"
+RELATIONSHIPS_FILE = DATA_DIR / "btc_relationships.json"
+
+# Sibling subprojects
+RETRIEVER_DIR = PARENT_DIR / "subproject_database_retriever"
+DATA_COLLECTION_DIR = PARENT_DIR / "subproject_data_collection"
+VARIABLE_MAPPER_DIR = PARENT_DIR / "subproject_variable_mapper"
+
+# Model configuration
+ANALYSIS_MODEL = "claude_sonnet"  # For impact analysis
+EXTRACTION_MODEL = "claude_haiku"  # For variable extraction (Phase 2)
+
+# Output settings
+VERBOSE = os.getenv("BTC_IMPACT_VERBOSE", "false").lower() == "true"
+OUTPUT_JSON = False  # Set via CLI --json flag
