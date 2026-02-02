@@ -119,7 +119,8 @@ The retriever can:
 5. **Route queries** - Direct different query types to appropriate handlers
 6. **Score confidence** - Compute confidence based on path count and source diversity
 7. **Detect contradictions** - Identify evidence that weakens consensus conclusions
-8. **LLM re-ranking** - Score retrieved chunks for causal relevance (NEW)
+8. **LLM re-ranking** - Score retrieved chunks for causal relevance
+9. **Chain-of-retrievals** - Auto-follow dangling effects with follow-up queries (NEW)
 
 ### Answer Generation Pipeline (3 Stages)
 
@@ -300,6 +301,53 @@ COMPLEX_QUERY_DIMENSIONS = 6      # Expansion dimensions for complex queries
 ```
 
 **Savings:** 30-50% reduction in expansion tokens for simple queries
+
+### Chain-of-Retrievals (NEW)
+
+Addresses incomplete chain traversal - when retrieved chunks mention an intermediate effect but don't explain what it leads to.
+
+**Problem**: Current retrieval is single-hop. If chunks mention "carry_unwind" as an effect but nothing explains what carry_unwind leads to, the answer is incomplete.
+
+**Solution**: Post-retrieval chain expansion - detect dangling effects and run follow-up queries.
+
+**How it works**:
+1. After initial retrieval, `detect_dangling_chains()` finds effects that aren't causes anywhere
+2. Effects are sorted by frequency (most common first)
+3. `expand_dangling_chains()` runs follow-up queries for top N effects
+4. New chunks are merged with original chunks (deduplicated)
+5. Synthesis proceeds with the expanded context
+
+**Example flow**:
+```
+Query: "JPY intervention impact on USD"
+    ↓
+Initial retrieval finds:
+  - JPY intervention → JPY strength [jpy_strength]
+  - JPY strength [jpy_strength] → carry unwind [carry_unwind]
+    ↓
+Dangling detection: "carry_unwind" is effect but not cause
+    ↓
+Follow-up query: "What is the impact of carry trade unwind?"
+    ↓
+Retrieves additional chunks:
+  - carry unwind [carry_unwind] → forced liquidation [liquidation]
+    ↓
+Complete chain available for synthesis
+```
+
+**Configuration (`config.py`):**
+```python
+ENABLE_CHAIN_EXPANSION = True       # Toggle feature
+MAX_DANGLING_TO_FOLLOW = 3          # Limit follow-up queries per run
+MIN_CHUNKS_BEFORE_EXPANSION = 3     # Only expand if enough initial context
+FOLLOWUP_TOP_K = 5                  # Chunks per follow-up query
+FOLLOWUP_THRESHOLD = 0.40           # Similarity threshold for follow-ups
+```
+
+**Cost:** ~$0.0006 per query with 3 follow-ups (no LLM re-ranking on follow-ups)
+
+**State Fields Added**:
+- `dangling_effects_followed`: List of effects that were followed up with additional queries
 
 ## Flexible Design Decisions (TBD)
 The following are intentionally left flexible for future decisions:

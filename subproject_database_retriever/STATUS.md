@@ -2,9 +2,9 @@
 
 **IMPORTANT**: Read `CLAUDE.md` first for project guidelines and patterns.
 
-**Last Updated**: 2026-01-23
+**Last Updated**: 2026-01-26
 
-## Current State: Hybrid Retrieval + Temporal Awareness + Cross-Chunk Chain Linkage + Optimizations
+## Current State: Hybrid Retrieval + Temporal Awareness + Cross-Chunk Chain Linkage + Chain-of-Retrievals
 
 ### Completed
 - [x] Project structure set up
@@ -47,8 +47,10 @@ subproject_database_retriever/
 ```
 
 ### Not Yet Implemented
-- [ ] Query refinement logic (currently just returns original)
-- [ ] Query type distinction handling (research_question vs data_lookup classified but not used differently)
+- [ ] Query refinement logic (currently stub only - just returns original query with TODO comment)
+
+### Implemented (previously marked TODO)
+- [x] Query type distinction handling - Used to skip contradiction analysis for `data_lookup` queries (see `answer_generation.py`)
 
 ### Recently Completed
 - [x] Multi-query retrieval - searches with original + all dimension queries, deduplicates by chunk ID
@@ -62,6 +64,60 @@ subproject_database_retriever/
 - [x] **Structured re-ranking** - Uses tool_use for guaranteed JSON parsing (2026-01-23)
 - [x] **Conditional contradiction** - Skips Stage 3 for data_lookup or high-confidence (2026-01-23)
 - [x] **Adaptive query expansion** - 2-3 dims for simple queries, 4-6 for complex (2026-01-23)
+- [x] **Chain-of-retrievals** - Auto-follow dangling effects with follow-up queries (2026-01-26)
+
+---
+
+## Session Summary: 2026-01-26
+
+### Feature: Chain-of-Retrievals (Option A)
+
+**Problem**: Current retrieval is single-hop. When chunks mention "carry_unwind" as an effect, we don't automatically retrieve what carry_unwind leads to.
+
+**Solution**: Post-retrieval chain expansion - detect dangling effects and run follow-up queries.
+
+**How it works**:
+1. After initial retrieval, `detect_dangling_chains()` finds effects that aren't causes anywhere
+2. Effects are sorted by frequency (most common first)
+3. `expand_dangling_chains()` runs follow-up queries for top N effects
+4. New chunks are merged with original chunks (deduplicated)
+5. Synthesis proceeds with the expanded context
+
+**Configuration (`config.py`):**
+```python
+ENABLE_CHAIN_EXPANSION = True       # Toggle feature
+MAX_DANGLING_TO_FOLLOW = 3          # Limit follow-up queries per run
+MIN_CHUNKS_BEFORE_EXPANSION = 3     # Only expand if enough initial context
+FOLLOWUP_TOP_K = 5                  # Chunks per follow-up query
+FOLLOWUP_THRESHOLD = 0.40           # Similarity threshold for follow-ups
+```
+
+**Example flow**:
+```
+Query: "JPY intervention impact on USD"
+    ↓
+Stage 1: Initial retrieval finds chunks with:
+  - JPY intervention → JPY strength [jpy_strength]
+  - JPY strength [jpy_strength] → carry unwind [carry_unwind]
+    ↓
+Dangling detection: "carry_unwind" is an effect but not a cause anywhere
+    ↓
+Follow-up query: "What is the impact of carry trade unwind?"
+    ↓
+Stage 2: Retrieves additional chunks:
+  - carry unwind [carry_unwind] → forced liquidation [liquidation]
+  - forced liquidation [liquidation] → vol spike [vol_spike]
+    ↓
+Complete chain available for synthesis
+```
+
+**Files updated:**
+- `config.py` - Added 6 chain expansion config options
+- `vector_search.py` - Updated `search_single_query()` with configurable params
+- `answer_generation.py` - Added `detect_dangling_chains()`, `expand_dangling_chains()`, integrated into `generate_answer()`
+- `states.py` - Added `dangling_effects_followed` tracking field
+
+**Cost impact**: ~$0.0006 per query with 3 follow-ups (no LLM re-ranking on follow-ups)
 
 ---
 
@@ -303,3 +359,5 @@ Added Stage 3 contradiction detection that runs on every query:
 ---
 
 **TODO**: Check the initial logic extraction logic in `subproject_database_manager` - verify `logic_chains` are being extracted correctly at ingestion time.
+
+**DONE**: ~~Implement chain-of-retrievals~~ - Implemented 2026-01-26. See "Chain-of-Retrievals" section above.

@@ -1,10 +1,63 @@
 # Project Status - Telegram Financial Message Processing Workflow
 
-**Last Updated**: 2026-01-20
+**Last Updated**: 2026-01-27
 
 ## Current State: Production-Ready with Vector DB Integration
 
 Complete end-to-end workflow for fetching and processing financial research messages from Telegram channels with AI-powered analysis, categorization, structured data extraction, automated QA sampling, and vector database storage.
+
+---
+
+## Session Summary: 2026-01-27
+
+### Deduplication Gap Identified
+
+**Issue detected**: 133 duplicate entries uploaded to Pinecone due to overlapping date ranges between runs.
+
+| Channel | Overlapping Messages |
+|---------|---------------------|
+| Fomo CTRINE | 83 |
+| Plan G Research | 50 |
+
+**Root cause**:
+1. SQLite processing tracker (`processing_state.db`) was empty at workflow start - no prior processing history recorded
+2. Previous runs (Jan 20) occurred before the incremental update feature was implemented, so no `telegram_msg_id` tracking existed
+3. Dedup check in `message_pipeline.py` found no IDs to skip, resulting in full re-processing of overlapping date range (Jan 1-20)
+
+**Current state**: Pinecone index cleaned - duplicates removed. Final index size: 436 vectors.
+
+**Resolution**: Deleted 278 duplicate vectors from Pinecone. Committed tracking files to git (commit `89fbfa7`).
+
+---
+
+## Future TODO: Data Collection Subproject
+
+### Use Case 1: Institutional Flow News Collection
+**Goal:** Collect news/announcements about institutional investors (insurers, pension funds, asset managers) and their portfolio rebalancing decisions.
+
+**Example flow:**
+```
+News source → "Japanese insurers rebalancing into JGBs" →
+Query retriever: "What does this mean for risk assets?" → Actionable insight
+```
+
+**Potential sources:** Bloomberg, Reuters, Nikkei, institutional press releases, regulatory filings
+
+### Use Case 2: Historical Data Validation
+**Goal:** When retrieval surfaces a claim (e.g., "BTC lags gold by 63-428 days"), fetch actual historical data and validate programmatically.
+
+**Example flow:**
+```
+Retrieval output: "BTC follows gold with decreasing lag" →
+Fetch: Gold prices, BTC prices (historical) →
+Validate: Calculate actual correlation/lag →
+Confirm or refute the claim
+```
+
+**Potential sources:** Yahoo Finance, FRED, CoinGecko API, etc.
+
+### Reference to Check
+- [ ] https://github.com/nathanyjleeprojects/global_markets_insight - Review for relevant patterns/data sources
 
 ---
 
@@ -927,6 +980,12 @@ MAX_CONCURRENT_REQUESTS = 10        # Parallel API calls
    - Compare Step 4 times
    - Document speedup factor
    - Identify optimal `MAX_CONCURRENT_REQUESTS` value
+   - Note: `MAX_CONCURRENT_REQUESTS=10` already exists in code, but no benchmark comparison done
+
+5. **[ ] Add missing metrics to `liquidity_metrics_mapping.csv`**
+   - `fed_funds_rate` - Fed funds rate (missing)
+   - `yield_curve_2y10y` - Yield curve spread (missing)
+   - Note: CSV structure is clean (155 entries, 100% clusters, 73% Korean variants)
 
 ### Medium Priority
 
@@ -934,9 +993,11 @@ MAX_CONCURRENT_REQUESTS = 10        # Parallel API calls
    - Handle company/stock-specific research messages
    - Separate category with appropriate extractor
 
-4. **[ ] Implement incremental updates**
-   - Don't re-fetch messages already processed
-   - Track processed message IDs
+4. **[x] Implement incremental updates** ✅ Done 2026-01-26
+   - SQLite tracker (`data/processing_state.db`) stores `(tg_channel, telegram_msg_id, status)`
+   - Dedup check in `message_pipeline.py` skips already-processed messages before LLM extraction
+   - `telegram_msg_id` preserved from JSON → CSV → Pinecone metadata
+   - Resume capability: tracks `extracted` vs `uploaded` status for mid-run failures
 
 5. **[ ] Add keyword search support**
    - Telethon supports keyword filtering
@@ -984,13 +1045,14 @@ MAX_CONCURRENT_REQUESTS = 10        # Parallel API calls
 - **2026-01-16** - Evaluation response: Temporal/regime awareness, metrics lifecycle tracking
 - **2026-01-17** - Logic Flaw Issue 1: Evidence anchors (evidence_quote field)
 - **2026-01-20** - Cross-chunk chain linkage (cause_normalized, effect_normalized fields)
+- **2026-01-26** - Incremental updates: SQLite processing tracker, telegram_msg_id preservation, dedup before LLM extraction
 
 ---
 
 ## Known Limitations
 
 1. GPT-5 Mini may have lower extraction quality than GPT-5 (cost tradeoff)
-2. No incremental updates (re-fetches full date range)
+2. ~~No incremental updates (re-fetches full date range)~~ ✅ **RESOLVED 2026-01-26** - SQLite tracker + dedup check before LLM extraction
 3. No keyword search (Telethon supports it)
 4. ~~Metrics dictionary can accumulate duplicate metric names~~ ✅ **RESOLVED 2025-12-29** - Added validation functions + post-mortem cleanup
 5. Parallel processing requires ThreadPoolExecutor workaround in async context

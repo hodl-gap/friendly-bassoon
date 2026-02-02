@@ -9,6 +9,7 @@ The entire project aims to produce an agentic research workflow. This subproject
 ## Technology Stack
 - **Vector Database**: Pinecone
 - **Embeddings**: OpenAI embeddings (text-embedding-3-large, 3072 dimensions)
+- **Processing State**: SQLite (`data/processing_state.db`) - tracks processed messages for deduplication
 - **Framework**: Procedural Python (simple function calls, no complex framework)
 - **AI Model Calls**: Via `models.py` in parent directory (GPT-5 Mini, Claude Sonnet 4.5)
 - **Environment**: `.env` file in project root folder (use `python-dotenv` to load)
@@ -40,8 +41,9 @@ subproject_database_manager/
 ├── metrics_mapping_prompts.py        # Prompts for institution normalization
 │
 ├── metrics_mapping_utils.py          # Metrics dictionary management + clustering
+├── processing_tracker.py             # SQLite tracker for incremental updates + deduplication
 │
-├── data/                             # Data folders (raw, processed, qa_logs)
+├── data/                             # Data folders (raw, processed, qa_logs, processing_state.db)
 └── tests/
     ├── enrich_data_opinions.py       # Post-mortem enrichment with data_update context
     ├── cleanup_metrics.py            # Post-mortem metrics deduplication
@@ -423,6 +425,64 @@ Step 3: Display index stats
 - **Keep it minimal and focused** - Only implement exactly what is asked, nothing more
 - **Write all one-time test files to `tests/` folder** - Keep root directory clean
 
+## Incremental Updates (Deduplication)
+
+The pipeline tracks processed messages to avoid re-extraction on overlapping date ranges.
+
+### Processing Tracker (`processing_tracker.py`)
+
+SQLite-based tracker stored at `data/processing_state.db`.
+
+**Schema:**
+```sql
+CREATE TABLE message_state (
+    tg_channel TEXT NOT NULL,
+    telegram_msg_id INTEGER NOT NULL,
+    status TEXT NOT NULL,  -- 'extracted' | 'uploaded'
+    extracted_at TEXT,
+    uploaded_at TEXT,
+    PRIMARY KEY (tg_channel, telegram_msg_id)
+);
+```
+
+**Key Functions:**
+- `get_processed_msg_ids(tg_channel)` - Returns set of already-processed message IDs
+- `mark_extracted(tg_channel, telegram_msg_id)` - Called after LLM extraction completes
+- `mark_uploaded(tg_channel, telegram_msg_id)` - Called after Pinecone upload completes
+- `sync_with_pinecone()` - Startup sync (placeholder for future enhancement)
+
+### Deduplication Flow
+
+```
+1. telegram_workflow_orchestrator.py
+   └── Startup: sync_with_pinecone(), display tracking stats
+
+2. message_pipeline.py (_convert_json_to_csv)
+   └── Check: get_processed_msg_ids(channel)
+   └── Skip: messages with telegram_msg_id already in tracker
+
+3. process_messages_v3.py (after CSV write)
+   └── Track: mark_extracted() for each processed message
+
+4. pinecone_uploader.py (after batch upsert)
+   └── Track: mark_uploaded() for each uploaded message
+```
+
+### Message ID Preservation
+
+`telegram_msg_id` flows through the entire pipeline:
+- `extract_telegram_data.py` - Extracts from JSON `msg.id`
+- `process_messages_v3.py` - Propagates to all entry types
+- `embedding_generation.py` - Includes in Pinecone metadata
+- Processed CSV column: `telegram_msg_id`
+
+### Resume Capability
+
+If a run fails mid-extraction:
+- Messages with status `extracted` (not `uploaded`) are tracked
+- On restart, these are skipped from re-extraction
+- `get_pending_uploads()` can identify messages needing Pinecone upload
+
 ## Completed
 - [x] Telegram message fetching workflow
 - [x] Message categorization and extraction (process_messages_v3.py)
@@ -432,9 +492,9 @@ Step 3: Display index stats
 - [x] Vector DB embedding + Pinecone upload
 - [x] Trade opinion categorization (data_opinion captures trading actions in casual content)
 - [x] Post-mortem enrichment (fills exact numbers using data_update context)
+- [x] Incremental updates (SQLite tracker + dedup before LLM extraction)
 
 ## TODO
-- [ ] Incremental updates (don't re-fetch already processed messages)
 - [ ] Individual stock research category
 - [ ] Keyword search support for Telegram fetching
 

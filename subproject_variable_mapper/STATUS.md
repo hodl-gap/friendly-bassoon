@@ -1,6 +1,6 @@
 # Project Status - Variable Extractor & Mapper
 
-**Last Updated**: 2026-01-23
+**Last Updated**: 2026-01-25
 
 ## Current State: Optimized Pipeline + Combined Extraction + Auto-Discovery + Role Classification
 
@@ -302,15 +302,21 @@ Output (Structured JSON with Full API Details)
 
 ## TODO / Next Steps
 
-### Priority 0: Clean Up Liquidity Metrics Mapping (BLOCKER)
+### Priority 0: Liquidity Metrics Mapping - Status Update (2026-01-25)
 
-- [ ] **Review and clean `liquidity_metrics_mapping.csv`** (in `subproject_database_manager`)
-- [ ] Add missing common metrics (Fed funds rate, yield curve terms, VIX, DXY, etc.)
-- [ ] Improve variant coverage (Korean/English aliases)
-- [ ] Add "measurable" flag for data-fetchable metrics
-- [ ] Validate categories (direct/indirect classification)
+**Evaluated:** CSV structure is clean and functional (no longer a blocker)
 
-> **Why blocker?** Step 2 (Normalization) depends on this CSV as the canonical reference dictionary. Without a clean mapping file, variable normalization will fail.
+| Item | Status | Notes |
+|------|--------|-------|
+| Review and clean CSV structure | ✅ DONE | 155 entries, no duplicates, 100% cluster coverage |
+| Validate categories (direct/indirect) | ✅ DONE | 29 direct, 126 indirect - correctly classified |
+| Improve variant coverage | ✅ DONE | 155/155 have variants, 113/155 (73%) have Korean variants |
+| Add missing common metrics | ⚠️ PARTIAL | `dxy`, `vix_*` exist. **Missing:** `fed_funds`, `yield_curve` |
+| Add "measurable" flag | ❌ NOT DONE | Column not in CSV schema |
+
+**Remaining work:**
+- [ ] Add `fed_funds_rate`, `yield_curve_2y10y` to metrics CSV
+- [ ] Add `measurable` column to CSV schema (optional - for data-fetchable metrics)
 
 ---
 
@@ -323,7 +329,7 @@ Output (Structured JSON with Full API Details)
 - [x] Implement `variable_mapper_orchestrator.py` skeleton
 - [x] Implement `variable_extraction.py` - Extract variables from text
 - [x] Create `variable_extraction_prompts.py`
-- [ ] Test extraction on sample retriever output (`query_result.md`)
+- [x] Test extraction on sample retriever output (`query_result.md`)
 
 ### Phase 2: Normalization (Step 2) (DONE)
 
@@ -368,28 +374,29 @@ python data_id_discovery.py -v tga,vix,cpi
 
 ### Phase 5: Query Builder & Integration
 
-- [ ] Implement `query_builder.py`
-- [ ] Generate structured JSON output
-- [ ] Connect to database_retriever output
-- [ ] End-to-end test with real synthesis data
+- [ ] Implement `query_builder.py` (optional - for structured output formatting)
+- [x] Generate structured JSON output (done in `data_id_mapping.py`)
+- [x] Connect to database_retriever output (uses `query_result.md` as sample)
+- [x] End-to-end test with real synthesis data (`tests/test_full_workflow.py`)
 
 ---
 
-## Dependency: Improve Liquidity Metrics Extraction
+## Dependency: Liquidity Metrics Extraction (Updated 2026-01-25)
 
 **Location:** `subproject_database_manager`
 
-**Issue:** The `liquidity_metrics_mapping.csv` is the reference dictionary for variable normalization. Quality of variable extraction in this subproject depends on:
+**Status:** CSV is clean and functional. Minor gaps remain.
 
-1. **Coverage** - Does the CSV contain all common financial metrics?
-2. **Variants** - Are Korean/English aliases comprehensive?
-3. **Categories** - Is direct/indirect classification accurate?
+| Requirement | Status |
+|-------------|--------|
+| Coverage - common financial metrics | ⚠️ Partial - missing `fed_funds`, `yield_curve` |
+| Variants - Korean/English aliases | ✅ Good - 73% have Korean variants |
+| Categories - direct/indirect | ✅ Correct |
+| Structure - no duplicates, clusters | ✅ Clean |
 
-**TODO (in database_manager):**
-- [ ] Review and clean up `liquidity_metrics_mapping.csv`
-- [ ] Add missing common metrics (Fed funds rate, yield curve terms, etc.)
-- [ ] Improve variant coverage for better matching
-- [ ] Consider adding a "measurable" flag (can this metric be fetched as data?)
+**Remaining (in database_manager):**
+- [ ] Add `fed_funds_rate`, `yield_curve_2y10y` metrics
+- [ ] Consider adding "measurable" flag column
 
 ---
 
