@@ -33,8 +33,7 @@ subproject_btc_intelligence/
 ├── data/
 │   └── btc_relationships.json       # Persistent chain storage (Phase 3)
 │
-├── CLAUDE.md                        # This file
-└── PLAN.md                          # Implementation plan
+└── CLAUDE.md                        # This file
 ```
 
 ### Workflow (Phase 3 - Complete)
