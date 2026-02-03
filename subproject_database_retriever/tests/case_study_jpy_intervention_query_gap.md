@@ -867,3 +867,88 @@ The Telegram research sources assume readers understand intervention mechanics a
 **Verdict:** Chain-of-retrievals feature is functioning as designed. The remaining gap requires either:
 1. Adding synthetic explainer chunks to the database (Fix E2 from root cause analysis)
 2. Or accepting that the system can only retrieve what exists in the source data
+
+---
+
+# UPDATE: Re-evaluation of "Content Gap" (2026-02-03)
+
+## Key Insight: Yen Strength = USD Weakness
+
+The "missing first-order chain" concern was **overly academic**.
+
+The practical outcome is logically equivalent:
+```
+Carry unwind → yen strengthens → USD/JPY falls → USD weaker
+Intervention → yen strengthens → USD/JPY falls → USD weaker
+```
+
+Both paths lead to: **yen up, USD down**.
+
+The system DOES retrieve:
+- `carry unwind → yen strengthens` ✅
+- `JPY 13.6% weight in DXY → JPY strength → DXY declines` ✅
+
+So the practical question "what happens to USD when yen strengthens/Japan intervenes" **is already answered**.
+
+## Revised Assessment
+
+| What | Status | Notes |
+|------|--------|-------|
+| First-order intervention mechanics | ❌ Missing | "Japan sells USD → USD supply up" not explicit |
+| Practical outcome chain | ✅ Present | Carry unwind/yen strength → USD weakness is covered |
+| Trader relevance | ✅ Sufficient | Outcome matters more than textbook mechanics |
+
+**Revised Verdict:** The "content gap" is more about **pedagogical completeness** than **practical trading relevance**. The DB effectively answers the question through carry trade dynamics.
+
+---
+
+## Candidate Articles to Add (Carry Trade Mechanics)
+
+The following Korean articles explain carry trade dynamics well and would strengthen the DB:
+
+### Article 1: 2024년 8월 증시 급락 원인
+```
+엔 캐리 트레이드 청산 가능성
+
+- 1995년 이후 달러엔 캐리 수익지수가 고점에서 저점까지 유의미하게 하락한 경우는 총 5차례
+- 캐리수익지수가 낮아진다는 것은 엔캐리 매력도가 떨어짐을 뜻함
+- 미국-일본 금리차 2024년 2월 (560bp) 최고치 후 축소 중
+- 유럽-일본 금리차 2024년 2월 (460bp) 최고치 후 축소 중
+- BOJ 금리 인상 이후 금리차 축소 → 캐리 트레이드 청산 가능성
+- 해외에는 엔화를 빌려 투자해온 돈이 엄청 많음. 이 돈들이 일본으로 다시 들어가게 된다면 추가적 엔화 강세를 촉발할 수 있을것
+```
+
+### Article 2: 일본 정책 혼선과 엔캐리
+```
+일본 정책 혼선 → 엔캐리 흔들림 → 트럼프 리스크
+
+다케이치 정부는 대규모 부양책을 밀어붙이며 재정확대를 예고
+우에다 BOJ는 금리인상 가능성을 열어두며 긴축 신호
+
+정책 방향성 엇갈림 →
+→ 엔캐리 포지션 불안
+→ 글로벌 금리 경로 재정립
+→ 달러 강세 유지
+→ 위험자산 전반의 조정
+
+트럼프는 엔저를 싫어하고, 일본의 금리인상을 압박하는 입장
+BOJ 긴축 시사 → "트럼프발 BOJ 압박 → 엔캐리 언와인딩 가능성 확대"
+```
+
+### Article 3: 달러엔 157엔 횡보와 유동성
+```
+달러/엔 환율 9월 이후 빠르게 상승하며 157엔 부근 횡보
+크립토 조정 구간과 시기적으로 맞물림
+엔화 약세 가속화 → '엔캐리 리스크'와 글로벌 유동성 흐름에 변동성
+
+일본 당국 추가 약세 시 개입 가능성 공개적으로 언급
+단기적으로 일본발 유동성 스트레스 완화 기대
+
+다만, 엔화 약세는 구조적으로:
+- 글로벌 달러 수요를 높이고
+- 일본 금융기관과 투자자들의 대외 포지션 조정을 촉발
+- 시장의 유동성 여건을 빠르게 경직
+→ 여전히 핵심 리스크 요인
+```
+
+**Search keywords for Telegram:** `엔캐리`, `캐리 트레이드 청산`, `금리차 축소`, `BOJ 금리인상`
