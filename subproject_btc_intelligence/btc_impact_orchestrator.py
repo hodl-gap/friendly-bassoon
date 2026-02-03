@@ -91,8 +91,14 @@ def retrieve_context(query: str) -> BTCImpactState:
         retrieved_chunks=result.get("retrieved_chunks", []),
         retrieval_answer=result.get("answer", ""),
         retrieval_synthesis=result.get("synthesis", ""),
-        confidence_metadata=result.get("confidence_metadata", {})
+        confidence_metadata=result.get("confidence_metadata", {}),
+        topic_coverage=result.get("topic_coverage", {})
     )
+
+    # Log topic coverage warning if extrapolation detected
+    topic_coverage = state.get("topic_coverage", {})
+    if topic_coverage.get("extrapolation_note"):
+        print(f"\n[Retrieve] ⚠️ {topic_coverage['extrapolation_note']}")
 
     # Extract logic chains from chunks
     state["logic_chains"] = extract_logic_chains(state["retrieved_chunks"])
@@ -111,6 +117,7 @@ def format_output(state: BTCImpactState, as_json: bool = False) -> str:
     """Format the final output for display."""
 
     current_values = state.get("current_values", {})
+    topic_coverage = state.get("topic_coverage", {})
 
     if as_json:
         output = {
@@ -121,7 +128,8 @@ def format_output(state: BTCImpactState, as_json: bool = False) -> str:
             "rationale": state.get("rationale", ""),
             "risk_factors": state.get("risk_factors", []),
             "current_values": current_values,
-            "btc_price": state.get("btc_price")
+            "btc_price": state.get("btc_price"),
+            "topic_coverage": topic_coverage
         }
         return json.dumps(output, indent=2)
 
@@ -140,10 +148,23 @@ def format_output(state: BTCImpactState, as_json: bool = False) -> str:
 
     lines = [
         "=" * 60,
+    ]
+
+    # Add extrapolation warning if topic mismatch detected
+    if topic_coverage.get("extrapolation_note"):
+        lines.extend([
+            "⚠️  DATA SOURCE WARNING:",
+            f"    {topic_coverage['extrapolation_note']}",
+            f"    Query entities: {topic_coverage.get('query_entities', [])}",
+            f"    Found in chunks: {topic_coverage.get('found_entities', [])}",
+            "-" * 60,
+        ])
+
+    lines.extend([
         f"DIRECTION: {direction}",
         f"CONFIDENCE: {conf_score} ({chain_count} chains, {source_div} sources)",
         f"TIME HORIZON: {time_horizon} ({decay_profile} decay)",
-    ]
+    ])
 
     # Add current values section if available
     if current_values:

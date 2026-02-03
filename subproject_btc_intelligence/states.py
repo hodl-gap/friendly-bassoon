@@ -46,3 +46,9 @@ class BTCImpactState(TypedDict, total=False):
     # Debug
     retrieval_answer: str  # Raw answer from retriever
     retrieval_synthesis: str  # Raw synthesis from retriever
+
+    # Topic Coverage (extrapolation warning)
+    topic_coverage: Dict[str, Any]  # {query_entities, found_entities, direct_match, extrapolation_note}
+
+    # Regime State (Phase 3)
+    regime_state: Dict[str, Any]  # Current liquidity regime from relationship_store

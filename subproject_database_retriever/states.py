@@ -26,6 +26,9 @@ class RetrieverState(TypedDict, total=False):
     retrieval_scores: List[float]  # Similarity scores
     data_temporal_summary: Dict[str, Any]  # Summary of temporal context from retrieved chunks
 
+    # Chain Expansion (follows dangling effects)
+    dangling_effects_followed: List[str]  # Effects that were followed up with additional queries
+
     # Synthesis & Answer
     synthesized_context: str  # Combined relevant context
     answer: str  # Final generated answer (logic chains)
@@ -34,6 +37,9 @@ class RetrieverState(TypedDict, total=False):
 
     # Confidence Metadata (Issue 3)
     confidence_metadata: Dict[str, Any]  # {overall_score, path_count, source_diversity, confidence_level}
+
+    # Topic Coverage (detects when query topic not found in retrieved chunks)
+    topic_coverage: Dict[str, Any]  # {query_entities, found_entities, direct_match, extrapolation_note}
 
     # Agentic Control
     iteration_count: int  # Number of retrieval iterations

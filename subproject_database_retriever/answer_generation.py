@@ -26,6 +26,122 @@ from config import (
 )
 
 
+def detect_topic_coverage(query: str, chunks: list) -> dict:
+    """
+    Detect whether retrieved chunks actually cover the query topic.
+
+    Extracts key entities from query and checks if they appear in chunk content.
+    Used to warn users when analysis is extrapolated from tangentially related data.
+
+    Returns:
+        {
+            "query_entities": ["RBA", "Australia"],
+            "found_entities": ["BOJ", "Japan"],
+            "direct_match": False,
+            "match_ratio": 0.0,
+            "extrapolation_note": "No direct research on RBA/Australia found. Analysis extrapolated from: BOJ rate hike patterns (10 chunks)"
+        }
+    """
+    import re
+
+    # Extract key entities from query (proper nouns, acronyms, specific terms)
+    # Common financial entities to look for
+    entity_patterns = [
+        # Central banks
+        (r'\bRBA\b', 'RBA'), (r'\bReserve Bank of Australia\b', 'RBA'),
+        (r'\bBOJ\b', 'BOJ'), (r'\bBank of Japan\b', 'BOJ'),
+        (r'\bFed\b', 'Fed'), (r'\bFederal Reserve\b', 'Fed'),
+        (r'\bECB\b', 'ECB'), (r'\bBOE\b', 'BOE'), (r'\bPBOC\b', 'PBOC'),
+        (r'\bBOK\b', 'BOK'), (r'\bBank of Korea\b', 'BOK'),
+        # Countries/regions
+        (r'\bAustralia\b', 'Australia'), (r'\bAustralian\b', 'Australia'),
+        (r'\bJapan\b', 'Japan'), (r'\bJapanese\b', 'Japan'),
+        (r'\bChina\b', 'China'), (r'\bChinese\b', 'China'),
+        (r'\bKorea\b', 'Korea'), (r'\bKorean\b', 'Korea'),
+        (r'\bEurope\b', 'Europe'), (r'\bEuropean\b', 'Europe'),
+        (r'\bUS\b', 'US'), (r'\bUnited States\b', 'US'), (r'\bAmerican\b', 'US'),
+        (r'\bUK\b', 'UK'), (r'\bBritish\b', 'UK'),
+        # Key terms
+        (r'\bTGA\b', 'TGA'), (r'\bTreasury General Account\b', 'TGA'),
+        (r'\bQE\b', 'QE'), (r'\bQT\b', 'QT'),
+        (r'\bRRP\b', 'RRP'), (r'\bSOFR\b', 'SOFR'),
+    ]
+
+    # Find entities in query
+    query_entities = set()
+    query_lower = query.lower()
+    for pattern, entity in entity_patterns:
+        if re.search(pattern, query, re.IGNORECASE):
+            query_entities.add(entity)
+
+    # Build chunk content for searching
+    chunk_text = ""
+    chunk_sources = []
+    for chunk in chunks:
+        metadata = chunk.get("metadata", {})
+        extracted = metadata.get("extracted_data", "{}")
+        if isinstance(extracted, str):
+            try:
+                extracted = json.loads(extracted)
+            except:
+                extracted = {}
+
+        # Gather searchable text
+        chunk_text += " " + str(metadata.get("source", ""))
+        chunk_text += " " + str(extracted.get("source", ""))
+        chunk_text += " " + str(extracted.get("what_happened", ""))
+        chunk_text += " " + str(extracted.get("interpretation", ""))
+
+        # Track sources for the note
+        source = extracted.get("source") or metadata.get("source", "Unknown")
+        if source and source not in chunk_sources:
+            chunk_sources.append(source)
+
+    # Find entities in chunks
+    found_entities = set()
+    for pattern, entity in entity_patterns:
+        if re.search(pattern, chunk_text, re.IGNORECASE):
+            found_entities.add(entity)
+
+    # Calculate match
+    if not query_entities:
+        # No specific entities detected in query
+        return {
+            "query_entities": [],
+            "found_entities": list(found_entities),
+            "direct_match": True,  # Assume match if no specific entities to check
+            "match_ratio": 1.0,
+            "extrapolation_note": None
+        }
+
+    # Check overlap
+    matched = query_entities & found_entities
+    match_ratio = len(matched) / len(query_entities) if query_entities else 1.0
+    direct_match = match_ratio >= 0.5  # At least half of query entities found
+
+    # Build extrapolation note if needed
+    extrapolation_note = None
+    if not direct_match:
+        missing = query_entities - found_entities
+        # Find what WAS found (for the "extrapolated from" part)
+        extrapolated_from = found_entities - query_entities
+
+        missing_str = "/".join(sorted(missing))
+        if extrapolated_from:
+            from_str = ", ".join(sorted(extrapolated_from))
+            extrapolation_note = f"No direct research on {missing_str} found in database. Analysis extrapolated from: {from_str} patterns ({len(chunks)} chunks)"
+        else:
+            extrapolation_note = f"No direct research on {missing_str} found in database. Analysis based on general patterns ({len(chunks)} chunks)"
+
+    return {
+        "query_entities": list(query_entities),
+        "found_entities": list(found_entities),
+        "direct_match": direct_match,
+        "match_ratio": match_ratio,
+        "extrapolation_note": extrapolation_note
+    }
+
+
 def generate_answer(state: RetrieverState) -> RetrieverState:
     """
     Generate logic chain answer from retrieved chunks (two-stage + conditional Stage 3).
@@ -41,6 +157,11 @@ def generate_answer(state: RetrieverState) -> RetrieverState:
     chunks = state.get("retrieved_chunks", [])
     query_temporal_ref = state.get("query_temporal_reference", {})
     query_type = state.get("query_type", "research_question")
+
+    # Detect topic coverage (extrapolation warning)
+    topic_coverage = detect_topic_coverage(query, chunks)
+    if topic_coverage.get("extrapolation_note"):
+        print(f"[answer_generation] ⚠️ TOPIC MISMATCH: {topic_coverage['extrapolation_note']}")
 
     # Limit chunks to preserve LLM reasoning quality
     chunks = chunks[:MAX_CHUNKS_FOR_ANSWER]
@@ -125,7 +246,8 @@ def generate_answer(state: RetrieverState) -> RetrieverState:
         "confidence_metadata": confidence_metadata,
         "contradictions": contradictions,
         "data_temporal_summary": data_temporal_summary,
-        "dangling_effects_followed": dangling_followed
+        "dangling_effects_followed": dangling_followed,
+        "topic_coverage": topic_coverage
     }
 
 
