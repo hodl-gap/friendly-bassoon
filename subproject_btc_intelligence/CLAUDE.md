@@ -1,14 +1,45 @@
 # BTC Intelligence Subproject - Claude Context
 
 ## Project Overview
-This subproject analyzes the impact of macro events/conditions on Bitcoin price by retrieving relevant logic chains from the research database and producing directional assessments with confidence scores.
+This subproject analyzes the impact of **specific macro events or data updates** on Bitcoin price. Given a current event, it retrieves relevant logic chains, finds similar historical analogs, and produces directional assessments with confidence scores.
 
-## Parent Project Goal
-The entire project aims to produce an agentic research workflow. This subproject is specifically for **BTC impact analysis**.
+## Core Purpose
+
+**Input**: A specific event or data update happening NOW (or hypothetically)
+**Output**: BTC directional impact (BULLISH/BEARISH/NEUTRAL) with confidence and rationale
+
+### What BTC Intelligence Does
+- Takes a **specific event/data update** as input
+- Retrieves logic chains explaining the causal mechanism (event → ... → BTC)
+- Finds **similar historical events** referenced in research
+- Fetches **actual data from historical analogs** to ground predictions
+- Fetches **current data for same instruments** to compare "then vs now"
+- **Extrapolates** past logic chains to predict current BTC impact
+
+### What BTC Intelligence Does NOT Do
+- Answer "what happened in X?" questions (that's the Retriever's job)
+- General market comparisons without specific events
+- Explain mechanisms without directional output
+
+### Valid Query Examples
+```
+"TGA increased +10% this week, what's the BTC impact?"
+"A new global contagion is spreading, what's the BTC impact?"
+"JPY strengthened 12% rapidly, what's the BTC impact?"
+"Fed just announced 50bps emergency rate cut, what's the BTC impact?"
+```
+
+### Invalid Query Examples
+```
+"What happened in August 2024 yen crash?" → Use Retriever
+"Compare current market to March 2020" → Too vague, no specific event
+"Explain how TGA affects liquidity" → Use Retriever
+```
 
 ## Technology Stack
-- **Input**: User queries about macro → BTC relationships
-- **Retrieval**: Uses `subproject_database_retriever` for context
+- **Input**: Specific event/data update → BTC impact question
+- **Retrieval**: Uses `subproject_database_retriever` for logic chains
+- **Historical Analog**: Fetches actual data from similar past events
 - **Analysis**: Claude Sonnet for impact assessment
 - **Output**: Direction, Confidence, Time Horizon, Rationale, Risk Factors
 - **Framework**: Simple sequential workflow (LangGraph in future phases)
@@ -115,18 +146,20 @@ query (CLI input)
 ## Usage
 
 ```bash
-# Basic query
-python -m subproject_btc_intelligence "What is the impact of TGA drawdown on BTC?"
+# Current data update → BTC impact
+python -m subproject_btc_intelligence "TGA increased +10% this week, what's the BTC impact?"
+python -m subproject_btc_intelligence "Fed just cut rates 50bps, what's the BTC impact?"
+python -m subproject_btc_intelligence "DXY strengthened 5% this month, what's the BTC impact?"
+
+# Current event with historical analog (triggers Phase 4)
+python -m subproject_btc_intelligence "A new global contagion is spreading, what's the BTC impact?"
+python -m subproject_btc_intelligence "JPY is strengthening rapidly like in August 2024, what's the BTC impact?"
 
 # JSON output
-python -m subproject_btc_intelligence --json "What is the impact of Fed rate cuts on BTC?"
+python -m subproject_btc_intelligence --json "Bank reserves dropped 5%, what's the BTC impact?"
 
 # Verbose mode
-python -m subproject_btc_intelligence -v "What is the impact of DXY strength on BTC?"
-
-# Historical event comparison (triggers Phase 4 detection)
-python -m subproject_btc_intelligence "Compare current market to March 2020 COVID crash"
-python -m subproject_btc_intelligence "What happened in August 2024 yen carry crash?"
+python -m subproject_btc_intelligence -v "VIX spiked to 40, what's the BTC impact?"
 ```
 
 ## Output Format
@@ -193,51 +226,71 @@ RISK FACTORS:
 
 ## Historical Event Detection (Phase 4)
 
+### Purpose
+When user asks about a **CURRENT event**, the system finds **similar historical analogs** in the research, fetches **actual data from those past events**, and **extrapolates** the logic chains to predict current BTC impact.
+
 ### Problem
-When user asks about historical events (e.g., "August 2024 yen carry crash", "March 2020 COVID crash"), the retriever finds research that *mentions* these events qualitatively, but lacks actual historical prices, correlations, and magnitudes.
+User asks: "A new contagion is spreading, what's the BTC impact?"
+- Retriever finds research that mentions **COVID 2020** as a similar historical analog
+- Research explains the logic chains qualitatively (contagion → risk-off → BTC sell)
+- But research lacks **actual historical prices** (BTC dropped 45%, VIX spiked 158%)
+- Without actual data, LLM can't ground predictions ("last time this happened, BTC dropped X%")
 
 ### Solution
-Detect historical event gaps → Identify relevant instruments → Fetch actual data → Calculate metrics → Feed to LLM
+1. Detect when retrieved research **references a historical analog**
+2. Fetch **actual data from that historical event** (prices, correlations, magnitudes)
+3. Fetch **current data for same instruments** (to compare "then vs now")
+4. **Extrapolate** logic chains: "Last time contagion spread, VIX spiked before BTC crashed. Current VIX is X, suggesting..."
 
 ### Flow
 ```
-Query: "Compare current market to March 2020 COVID crash"
+Query: "A new global contagion is spreading, what's the BTC impact?"
     │
     ▼
-[1] detect_historical_gap()
-    ├─ Regex pre-filter: temporal keywords ("compare", "2020", "crash")
-    ├─ LLM (Haiku): Confirms gap exists
-    └─ → gap_detected = True, event_description = "March 2020 COVID crash"
+[1] retrieve_context()
+    └─ Finds research mentioning "COVID 2020" as similar historical event
     │
     ▼
-[2] identify_instruments()
-    ├─ Input: retrieval_synthesis + logic_chains
-    ├─ LLM extracts instruments MENTIONED in research context
-    └─ → [^GSPC, ^VIX, BTC-USD, ^TNX, GC=F, ^IXIC]
+[2] detect_historical_gap()
+    ├─ Research mentions COVID but lacks actual 2020 price data
+    └─ → gap_detected = True, analog = "March 2020 COVID crash"
     │
     ▼
-[3] get_date_range()
-    ├─ Web search: "March 2020 COVID crash exact dates"
-    ├─ LLM (Haiku): Extract dates from search results
-    └─ → 2020-02-23 to 2020-04-07 (with buffer)
+[3] identify_instruments()
+    ├─ From research: VIX, SP500, BTC mentioned in COVID context
+    └─ → [^GSPC, ^VIX, BTC-USD, ^TNX, GC=F]
     │
     ▼
-[4] fetch_historical_event_data()
-    ├─ Yahoo Finance API for each instrument
-    └─ Calculate metrics:
-       - Peak-to-trough drawdown %
-       - Peak/trough dates
-       - Recovery days (50% recovery)
-       - Max single-day move %
-       - Pairwise correlations (BTC vs VIX, BTC vs SP500)
+[4] get_date_range()
+    └─ → 2020-02-23 to 2020-04-07
     │
     ▼
-[5] compare_to_current()
-    └─ "Current move (-0.7%) much smaller than historical (-28.5%)"
+[5] fetch_historical_event_data()
+    ├─ Historical (March 2020): BTC -45%, VIX +158%, SP500 -28%
+    └─ Correlations: BTC vs SP500: 0.82, BTC vs VIX: -0.84
     │
     ▼
-[6] analyze_impact() receives historical comparison section
+[6] fetch_current_data() [already done in Step 4]
+    └─ Current: BTC -15%, VIX +5%, SP500 -0.7%
+    │
+    ▼
+[7] compare_to_current()
+    └─ "Current VIX (+5%) much smaller than COVID analog (+158%)"
+    └─ "If VIX approaches COVID levels, expect BTC to drop similarly"
+    │
+    ▼
+[8] analyze_impact()
+    └─ Extrapolates: "Based on COVID analog where BTC dropped 45% with 0.82
+       SP500 correlation, current contagion could trigger similar risk-off.
+       However, current stress indicators (VIX +5%) are far below COVID levels
+       (+158%), suggesting impact may be more muted unless stress escalates."
 ```
+
+### Key Insight: Extrapolation Logic
+The system should identify **leading indicators** from historical analogs:
+- "In COVID, VIX spiked BEFORE BTC crashed"
+- "In COVID, option spreads widened BEFORE the crash"
+- Then check: "What are current VIX / option spreads?" to predict if similar pattern developing
 
 ### Configuration (`config.py`)
 ```python
@@ -248,23 +301,26 @@ MAX_INSTRUMENTS_PER_EVENT = 6             # Limit instruments fetched
 
 ### Output Format (added to impact analysis prompt)
 ```
-## HISTORICAL EVENT COMPARISON (Data-Driven)
-
-**Event:** March 2020 COVID crash
+## HISTORICAL ANALOG: March 2020 COVID Crash
 **Period:** 2020-02-23 to 2020-04-07
 
-**What the DATA shows:**
+**What happened in the analog:**
+- BTC: -45.5% (peak 2020-02-14, trough 2020-03-13)
 - SP500: -28.5% (peak 2020-02-19, trough 2020-03-23)
 - VIX: +158.5% (peak 2020-03-16, trough 2020-02-19)
-- BTC: -45.5% (peak 2020-02-14, trough 2020-03-13)
 
-**Correlations during event:**
-- BTC vs SP500: 0.82
-- BTC vs VIX: -0.84
+**Correlations during analog:**
+- BTC vs SP500: 0.82 (moved together)
+- BTC vs VIX: -0.84 (inverse relationship)
 
-**Then vs Now:**
-- SP500: Current move (-0.7%) much smaller than historical (-28.5%)
-- BTC: Current move (-15.4%) smaller than historical (-45.5%)
+**Then vs Now (same instruments):**
+- VIX: Then +158.5% → Now +5.8% (stress much lower)
+- SP500: Then -28.5% → Now -0.7% (drawdown much smaller)
+- BTC: Then -45.5% → Now -15.6% (decline smaller)
+
+**Extrapolation:**
+Current stress indicators far below COVID levels. If VIX approaches 80+
+(COVID peak), expect BTC drawdown to approach -45% range.
 ```
 
 ### Key Functions
@@ -280,11 +336,16 @@ MAX_INSTRUMENTS_PER_EVENT = 6             # Limit instruments fetched
 | `parse_logic_chains_from_answer()` | `btc_impact_orchestrator.py` | Extract chains from Stage 1 answer text |
 | `enrich_with_historical_event()` | `btc_impact_orchestrator.py` | Step 5.5 orchestration |
 
-### Temporal Keywords Detected
+### Gap Detection Triggers
+The system detects historical analog gaps when:
+1. Retrieved research **references a past event** (e.g., "similar to COVID 2020", "like the 2024 yen crash")
+2. Research explains **logic chains qualitatively** but lacks **actual prices/data**
+3. User's query involves a **current event** that maps to the historical reference
+
+**Keywords in research that trigger detection:**
 ```
-"what happened", "during the X 2024", "in August 2024",
-"2024 crash", "crash in 2024", "previous crash",
-"compare to 2020", "like in 2020"
+"similar to [year]", "like in [year]", "reminiscent of",
+"[year] analog", "comparable to [event]", "last time this happened"
 ```
 
 ### Cost
