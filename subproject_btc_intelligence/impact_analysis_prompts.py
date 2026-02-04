@@ -23,7 +23,8 @@ def get_impact_analysis_prompt(
     confidence_metadata: dict,
     current_values_text: str = "",
     historical_chains_text: str = "",
-    validated_patterns_text: str = ""
+    validated_patterns_text: str = "",
+    historical_event_text: str = ""
 ) -> str:
     """Build the impact analysis prompt."""
 
@@ -78,6 +79,13 @@ def get_impact_analysis_prompt(
 {validated_patterns_text}
 """
 
+    # Format historical event section
+    historical_event_section = ""
+    if historical_event_text:
+        historical_event_section = f"""
+{historical_event_text}
+"""
+
     return f"""## USER QUERY
 {query}
 
@@ -92,10 +100,10 @@ def get_impact_analysis_prompt(
 
 ## RETRIEVAL CONFIDENCE
 {conf_text}
-{current_values_section}{historical_chains_section}{validated_patterns_section}
+{current_values_section}{historical_chains_section}{validated_patterns_section}{historical_event_section}
 ---
 
-Based on the above context, current market data, and pattern validation, analyze the impact on Bitcoin.
+Based on the above context, current market data, pattern validation, and any historical event comparisons, analyze the impact on Bitcoin.
 Pay special attention to TRIGGERED patterns - these indicate that conditions from research are currently active.
 
 Respond in EXACTLY this format:

@@ -13,6 +13,7 @@ from .impact_analysis_prompts import SYSTEM_PROMPT, get_impact_analysis_prompt
 from .current_data_fetcher import format_current_values_for_prompt
 from .relationship_store import get_relevant_historical_chains, format_historical_chains_for_prompt
 from .pattern_validator import format_validated_patterns_for_prompt
+from .historical_data_fetcher import format_historical_data_for_prompt
 from .states import BTCImpactState
 
 
@@ -51,6 +52,10 @@ def analyze_impact(state: BTCImpactState) -> BTCImpactState:
     validated_patterns = state.get("validated_patterns", [])
     validated_patterns_text = format_validated_patterns_for_prompt(validated_patterns)
 
+    # Format historical event data (Phase 4)
+    historical_event_data = state.get("historical_event_data", {})
+    historical_event_text = format_historical_data_for_prompt(historical_event_data)
+
     # Build prompt
     prompt = get_impact_analysis_prompt(
         query=query,
@@ -60,7 +65,8 @@ def analyze_impact(state: BTCImpactState) -> BTCImpactState:
         confidence_metadata=state.get("confidence_metadata", {}),
         current_values_text=current_values_text,
         historical_chains_text=historical_chains_text,
-        validated_patterns_text=validated_patterns_text
+        validated_patterns_text=validated_patterns_text,
+        historical_event_text=historical_event_text
     )
 
     # Call LLM

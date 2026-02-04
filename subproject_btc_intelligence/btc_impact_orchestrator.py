@@ -31,6 +31,8 @@ from .relationship_store import (
     update_regime_from_analysis,
     get_regime_context_for_prompt
 )
+from .historical_event_detector import detect_historical_gap, identify_instruments, get_date_range
+from .historical_data_fetcher import fetch_historical_event_data, compare_to_current
 from . import config
 
 
@@ -70,6 +72,75 @@ def extract_logic_chains(retrieved_chunks: List[Dict]) -> List[Dict]:
     return all_chains
 
 
+def parse_logic_chains_from_answer(answer_text: str) -> List[Dict]:
+    """
+    Parse logic chains from the Stage 1 answer text (retrieval_answer).
+
+    Stage 1 output format:
+        **CHAIN:** cause [cause_norm] → effect [effect_norm] → effect2 [effect2_norm]
+        **MECHANISM:** explanation
+        **SOURCE:** source name (chunk_id)
+        **CONNECTION:** connection info
+
+    Returns list of parsed chain dicts.
+    """
+    import re
+
+    chains = []
+
+    # Split by **CHAIN:** to get each chain block
+    chain_blocks = re.split(r'\*\*CHAIN:\*\*', answer_text)
+
+    for block in chain_blocks[1:]:  # Skip first empty split
+        chain_dict = {}
+
+        # Extract the chain line (first line after CHAIN:)
+        chain_match = re.match(r'\s*(.+?)(?:\n|$)', block)
+        if chain_match:
+            chain_line = chain_match.group(1).strip()
+            chain_dict["chain_text"] = chain_line
+
+            # Parse steps from chain line: "cause [norm] → effect [norm]"
+            # Extract normalized variables in brackets
+            normalized_vars = re.findall(r'\[([^\]]+)\]', chain_line)
+            chain_dict["normalized_variables"] = normalized_vars
+
+            # Parse arrow-separated steps
+            steps = []
+            # Split by arrow variants (→ or -> or - >)
+            step_parts = re.split(r'\s*(?:→|->|—>)\s*', chain_line)
+            for i, part in enumerate(step_parts[:-1]):
+                # Extract variable name (text before bracket)
+                cause_match = re.match(r'([^\[]+)', part.strip())
+                effect_match = re.match(r'([^\[]+)', step_parts[i+1].strip())
+                if cause_match and effect_match:
+                    steps.append({
+                        "cause": cause_match.group(1).strip(),
+                        "effect": effect_match.group(1).strip()
+                    })
+            chain_dict["steps"] = steps
+
+        # Extract MECHANISM
+        mechanism_match = re.search(r'\*\*MECHANISM:\*\*\s*(.+?)(?=\*\*|$)', block, re.DOTALL)
+        if mechanism_match:
+            chain_dict["mechanism"] = mechanism_match.group(1).strip()
+
+        # Extract SOURCE
+        source_match = re.search(r'\*\*SOURCE:\*\*\s*(.+?)(?=\*\*|\n|$)', block)
+        if source_match:
+            chain_dict["source"] = source_match.group(1).strip()
+
+        # Extract CONNECTION
+        connection_match = re.search(r'\*\*CONNECTION:\*\*\s*(.+?)(?=\*\*|$)', block, re.DOTALL)
+        if connection_match:
+            chain_dict["connection"] = connection_match.group(1).strip()
+
+        if chain_dict.get("steps") or chain_dict.get("chain_text"):
+            chains.append(chain_dict)
+
+    return chains
+
+
 def retrieve_context(query: str) -> BTCImpactState:
     """
     Step 1: Call database_retriever to get relevant context.
@@ -100,11 +171,32 @@ def retrieve_context(query: str) -> BTCImpactState:
     if topic_coverage.get("extrapolation_note"):
         print(f"\n[Retrieve] ⚠️ {topic_coverage['extrapolation_note']}")
 
-    # Extract logic chains from chunks
-    state["logic_chains"] = extract_logic_chains(state["retrieved_chunks"])
+    # Extract logic chains from chunks (pre-indexed in metadata)
+    chunk_chains = extract_logic_chains(state["retrieved_chunks"])
+
+    # Also parse logic chains from Stage 1 answer text (query-time extracted)
+    answer_chains = parse_logic_chains_from_answer(state.get("retrieval_answer", ""))
+
+    # Combine both sources
+    state["logic_chains"] = chunk_chains + answer_chains
 
     print(f"\n[Retrieve] Got {len(state['retrieved_chunks'])} chunks")
-    print(f"[Retrieve] Extracted {len(state['logic_chains'])} logic chains")
+    print(f"[Retrieve] Extracted {len(chunk_chains)} chains from chunk metadata")
+    print(f"[Retrieve] Parsed {len(answer_chains)} chains from Stage 1 answer")
+    print(f"[Retrieve] Total logic chains: {len(state['logic_chains'])}")
+
+    # Debug: Print raw retrieved chunks (per CLAUDE.md: print full LLM outputs)
+    print(f"\n[Retrieve] === RAW RETRIEVED CHUNKS ===")
+    for i, chunk in enumerate(state['retrieved_chunks'], 1):
+        print(f"\n--- CHUNK {i} ---")
+        print(f"ID: {chunk.get('id', 'N/A')}")
+        print(f"Score: {chunk.get('score', 'N/A')}")
+        metadata = chunk.get('metadata', {})
+        print(f"Source: {metadata.get('source', 'N/A')}")
+        print(f"Date: {metadata.get('date', 'N/A')}")
+        print(f"What Happened: {metadata.get('what_happened', 'N/A')}")
+        print(f"Interpretation: {metadata.get('interpretation', 'N/A')}")
+    print(f"[Retrieve] === END RAW CHUNKS ===")
 
     if config.VERBOSE:
         print(f"\n[Retrieve] Answer:\n{state['retrieval_answer'][:500]}...")
@@ -118,6 +210,7 @@ def format_output(state: BTCImpactState, as_json: bool = False) -> str:
 
     current_values = state.get("current_values", {})
     topic_coverage = state.get("topic_coverage", {})
+    historical_event_data = state.get("historical_event_data", {})
 
     if as_json:
         output = {
@@ -129,9 +222,10 @@ def format_output(state: BTCImpactState, as_json: bool = False) -> str:
             "risk_factors": state.get("risk_factors", []),
             "current_values": current_values,
             "btc_price": state.get("btc_price"),
-            "topic_coverage": topic_coverage
+            "topic_coverage": topic_coverage,
+            "historical_event_data": historical_event_data
         }
-        return json.dumps(output, indent=2)
+        return json.dumps(output, indent=2, default=str)
 
     # Human-readable format
     direction = state.get("direction", "NEUTRAL")
@@ -173,6 +267,35 @@ def format_output(state: BTCImpactState, as_json: bool = False) -> str:
         current_text = format_current_values_for_prompt(current_values)
         for line in current_text.split("\n"):
             lines.append(f"  {line}")
+
+    # Add historical event section if available
+    if historical_event_data.get("event_detected"):
+        lines.append("")
+        lines.append("-" * 60)
+        lines.append("HISTORICAL EVENT COMPARISON:")
+        lines.append(f"  Event: {historical_event_data.get('event_name', 'Unknown')}")
+        period = historical_event_data.get("period", {})
+        lines.append(f"  Period: {period.get('start', '?')} to {period.get('end', '?')}")
+
+        instruments = historical_event_data.get("instruments", {})
+        if instruments:
+            lines.append("  Market Impact:")
+            for name, data in instruments.items():
+                metrics = data.get("metrics", {})
+                change = metrics.get("peak_to_trough_pct", 0)
+                lines.append(f"    - {name}: {change:+.1f}%")
+
+        correlations = historical_event_data.get("correlations", {})
+        if correlations:
+            lines.append("  Correlations:")
+            for pair, corr in correlations.items():
+                lines.append(f"    - {pair.replace('_', ' ')}: {corr:.2f}")
+
+        comparisons = historical_event_data.get("comparison_to_current", {}).get("comparisons", {})
+        if comparisons:
+            lines.append("  Then vs Now:")
+            for name, comp in comparisons.items():
+                lines.append(f"    - {name}: {comp.get('note', '')}")
 
     lines.extend([
         "",
@@ -247,6 +370,10 @@ def run_btc_impact_analysis(
     if not skip_data_fetch:
         state = validate_patterns(state)
 
+    # Step 5.5: Historical event data enrichment
+    if not skip_data_fetch:
+        state = enrich_with_historical_event(state)
+
     # Step 6: Analyze impact (LLM call with current data + validated patterns)
     state = analyze_impact(state)
 
@@ -266,6 +393,97 @@ def run_btc_impact_analysis(
     print("\n" + output)
 
     return dict(state)
+
+
+def enrich_with_historical_event(state: BTCImpactState) -> BTCImpactState:
+    """
+    Step 5.5: Detect and fetch historical event data if needed.
+
+    Detects if the user query references a historical event not covered
+    by the retrieved research, and if so, fetches actual market data
+    for that event.
+
+    Updates state with:
+    - historical_event_data: Contains event details, instruments, metrics, correlations
+    """
+    if not config.ENABLE_HISTORICAL_EVENT_DETECTION:
+        state["historical_event_data"] = {}
+        return state
+
+    query = state.get("query", "")
+    synthesis = state.get("retrieval_synthesis", "")
+    topic_coverage = state.get("topic_coverage", {})
+    logic_chains = state.get("logic_chains", [])
+
+    # Step 1: Detect historical event gap
+    print("\n[Historical Event] Checking for historical event gap...")
+    gap_result = detect_historical_gap(query, topic_coverage, synthesis)
+
+    if not gap_result.get("gap_detected"):
+        print(f"[Historical Event] No gap detected: {gap_result.get('reasoning', '')}")
+        state["historical_event_data"] = {"event_detected": False}
+        return state
+
+    event_description = gap_result.get("event_description", "Unknown event")
+    date_search_query = gap_result.get("date_search_query", "")
+
+    print(f"[Historical Event] Gap detected: {event_description}")
+
+    # Step 2: Identify instruments from research context
+    print("[Historical Event] Identifying instruments...")
+    instruments = identify_instruments(
+        event_description=event_description,
+        query=query,
+        synthesis=synthesis,
+        logic_chains=logic_chains
+    )
+    print(f"[Historical Event] Instruments: {[i.get('ticker') for i in instruments]}")
+
+    # Step 3: Get date range via web search
+    print("[Historical Event] Determining date range...")
+    if date_search_query:
+        date_range = get_date_range(event_description, date_search_query)
+    else:
+        # Fallback if no search query provided
+        from .historical_event_detector import _fallback_date_range
+        date_range = _fallback_date_range(event_description)
+
+    print(f"[Historical Event] Period: {date_range.get('start_date')} to {date_range.get('end_date')} (confidence: {date_range.get('confidence')})")
+
+    # Step 4: Fetch historical data
+    print("[Historical Event] Fetching historical data...")
+    historical_data = fetch_historical_event_data(
+        instruments=instruments,
+        start_date=date_range.get("start_date"),
+        end_date=date_range.get("end_date")
+    )
+
+    # Step 5: Compare to current values
+    current_values = state.get("current_values", {})
+    if current_values and historical_data.get("instruments"):
+        comparison = compare_to_current(historical_data, current_values)
+    else:
+        comparison = {"comparisons": {}}
+
+    # Build historical event data
+    state["historical_event_data"] = {
+        "event_detected": True,
+        "event_name": event_description,
+        "period": {
+            "start": date_range.get("start_date"),
+            "end": date_range.get("end_date"),
+            "peak_date": date_range.get("peak_date"),
+            "date_confidence": date_range.get("confidence")
+        },
+        "instruments": historical_data.get("instruments", {}),
+        "correlations": historical_data.get("correlations", {}),
+        "comparison_to_current": comparison
+    }
+
+    instr_count = len(historical_data.get("instruments", {}))
+    print(f"[Historical Event] Fetched data for {instr_count} instruments")
+
+    return state
 
 
 def _run_integrated_pipeline(state: BTCImpactState) -> BTCImpactState:

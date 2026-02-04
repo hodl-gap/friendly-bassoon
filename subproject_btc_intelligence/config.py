@@ -26,3 +26,8 @@ EXTRACTION_MODEL = "claude_haiku"  # For variable extraction (Phase 2)
 # Output settings
 VERBOSE = os.getenv("BTC_IMPACT_VERBOSE", "false").lower() == "true"
 OUTPUT_JSON = False  # Set via CLI --json flag
+
+# Historical Event Detection (Phase 4)
+ENABLE_HISTORICAL_EVENT_DETECTION = os.getenv("BTC_HISTORICAL_DETECTION", "true").lower() == "true"
+HISTORICAL_DATE_BUFFER_DAYS = 7  # Days to add before/after detected event dates
+MAX_INSTRUMENTS_PER_EVENT = 6  # Maximum instruments to fetch for historical event

@@ -52,3 +52,17 @@ class BTCImpactState(TypedDict, total=False):
 
     # Regime State (Phase 3)
     regime_state: Dict[str, Any]  # Current liquidity regime from relationship_store
+
+    # Historical Event Data (Phase 4)
+    historical_event_data: Dict[str, Any]
+    # {
+    #     "event_detected": True,
+    #     "event_name": "August 2024 Yen Carry Trade Crash",
+    #     "period": {"start": "2024-07-25", "end": "2024-08-15"},
+    #     "instruments": {
+    #         "USDJPY": {"ticker": "...", "role": "...", "data": [...], "metrics": {...}},
+    #         ...
+    #     },
+    #     "correlations": {"BTC_vs_VIX": 0.82, ...},
+    #     "comparison_to_current": {...}
+    # }
