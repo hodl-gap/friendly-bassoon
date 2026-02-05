@@ -1,0 +1,345 @@
+"""
+Web Search Adapter
+
+Searches the web for information and extracts key data points using LLM.
+Unlike other adapters, this doesn't fetch time series - it finds qualitative data.
+
+Cost: ~$0.0003 per search (Haiku extraction from snippets)
+"""
+
+import sys
+from pathlib import Path
+from typing import Dict, Any, List, Optional
+from datetime import datetime
+import json
+import hashlib
+import time
+
+# Add parent paths for imports
+sys.path.append(str(Path(__file__).parent.parent))
+sys.path.append(str(Path(__file__).parent.parent.parent))
+
+from config import CACHE_DIR, ENABLE_CACHE, CACHE_EXPIRY_HOURS
+from models import call_claude_haiku
+from web_search_prompts import (
+    EXTRACT_DATA_POINTS_PROMPT,
+    EXTRACT_ANNOUNCEMENTS_PROMPT,
+    EXTRACT_KNOWLEDGE_GAP_PROMPT
+)
+
+
+class WebSearchAdapter:
+    """
+    Web search adapter that extracts structured data from search results.
+
+    Uses DuckDuckGo for search (free, no API key) and Haiku for extraction.
+
+    Example usage:
+        adapter = WebSearchAdapter()
+
+        # Search for quantitative data
+        result = adapter.search_and_extract(
+            query="USD JPY hedging cost basis swap 2026",
+            extract_type="data_points"
+        )
+
+        # Search for announcements
+        result = adapter.search_and_extract(
+            query="Sumitomo Life JGB rebalancing 2026",
+            extract_type="announcements"
+        )
+    """
+
+    def __init__(self, max_results: int = 8):
+        """
+        Initialize the web search adapter.
+
+        Args:
+            max_results: Maximum search results to fetch (default 8)
+        """
+        self.max_results = max_results
+        self.source_name = "WebSearch"
+
+    def _get_cache_key(self, query: str, extract_type: str) -> str:
+        """Generate cache key for this search."""
+        key_str = f"{self.source_name}:{query}:{extract_type}"
+        return hashlib.md5(key_str.encode()).hexdigest()
+
+    def _get_from_cache(self, query: str, extract_type: str) -> Optional[Dict[str, Any]]:
+        """Try to get data from cache."""
+        if not ENABLE_CACHE:
+            return None
+
+        cache_key = self._get_cache_key(query, extract_type)
+        cache_file = CACHE_DIR / f"websearch_{cache_key}.json"
+
+        if not cache_file.exists():
+            return None
+
+        try:
+            file_mtime = datetime.fromtimestamp(cache_file.stat().st_mtime)
+            age_hours = (datetime.now() - file_mtime).total_seconds() / 3600
+
+            if age_hours > CACHE_EXPIRY_HOURS:
+                print(f"[{self.source_name}] Cache expired for query: {query[:50]}...")
+                return None
+
+            with open(cache_file, 'r') as f:
+                cached_data = json.load(f)
+                print(f"[{self.source_name}] Cache hit for query: {query[:50]}...")
+                return cached_data
+
+        except Exception as e:
+            print(f"[{self.source_name}] Cache read error: {e}")
+            return None
+
+    def _save_to_cache(self, query: str, extract_type: str, data: Dict[str, Any]) -> None:
+        """Save data to cache."""
+        if not ENABLE_CACHE:
+            return
+
+        try:
+            CACHE_DIR.mkdir(parents=True, exist_ok=True)
+            cache_key = self._get_cache_key(query, extract_type)
+            cache_file = CACHE_DIR / f"websearch_{cache_key}.json"
+
+            with open(cache_file, 'w') as f:
+                json.dump(data, f, default=str, indent=2)
+                print(f"[{self.source_name}] Cached result for query: {query[:50]}...")
+
+        except Exception as e:
+            print(f"[{self.source_name}] Cache write error: {e}")
+
+    def _search_duckduckgo(self, query: str) -> List[Dict[str, str]]:
+        """
+        Search DuckDuckGo and return results.
+
+        Returns:
+            List of dicts with 'title', 'snippet', 'url'
+        """
+        try:
+            from duckduckgo_search import DDGS
+        except ImportError:
+            print(f"[{self.source_name}] duckduckgo-search not installed. Run: pip install duckduckgo-search")
+            return []
+
+        try:
+            results = []
+            with DDGS() as ddgs:
+                for r in ddgs.text(query, max_results=self.max_results):
+                    results.append({
+                        "title": r.get("title", ""),
+                        "snippet": r.get("body", ""),
+                        "url": r.get("href", "")
+                    })
+
+            print(f"[{self.source_name}] Found {len(results)} results for: {query[:50]}...")
+            return results
+
+        except Exception as e:
+            print(f"[{self.source_name}] Search error: {e}")
+            return []
+
+    def _format_search_results(self, results: List[Dict[str, str]]) -> str:
+        """Format search results for LLM consumption."""
+        if not results:
+            return "No search results found."
+
+        formatted = []
+        for i, r in enumerate(results, 1):
+            formatted.append(f"[{i}] {r['title']}\n{r['snippet']}\nSource: {r['url']}\n")
+
+        return "\n".join(formatted)
+
+    def _extract_with_llm(
+        self,
+        query: str,
+        search_results: str,
+        extract_type: str,
+        gap_category: str = None,
+        missing_description: str = None
+    ) -> Dict[str, Any]:
+        """
+        Extract structured data from search results using Haiku.
+
+        Args:
+            query: Original search query
+            search_results: Formatted search results text
+            extract_type: "data_points", "announcements", or "knowledge_gap"
+            gap_category: (for knowledge_gap) Category of the gap being filled
+            missing_description: (for knowledge_gap) What information is needed
+
+        Returns:
+            Extracted data as dict
+        """
+        if extract_type == "data_points":
+            prompt_template = EXTRACT_DATA_POINTS_PROMPT
+            user_prompt = prompt_template.format(
+                query=query,
+                search_results=search_results
+            )
+        elif extract_type == "announcements":
+            prompt_template = EXTRACT_ANNOUNCEMENTS_PROMPT
+            user_prompt = prompt_template.format(
+                query=query,
+                search_results=search_results
+            )
+        elif extract_type == "knowledge_gap":
+            prompt_template = EXTRACT_KNOWLEDGE_GAP_PROMPT
+            user_prompt = prompt_template.format(
+                gap_category=gap_category or "unknown",
+                missing_description=missing_description or query,
+                query=query,
+                search_results=search_results
+            )
+        else:
+            raise ValueError(f"Unknown extract_type: {extract_type}")
+
+        messages = [{"role": "user", "content": user_prompt}]
+
+        print(f"[{self.source_name}] Extracting {extract_type} with Haiku...")
+
+        try:
+            response = call_claude_haiku(messages, temperature=0.0, max_tokens=1500)
+            print(f"[{self.source_name}] Raw LLM response:\n{response}")
+
+            # Try to parse JSON from response
+            # Handle markdown code blocks
+            if "```json" in response:
+                json_str = response.split("```json")[1].split("```")[0].strip()
+            elif "```" in response:
+                json_str = response.split("```")[1].split("```")[0].strip()
+            else:
+                json_str = response.strip()
+
+            extracted = json.loads(json_str)
+            return extracted
+
+        except json.JSONDecodeError as e:
+            print(f"[{self.source_name}] JSON parse error: {e}")
+            return {
+                "error": "Failed to parse LLM response",
+                "raw_response": response
+            }
+        except Exception as e:
+            print(f"[{self.source_name}] Extraction error: {e}")
+            return {"error": str(e)}
+
+    def search_and_extract(
+        self,
+        query: str,
+        extract_type: str = "data_points",
+        gap_category: str = None,
+        missing_description: str = None
+    ) -> Dict[str, Any]:
+        """
+        Search the web and extract structured data.
+
+        Args:
+            query: Search query (e.g., "USD JPY hedging cost 2026")
+            extract_type: Type of extraction:
+                - "data_points": Extract quantitative data (numbers, percentages, dates)
+                - "announcements": Extract entity announcements (who, what, when)
+                - "knowledge_gap": Fill a specific knowledge gap
+            gap_category: (for knowledge_gap) Category of the gap being filled
+            missing_description: (for knowledge_gap) What information is needed
+
+        Returns:
+            Dict containing:
+            - query: Original query
+            - extract_type: Type of extraction
+            - timestamp: When search was performed
+            - results_count: Number of search results
+            - extracted: Extracted data (format depends on extract_type)
+            - sources: List of source URLs
+        """
+        # Check cache first (include gap params in cache key for knowledge_gap type)
+        cache_key_suffix = f":{gap_category}:{missing_description}" if extract_type == "knowledge_gap" else ""
+        cached = self._get_from_cache(query + cache_key_suffix, extract_type)
+        if cached:
+            return cached
+
+        # Perform search
+        search_results = self._search_duckduckgo(query)
+
+        if not search_results:
+            result = {
+                "query": query,
+                "extract_type": extract_type,
+                "timestamp": datetime.now().isoformat(),
+                "results_count": 0,
+                "extracted": {"error": "No search results found"},
+                "sources": []
+            }
+            return result
+
+        # Format for LLM
+        formatted_results = self._format_search_results(search_results)
+
+        # Extract with LLM
+        extracted = self._extract_with_llm(
+            query,
+            formatted_results,
+            extract_type,
+            gap_category=gap_category,
+            missing_description=missing_description
+        )
+
+        # Build result
+        result = {
+            "query": query,
+            "extract_type": extract_type,
+            "timestamp": datetime.now().isoformat(),
+            "results_count": len(search_results),
+            "extracted": extracted,
+            "sources": [r["url"] for r in search_results]
+        }
+
+        # Cache result (use same key suffix for knowledge_gap type)
+        self._save_to_cache(query + cache_key_suffix, extract_type, result)
+
+        return result
+
+    def search_multiple(
+        self,
+        queries: List[str],
+        extract_type: str = "data_points",
+        delay_seconds: float = 1.0
+    ) -> List[Dict[str, Any]]:
+        """
+        Search multiple queries with rate limiting.
+
+        Args:
+            queries: List of search queries
+            extract_type: Type of extraction for all queries
+            delay_seconds: Delay between searches to avoid rate limiting
+
+        Returns:
+            List of results (same order as queries)
+        """
+        results = []
+
+        for i, query in enumerate(queries):
+            print(f"[{self.source_name}] Processing query {i+1}/{len(queries)}: {query[:50]}...")
+
+            result = self.search_and_extract(query, extract_type)
+            results.append(result)
+
+            # Rate limiting delay (skip for last query)
+            if i < len(queries) - 1:
+                time.sleep(delay_seconds)
+
+        return results
+
+
+# Convenience functions for direct use
+def search_data_points(query: str) -> Dict[str, Any]:
+    """Search for quantitative data points."""
+    adapter = WebSearchAdapter()
+    return adapter.search_and_extract(query, extract_type="data_points")
+
+
+def search_announcements(query: str) -> Dict[str, Any]:
+    """Search for entity announcements."""
+    adapter = WebSearchAdapter()
+    return adapter.search_and_extract(query, extract_type="announcements")

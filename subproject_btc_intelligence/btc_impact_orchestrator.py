@@ -33,6 +33,7 @@ from .relationship_store import (
 )
 from .historical_event_detector import detect_historical_gap, identify_instruments, get_date_range
 from .historical_data_fetcher import fetch_historical_event_data, compare_to_current
+from .knowledge_gap_detector import detect_knowledge_gaps, fill_gaps_with_search
 from . import config
 
 
@@ -374,7 +375,11 @@ def run_btc_impact_analysis(
     if not skip_data_fetch:
         state = enrich_with_historical_event(state)
 
-    # Step 6: Analyze impact (LLM call with current data + validated patterns)
+    # Step 5.6: Knowledge gap detection (separate LLM call before main analysis)
+    if not skip_data_fetch:
+        state = detect_and_fill_knowledge_gaps(state)
+
+    # Step 6: Analyze impact (LLM call with current data + validated patterns + gap enrichment)
     state = analyze_impact(state)
 
     # Step 7: Store newly discovered chains (Phase 3)
@@ -393,6 +398,76 @@ def run_btc_impact_analysis(
     print("\n" + output)
 
     return dict(state)
+
+
+def detect_and_fill_knowledge_gaps(state: BTCImpactState) -> BTCImpactState:
+    """
+    Step 5.6: Detect knowledge gaps and optionally fill them with web search.
+
+    This is a SEPARATE LLM call before the main impact analysis to identify
+    what information is missing. This allows the system to:
+    1. Know what it doesn't know (meta-cognition)
+    2. Attempt to fill gaps via web search
+    3. Pass gap awareness to the main analysis
+
+    Updates state with:
+    - knowledge_gaps: Structured gap detection results
+    - gap_enrichment_text: Additional context from web search (if any)
+    - filled_gaps: Gaps that were successfully filled
+    - partially_filled_gaps: Gaps with partial information
+    - unfillable_gaps: Gaps that could not be filled
+    """
+    query = state.get("query", "")
+    synthesis = state.get("retrieval_synthesis", "")
+    logic_chains = state.get("logic_chains", [])
+    current_values = state.get("current_values", {})
+
+    # Step 1: Detect gaps (first LLM call - Haiku)
+    gap_result = detect_knowledge_gaps(
+        query=query,
+        synthesis=synthesis,
+        logic_chains=logic_chains,
+        current_values=current_values
+    )
+
+    state["knowledge_gaps"] = gap_result
+
+    # Step 2: Filter gaps that need filling (status == "GAP")
+    gaps = gap_result.get("gaps", [])
+    gaps_to_fill = [g for g in gaps if g.get("status") == "GAP"]
+    gap_count = len(gaps_to_fill)
+
+    # Step 3: Attempt to fill gaps with web search (if gaps detected)
+    if gap_count > 0 and config.ENABLE_GAP_FILLING:
+        fill_result = fill_gaps_with_search(
+            gaps=gaps_to_fill,
+            max_searches=config.MAX_GAP_SEARCHES,
+            max_attempts_per_gap=config.MAX_ATTEMPTS_PER_GAP
+        )
+
+        # Store all results in state
+        state["gap_enrichment_text"] = fill_result.get("enrichment_text", "")
+        state["filled_gaps"] = fill_result.get("filled_gaps", [])
+        state["partially_filled_gaps"] = fill_result.get("partially_filled_gaps", [])
+        state["unfillable_gaps"] = fill_result.get("unfillable_gaps", [])
+
+        # Log summary
+        filled_count = len(fill_result.get("filled_gaps", []))
+        partial_count = len(fill_result.get("partially_filled_gaps", []))
+        unfillable_count = len(fill_result.get("unfillable_gaps", []))
+        total_searches = fill_result.get("total_searches", 0)
+        termination = fill_result.get("termination_reason", "unknown")
+
+        print(f"[Knowledge Gap] Filled {filled_count}/{gap_count} gaps, "
+              f"partially filled {partial_count}, unfillable {unfillable_count}")
+        print(f"[Knowledge Gap] Total searches: {total_searches}, termination: {termination}")
+    else:
+        state["gap_enrichment_text"] = ""
+        state["filled_gaps"] = []
+        state["partially_filled_gaps"] = []
+        state["unfillable_gaps"] = []
+
+    return state
 
 
 def enrich_with_historical_event(state: BTCImpactState) -> BTCImpactState:
