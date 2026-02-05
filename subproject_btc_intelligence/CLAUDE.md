@@ -402,6 +402,10 @@ MAX_ATTEMPTS_PER_GAP = 2        # Primary + 1 refinement per gap
 - **Yahoo Finance** - Market data (BTC, ETH, DXY, VIX, etc.) via `yfinance`
 - **Tavily** - Web search for knowledge gap filling (via WebSearchAdapter)
 
+## TODO
+
+- **Gap detection prompt examples are JPY/BOJ-specific** (`knowledge_gap_prompts.py`): The GOOD/BAD search query examples in categories 1 (historical_precedent_depth), 3 (monitoring_thresholds), and 6 (exit_criteria) are all from the JPY carry trade case study. Run 2-3 different query types (e.g., TGA, Fed rate cut, DXY) through the pipeline first. If the gap detector generates poor queries for those, diversify the examples using validated results from those runs.
+
 ## Notes for AI Assistants
 - **Follow established patterns** from other subprojects
 - **Main file = orchestration only** - no business logic
