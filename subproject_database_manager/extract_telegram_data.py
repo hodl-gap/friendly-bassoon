@@ -26,6 +26,7 @@ def extract_telegram_messages(json_path):
     records = []
     for msg in messages:
         record = {
+            'telegram_msg_id': msg.get('id', ''),  # Preserve Telegram message ID for deduplication
             'name': channel_name,
             'from': msg.get('from', ''),
             'date': msg.get('date', ''),

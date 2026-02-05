@@ -56,6 +56,10 @@ def analyze_impact(state: BTCImpactState) -> BTCImpactState:
     historical_event_data = state.get("historical_event_data", {})
     historical_event_text = format_historical_data_for_prompt(historical_event_data)
 
+    # Get pre-assessed knowledge gaps (Phase 5 - separate LLM call)
+    knowledge_gaps = state.get("knowledge_gaps", {})
+    gap_enrichment_text = state.get("gap_enrichment_text", "")
+
     # Build prompt
     prompt = get_impact_analysis_prompt(
         query=query,
@@ -66,7 +70,9 @@ def analyze_impact(state: BTCImpactState) -> BTCImpactState:
         current_values_text=current_values_text,
         historical_chains_text=historical_chains_text,
         validated_patterns_text=validated_patterns_text,
-        historical_event_text=historical_event_text
+        historical_event_text=historical_event_text,
+        knowledge_gaps=knowledge_gaps,
+        gap_enrichment_text=gap_enrichment_text
     )
 
     # Call LLM
@@ -107,8 +113,10 @@ def parse_impact_response(response: str) -> Dict[str, Any]:
         "risk_factors": []
     }
 
-    # Parse DIRECTION
-    direction_match = re.search(r"DIRECTION:\s*(BULLISH|BEARISH|NEUTRAL)", response, re.IGNORECASE)
+    # Parse PRIMARY_DIRECTION (or fallback to DIRECTION for backward compatibility)
+    direction_match = re.search(r"PRIMARY_DIRECTION:\s*(BULLISH|BEARISH|NEUTRAL)", response, re.IGNORECASE)
+    if not direction_match:
+        direction_match = re.search(r"DIRECTION:\s*(BULLISH|BEARISH|NEUTRAL)", response, re.IGNORECASE)
     if direction_match:
         result["direction"] = direction_match.group(1).upper()
 

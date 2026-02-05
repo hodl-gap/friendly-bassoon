@@ -16,8 +16,15 @@ env/
 subproject_database_manager/data/raw/
 subproject_database_manager/data/processed/
 subproject_database_manager/data/qa_logs/
+subproject_database_manager/data/checkpoints/
 subproject_database_manager/test_data/
 subproject_database_manager/telegram_messages/
+*.db
+
+# Cache and logs (ephemeral)
+subproject_data_collection/data/cache/*.json
+subproject_data_collection/logs/*.log
+subproject_variable_mapper/logs/*.log
 
 # Images
 *.jpg

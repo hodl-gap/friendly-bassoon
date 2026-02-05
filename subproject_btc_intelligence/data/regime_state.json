@@ -1,9 +1,9 @@
 {
   "liquidity_regime": "reserve_scarce",
-  "dominant_driver": "tga_rebuild",
+  "dominant_driver": "JPY intervention risk → carry unwind → USD funding squeeze (SOFR spike) → BTC liquidation\" with historical precedent validation (3 prior episodes: -22% to -30%)",
   "confidence": 0.72,
   "assessment_source": "impact_analysis",
   "direction": "BEARISH",
-  "strongest_chain": "tga_rebuild -> treasury_issuance -> bank_reserves_drain -> repo_spike -> btc_downside",
-  "last_updated": "2026-02-02T08:45:36.310206"
+  "strongest_chain": "JPY intervention risk → carry unwind → USD funding squeeze (SOFR spike) → BTC liquidation\" with historical precedent validation (3 prior episodes: -22% to -30%)",
+  "last_updated": "2026-02-05T02:12:24.936882"
 }

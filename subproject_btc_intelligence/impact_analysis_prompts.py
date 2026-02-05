@@ -4,13 +4,11 @@ SYSTEM_PROMPT = """You are a quantitative macro analyst specializing in Bitcoin'
 
 Your task is to analyze how a specific macro event or condition impacts Bitcoin price, based on logic chains extracted from financial research AND current market data.
 
-## COMPLETENESS CHECK
-Before providing your analysis, assess whether the retrieved information is SUFFICIENT:
-- Are there aspects of this event that you CANNOT analyze due to missing information?
-- What additional data or context would strengthen this analysis?
-- Rate coverage: COMPLETE / PARTIAL / INSUFFICIENT
-
-If PARTIAL or INSUFFICIENT, explicitly state what's missing.
+## KNOWLEDGE GAPS (Pre-Assessed)
+You will receive a pre-assessed knowledge gap analysis. Use this to:
+- Acknowledge limitations in your analysis where gaps exist
+- Be appropriately uncertain where information is missing
+- NOT claim confidence in areas flagged as gaps
 
 ## VARIABLE ACKNOWLEDGMENT
 You will receive current market data for multiple variables. You MUST acknowledge ALL fetched variables:
@@ -37,7 +35,9 @@ def get_impact_analysis_prompt(
     current_values_text: str = "",
     historical_chains_text: str = "",
     validated_patterns_text: str = "",
-    historical_event_text: str = ""
+    historical_event_text: str = "",
+    knowledge_gaps: dict = None,
+    gap_enrichment_text: str = ""
 ) -> str:
     """Build the impact analysis prompt."""
 
@@ -99,6 +99,40 @@ def get_impact_analysis_prompt(
 {historical_event_text}
 """
 
+    # Format knowledge gaps section (pre-assessed by separate LLM call)
+    knowledge_gaps_section = ""
+    if knowledge_gaps:
+        coverage = knowledge_gaps.get("coverage_rating", "UNKNOWN")
+        gap_count = knowledge_gaps.get("gap_count", 0)
+        gaps = knowledge_gaps.get("gaps", [])
+
+        gap_lines = [f"## PRE-ASSESSED KNOWLEDGE GAPS"]
+        gap_lines.append(f"Coverage: {coverage} ({gap_count} gaps detected)")
+        gap_lines.append("")
+
+        for gap in gaps:
+            status = gap.get("status", "UNKNOWN")
+            category = gap.get("category", "unknown").replace("_", " ").title()
+            found = gap.get("found", "")
+            missing = gap.get("missing", "")
+
+            if status == "COVERED":
+                gap_lines.append(f"- {category}: COVERED - {found}")
+            else:
+                gap_lines.append(f"- {category}: GAP - {found}")
+                if missing:
+                    gap_lines.append(f"  Missing: {missing}")
+
+        knowledge_gaps_section = "\n".join(gap_lines) + "\n"
+
+    # Format gap enrichment section (from web search)
+    gap_enrichment_section = ""
+    if gap_enrichment_text:
+        gap_enrichment_section = f"""
+## ADDITIONAL CONTEXT (from web search to fill gaps)
+{gap_enrichment_text}
+"""
+
     return f"""## USER QUERY
 {query}
 
@@ -114,16 +148,17 @@ def get_impact_analysis_prompt(
 ## RETRIEVAL CONFIDENCE
 {conf_text}
 {current_values_section}{historical_chains_section}{validated_patterns_section}{historical_event_section}
----
+{knowledge_gaps_section}{gap_enrichment_section}---
 
 Based on the above context, current market data, pattern validation, and any historical event comparisons, analyze the impact on Bitcoin.
 Pay special attention to TRIGGERED patterns - these indicate that conditions from research are currently active.
 
+**IMPORTANT**: Knowledge gaps have been pre-assessed above. Where gaps exist:
+- Acknowledge the limitation in your analysis
+- Be appropriately uncertain (lower confidence, wider scenario range)
+- Do NOT claim precision in areas flagged as gaps
+
 Respond in EXACTLY this format:
-
-COVERAGE: [COMPLETE/PARTIAL/INSUFFICIENT]
-
-UNCOVERED_ASPECTS: [what information is missing that would strengthen this analysis, or "None" if COMPLETE]
 
 VARIABLES_ANALYSIS:
 - USED: [variable]: [value] - [how it informed the analysis]

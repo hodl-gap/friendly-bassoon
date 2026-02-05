@@ -46,12 +46,24 @@ Your task: Generate search queries that approach the question from different ang
 - Each query should be recognizable as related to the original question
 - Keep queries simple and searchable
 
+## CRITICAL: Mechanical Operations
+For any abstract event (intervention, QE, rate hike, etc.), FIRST identify the concrete mechanical operation:
+- What is BOUGHT and what is SOLD?
+- What asset/currency INCREASES vs DECREASES?
+
+Then ensure at least ONE query uses these concrete action terms, not just the abstract event name.
+
+Examples:
+- "yen intervention to strengthen yen" → Japan SELLS USD, BUYS JPY → include query with "selling dollars" or "USD reserve drawdown"
+- "Fed QE" → Fed BUYS bonds → include query with "Fed buying treasuries" or "balance sheet expansion"
+- "rate hike" → raising interest rates → include query with "higher policy rate" or "tightening"
+
 ## Think About
-- What directly vs indirectly relates to this?
-- What precedes, coincides with, or follows from this?
+- What is the MECHANICAL/DIRECT effect? (first-order)
+- What are the MARKET/BEHAVIORAL consequences? (second-order)
 - What causes this vs what results from it?
 
-Generate 4-6 query variations.
+Generate 4-6 query variations. At least one MUST use concrete mechanical action terms.
 
 Original query: {query}
 

@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "last_updated": "2026-02-02T06:37:27.057733",
-    "total_relationships": 40
+    "last_updated": "2026-02-05T05:43:56.159863",
+    "total_relationships": 125
   },
   "relationships": [
     {
@@ -1296,6 +1296,2800 @@
       "validation_count": 1,
       "relationship_type": "negative",
       "confidence": 0.75
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "QRA borrowing plan + smaller TGA buffer",
+            "cause_normalized": "qra_borrowing",
+            "effect": "short-term reserve plunge possible",
+            "effect_normalized": "bank_reserves",
+            "mechanism": "incremental Treasury borrowing + reduced TGA buffer drains bank reserves → funding stress triggers repo rate spike → funding stress triggers selling, price re-enters consolidation"
+          },
+          {
+            "cause": "short-term reserve plunge possible",
+            "cause_normalized": "bank_reserves",
+            "effect": "repo spike",
+            "effect_normalized": "repo_rate",
+            "mechanism": ""
+          },
+          {
+            "cause": "repo spike",
+            "cause_normalized": "repo_rate",
+            "effect": "bitcoin falls and holds box range",
+            "effect_normalized": "btc_box_range",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "qra_borrowing -> bank_reserves -> repo_rate -> btc_box_range"
+      },
+      "terminal_effect": "btc_box_range",
+      "mechanism": "incremental Treasury borrowing + reduced TGA buffer drains bank reserves → funding stress triggers repo rate spike → funding stress triggers selling, price re-enters consolidation",
+      "source_attribution": "f541c3f68a4432e2_221 (steps 1-2), 962c5f96d98e13e4_104 (step 3)",
+      "id": "rel_cb2ce48b",
+      "discovered_at": "2026-02-02T08:45:36.309188",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Current TGA balance $300B vs required $550B",
+            "cause_normalized": "tga",
+            "effect": "Treasury needs to rebuild by ~$250B",
+            "effect_normalized": "treasury_needs_to_rebuild_by_~$250b",
+            "mechanism": "Low TGA relative to target requires refilling → Treasury issuance absorbs bank reserves → reduced liquidity pressures risk assets"
+          },
+          {
+            "cause": "Treasury needs to rebuild by ~$250B",
+            "cause_normalized": "treasury_needs_to_rebuild_by_~$250b",
+            "effect": "increased Treasury issuance drains liquidity",
+            "effect_normalized": "increased_treasury_issuance_drains_liquidity",
+            "mechanism": ""
+          },
+          {
+            "cause": "increased Treasury issuance drains liquidity",
+            "cause_normalized": "increased_treasury_issuance_drains_liquidity",
+            "effect": "potential BTC downside pressure",
+            "effect_normalized": "potential_btc_downside_pressure",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "tga -> treasury_needs_to_rebuild_by_~$250b -> increased_treasury_issuance_drains_liquidity -> potential_btc_downside_pressure"
+      },
+      "terminal_effect": "potential_btc_downside_pressure",
+      "mechanism": "Low TGA relative to target requires refilling → Treasury issuance absorbs bank reserves → reduced liquidity pressures risk assets",
+      "source_attribution": "385bb80b0b65c934_231, 683a03e261d432c3_230",
+      "id": "rel_4ecfe15c",
+      "discovered_at": "2026-02-02T08:45:36.309208",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "TGA drawdown improves liquidity",
+            "cause_normalized": "tga",
+            "effect": "bank reserves increaseBUT geopolitical/tariff risk",
+            "effect_normalized": "bank_reserves",
+            "mechanism": "TGA release mechanically improves systemic liquidity → however, risk assets remain geopolitically sensitive → tariff risk increases downside sensitivity despite liquidity improvement"
+          },
+          {
+            "cause": "bank reserves increaseBUT geopolitical/tariff risk",
+            "cause_normalized": "bank_reserves",
+            "effect": "bitcoin vulnerability to bad news",
+            "effect_normalized": "bitcoin_price",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "tga -> bank_reserves -> bitcoin_price"
+      },
+      "terminal_effect": "bitcoin_price",
+      "mechanism": "TGA release mechanically improves systemic liquidity → however, risk assets remain geopolitically sensitive → tariff risk increases downside sensitivity despite liquidity improvement",
+      "source_attribution": "2d482ab65308767d_41",
+      "id": "rel_4c782dd9",
+      "discovered_at": "2026-02-02T08:45:36.309221",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "End-month/year-end flows",
+            "cause_normalized": "month_end_liquidity",
+            "effect": "repo spike",
+            "effect_normalized": "repo_rate",
+            "mechanism": "Calendar-driven flows cause transient liquidity moves rather than structural shocks → temporary funding stress triggers selling → price impact reverses after calendar effect passes"
+          },
+          {
+            "cause": "repo spike",
+            "cause_normalized": "repo_rate",
+            "effect": "temporary, not systemic liquidity dislocation",
+            "effect_normalized": "temporary_liquidity_effect",
+            "mechanism": ""
+          },
+          {
+            "cause": "temporary, not systemic liquidity dislocation",
+            "cause_normalized": "temporary_liquidity_effect",
+            "effect": "bitcoin falls temporarily then recovers",
+            "effect_normalized": "bitcoin_falls_temporarily_then_recovers",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "month_end_liquidity -> repo_rate -> temporary_liquidity_effect -> bitcoin_falls_temporarily_then_recovers"
+      },
+      "terminal_effect": "bitcoin_falls_temporarily_then_recovers",
+      "mechanism": "Calendar-driven flows cause transient liquidity moves rather than structural shocks → temporary funding stress triggers selling → price impact reverses after calendar effect passes",
+      "source_attribution": "962c5f96d98e13e4_104",
+      "id": "rel_562fa679",
+      "discovered_at": "2026-02-02T08:45:36.309231",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Short-term reserve plunge risk",
+            "cause_normalized": "bank_reserves",
+            "effect": "liquidity backstops activated",
+            "effect_normalized": "liquidity_backstops",
+            "mechanism": "Reserve drain creates funding stress → SRF availability, QT guidance, Genius Act increase bond demand / provide liquidity → backstops reduce severity of liquidity-driven asset price pressure"
+          },
+          {
+            "cause": "liquidity backstops activated",
+            "cause_normalized": "liquidity_backstops",
+            "effect": "SRF availability, QT end guidance, Genius Act bond-buying",
+            "effect_normalized": "srf_availability,_qt_end_guidance,_genius_act_bond-buying",
+            "mechanism": ""
+          },
+          {
+            "cause": "SRF availability, QT end guidance, Genius Act bond-buying",
+            "cause_normalized": "srf_availability,_qt_end_guidance,_genius_act_bond-buying",
+            "effect": "mitigates BTC downside",
+            "effect_normalized": "mitigates_btc_downside",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "bank_reserves -> liquidity_backstops -> srf_availability,_qt_end_guidance,_genius_act_bond-buying -> mitigates_btc_downside"
+      },
+      "terminal_effect": "mitigates_btc_downside",
+      "mechanism": "Reserve drain creates funding stress → SRF availability, QT guidance, Genius Act increase bond demand / provide liquidity → backstops reduce severity of liquidity-driven asset price pressure",
+      "source_attribution": "f541c3f68a4432e2_221",
+      "id": "rel_87617689",
+      "discovered_at": "2026-02-02T08:45:36.309239",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ rate hike",
+            "cause_normalized": "japan_rate_hike",
+            "effect": "Bitcoin price correction (-22% to -30%)",
+            "effect_normalized": "bitcoin_price",
+            "mechanism": "Japanese monetary tightening triggers risk-off sentiment → potential yen carry trade unwinding and reduced global liquidity → Bitcoin experiences 20-30% drawdowns"
+          }
+        ],
+        "chain_summary": "japan_rate_hike -> bitcoin_price"
+      },
+      "terminal_effect": "bitcoin_price",
+      "mechanism": "Japanese monetary tightening triggers risk-off sentiment → potential yen carry trade unwinding and reduced global liquidity → Bitcoin experiences 20-30% drawdowns",
+      "source_attribution": "Source 9 (afb976361a1e97a1_534), Source 13 (3bfe46e026b54bb5_500)",
+      "id": "rel_5715d708",
+      "discovered_at": "2026-02-02T08:54:37.448327",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "TGA drawdown",
+            "cause_normalized": "tga",
+            "effect": "bank reserves increase",
+            "effect_normalized": "bank_reserves",
+            "mechanism": "Treasury spending releases cash from Fed account into banking system → reserve balances rise → money market rates stabilize as funding pressure decreases → improved systemic liquidity benefits risk assets including BTC"
+          },
+          {
+            "cause": "bank reserves increase",
+            "cause_normalized": "bank_reserves",
+            "effect": "SOFR/REPO stabilize",
+            "effect_normalized": "sofr",
+            "mechanism": ""
+          },
+          {
+            "cause": "SOFR/REPO stabilize",
+            "cause_normalized": "sofr",
+            "effect": "funding stress eases",
+            "effect_normalized": "funding_stress_eases",
+            "mechanism": ""
+          },
+          {
+            "cause": "funding stress eases",
+            "cause_normalized": "funding_stress_eases",
+            "effect": "BTC liquidity improves",
+            "effect_normalized": "btc_liquidity_improves",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "tga -> bank_reserves -> sofr -> funding_stress_eases -> btc_liquidity_improves"
+      },
+      "terminal_effect": "btc_liquidity_improves",
+      "mechanism": "Treasury spending releases cash from Fed account into banking system → reserve balances rise → money market rates stabilize as funding pressure decreases → improved systemic liquidity benefits risk assets including BTC",
+      "source_attribution": "Source 2 (steps 1-3), Source 1 (TGA mechanics)",
+      "id": "rel_95edb2b0",
+      "discovered_at": "2026-02-02T09:19:33.054235",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "TGA rebuild requirement (~$250B shortfall per 2025 context)",
+            "cause_normalized": "tga_rebuild_requirement_(~$250b_shortfall_per_2025_context)",
+            "effect": "increased Treasury issuance",
+            "effect_normalized": "increased_treasury_issuance",
+            "mechanism": "Low TGA balance ($300B vs $550B target in 2025 context) requires Treasury to issue more debt → cash withdrawn from banking system to rebuild TGA → reduced market liquidity pressures risk assets"
+          },
+          {
+            "cause": "increased Treasury issuance",
+            "cause_normalized": "increased_treasury_issuance",
+            "effect": "liquidity drain from financial markets",
+            "effect_normalized": "liquidity_drain_from_financial_markets",
+            "mechanism": ""
+          },
+          {
+            "cause": "liquidity drain from financial markets",
+            "cause_normalized": "liquidity_drain_from_financial_markets",
+            "effect": "potential BTC headwind",
+            "effect_normalized": "potential_btc_headwind",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "tga_rebuild_requirement_(~$250b_shortfall_per_2025_context) -> increased_treasury_issuance -> liquidity_drain_from_financial_markets -> potential_btc_headwind"
+      },
+      "terminal_effect": "potential_btc_headwind",
+      "mechanism": "Low TGA balance ($300B vs $550B target in 2025 context) requires Treasury to issue more debt → cash withdrawn from banking system to rebuild TGA → reduced market liquidity pressures risk assets",
+      "source_attribution": "Source 3",
+      "id": "rel_58eb301d",
+      "discovered_at": "2026-02-02T09:19:33.054260",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "repo/HIBOR stress",
+            "cause_normalized": "repo_hibor_stress",
+            "effect": "borrow rates rise",
+            "effect_normalized": "borrow_rates",
+            "mechanism": "interbank funding stress raises HIBOR/repo rates → higher borrowing rates increase position financing costs → higher maintenance costs trigger margin calls and forced selling in leveraged crypto positions"
+          },
+          {
+            "cause": "borrow rates rise",
+            "cause_normalized": "borrow_rates",
+            "effect": "maintenance cost increase",
+            "effect_normalized": "maintenance_cost",
+            "mechanism": ""
+          },
+          {
+            "cause": "maintenance cost increase",
+            "cause_normalized": "maintenance_cost",
+            "effect": "immediate liquidation pressure in crypto",
+            "effect_normalized": "crypto_liquidation",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "repo_hibor_stress -> borrow_rates -> maintenance_cost -> crypto_liquidation"
+      },
+      "terminal_effect": "crypto_liquidation",
+      "mechanism": "interbank funding stress raises HIBOR/repo rates → higher borrowing rates increase position financing costs → higher maintenance costs trigger margin calls and forced selling in leveraged crypto positions",
+      "source_attribution": "Source 7, Source 10",
+      "id": "rel_73b403b7",
+      "discovered_at": "2026-02-02T09:19:33.054272",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Asia funding linkage (HIBOR, CNH)",
+            "cause_normalized": "asia_dollar_liquidity",
+            "effect": "crypto funding sensitivity",
+            "effect_normalized": "crypto_funding_sensitivity",
+            "mechanism": "high share of HK/SG/China capital funds crypto leverage → crypto funding costs tied to HIBOR/CNH rates → Asian dollar liquidity conditions directly impact BTC leverage capacity"
+          },
+          {
+            "cause": "crypto funding sensitivity",
+            "cause_normalized": "crypto_funding_sensitivity",
+            "effect": "amplified BTC volatility",
+            "effect_normalized": "amplified_btc_volatility",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "asia_dollar_liquidity -> crypto_funding_sensitivity -> amplified_btc_volatility"
+      },
+      "terminal_effect": "amplified_btc_volatility",
+      "mechanism": "high share of HK/SG/China capital funds crypto leverage → crypto funding costs tied to HIBOR/CNH rates → Asian dollar liquidity conditions directly impact BTC leverage capacity",
+      "source_attribution": "Source 7, Source 10",
+      "id": "rel_0e4b14dc",
+      "discovered_at": "2026-02-02T09:19:33.054282",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "SOFR volume rising",
+            "cause_normalized": "sofr_volume",
+            "effect": "systemic bailout need",
+            "effect_normalized": "systemic_bailout_need",
+            "mechanism": "rising SOFR volumes signal acute funding stress requiring rescue → scale of funding stress implies massive QE (3x 2020 levels in projection) → QE liquidity expansion historically positive for risk assets"
+          },
+          {
+            "cause": "systemic bailout need",
+            "cause_normalized": "systemic_bailout_need",
+            "effect": "QE requirement (~$18T scale in 2026 context)",
+            "effect_normalized": "qe_needed",
+            "mechanism": ""
+          },
+          {
+            "cause": "QE requirement (~$18T scale in 2026 context)",
+            "cause_normalized": "qe_needed",
+            "effect": "potential liquidity injection benefiting BTC",
+            "effect_normalized": "potential_liquidity_injection_benefiting_btc",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "sofr_volume -> systemic_bailout_need -> qe_needed -> potential_liquidity_injection_benefiting_btc"
+      },
+      "terminal_effect": "potential_liquidity_injection_benefiting_btc",
+      "mechanism": "rising SOFR volumes signal acute funding stress requiring rescue → scale of funding stress implies massive QE (3x 2020 levels in projection) → QE liquidity expansion historically positive for risk assets",
+      "source_attribution": "Source 15, Source 11, Source 12",
+      "id": "rel_60d47e1c",
+      "discovered_at": "2026-02-02T09:19:33.054291",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "SOFR volume decline to 2020 levels",
+            "cause_normalized": "sofr_volume_decline_to_2020_levels",
+            "effect": "easing funding stress",
+            "effect_normalized": "easing_funding_stress",
+            "mechanism": "declining SOFR volumes indicate reduced money market stress → lower systemic funding pressure → reduced headwind for risk assets"
+          },
+          {
+            "cause": "easing funding stress",
+            "cause_normalized": "easing_funding_stress",
+            "effect": "current neutral-to-positive for BTC",
+            "effect_normalized": "current_neutral-to-positive_for_btc",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "sofr_volume_decline_to_2020_levels -> easing_funding_stress -> current_neutral-to-positive_for_btc"
+      },
+      "terminal_effect": "current_neutral-to-positive_for_btc",
+      "mechanism": "declining SOFR volumes indicate reduced money market stress → lower systemic funding pressure → reduced headwind for risk assets",
+      "source_attribution": "Source 11, Source 12, Source 14",
+      "id": "rel_0a051cdd",
+      "discovered_at": "2026-02-02T09:19:33.054300",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "geopolitical/tariff risk",
+            "cause_normalized": "greenland_tariff_war",
+            "effect": "bitcoin vulnerability to bad news",
+            "effect_normalized": "bitcoin_price",
+            "mechanism": "geopolitical/tariff risk increases downside sensitivity for risk assets → BTC exhibits heightened volatility to negative headlines"
+          },
+          {
+            "cause": "bitcoin vulnerability to bad news",
+            "cause_normalized": "bitcoin_price",
+            "effect": "BTC price pressure",
+            "effect_normalized": "btc_price_pressure",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "greenland_tariff_war -> bitcoin_price -> btc_price_pressure"
+      },
+      "terminal_effect": "btc_price_pressure",
+      "mechanism": "geopolitical/tariff risk increases downside sensitivity for risk assets → BTC exhibits heightened volatility to negative headlines",
+      "source_attribution": "Source 2",
+      "id": "rel_b29e10b3",
+      "discovered_at": "2026-02-02T09:19:33.054309",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "risk-off sentiment",
+            "cause_normalized": "risk_off",
+            "effect": "bitcoin price decline",
+            "effect_normalized": "btc_price_drop",
+            "mechanism": "risk-off reduces demand for risk assets including crypto → investor redemptions/liquidations from ETFs amid price weakness"
+          },
+          {
+            "cause": "bitcoin price decline",
+            "cause_normalized": "btc_price_drop",
+            "effect": "ETF outflows ($490M in one-day 2026 context)",
+            "effect_normalized": "etf_net_flows",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "risk_off -> btc_price_drop -> etf_net_flows"
+      },
+      "terminal_effect": "etf_net_flows",
+      "mechanism": "risk-off reduces demand for risk assets including crypto → investor redemptions/liquidations from ETFs amid price weakness",
+      "source_attribution": "Source 6, Source 16",
+      "id": "rel_ed222efd",
+      "discovered_at": "2026-02-02T09:19:33.054316",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ rate hike",
+            "cause_normalized": "boj_rate_hike",
+            "effect": "yen carry trade unwind",
+            "effect_normalized": "yen_carry_trade_unwind",
+            "mechanism": "Japanese rate increases make yen borrowing expensive → investors unwind carry trades by buying back dollars → temporary dollar shortage pushes up overnight rates → deleveraging and risk-off pressure BTC"
+          },
+          {
+            "cause": "yen carry trade unwind",
+            "cause_normalized": "yen_carry_trade_unwind",
+            "effect": "dollar funding stress (SOFR spike)",
+            "effect_normalized": "dollar_funding_stress_(sofr_spike)",
+            "mechanism": ""
+          },
+          {
+            "cause": "dollar funding stress (SOFR spike)",
+            "cause_normalized": "dollar_funding_stress_(sofr_spike)",
+            "effect": "BTC correction (-22% to -30% historical pattern)",
+            "effect_normalized": "btc_correction_(-22%_to_-30%_historical_pattern)",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "boj_rate_hike -> yen_carry_trade_unwind -> dollar_funding_stress_(sofr_spike) -> btc_correction_(-22%_to_-30%_historical_pattern)"
+      },
+      "terminal_effect": "btc_correction_(-22%_to_-30%_historical_pattern)",
+      "mechanism": "Japanese rate increases make yen borrowing expensive → investors unwind carry trades by buying back dollars → temporary dollar shortage pushes up overnight rates → deleveraging and risk-off pressure BTC",
+      "source_attribution": "Source 5, Source 13, Source 18",
+      "id": "rel_3692a8cd",
+      "discovered_at": "2026-02-02T09:19:33.054325",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Bitfinex longs increase during BTC decline",
+            "cause_normalized": "bitfinex_longs_increase_during_btc_decline",
+            "effect": "contrarian accumulation",
+            "effect_normalized": "contrarian_accumulation",
+            "mechanism": "traders add long positions during dips (buying opportunity) → accumulated leveraged longs create vulnerability → rally phase may trigger profit-taking or liquidations"
+          },
+          {
+            "cause": "contrarian accumulation",
+            "cause_normalized": "contrarian_accumulation",
+            "effect": "potential liquidation risk on next rally",
+            "effect_normalized": "potential_liquidation_risk_on_next_rally",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "bitfinex_longs_increase_during_btc_decline -> contrarian_accumulation -> potential_liquidation_risk_on_next_rally"
+      },
+      "terminal_effect": "potential_liquidation_risk_on_next_rally",
+      "mechanism": "traders add long positions during dips (buying opportunity) → accumulated leveraged longs create vulnerability → rally phase may trigger profit-taking or liquidations",
+      "source_attribution": "Source 8",
+      "id": "rel_01afa329",
+      "discovered_at": "2026-02-02T09:19:33.054334",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "TGA drawdown",
+            "cause_normalized": "tga",
+            "effect": "bank reserves increase",
+            "effect_normalized": "bank_reserves",
+            "mechanism": "Treasury spending injects reserves → money market rates stabilize → crypto leverage financing costs remain manageable → reduced forced selling → positive environment for BTC"
+          },
+          {
+            "cause": "bank reserves increase",
+            "cause_normalized": "bank_reserves",
+            "effect": "SOFR/REPO/HIBOR stabilize",
+            "effect_normalized": "sofr",
+            "mechanism": ""
+          },
+          {
+            "cause": "SOFR/REPO/HIBOR stabilize",
+            "cause_normalized": "sofr",
+            "effect": "borrow rates stabilize",
+            "effect_normalized": "borrow_rates",
+            "mechanism": ""
+          },
+          {
+            "cause": "borrow rates stabilize",
+            "cause_normalized": "borrow_rates",
+            "effect": "maintenance costs stable",
+            "effect_normalized": "maintenance_cost",
+            "mechanism": ""
+          },
+          {
+            "cause": "maintenance costs stable",
+            "cause_normalized": "maintenance_cost",
+            "effect": "reduced crypto liquidation pressure",
+            "effect_normalized": "crypto_liquidation",
+            "mechanism": ""
+          },
+          {
+            "cause": "reduced crypto liquidation pressure",
+            "cause_normalized": "crypto_liquidation",
+            "effect": "BTC price support",
+            "effect_normalized": "btc_price_support",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "tga -> bank_reserves -> sofr -> borrow_rates -> maintenance_cost -> crypto_liquidation -> btc_price_support"
+      },
+      "terminal_effect": "btc_price_support",
+      "mechanism": "Treasury spending injects reserves → money market rates stabilize → crypto leverage financing costs remain manageable → reduced forced selling → positive environment for BTC",
+      "source_attribution": "Source 2 (steps 1-3), Source 7 (steps 4-6)",
+      "id": "rel_4f66ec2f",
+      "discovered_at": "2026-02-02T09:19:33.054342",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "TGA rebuild (inverse)",
+            "cause_normalized": "tga_rebuild_(inverse)",
+            "effect": "bank reserves decrease",
+            "effect_normalized": "bank_reserves_decrease",
+            "mechanism": "Treasury debt issuance drains reserves → funding rates spike → leveraged crypto positions face higher costs → margin calls trigger selling → BTC price pressure"
+          },
+          {
+            "cause": "bank reserves decrease",
+            "cause_normalized": "bank_reserves_decrease",
+            "effect": "SOFR/HIBOR stress",
+            "effect_normalized": "sofr/hibor_stress",
+            "mechanism": ""
+          },
+          {
+            "cause": "SOFR/HIBOR stress",
+            "cause_normalized": "sofr/hibor_stress",
+            "effect": "borrow rates rise",
+            "effect_normalized": "borrow_rates",
+            "mechanism": ""
+          },
+          {
+            "cause": "borrow rates rise",
+            "cause_normalized": "borrow_rates",
+            "effect": "maintenance cost increase",
+            "effect_normalized": "maintenance_cost",
+            "mechanism": ""
+          },
+          {
+            "cause": "maintenance cost increase",
+            "cause_normalized": "maintenance_cost",
+            "effect": "immediate liquidation pressure",
+            "effect_normalized": "crypto_liquidation",
+            "mechanism": ""
+          },
+          {
+            "cause": "immediate liquidation pressure",
+            "cause_normalized": "crypto_liquidation",
+            "effect": "BTC downside",
+            "effect_normalized": "btc_downside",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "tga_rebuild_(inverse) -> bank_reserves_decrease -> sofr/hibor_stress -> borrow_rates -> maintenance_cost -> crypto_liquidation -> btc_downside"
+      },
+      "terminal_effect": "btc_downside",
+      "mechanism": "Treasury debt issuance drains reserves → funding rates spike → leveraged crypto positions face higher costs → margin calls trigger selling → BTC price pressure",
+      "source_attribution": "Source 3 (TGA rebuild need), Source 7/10 (funding-to-crypto transmission)",
+      "id": "rel_a527e227",
+      "discovered_at": "2026-02-02T09:19:33.054351",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BTC price correction",
+            "cause_normalized": "btc_price_correction",
+            "effect": "institutional buying (120% of mining production in 2025-2026 context)",
+            "effect_normalized": "institutional_buying_(120%_of_mining_production_in_2025-2026_context)",
+            "mechanism": "price decline to $92k-94k range triggers institutional accumulation → buying pressure equivalent to more than daily supply → potential floor formation"
+          },
+          {
+            "cause": "institutional buying (120% of mining production in 2025-2026 context)",
+            "cause_normalized": "institutional_buying_(120%_of_mining_production_in_2025-2026_context)",
+            "effect": "price support/reversal potential",
+            "effect_normalized": "price_support/reversal_potential",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "btc_price_correction -> institutional_buying_(120%_of_mining_production_in_2025-2026_context) -> price_support/reversal_potential"
+      },
+      "terminal_effect": "price_support/reversal_potential",
+      "mechanism": "price decline to $92k-94k range triggers institutional accumulation → buying pressure equivalent to more than daily supply → potential floor formation",
+      "source_attribution": "Source 19",
+      "id": "rel_fd6bbd7a",
+      "discovered_at": "2026-02-02T09:19:33.054360",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "TGA drawdown",
+            "cause_normalized": "tga",
+            "effect": "system liquidity release",
+            "effect_normalized": "bank_reserves",
+            "mechanism": "Treasury spending draws down TGA, releases cash into banking system → increased reserves ease short-term funding markets → lower funding stress reduces liquidation pressure on leveraged crypto positions"
+          },
+          {
+            "cause": "system liquidity release",
+            "cause_normalized": "bank_reserves",
+            "effect": "reduced funding stress",
+            "effect_normalized": "funding_stress",
+            "mechanism": ""
+          },
+          {
+            "cause": "reduced funding stress",
+            "cause_normalized": "funding_stress",
+            "effect": "crypto support",
+            "effect_normalized": "crypto_support",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "tga -> bank_reserves -> funding_stress -> crypto_support"
+      },
+      "terminal_effect": "crypto_support",
+      "mechanism": "Treasury spending draws down TGA, releases cash into banking system → increased reserves ease short-term funding markets → lower funding stress reduces liquidation pressure on leveraged crypto positions",
+      "source_attribution": "Source 7 (step 1), Source 1 (step 2), implied from funding-crypto correlation framework",
+      "id": "rel_1298a8d2",
+      "discovered_at": "2026-02-02T09:24:58.010720",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.82
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "TGA increase during shutdown",
+            "cause_normalized": "tga",
+            "effect": "bank reserves drain",
+            "effect_normalized": "bank_reserves",
+            "mechanism": "Treasury cash accumulation withdraws liquidity from banking system → lower reserves create funding scarcity → higher overnight secured rates signal dollar funding scarcity → funding stress triggers selling in leveraged crypto markets → price enters consolidation/decline"
+          },
+          {
+            "cause": "bank reserves drain",
+            "cause_normalized": "bank_reserves",
+            "effect": "SOFR spike",
+            "effect_normalized": "sofr",
+            "mechanism": ""
+          },
+          {
+            "cause": "SOFR spike",
+            "cause_normalized": "sofr",
+            "effect": "crypto shock",
+            "effect_normalized": "funding_stress",
+            "mechanism": ""
+          },
+          {
+            "cause": "crypto shock",
+            "cause_normalized": "funding_stress",
+            "effect": "bitcoin falls",
+            "effect_normalized": "btc_box_range",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "tga -> bank_reserves -> sofr -> funding_stress -> btc_box_range"
+      },
+      "terminal_effect": "btc_box_range",
+      "mechanism": "Treasury cash accumulation withdraws liquidity from banking system → lower reserves create funding scarcity → higher overnight secured rates signal dollar funding scarcity → funding stress triggers selling in leveraged crypto markets → price enters consolidation/decline",
+      "source_attribution": "Source 7 (steps 1-3), Source 10 (step 4)",
+      "id": "rel_4d942b13",
+      "discovered_at": "2026-02-02T09:24:58.010758",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.82
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "TGA drawdown",
+            "cause_normalized": "tga",
+            "effect": "bank reserves increase",
+            "effect_normalized": "bank_reserves",
+            "mechanism": "TGA release increases system reserves → funding stress eases in both US (SOFR) and Asia (HIBOR) markets → interbank funding rates stabilize → borrowing rates for crypto leverage stop rising → position financing costs stabilize → margin calls and forced selling pressure reduced"
+          },
+          {
+            "cause": "bank reserves increase",
+            "cause_normalized": "bank_reserves",
+            "effect": "SOFR/HIBOR stabilize",
+            "effect_normalized": "repo_hibor",
+            "mechanism": ""
+          },
+          {
+            "cause": "SOFR/HIBOR stabilize",
+            "cause_normalized": "repo_hibor",
+            "effect": "borrow rates stabilize",
+            "effect_normalized": "borrow_rates",
+            "mechanism": ""
+          },
+          {
+            "cause": "borrow rates stabilize",
+            "cause_normalized": "borrow_rates",
+            "effect": "maintenance cost stable",
+            "effect_normalized": "maintenance_cost",
+            "mechanism": ""
+          },
+          {
+            "cause": "maintenance cost stable",
+            "cause_normalized": "maintenance_cost",
+            "effect": "reduced liquidation pressure",
+            "effect_normalized": "crypto_liquidation_pressure",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "tga -> bank_reserves -> repo_hibor -> borrow_rates -> maintenance_cost -> crypto_liquidation_pressure"
+      },
+      "terminal_effect": "crypto_liquidation_pressure",
+      "mechanism": "TGA release increases system reserves → funding stress eases in both US (SOFR) and Asia (HIBOR) markets → interbank funding rates stabilize → borrowing rates for crypto leverage stop rising → position financing costs stabilize → margin calls and forced selling pressure reduced",
+      "source_attribution": "Source 1 (steps 1-2), Source 8 (steps 3-5)",
+      "id": "rel_6cfe00ce",
+      "discovered_at": "2026-02-02T09:24:58.010791",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.82
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "TGA increase",
+            "cause_normalized": "tga",
+            "effect": "reserves drain",
+            "effect_normalized": "bank_reserves",
+            "mechanism": "Treasury cash accumulation drains banking system reserves → funding stress emerges in Asia dollar markets (HIBOR/CNH) → crypto leverage funded by HK/SG/China capital faces higher borrowing costs → maintenance costs trigger margin calls and forced liquidations"
+          },
+          {
+            "cause": "reserves drain",
+            "cause_normalized": "bank_reserves",
+            "effect": "repo/HIBOR stress",
+            "effect_normalized": "repo_hibor_stress",
+            "mechanism": ""
+          },
+          {
+            "cause": "repo/HIBOR stress",
+            "cause_normalized": "repo_hibor_stress",
+            "effect": "immediate liquidation pressure in crypto",
+            "effect_normalized": "crypto_liquidation",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "tga -> bank_reserves -> repo_hibor_stress -> crypto_liquidation"
+      },
+      "terminal_effect": "crypto_liquidation",
+      "mechanism": "Treasury cash accumulation drains banking system reserves → funding stress emerges in Asia dollar markets (HIBOR/CNH) → crypto leverage funded by HK/SG/China capital faces higher borrowing costs → maintenance costs trigger margin calls and forced liquidations",
+      "source_attribution": "Source 7 (step 1), Source 2 (step 2)",
+      "id": "rel_32c297be",
+      "discovered_at": "2026-02-02T09:24:58.010820",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.82
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "TGA drawdown",
+            "cause_normalized": "tga",
+            "effect": "improved systemic liquidity",
+            "effect_normalized": "bank_reserves",
+            "mechanism": "TGA release improves liquidity conditions providing baseline support for risk assets → however, geopolitical/tariff risk increases downside sensitivity, overriding liquidity support during negative news flow"
+          },
+          {
+            "cause": "improved systemic liquidity",
+            "cause_normalized": "bank_reserves",
+            "effect": "BTC baseline support BUT Greenland tariff war headlines",
+            "effect_normalized": "greenland_tariff_war",
+            "mechanism": ""
+          },
+          {
+            "cause": "BTC baseline support BUT Greenland tariff war headlines",
+            "cause_normalized": "greenland_tariff_war",
+            "effect": "bitcoin vulnerability to bad news",
+            "effect_normalized": "bitcoin_price",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "tga -> bank_reserves -> greenland_tariff_war -> bitcoin_price"
+      },
+      "terminal_effect": "bitcoin_price",
+      "mechanism": "TGA release improves liquidity conditions providing baseline support for risk assets → however, geopolitical/tariff risk increases downside sensitivity, overriding liquidity support during negative news flow",
+      "source_attribution": "Source 1 (both chains)",
+      "id": "rel_bc795ecd",
+      "discovered_at": "2026-02-02T09:24:58.010842",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.82
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "TGA drawdown",
+            "cause_normalized": "tga",
+            "effect": "bank reserves up",
+            "effect_normalized": "bank_reserves",
+            "mechanism": "Treasury spending releases reserves → short-term funding markets improve → funding constraints that reduce flows into crypto are alleviated"
+          },
+          {
+            "cause": "bank reserves up",
+            "cause_normalized": "bank_reserves",
+            "effect": "money market stress eases",
+            "effect_normalized": "money_markets",
+            "mechanism": ""
+          },
+          {
+            "cause": "money market stress eases",
+            "cause_normalized": "money_markets",
+            "effect": "crypto weakness moderates",
+            "effect_normalized": "crypto_weakness",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "tga -> bank_reserves -> money_markets -> crypto_weakness"
+      },
+      "terminal_effect": "crypto_weakness",
+      "mechanism": "Treasury spending releases reserves → short-term funding markets improve → funding constraints that reduce flows into crypto are alleviated",
+      "source_attribution": "Source 7 (step 1), Source 9 (step 2 inverse)",
+      "id": "rel_d4f09842",
+      "discovered_at": "2026-02-02T09:24:58.010866",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.82
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "TGA drawdown",
+            "cause_normalized": "tga",
+            "effect": "system liquidity release",
+            "effect_normalized": "bank_reserves",
+            "mechanism": "TGA spending increases banking system reserves → improved USD funding conditions → reduced pressure on yen carry trades → lower risk-off pressure on crypto markets"
+          },
+          {
+            "cause": "system liquidity release",
+            "cause_normalized": "bank_reserves",
+            "effect": "USD funding improves",
+            "effect_normalized": "usd_funding_improves",
+            "mechanism": ""
+          },
+          {
+            "cause": "USD funding improves",
+            "cause_normalized": "usd_funding_improves",
+            "effect": "carry-trade unwind risk reduced",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": ""
+          },
+          {
+            "cause": "carry-trade unwind risk reduced",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "crypto headwind eases",
+            "effect_normalized": "crypto_downside",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "tga -> bank_reserves -> usd_funding_improves -> carry_trade_unwind -> crypto_downside"
+      },
+      "terminal_effect": "crypto_downside",
+      "mechanism": "TGA spending increases banking system reserves → improved USD funding conditions → reduced pressure on yen carry trades → lower risk-off pressure on crypto markets",
+      "source_attribution": "Source 7 (steps 1-2, steps 3-4)",
+      "id": "rel_bb8f0680",
+      "discovered_at": "2026-02-02T09:24:58.010886",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.82
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "repo spike",
+            "cause_normalized": "repo_rate",
+            "effect": "bitcoin falls and holds box range",
+            "effect_normalized": "btc_box_range",
+            "mechanism": "Funding stress triggers selling → price enters consolidation/decline → overleveraged long positions hit margin calls → 10:1 long-to-short liquidation ratio amplifies downward momentum"
+          },
+          {
+            "cause": "bitcoin falls and holds box range",
+            "cause_normalized": "btc_box_range",
+            "effect": "long liquidations dominate ($999.52M vs $81.22M shorts)",
+            "effect_normalized": "long_liquidations_dominate_($999.52m_vs_$81.22m_shorts)",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "repo_rate -> btc_box_range -> long_liquidations_dominate_($999.52m_vs_$81.22m_shorts)"
+      },
+      "terminal_effect": "long_liquidations_dominate_($999.52m_vs_$81.22m_shorts)",
+      "mechanism": "Funding stress triggers selling → price enters consolidation/decline → overleveraged long positions hit margin calls → 10:1 long-to-short liquidation ratio amplifies downward momentum",
+      "source_attribution": "Source 10 (steps 1-2), Source 20 (step 3)",
+      "id": "rel_789e4e3e",
+      "discovered_at": "2026-02-02T09:24:58.010906",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.82
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ hawkish comments",
+            "cause_normalized": "boj_hawkish_comments",
+            "effect": "yen carry-trade unwind risk",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": "Stronger Japan macro + hawkish guidance raises JPY yield expectations → carry unwinds reduce USD funding and trigger risk-off → crypto selling pressure → BTC price declines (Source 16 shows correlation between BOJ rate hike search spikes and BTC corrections)"
+          },
+          {
+            "cause": "yen carry-trade unwind risk",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "crypto market headwind",
+            "effect_normalized": "crypto_downside",
+            "mechanism": ""
+          },
+          {
+            "cause": "crypto market headwind",
+            "cause_normalized": "crypto_downside",
+            "effect": "bitcoin weakness",
+            "effect_normalized": "btc_weakness",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "boj_hawkish_comments -> carry_trade_unwind -> crypto_downside -> btc_weakness"
+      },
+      "terminal_effect": "btc_weakness",
+      "mechanism": "Stronger Japan macro + hawkish guidance raises JPY yield expectations → carry unwinds reduce USD funding and trigger risk-off → crypto selling pressure → BTC price declines (Source 16 shows correlation between BOJ rate hike search spikes and BTC corrections)",
+      "source_attribution": "Source 7 (steps 1-3), Sources 16, 18 (empirical correlation)",
+      "id": "rel_3837487c",
+      "discovered_at": "2026-02-02T09:24:58.010926",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.82
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "MSCI news",
+            "cause_normalized": "msci_news",
+            "effect": "bitcoin weakness(sentiment transmission independent of TGA)",
+            "effect_normalized": "btc_weakness",
+            "mechanism": "Index/news-driven sentiment spillover into crypto → immediate price pressure regardless of underlying liquidity conditions"
+          }
+        ],
+        "chain_summary": "msci_news -> btc_weakness"
+      },
+      "terminal_effect": "btc_weakness",
+      "mechanism": "Index/news-driven sentiment spillover into crypto → immediate price pressure regardless of underlying liquidity conditions",
+      "source_attribution": "Sources 11-12",
+      "id": "rel_b9490191",
+      "discovered_at": "2026-02-02T09:24:58.010946",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.82
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "large aggregate thefts",
+            "cause_normalized": "crypto_theft_total",
+            "effect": "significant exchange losses",
+            "effect_normalized": "exchange_hack_loss",
+            "mechanism": "Major hacks (>$3.4B in 2025, Bybit ~$1.5B) → exchange security concerns → increased custody risk perception → selling pressure/reduced inflows independent of TGA liquidity conditions"
+          },
+          {
+            "cause": "significant exchange losses",
+            "cause_normalized": "exchange_hack_loss",
+            "effect": "custody risk concerns",
+            "effect_normalized": "custody_risk",
+            "mechanism": ""
+          },
+          {
+            "cause": "custody risk concerns",
+            "cause_normalized": "custody_risk",
+            "effect": "bitcoin weakness",
+            "effect_normalized": "btc_weakness",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "crypto_theft_total -> exchange_hack_loss -> custody_risk -> btc_weakness"
+      },
+      "terminal_effect": "btc_weakness",
+      "mechanism": "Major hacks (>$3.4B in 2025, Bybit ~$1.5B) → exchange security concerns → increased custody risk perception → selling pressure/reduced inflows independent of TGA liquidity conditions",
+      "source_attribution": "Source 13",
+      "id": "rel_899b3b6e",
+      "discovered_at": "2026-02-02T09:24:58.010965",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.82
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ rate hike",
+            "cause_normalized": "boj_rate_hike",
+            "effect": "Bitcoin price fell 20-30%",
+            "effect_normalized": "btc_drawdown",
+            "mechanism": "Policy tightening correlates with crypto risk-off moves; historical pattern shows consistent BTC corrections following BOJ hikes"
+          }
+        ],
+        "chain_summary": "boj_rate_hike -> btc_drawdown"
+      },
+      "terminal_effect": "btc_drawdown",
+      "mechanism": "Policy tightening correlates with crypto risk-off moves; historical pattern shows consistent BTC corrections following BOJ hikes",
+      "source_attribution": "@TedPillows (id: afb976361a1e97a1_534), BOJ (id: 8d68af75fff9b557_533)",
+      "id": "rel_059f0a55",
+      "discovered_at": "2026-02-03T07:22:21.502576",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "RBA rate hike",
+            "cause_normalized": "rba_rate_hike",
+            "effect": "similar central bank tightening mechanism",
+            "effect_normalized": "cb_tightening",
+            "mechanism": "RBA 25bp hike to 3.85% follows same tightening logic as BOJ hikes; central bank rate increases signal reduced liquidity and risk-off sentiment"
+          },
+          {
+            "cause": "similar central bank tightening mechanism",
+            "cause_normalized": "cb_tightening",
+            "effect": "BTC downside pressure",
+            "effect_normalized": "btc_price_down",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "rba_rate_hike -> cb_tightening -> btc_price_down"
+      },
+      "terminal_effect": "btc_price_down",
+      "mechanism": "RBA 25bp hike to 3.85% follows same tightening logic as BOJ hikes; central bank rate increases signal reduced liquidity and risk-off sentiment",
+      "source_attribution": "Query context (RBA), extrapolated from BOJ pattern (Sources 3, 4, 6)",
+      "id": "rel_74613e79",
+      "discovered_at": "2026-02-03T07:22:21.502598",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ rate hike",
+            "cause_normalized": "boj_rate_hike",
+            "effect": "yen strength",
+            "effect_normalized": "jpy_strength",
+            "mechanism": "Step 1: Higher BOJ rates attract demand for yen, push up JPY. Step 2: JPY appreciation signals tighter funding/liquidity conditions, compresses carry. Step 3: Policy divergence reduces carry profitability, triggers liquidation of yen-funded positions. Step 4: Unwinding reduces demand/liquidity for risk assets, forces BTC selling"
+          },
+          {
+            "cause": "yen strength",
+            "cause_normalized": "jpy_strength",
+            "effect": "global liquidity tightening concerns",
+            "effect_normalized": "global_liquidity_tightening",
+            "mechanism": ""
+          },
+          {
+            "cause": "global liquidity tightening concerns",
+            "cause_normalized": "global_liquidity_tightening",
+            "effect": "carry trade unwind risk",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": ""
+          },
+          {
+            "cause": "carry trade unwind risk",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "BTC downward pressure",
+            "effect_normalized": "btc_price_down",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "boj_rate_hike -> jpy_strength -> global_liquidity_tightening -> carry_trade_unwind -> btc_price_down"
+      },
+      "terminal_effect": "btc_price_down",
+      "mechanism": "Step 1: Higher BOJ rates attract demand for yen, push up JPY. Step 2: JPY appreciation signals tighter funding/liquidity conditions, compresses carry. Step 3: Policy divergence reduces carry profitability, triggers liquidation of yen-funded positions. Step 4: Unwinding reduces demand/liquidity for risk assets, forces BTC selling",
+      "source_attribution": "CoinDesk (id: cfbe53872aafa7ad_157)",
+      "id": "rel_4e8081ff",
+      "discovered_at": "2026-02-03T07:22:21.502610",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ rate hike + Fed rate cuts expectation mix",
+            "cause_normalized": "boj_hike_fed_cut_mix",
+            "effect": "carry trade unwind risk",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": "Policy divergence between BOJ tightening and Fed easing reduces carry profitability, triggers liquidation of yen-funded positions → forces BTC selling"
+          },
+          {
+            "cause": "carry trade unwind risk",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "BTC downward pressure",
+            "effect_normalized": "btc_price_down",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "boj_hike_fed_cut_mix -> carry_trade_unwind -> btc_price_down"
+      },
+      "terminal_effect": "btc_price_down",
+      "mechanism": "Policy divergence between BOJ tightening and Fed easing reduces carry profitability, triggers liquidation of yen-funded positions → forces BTC selling",
+      "source_attribution": "CoinDesk (id: cfbe53872aafa7ad_157)\n\n## Risk-Off Sentiment Transmission",
+      "id": "rel_4cd38414",
+      "discovered_at": "2026-02-03T07:22:21.502622",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "US weak employment and slower growth",
+            "cause_normalized": "us_weak_employment",
+            "effect": "safe-haven preference rises",
+            "effect_normalized": "safe_haven_preference",
+            "mechanism": "Step 1: Macroeconomic weakness increases risk aversion. Step 2: Flight to safety into USTs, repricing of rate-cut expectations. Step 3: Capital shifts from crypto to safer assets"
+          },
+          {
+            "cause": "safe-haven preference rises",
+            "cause_normalized": "safe_haven_preference",
+            "effect": "strong UST demand and lower Fed cut odds",
+            "effect_normalized": "ust_demand_and_fed_cut_odds",
+            "mechanism": ""
+          },
+          {
+            "cause": "strong UST demand and lower Fed cut odds",
+            "cause_normalized": "ust_demand_and_fed_cut_odds",
+            "effect": "BTC interest falls, BTC weakens",
+            "effect_normalized": "btc_interest_down",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "us_weak_employment -> safe_haven_preference -> ust_demand_and_fed_cut_odds -> btc_interest_down"
+      },
+      "terminal_effect": "btc_interest_down",
+      "mechanism": "Step 1: Macroeconomic weakness increases risk aversion. Step 2: Flight to safety into USTs, repricing of rate-cut expectations. Step 3: Capital shifts from crypto to safer assets",
+      "source_attribution": "Cointelegraph (id: dfce1d5fece6dea0_120)",
+      "id": "rel_dd56e64a",
+      "discovered_at": "2026-02-03T07:22:21.502633",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Global policy rates decline",
+            "cause_normalized": "global_rate_decline",
+            "effect": "increased liquidity",
+            "effect_normalized": "liquidity_increase",
+            "mechanism": "Sustained decline in global central bank policy rates (5.8% Nov 2023 → 4.1% Dec 2025 → projected 3.7% Dec 2026) increases liquidity and supports asset rallies; record $6B crypto fund inflows in early 2025"
+          },
+          {
+            "cause": "increased liquidity",
+            "cause_normalized": "liquidity_increase",
+            "effect": "crypto fund inflows",
+            "effect_normalized": "crypto_inflows",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "global_rate_decline -> liquidity_increase -> crypto_inflows"
+      },
+      "terminal_effect": "crypto_inflows",
+      "mechanism": "Sustained decline in global central bank policy rates (5.8% Nov 2023 → 4.1% Dec 2025 → projected 3.7% Dec 2026) increases liquidity and supports asset rallies; record $6B crypto fund inflows in early 2025",
+      "source_attribution": "BofA Global Research (id: 081ba7008b6542be_204)",
+      "id": "rel_86ba1369",
+      "discovered_at": "2026-02-03T07:22:21.502644",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ rate decision announcement not released",
+            "cause_normalized": "boj_announcement_delay",
+            "effect": "bitcoin pushed higher",
+            "effect_normalized": "bitcoin_price",
+            "mechanism": "Traders preemptive positioning ahead of policy news; market front-running BOJ decision, crypto reacts to policy uncertainty"
+          }
+        ],
+        "chain_summary": "boj_announcement_delay -> bitcoin_price"
+      },
+      "terminal_effect": "bitcoin_price",
+      "mechanism": "Traders preemptive positioning ahead of policy news; market front-running BOJ decision, crypto reacts to policy uncertainty",
+      "source_attribution": "(id: 55f2736fd6a72c85_126)",
+      "id": "rel_2fb5c284",
+      "discovered_at": "2026-02-03T07:22:21.502655",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Spikes in Google search interest for 'BOJ rate hike'",
+            "cause_normalized": "boj_search_spike",
+            "effect": "Bitcoin price corrections or volatility",
+            "effect_normalized": "btc_volatility",
+            "mechanism": "When market participants increase searches for BOJ rate hikes (indicating heightened concern about Japanese monetary policy tightening), Bitcoin tends to experience selling pressure; reflects broader risk-off sentiment triggered by expectations of yen strengthening and global liquidity tightening"
+          }
+        ],
+        "chain_summary": "boj_search_spike -> btc_volatility"
+      },
+      "terminal_effect": "btc_volatility",
+      "mechanism": "When market participants increase searches for BOJ rate hikes (indicating heightened concern about Japanese monetary policy tightening), Bitcoin tends to experience selling pressure; reflects broader risk-off sentiment triggered by expectations of yen strengthening and global liquidity tightening",
+      "source_attribution": "@bitcoindata21 (id: 3bfe46e026b54bb5_500)",
+      "id": "rel_de2ecbd4",
+      "discovered_at": "2026-02-03T07:22:21.502664",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "RBA rate hike 25bp to 3.85%",
+            "cause_normalized": "rba_rate_hike",
+            "effect": "regional tightening signal",
+            "effect_normalized": "regional_tightening",
+            "mechanism": "While RBA lacks the direct yen carry trade mechanism of BOJ, the rate hike contributes to: (1) Global tightening narrative counter to declining rate trend, (2) Risk-off sentiment in Asia-Pacific region, (3) Reduced liquidity expectations, (4) Potential AUD strength affecting regional carry dynamics"
+          },
+          {
+            "cause": "regional tightening signal",
+            "cause_normalized": "regional_tightening",
+            "effect": "contributes to global liquidity concerns",
+            "effect_normalized": "global_liquidity_concern",
+            "mechanism": ""
+          },
+          {
+            "cause": "contributes to global liquidity concerns",
+            "cause_normalized": "global_liquidity_concern",
+            "effect": "BTC downside pressure",
+            "effect_normalized": "btc_downside",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "rba_rate_hike -> regional_tightening -> global_liquidity_concern -> btc_downside"
+      },
+      "terminal_effect": "btc_downside",
+      "mechanism": "While RBA lacks the direct yen carry trade mechanism of BOJ, the rate hike contributes to: (1) Global tightening narrative counter to declining rate trend, (2) Risk-off sentiment in Asia-Pacific region, (3) Reduced liquidity expectations, (4) Potential AUD strength affecting regional carry dynamics",
+      "source_attribution": "Synthesized from BOJ mechanisms (Sources 3, 4, 6) and global liquidity context (Source 1)",
+      "id": "rel_d752f09b",
+      "discovered_at": "2026-02-03T07:22:21.502674",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Institutional buying turned positive",
+            "cause_normalized": "institutional_accumulation",
+            "effect": "potential BTC price support",
+            "effect_normalized": "btc_support",
+            "mechanism": "Institutions purchasing at rate equivalent to 120% of daily mining production provides demand floor despite rate hike headwinds"
+          }
+        ],
+        "chain_summary": "institutional_accumulation -> btc_support"
+      },
+      "terminal_effect": "btc_support",
+      "mechanism": "Institutions purchasing at rate equivalent to 120% of daily mining production provides demand floor despite rate hike headwinds",
+      "source_attribution": "TradingView/CoinGlass (id: 198a882bd447537a_245)",
+      "id": "rel_49b7f656",
+      "discovered_at": "2026-02-03T07:22:21.502684",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "repo/HIBOR stress",
+            "cause_normalized": "repo_hibor_stress",
+            "effect": "borrow rates rise",
+            "effect_normalized": "borrow_rates",
+            "mechanism": "Interbank funding stress raises HIBOR/repo rates → Higher borrowing rates increase position financing costs → Higher maintenance costs trigger margin calls and forced selling"
+          },
+          {
+            "cause": "borrow rates rise",
+            "cause_normalized": "borrow_rates",
+            "effect": "maintenance cost increase",
+            "effect_normalized": "maintenance_cost",
+            "mechanism": ""
+          },
+          {
+            "cause": "maintenance cost increase",
+            "cause_normalized": "maintenance_cost",
+            "effect": "immediate liquidation pressure",
+            "effect_normalized": "crypto_liquidation_pressure",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "repo_hibor_stress -> borrow_rates -> maintenance_cost -> crypto_liquidation_pressure"
+      },
+      "terminal_effect": "crypto_liquidation_pressure",
+      "mechanism": "Interbank funding stress raises HIBOR/repo rates → Higher borrowing rates increase position financing costs → Higher maintenance costs trigger margin calls and forced selling",
+      "source_attribution": "(id: bedfe108267fca9b_77), (id: b05427264c07dc2d_36)",
+      "id": "rel_cab4d446",
+      "discovered_at": "2026-02-03T07:49:57.644349",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.68
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Asia funding linkage (HIBOR, CNH funding)",
+            "cause_normalized": "asia_dollar_liquidity",
+            "effect": "crypto funding sensitivity to Asia rates",
+            "effect_normalized": "crypto_funding_sensitivity",
+            "mechanism": "High share of HK/SG/China capital funds crypto leverage, tying crypto funding to HIBOR/CNH → Funding sources priced in HIBOR/CNH link leverage costs to Asian dollar liquidity → Leverage amplifies funding shocks"
+          },
+          {
+            "cause": "crypto funding sensitivity to Asia rates",
+            "cause_normalized": "crypto_funding_sensitivity",
+            "effect": "amplified risk transmission",
+            "effect_normalized": "crypto_liquidation",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "asia_dollar_liquidity -> crypto_funding_sensitivity -> crypto_liquidation"
+      },
+      "terminal_effect": "crypto_liquidation",
+      "mechanism": "High share of HK/SG/China capital funds crypto leverage, tying crypto funding to HIBOR/CNH → Funding sources priced in HIBOR/CNH link leverage costs to Asian dollar liquidity → Leverage amplifies funding shocks",
+      "source_attribution": "(id: b05427264c07dc2d_36), (id: bedfe108267fca9b_77)",
+      "id": "rel_c5d474d6",
+      "discovered_at": "2026-02-03T07:49:57.644383",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.68
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Bitcoin selling pressure",
+            "cause_normalized": "btc_selling",
+            "effect": "large long position liquidations (~$300M) within 1 hour",
+            "effect_normalized": "crypto_long_liquidations",
+            "mechanism": "Price drops trigger margin calls, automated liquidation of leveraged longs; US futures open triggers proto-orders and market sell pressure"
+          }
+        ],
+        "chain_summary": "btc_selling -> crypto_long_liquidations"
+      },
+      "terminal_effect": "crypto_long_liquidations",
+      "mechanism": "Price drops trigger margin calls, automated liquidation of leveraged longs; US futures open triggers proto-orders and market sell pressure",
+      "source_attribution": "CME (id: 37d8c1eb04cd4d51_651)",
+      "id": "rel_59cba537",
+      "discovered_at": "2026-02-03T07:49:57.644407",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.68
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "US futures market open",
+            "cause_normalized": "us_futures_open",
+            "effect": "Bitcoin selling pressure",
+            "effect_normalized": "btc_selling",
+            "mechanism": "Futures liquidity/proto-orders trigger market sell pressure at open → price drops trigger margin calls → automated liquidation of leveraged longs within 1 hour"
+          },
+          {
+            "cause": "Bitcoin selling pressure",
+            "cause_normalized": "btc_selling",
+            "effect": "large long position liquidations $300M",
+            "effect_normalized": "crypto_long_liquidations",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "us_futures_open -> btc_selling -> crypto_long_liquidations"
+      },
+      "terminal_effect": "crypto_long_liquidations",
+      "mechanism": "Futures liquidity/proto-orders trigger market sell pressure at open → price drops trigger margin calls → automated liquidation of leveraged longs within 1 hour",
+      "source_attribution": "CME (id: 37d8c1eb04cd4d51_651)",
+      "id": "rel_0832f7f5",
+      "discovered_at": "2026-02-03T08:37:52.410163",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.68
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Global policy rates decline",
+            "cause_normalized": "global_rate_decline",
+            "effect": "increased liquidity",
+            "effect_normalized": "liquidity_expansion",
+            "mechanism": "GDP-weighted global rates declined from 5.8% (Nov 2023) to 4.1% (Dec 2025) → sustained rate decline increases liquidity → record $6B 4-week crypto fund inflow in early 2025"
+          },
+          {
+            "cause": "increased liquidity",
+            "cause_normalized": "liquidity_expansion",
+            "effect": "crypto fund inflows",
+            "effect_normalized": "crypto_inflows",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "global_rate_decline -> liquidity_expansion -> crypto_inflows"
+      },
+      "terminal_effect": "crypto_inflows",
+      "mechanism": "GDP-weighted global rates declined from 5.8% (Nov 2023) to 4.1% (Dec 2025) → sustained rate decline increases liquidity → record $6B 4-week crypto fund inflow in early 2025",
+      "source_attribution": "BofA Global Research (id: 081ba7008b6542be_204)",
+      "id": "rel_0ac11235",
+      "discovered_at": "2026-02-03T08:37:52.410201",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.68
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Fed balance sheet MACD golden cross",
+            "cause_normalized": "fed_balance_sheet_expansion",
+            "effect": "Bitcoin rally precedent",
+            "effect_normalized": "btc_price_appreciation",
+            "mechanism": "Fed balance sheet MACD turned positive (Oct 2019 precedent) → expansionary monetary policy signal → Bitcoin rallied from ~$10k to ~$60k cycle top"
+          }
+        ],
+        "chain_summary": "fed_balance_sheet_expansion -> btc_price_appreciation"
+      },
+      "terminal_effect": "btc_price_appreciation",
+      "mechanism": "Fed balance sheet MACD turned positive (Oct 2019 precedent) → expansionary monetary policy signal → Bitcoin rallied from ~$10k to ~$60k cycle top",
+      "source_attribution": "(id: b0e12bd811e45398_263)",
+      "id": "rel_56231cb3",
+      "discovered_at": "2026-02-03T08:37:52.410253",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.68
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ hike expectation",
+            "cause_normalized": "boj_hike_expectation",
+            "effect": "heightened search interest",
+            "effect_normalized": "boj_search_spike",
+            "mechanism": "Market anticipation of Dec 19, 2025 BOJ hike → Google search interest spike to 100 (highest in 5 years) → historical pattern suggests BTC correction follows search spikes"
+          },
+          {
+            "cause": "heightened search interest",
+            "cause_normalized": "boj_search_spike",
+            "effect": "BTC downside risk",
+            "effect_normalized": "btc_downside_risk",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "boj_hike_expectation -> boj_search_spike -> btc_downside_risk"
+      },
+      "terminal_effect": "btc_downside_risk",
+      "mechanism": "Market anticipation of Dec 19, 2025 BOJ hike → Google search interest spike to 100 (highest in 5 years) → historical pattern suggests BTC correction follows search spikes",
+      "source_attribution": "@bitcoindata21 (id: 3bfe46e026b54bb5_500)",
+      "id": "rel_e170dd22",
+      "discovered_at": "2026-02-03T08:37:52.410289",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.68
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "boj_hawkish_comments",
+            "cause_normalized": "boj_hawkish_comments",
+            "effect": "carry_trade_unwind",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": "stronger Japan macro + hawkish guidance raises JPY yield expectations, reducing carry attractiveness → carry unwinds reduce USD funding and trigger risk-off"
+          },
+          {
+            "cause": "carry_trade_unwind",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "crypto_downside",
+            "effect_normalized": "crypto_downside",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "boj_hawkish_comments -> carry_trade_unwind -> crypto_downside"
+      },
+      "terminal_effect": "crypto_downside",
+      "mechanism": "stronger Japan macro + hawkish guidance raises JPY yield expectations, reducing carry attractiveness → carry unwinds reduce USD funding and trigger risk-off",
+      "source_attribution": "NY Fed (f302d29e63075107_204)",
+      "id": "rel_b048d379",
+      "discovered_at": "2026-02-03T09:01:23.683837",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.78
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "repo_hibor",
+            "cause_normalized": "repo_hibor",
+            "effect": "borrow_rates",
+            "effect_normalized": "borrow_rates",
+            "mechanism": "interbank funding stress raises HIBOR/repo rates → higher borrowing rates increase position financing costs → higher maintenance costs trigger margin calls and forced selling"
+          },
+          {
+            "cause": "borrow_rates",
+            "cause_normalized": "borrow_rates",
+            "effect": "maintenance_cost",
+            "effect_normalized": "maintenance_cost",
+            "mechanism": ""
+          },
+          {
+            "cause": "maintenance_cost",
+            "cause_normalized": "maintenance_cost",
+            "effect": "crypto_liquidation_pressure",
+            "effect_normalized": "crypto_liquidation_pressure",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "repo_hibor -> borrow_rates -> maintenance_cost -> crypto_liquidation_pressure"
+      },
+      "terminal_effect": "crypto_liquidation_pressure",
+      "mechanism": "interbank funding stress raises HIBOR/repo rates → higher borrowing rates increase position financing costs → higher maintenance costs trigger margin calls and forced selling",
+      "source_attribution": "(bedfe108267fca9b_77)",
+      "id": "rel_0969a427",
+      "discovered_at": "2026-02-03T09:01:23.683883",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.78
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "sofr",
+            "cause_normalized": "sofr",
+            "effect": "funding_stress",
+            "effect_normalized": "funding_stress",
+            "mechanism": "higher overnight secured rates signal dollar funding scarcity, transmit to risk assets"
+          },
+          {
+            "cause": "funding_stress",
+            "cause_normalized": "funding_stress",
+            "effect": "crypto shock",
+            "effect_normalized": "crypto_shock",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "sofr -> funding_stress -> crypto_shock"
+      },
+      "terminal_effect": "crypto_shock",
+      "mechanism": "higher overnight secured rates signal dollar funding scarcity, transmit to risk assets",
+      "source_attribution": "NY Fed (f302d29e63075107_204)",
+      "id": "rel_e9f120b6",
+      "discovered_at": "2026-02-03T09:01:23.683908",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.78
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "past_boj_hike",
+            "cause_normalized": "past_boj_hike",
+            "effect": "btc_price_move",
+            "effect_normalized": "btc_price_move",
+            "mechanism": "historical precedent of BOJ tightening triggering BTC selloff"
+          }
+        ],
+        "chain_summary": "past_boj_hike -> btc_price_move"
+      },
+      "terminal_effect": "btc_price_move",
+      "mechanism": "historical precedent of BOJ tightening triggering BTC selloff",
+      "source_attribution": "CoinDesk (cfbe53872aafa7ad_157), @TedPillows (afb976361a1e97a1_534)",
+      "id": "rel_92dc928d",
+      "discovered_at": "2026-02-03T09:01:23.683927",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.78
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ rate hike",
+            "cause_normalized": "boj_rate_expectation",
+            "effect": "carry trade unwind",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": "BOJ tightening triggers carry unwind (CoinDesk) → unwind requires USD buying (Plan G) → creates dollar shortage (Plan G) → spikes money market rates (Plan G) → transmits to crypto (NY Fed)"
+          },
+          {
+            "cause": "carry trade unwind",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "USD repurchase",
+            "effect_normalized": "usd_repurchase",
+            "mechanism": ""
+          },
+          {
+            "cause": "USD repurchase",
+            "cause_normalized": "usd_repurchase",
+            "effect": "USD shortage",
+            "effect_normalized": "usd_shortage",
+            "mechanism": ""
+          },
+          {
+            "cause": "USD shortage",
+            "cause_normalized": "usd_shortage",
+            "effect": "SOFR spike",
+            "effect_normalized": "sofr",
+            "mechanism": ""
+          },
+          {
+            "cause": "SOFR spike",
+            "cause_normalized": "sofr",
+            "effect": "funding stress",
+            "effect_normalized": "funding_stress",
+            "mechanism": ""
+          },
+          {
+            "cause": "funding stress",
+            "cause_normalized": "funding_stress",
+            "effect": "crypto shock",
+            "effect_normalized": "crypto_shock",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "boj_rate_expectation -> carry_trade_unwind -> usd_repurchase -> usd_shortage -> sofr -> funding_stress -> crypto_shock"
+      },
+      "terminal_effect": "crypto_shock",
+      "mechanism": "BOJ tightening triggers carry unwind (CoinDesk) → unwind requires USD buying (Plan G) → creates dollar shortage (Plan G) → spikes money market rates (Plan G) → transmits to crypto (NY Fed)",
+      "source_attribution": "CoinDesk (cfbe53872aafa7ad_157) → Plan G Research (1ff0edc5cd7a3aeb_201) → NY Fed (f302d29e63075107_204)",
+      "id": "rel_c8066446",
+      "discovered_at": "2026-02-03T09:47:21.180407",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.78
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ hawkish",
+            "cause_normalized": "boj_hawkish",
+            "effect": "carry unwind",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": "BOJ policy shift triggers carry unwind (multiple sources) → drains market liquidity (BOJ source) → triggers margin calls (BOJ source) → forces deleveraging and risk-off"
+          },
+          {
+            "cause": "carry unwind",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "market liquidity drain",
+            "effect_normalized": "market_liquidity",
+            "mechanism": ""
+          },
+          {
+            "cause": "market liquidity drain",
+            "cause_normalized": "market_liquidity",
+            "effect": "margin calls",
+            "effect_normalized": "margin_calls",
+            "mechanism": ""
+          },
+          {
+            "cause": "margin calls",
+            "cause_normalized": "margin_calls",
+            "effect": "forced deleveraging",
+            "effect_normalized": "forced_deleveraging",
+            "mechanism": ""
+          },
+          {
+            "cause": "forced deleveraging",
+            "cause_normalized": "forced_deleveraging",
+            "effect": "crypto downside",
+            "effect_normalized": "crypto_downside",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "boj_hawkish -> carry_trade_unwind -> market_liquidity -> margin_calls -> forced_deleveraging -> crypto_downside"
+      },
+      "terminal_effect": "crypto_downside",
+      "mechanism": "BOJ policy shift triggers carry unwind (multiple sources) → drains market liquidity (BOJ source) → triggers margin calls (BOJ source) → forces deleveraging and risk-off",
+      "source_attribution": "CoinDesk/NY Fed (carry unwind) → BOJ (9a7dfa8be11634e4_493) for liquidity→margin call chain",
+      "id": "rel_b30bf48f",
+      "discovered_at": "2026-02-03T09:47:21.180441",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.78
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ rate hikes",
+            "cause_normalized": "boj_rate_hike",
+            "effect": "Bitcoin price corrections -22% to -30%",
+            "effect_normalized": "btc_correction",
+            "mechanism": "Three historical instances show consistent pattern: March 18, 2024 hike → -22.28% decline; July 31, 2024 hike → -26.63% decline; January 24, 2025 hike → -30.34% decline. Japanese monetary tightening triggers risk-off sentiment in crypto markets, potentially via yen carry trade unwinding or reduced global liquidity"
+          }
+        ],
+        "chain_summary": "boj_rate_hike -> btc_correction"
+      },
+      "terminal_effect": "btc_correction",
+      "mechanism": "Three historical instances show consistent pattern: March 18, 2024 hike → -22.28% decline; July 31, 2024 hike → -26.63% decline; January 24, 2025 hike → -30.34% decline. Japanese monetary tightening triggers risk-off sentiment in crypto markets, potentially via yen carry trade unwinding or reduced global liquidity",
+      "source_attribution": "@TedPillows (id: afb976361a1e97a1_534)",
+      "id": "rel_3f534d88",
+      "discovered_at": "2026-02-03T09:50:49.057912",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.75
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ rate hikes (March 18, 2024; July 31, 2024; January 24, 2025)",
+            "cause_normalized": "boj_rate_hikes_(march_18,_2024;_july_31,_2024;_january_24,_2025)",
+            "effect": "Bitcoin price corrections (-22.28%, -26.63%, -30.34%)",
+            "effect_normalized": "bitcoin_price_corrections_(-22.28%,_-26.63%,_-30.34%)",
+            "mechanism": "Japanese monetary policy tightening triggers risk-off sentiment in cryptocurrency markets, potentially due to unwinding of yen carry trades or reduced global liquidity"
+          }
+        ],
+        "chain_summary": "boj_rate_hikes_(march_18,_2024;_july_31,_2024;_january_24,_2025) -> bitcoin_price_corrections_(-22.28%,_-26.63%,_-30.34%)"
+      },
+      "terminal_effect": "bitcoin_price_corrections_(-22.28%,_-26.63%,_-30.34%)",
+      "mechanism": "Japanese monetary policy tightening triggers risk-off sentiment in cryptocurrency markets, potentially due to unwinding of yen carry trades or reduced global liquidity",
+      "source_attribution": "Source 8 (@TedPillows)",
+      "id": "rel_ed51e9d8",
+      "discovered_at": "2026-02-03T09:53:12.803805",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ rate hike",
+            "cause_normalized": "boj_rate_hike",
+            "effect": "yen strength",
+            "effect_normalized": "jpy_strength",
+            "mechanism": "BOJ rate hikes attract demand for yen, pushing JPY higher → JPY appreciation signals tighter funding/liquidity conditions, compresses carry profitability → policy divergence reduces carry profitability, triggers liquidation of yen-funded positions → unwinding reduces demand/liquidity for risk assets, forces BTC selling"
+          },
+          {
+            "cause": "yen strength",
+            "cause_normalized": "jpy_strength",
+            "effect": "carry trade unwind",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": ""
+          },
+          {
+            "cause": "carry trade unwind",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "BTC downward pressure",
+            "effect_normalized": "btc_price_down",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "boj_rate_hike -> jpy_strength -> carry_trade_unwind -> btc_price_down"
+      },
+      "terminal_effect": "btc_price_down",
+      "mechanism": "BOJ rate hikes attract demand for yen, pushing JPY higher → JPY appreciation signals tighter funding/liquidity conditions, compresses carry profitability → policy divergence reduces carry profitability, triggers liquidation of yen-funded positions → unwinding reduces demand/liquidity for risk assets, forces BTC selling",
+      "source_attribution": "CoinDesk (all steps), @TedPillows (historical precedent: Jul 2024 hike → BTC crash 65,000→50,000)",
+      "id": "rel_a4582777",
+      "discovered_at": "2026-02-04T00:16:25.729029",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.78
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "JPY surge",
+            "cause_normalized": "jpy_surge",
+            "effect": "intervention risk up",
+            "effect_normalized": "fx_intervention_risk",
+            "mechanism": "Sharp JPY appreciation prompts consideration of intervention → intervention risk destabilizes carry trades, triggers position liquidation → reduced liquidity and forced unwinds increase risk-asset volatility and trigger corrections"
+          },
+          {
+            "cause": "intervention risk up",
+            "cause_normalized": "fx_intervention_risk",
+            "effect": "yen carry unwind",
+            "effect_normalized": "carry_unwind",
+            "mechanism": ""
+          },
+          {
+            "cause": "yen carry unwind",
+            "cause_normalized": "carry_unwind",
+            "effect": "global liquidity contraction",
+            "effect_normalized": "global_liquidity",
+            "mechanism": ""
+          },
+          {
+            "cause": "global liquidity contraction",
+            "cause_normalized": "global_liquidity",
+            "effect": "BTC short-term adjustment and higher volatility",
+            "effect_normalized": "btc_volatility",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "jpy_surge -> fx_intervention_risk -> carry_unwind -> global_liquidity -> btc_volatility"
+      },
+      "terminal_effect": "btc_volatility",
+      "mechanism": "Sharp JPY appreciation prompts consideration of intervention → intervention risk destabilizes carry trades, triggers position liquidation → reduced liquidity and forced unwinds increase risk-asset volatility and trigger corrections",
+      "source_attribution": "Generic source (id: 78c9945a42691062_43)",
+      "id": "rel_c90c3607",
+      "discovered_at": "2026-02-04T00:16:25.729094",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.78
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "JPY strength and USDJPY -0.88%",
+            "cause_normalized": "usd_jpy",
+            "effect": "USD weakness, US-asset selling and conversion to JPY",
+            "effect_normalized": "carry_unwind",
+            "mechanism": "Holders selling US assets to buy JPY to cover carry positions → evidence of yen carry unwind via US-asset liquidation"
+          },
+          {
+            "cause": "USD weakness, US-asset selling and conversion to JPY",
+            "cause_normalized": "carry_unwind",
+            "effect": "risk assets lower (Nasdaq ~-1%, BTC new lows)",
+            "effect_normalized": "risk_assets_lower_(nasdaq_~-1%,_btc_new_lows)",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "usd_jpy -> carry_unwind -> risk_assets_lower_(nasdaq_~-1%,_btc_new_lows)"
+      },
+      "terminal_effect": "risk_assets_lower_(nasdaq_~-1%,_btc_new_lows)",
+      "mechanism": "Holders selling US assets to buy JPY to cover carry positions → evidence of yen carry unwind via US-asset liquidation",
+      "source_attribution": "Plan G Research",
+      "id": "rel_400901b9",
+      "discovered_at": "2026-02-04T00:16:25.729121",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.78
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "position unwinding",
+            "cause_normalized": "position_unwinding",
+            "effect": "simultaneous falls across previously rising assets",
+            "effect_normalized": "correlated_selloff",
+            "mechanism": "Holders sell assets to liquidate positions irrespective of safe/risk labels → indiscriminate selling affects all asset classes"
+          },
+          {
+            "cause": "simultaneous falls across previously rising assets",
+            "cause_normalized": "correlated_selloff",
+            "effect": "disproportionate hit to bitcoin",
+            "effect_normalized": "disproportionate_hit_to_bitcoin",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "position_unwinding -> correlated_selloff -> disproportionate_hit_to_bitcoin"
+      },
+      "terminal_effect": "disproportionate_hit_to_bitcoin",
+      "mechanism": "Holders sell assets to liquidate positions irrespective of safe/risk labels → indiscriminate selling affects all asset classes",
+      "source_attribution": "Generic source (id: a16f8cf8c7fd06e1_181)",
+      "id": "rel_b920d062",
+      "discovered_at": "2026-02-04T00:16:25.729144",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.78
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "30y JGB yield spike",
+            "cause_normalized": "30y_jgb_yield_spike",
+            "effect": "Japanese capital repatriation and carry trade unwind",
+            "effect_normalized": "jpy_repatriation_and_carry_unwind",
+            "mechanism": "Sharp yield rise stresses bond market or compels central bank easing → flow reversals and deleveraging boost market volatility → investors seek non-fiat hedges amid currency/funding stress"
+          },
+          {
+            "cause": "Japanese capital repatriation and carry trade unwind",
+            "cause_normalized": "jpy_repatriation_and_carry_unwind",
+            "effect": "increase short-term volatility",
+            "effect_normalized": "short_term_volatility_up",
+            "mechanism": ""
+          },
+          {
+            "cause": "increase short-term volatility",
+            "cause_normalized": "short_term_volatility_up",
+            "effect": "BTC may perform as currency-risk hedge",
+            "effect_normalized": "btc_as_hedge",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "30y_jgb_yield_spike -> jpy_repatriation_and_carry_unwind -> short_term_volatility_up -> btc_as_hedge"
+      },
+      "terminal_effect": "btc_as_hedge",
+      "mechanism": "Sharp yield rise stresses bond market or compels central bank easing → flow reversals and deleveraging boost market volatility → investors seek non-fiat hedges amid currency/funding stress",
+      "source_attribution": "Generic source (id: d4fd4f3e4670fb2b_110)",
+      "id": "rel_4dc73344",
+      "discovered_at": "2026-02-04T00:16:25.729165",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.78
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ rate hike",
+            "cause_normalized": "boj_rate_hike",
+            "effect": "carry trade unwind",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": "(Step 1-2) Rate hike triggers position liquidation → (Step 2-3) Closing dollar-shorts requires USD buying → (Step 3-4) USD shortage pushes money market rates higher → (Step 4-5) Funding stress transmits to risk assets"
+          },
+          {
+            "cause": "carry trade unwind",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "USD repurchase",
+            "effect_normalized": "usd_repurchase",
+            "mechanism": ""
+          },
+          {
+            "cause": "USD repurchase",
+            "cause_normalized": "usd_repurchase",
+            "effect": "SOFR spike",
+            "effect_normalized": "sofr",
+            "mechanism": ""
+          },
+          {
+            "cause": "SOFR spike",
+            "cause_normalized": "sofr",
+            "effect": "crypto shock",
+            "effect_normalized": "crypto_shock",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "boj_rate_hike -> carry_trade_unwind -> usd_repurchase -> sofr -> crypto_shock"
+      },
+      "terminal_effect": "crypto_shock",
+      "mechanism": "(Step 1-2) Rate hike triggers position liquidation → (Step 2-3) Closing dollar-shorts requires USD buying → (Step 3-4) USD shortage pushes money market rates higher → (Step 4-5) Funding stress transmits to risk assets",
+      "source_attribution": "CoinDesk → Plan G Research → NY Fed",
+      "id": "rel_de8a5244",
+      "discovered_at": "2026-02-04T00:16:25.729188",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.78
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "March 2020 COVID crash",
+            "cause_normalized": "covid_crash",
+            "effect": "external shock during QT-ending bear market",
+            "effect_normalized": "external_shock_pattern",
+            "mechanism": "COVID crash represented external shock event → occurred during 2019 bear market cycle at day 265 mark → caused sharp decline in Bitcoin from ~0.70 to ~0.40 ROI"
+          },
+          {
+            "cause": "external shock during QT-ending bear market",
+            "cause_normalized": "external_shock_pattern",
+            "effect": "dramatic Bitcoin drop to ~0.40 ROI around day 265",
+            "effect_normalized": "crypto_crash_magnitude",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "covid_crash -> external_shock_pattern -> crypto_crash_magnitude"
+      },
+      "terminal_effect": "crypto_crash_magnitude",
+      "mechanism": "COVID crash represented external shock event → occurred during 2019 bear market cycle at day 265 mark → caused sharp decline in Bitcoin from ~0.70 to ~0.40 ROI",
+      "source_attribution": "The Cryptoverse (Source 9)",
+      "id": "rel_182ee654",
+      "discovered_at": "2026-02-04T01:28:02.747696",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "JPY surge/intervention risk",
+            "cause_normalized": "jpy_intervention_risk",
+            "effect": "USD strength shaken",
+            "effect_normalized": "usd_strength_shaken",
+            "mechanism": "intervention risk limits further USD appreciation and signals policy support for JPY → carry positions unwind as funding costs/FX moves trigger deleveraging, liquidity withdraws → reduced liquidity and forced unwinds increase risk-asset volatility and trigger corrections"
+          },
+          {
+            "cause": "USD strength shaken",
+            "cause_normalized": "usd_strength_shaken",
+            "effect": "yen carry unwind and global liquidity contraction",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": ""
+          },
+          {
+            "cause": "yen carry unwind and global liquidity contraction",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "BTC short-term adjustment and higher volatility",
+            "effect_normalized": "btc_volatility",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "jpy_intervention_risk -> usd_strength_shaken -> carry_trade_unwind -> btc_volatility"
+      },
+      "terminal_effect": "btc_volatility",
+      "mechanism": "intervention risk limits further USD appreciation and signals policy support for JPY → carry positions unwind as funding costs/FX moves trigger deleveraging, liquidity withdraws → reduced liquidity and forced unwinds increase risk-asset volatility and trigger corrections",
+      "source_attribution": "Source 2 (7b77309cfd6630df_70), Source 4 (78c9945a42691062_43)",
+      "id": "rel_f1ff0686",
+      "discovered_at": "2026-02-04T02:50:20.025988",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.78
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "JPY intervention",
+            "cause_normalized": "jpy_intervention",
+            "effect": "BTC -29% over 1 week",
+            "effect_normalized": "btc_drop",
+            "mechanism": "FX intervention altered flows, triggered risk-off/unwinding in crypto → overshoot then mean-reversion / short-covering"
+          },
+          {
+            "cause": "BTC -29% over 1 week",
+            "cause_normalized": "btc_drop",
+            "effect": "BTC +100% rebound",
+            "effect_normalized": "btc_rebound",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "jpy_intervention -> btc_drop -> btc_rebound"
+      },
+      "terminal_effect": "btc_rebound",
+      "mechanism": "FX intervention altered flows, triggered risk-off/unwinding in crypto → overshoot then mean-reversion / short-covering",
+      "source_attribution": "Source 6 (8e8ac257a543dbab_51)",
+      "id": "rel_85c5c096",
+      "discovered_at": "2026-02-04T02:50:20.026018",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.78
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ or government likely to act to support JPY",
+            "cause_normalized": "policy_action_yen_support",
+            "effect": "JPY rebound risk",
+            "effect_normalized": "jpy_rebound_risk",
+            "mechanism": "policy measures to stem yen weakness will affect FX and risk assets"
+          },
+          {
+            "cause": "JPY rebound risk",
+            "cause_normalized": "jpy_rebound_risk",
+            "effect": "short-term Bitcoin moves",
+            "effect_normalized": "bitcoin_price",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "policy_action_yen_support -> jpy_rebound_risk -> bitcoin_price"
+      },
+      "terminal_effect": "bitcoin_price",
+      "mechanism": "policy measures to stem yen weakness will affect FX and risk assets",
+      "source_attribution": "Source 8 (771b9b416d46347b_67)",
+      "id": "rel_1406269d",
+      "discovered_at": "2026-02-04T02:50:20.026040",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.78
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Hibo rate plunge",
+            "cause_normalized": "hibo_rate",
+            "effect": "Bitcoin rebound",
+            "effect_normalized": "bitcoin_price",
+            "mechanism": "lower interbank rates support risk asset moves"
+          }
+        ],
+        "chain_summary": "hibo_rate -> bitcoin_price"
+      },
+      "terminal_effect": "bitcoin_price",
+      "mechanism": "lower interbank rates support risk asset moves",
+      "source_attribution": "Source 8 (771b9b416d46347b_67)\n\n## Medium-Term Reversal Chains",
+      "id": "rel_6c1bc50c",
+      "discovered_at": "2026-02-04T02:50:20.026053",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.78
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "intervention followed by easing expectations",
+            "cause_normalized": "post_intervention_easing_expectations",
+            "effect": "bitcoin medium-term positive",
+            "effect_normalized": "btc_midterm_positive",
+            "mechanism": "heightened easing expectations increase risk appetite, support risk assets"
+          }
+        ],
+        "chain_summary": "post_intervention_easing_expectations -> btc_midterm_positive"
+      },
+      "terminal_effect": "btc_midterm_positive",
+      "mechanism": "heightened easing expectations increase risk appetite, support risk assets",
+      "source_attribution": "Source 2 (7b77309cfd6630df_70)\n\n## Funding Market Stress Chains",
+      "id": "rel_e076973a",
+      "discovered_at": "2026-02-04T02:50:20.026066",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.78
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "positive Bitcoin ETF inflows (first since late Oct)",
+            "cause_normalized": "etf_net_flows",
+            "effect": "renewed demand for BTC",
+            "effect_normalized": "btc_demand",
+            "mechanism": "net ETF inflows increase asset-buying demand"
+          }
+        ],
+        "chain_summary": "etf_net_flows -> btc_demand"
+      },
+      "terminal_effect": "btc_demand",
+      "mechanism": "net ETF inflows increase asset-buying demand",
+      "source_attribution": "Source 19 (829989205ff3a27a_565)",
+      "id": "rel_29dffef6",
+      "discovered_at": "2026-02-04T02:50:20.026078",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.78
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "US equities down",
+            "cause_normalized": "us_equities_down",
+            "effect": "Bitcoin attempting reversal",
+            "effect_normalized": "btc_reversal_attempt",
+            "mechanism": "relative flows/rotation or safe-risk reallocation prompt BTC price action amid equity weakness"
+          }
+        ],
+        "chain_summary": "us_equities_down -> btc_reversal_attempt"
+      },
+      "terminal_effect": "btc_reversal_attempt",
+      "mechanism": "relative flows/rotation or safe-risk reallocation prompt BTC price action amid equity weakness",
+      "source_attribution": "Source 20 (666219321abf2886_158)",
+      "id": "rel_d4d16cb1",
+      "discovered_at": "2026-02-04T02:50:20.026090",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.78
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "JPY surge due to intervention risk",
+            "cause_normalized": "jpy_intervention_risk",
+            "effect": "USD strength shaken",
+            "effect_normalized": "usd_strength_shaken",
+            "mechanism": "intervention risk limits further USD appreciation and signals policy support for JPY → carry positions unwind as funding costs/FX moves trigger deleveraging, liquidity withdraws → unwinding reduces demand/liquidity for risk assets, forces BTC selling"
+          },
+          {
+            "cause": "USD strength shaken",
+            "cause_normalized": "usd_strength_shaken",
+            "effect": "yen carry unwind and global liquidity contraction",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": ""
+          },
+          {
+            "cause": "yen carry unwind and global liquidity contraction",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "BTC downward pressure",
+            "effect_normalized": "btc_price_down",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "jpy_intervention_risk -> usd_strength_shaken -> carry_trade_unwind -> btc_price_down"
+      },
+      "terminal_effect": "btc_price_down",
+      "mechanism": "intervention risk limits further USD appreciation and signals policy support for JPY → carry positions unwind as funding costs/FX moves trigger deleveraging, liquidity withdraws → unwinding reduces demand/liquidity for risk assets, forces BTC selling",
+      "source_attribution": "Source 3 (steps 1-2), Source 4 (step 3)",
+      "id": "rel_4ab6905b",
+      "discovered_at": "2026-02-04T06:38:19.922730",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.88
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "service PMI beats expectations",
+            "cause_normalized": "service_pmi",
+            "effect": "cut probability falls",
+            "effect_normalized": "fed_cut_probability",
+            "mechanism": "strong PMI reduces rate cut expectations → lower cut odds reduce risk appetite leading to price adjustment"
+          },
+          {
+            "cause": "cut probability falls",
+            "cause_normalized": "fed_cut_probability",
+            "effect": "BTC correction/adjustment",
+            "effect_normalized": "btc_price",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "service_pmi -> fed_cut_probability -> btc_price"
+      },
+      "terminal_effect": "btc_price",
+      "mechanism": "strong PMI reduces rate cut expectations → lower cut odds reduce risk appetite leading to price adjustment",
+      "source_attribution": "Source 13",
+      "id": "rel_b600492b",
+      "discovered_at": "2026-02-04T06:38:19.922807",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.88
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "jpy_intervention_risk",
+            "cause_normalized": "jpy_intervention_risk",
+            "effect": "USD strength shaken",
+            "effect_normalized": "usd_strength_shaken",
+            "mechanism": "Intervention risk limits further USD appreciation, signals policy support for JPY → carry positions unwind as funding costs/FX moves trigger deleveraging, liquidity withdraws → global liquidity contraction pressures risk assets"
+          },
+          {
+            "cause": "USD strength shaken",
+            "cause_normalized": "usd_strength_shaken",
+            "effect": "yen carry unwind and global liquidity contraction",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": ""
+          },
+          {
+            "cause": "yen carry unwind and global liquidity contraction",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "BTC short-term correction & higher volatility",
+            "effect_normalized": "btc_short-term_correction_&_higher_volatility",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "jpy_intervention_risk -> usd_strength_shaken -> carry_trade_unwind -> btc_short-term_correction_&_higher_volatility"
+      },
+      "terminal_effect": "btc_short-term_correction_&_higher_volatility",
+      "mechanism": "Intervention risk limits further USD appreciation, signals policy support for JPY → carry positions unwind as funding costs/FX moves trigger deleveraging, liquidity withdraws → global liquidity contraction pressures risk assets",
+      "source_attribution": "7b77309cfd6630df_70",
+      "id": "rel_fefa426c",
+      "discovered_at": "2026-02-04T07:32:05.876923",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.88
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ rate hikes (March 2024, July 2024, January 2025)",
+            "cause_normalized": "boj_rate_hikes_(march_2024,_july_2024,_january_2025)",
+            "effect": "Bitcoin price corrections (-22.28%, -26.63%, -30.34%)",
+            "effect_normalized": "bitcoin_price_corrections_(-22.28%,_-26.63%,_-30.34%)",
+            "mechanism": "Japanese monetary policy tightening triggers risk-off sentiment in cryptocurrency markets, potentially due to unwinding of yen carry trades or reduced global liquidity"
+          }
+        ],
+        "chain_summary": "boj_rate_hikes_(march_2024,_july_2024,_january_2025) -> bitcoin_price_corrections_(-22.28%,_-26.63%,_-30.34%)"
+      },
+      "terminal_effect": "bitcoin_price_corrections_(-22.28%,_-26.63%,_-30.34%)",
+      "mechanism": "Japanese monetary policy tightening triggers risk-off sentiment in cryptocurrency markets, potentially due to unwinding of yen carry trades or reduced global liquidity",
+      "source_attribution": "afb976361a1e97a1_534, 90f98eee5ecd8f33_464",
+      "id": "rel_c4522bdd",
+      "discovered_at": "2026-02-04T07:32:05.876951",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.88
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "30y JGB yield record",
+            "cause_normalized": "30y_jgb_yield_record",
+            "effect": "long-term BTC hedge demand up",
+            "effect_normalized": "long-term_btc_hedge_demand_up",
+            "mechanism": "Dramatic spike in long-term Japanese government bond yields (0.649% to 3.863%, +495%) indicates severe stress in Japanese bond market, potential loss of confidence in debt sustainability → Bitcoin may shine as hedge asset against currency risk"
+          }
+        ],
+        "chain_summary": "30y_jgb_yield_record -> long-term_btc_hedge_demand_up"
+      },
+      "terminal_effect": "long-term_btc_hedge_demand_up",
+      "mechanism": "Dramatic spike in long-term Japanese government bond yields (0.649% to 3.863%, +495%) indicates severe stress in Japanese bond market, potential loss of confidence in debt sustainability → Bitcoin may shine as hedge asset against currency risk",
+      "source_attribution": "407f42bd9bfc3d8a_453, 5674b488617dcd4e_80 (data context)",
+      "id": "rel_628cc629",
+      "discovered_at": "2026-02-04T07:32:05.876976",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.88
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "JPY surge due to intervention risk",
+            "cause_normalized": "jpy_intervention_risk",
+            "effect": "USD strength shaken",
+            "effect_normalized": "usd_strength_shaken",
+            "mechanism": "Intervention risk limits further USD appreciation, signals policy support for JPY → carry positions unwind as funding costs/FX moves trigger deleveraging, liquidity withdraws → global liquidity contraction pressures risk assets"
+          },
+          {
+            "cause": "USD strength shaken",
+            "cause_normalized": "usd_strength_shaken",
+            "effect": "yen carry unwind and global liquidity contraction",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": ""
+          },
+          {
+            "cause": "yen carry unwind and global liquidity contraction",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "BTC short-term correction",
+            "effect_normalized": "btc_short-term_correction",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "jpy_intervention_risk -> usd_strength_shaken -> carry_trade_unwind -> btc_short-term_correction"
+      },
+      "terminal_effect": "btc_short-term_correction",
+      "mechanism": "Intervention risk limits further USD appreciation, signals policy support for JPY → carry positions unwind as funding costs/FX moves trigger deleveraging, liquidity withdraws → global liquidity contraction pressures risk assets",
+      "source_attribution": "Source 2 (7b77309cfd6630df_70)",
+      "id": "rel_3a484f7e",
+      "discovered_at": "2026-02-05T02:08:51.956357",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.82
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "JPY surge due to intervention risk",
+            "cause_normalized": "jpy_intervention_risk",
+            "effect": "USD strength shaken",
+            "effect_normalized": "usd_strength_shaken",
+            "mechanism": "Intervention risk limits further USD appreciation, signals policy support for JPY → carry positions unwind as funding costs/FX moves trigger deleveraging, liquidity withdraws → unwinding reduces demand/liquidity for risk assets, forces BTC selling"
+          },
+          {
+            "cause": "USD strength shaken",
+            "cause_normalized": "usd_strength_shaken",
+            "effect": "yen carry unwind and global liquidity contraction",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": ""
+          },
+          {
+            "cause": "yen carry unwind and global liquidity contraction",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "BTC downward pressure",
+            "effect_normalized": "btc_downward_pressure",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "jpy_intervention_risk -> usd_strength_shaken -> carry_trade_unwind -> btc_downward_pressure"
+      },
+      "terminal_effect": "btc_downward_pressure",
+      "mechanism": "Intervention risk limits further USD appreciation, signals policy support for JPY → carry positions unwind as funding costs/FX moves trigger deleveraging, liquidity withdraws → unwinding reduces demand/liquidity for risk assets, forces BTC selling",
+      "source_attribution": "Source 2 (steps 1-2), Source 7 (step 4 for BTC impact)",
+      "id": "rel_f8af58f5",
+      "discovered_at": "2026-02-05T04:46:32.069804",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.65
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "JPY surge due to intervention risk",
+            "cause_normalized": "jpy_intervention_risk",
+            "effect": "USD strength shaken",
+            "effect_normalized": "usd_strength_shaken",
+            "mechanism": "intervention risk limits further USD appreciation and signals policy support for JPY → carry positions unwind as funding costs/FX moves trigger deleveraging → liquidity withdraws from risk assets including BTC"
+          },
+          {
+            "cause": "USD strength shaken",
+            "cause_normalized": "usd_strength_shaken",
+            "effect": "yen carry unwind and global liquidity contraction",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": ""
+          },
+          {
+            "cause": "yen carry unwind and global liquidity contraction",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "BTC short-term negative pressure",
+            "effect_normalized": "btc_short-term_negative_pressure",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "jpy_intervention_risk -> usd_strength_shaken -> carry_trade_unwind -> btc_short-term_negative_pressure"
+      },
+      "terminal_effect": "btc_short-term_negative_pressure",
+      "mechanism": "intervention risk limits further USD appreciation and signals policy support for JPY → carry positions unwind as funding costs/FX moves trigger deleveraging → liquidity withdraws from risk assets including BTC",
+      "source_attribution": "Source 2 (7b77309cfd6630df_70)",
+      "id": "rel_99e53d52",
+      "discovered_at": "2026-02-05T04:52:00.361877",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.68
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Japan's recent three rate hikes",
+            "cause_normalized": "boj_recent_hikes",
+            "effect": "Bitcoin price fell 20-30%",
+            "effect_normalized": "btc_drawdown",
+            "mechanism": "policy tightening correlates with crypto risk-off moves → historical pattern shows -22.28% (Mar 2024), -26.63% (Jul 2024), -30.34% (Jan 2025) declines → anticipated tightening may replay prior correlation, pressuring BTC"
+          },
+          {
+            "cause": "Bitcoin price fell 20-30%",
+            "cause_normalized": "btc_drawdown",
+            "effect": "BOJ expected to hike on Dec 19",
+            "effect_normalized": "boj_hike_expectation",
+            "mechanism": ""
+          },
+          {
+            "cause": "BOJ expected to hike on Dec 19",
+            "cause_normalized": "boj_hike_expectation",
+            "effect": "BTC downside risk via historical pattern",
+            "effect_normalized": "btc_downside_risk",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "boj_recent_hikes -> btc_drawdown -> boj_hike_expectation -> btc_downside_risk"
+      },
+      "terminal_effect": "btc_downside_risk",
+      "mechanism": "policy tightening correlates with crypto risk-off moves → historical pattern shows -22.28% (Mar 2024), -26.63% (Jul 2024), -30.34% (Jan 2025) declines → anticipated tightening may replay prior correlation, pressuring BTC",
+      "source_attribution": "Source 8 (8d68af75fff9b557_533), Source 5 (afb976361a1e97a1_534)",
+      "id": "rel_89494e66",
+      "discovered_at": "2026-02-05T04:52:00.361919",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.68
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "30y JGB yield spike",
+            "cause_normalized": "30y_jgb_yield_spike",
+            "effect": "force bond market collapse or BOJ large-scale easing+ Japanese capital repatriation and carry trade unwind",
+            "effect_normalized": "boj_large_easing_or_bond_collapse",
+            "mechanism": "sharp yield rise stresses bond market or compels central bank easing → flow reversals and deleveraging boost market volatility → investors seek non-fiat hedges amid currency/funding stress"
+          },
+          {
+            "cause": "force bond market collapse or BOJ large-scale easing+ Japanese capital repatriation and carry trade unwind",
+            "cause_normalized": "boj_large_easing_or_bond_collapse",
+            "effect": "increase short-term volatility",
+            "effect_normalized": "short_term_volatility_up",
+            "mechanism": ""
+          },
+          {
+            "cause": "increase short-term volatility",
+            "cause_normalized": "short_term_volatility_up",
+            "effect": "BTC may perform as currency-risk hedge",
+            "effect_normalized": "btc_as_hedge",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "30y_jgb_yield_spike -> boj_large_easing_or_bond_collapse -> short_term_volatility_up -> btc_as_hedge"
+      },
+      "terminal_effect": "btc_as_hedge",
+      "mechanism": "sharp yield rise stresses bond market or compels central bank easing → flow reversals and deleveraging boost market volatility → investors seek non-fiat hedges amid currency/funding stress",
+      "source_attribution": "Source 9 (d4fd4f3e4670fb2b_110)",
+      "id": "rel_491b4b60",
+      "discovered_at": "2026-02-05T04:52:00.361939",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.68
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Takaiichi reports considering lower-house dissolution",
+            "cause_normalized": "takaiichi_dissolution_report",
+            "effect": "USDJPY surge / JPY weakness",
+            "effect_normalized": "usd_jpy",
+            "mechanism": "political event triggers FX moves → JPY weakness supports exporters/equities, carry dynamics affect crypto + lower interbank rates support risk asset moves → BUT BOJ or government likely to act to support JPY [policy_action_yen_support] → JPY rebound risk → short-term Bitcoin moves [bitcoin_price]"
+          },
+          {
+            "cause": "USDJPY surge / JPY weakness",
+            "cause_normalized": "usd_jpy",
+            "effect": "Nikkei strength, Bitcoin rebound+ Hibo rate plunge",
+            "effect_normalized": "risk_asset_rebound",
+            "mechanism": ""
+          },
+          {
+            "cause": "Nikkei strength, Bitcoin rebound+ Hibo rate plunge",
+            "cause_normalized": "risk_asset_rebound",
+            "effect": "Bitcoin rebound",
+            "effect_normalized": "bitcoin_price",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "takaiichi_dissolution_report -> usd_jpy -> risk_asset_rebound -> bitcoin_price"
+      },
+      "terminal_effect": "bitcoin_price",
+      "mechanism": "political event triggers FX moves → JPY weakness supports exporters/equities, carry dynamics affect crypto + lower interbank rates support risk asset moves → BUT BOJ or government likely to act to support JPY [policy_action_yen_support] → JPY rebound risk → short-term Bitcoin moves [bitcoin_price]",
+      "source_attribution": "Source 10 (771b9b416d46347b_67)",
+      "id": "rel_a2e7b74b",
+      "discovered_at": "2026-02-05T04:52:00.361957",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.68
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "JPY/USD rally to 155.90 (+1.6%) + finance minister warning",
+            "cause_normalized": "jpy_intervention_risk",
+            "effect": "",
+            "effect_normalized": "usd_strength_shaken",
+            "mechanism": "Query event (155.90 level, 1.6% daily move, official warnings) matches intervention risk threshold → triggers mechanisms documented in Sources 2, 3, 4 → carry unwind reduces liquidity → BTC experiences downside pressure and elevated volatility"
+          },
+          {
+            "cause": "",
+            "cause_normalized": "usd_strength_shaken",
+            "effect": "",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": ""
+          },
+          {
+            "cause": "",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "",
+            "effect_normalized": "global_liquidity_contraction",
+            "mechanism": ""
+          },
+          {
+            "cause": "",
+            "cause_normalized": "global_liquidity_contraction",
+            "effect": "BTC short-term correction & volatility spike",
+            "effect_normalized": "btc_short-term_correction_&_volatility_spike",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "jpy_intervention_risk -> usd_strength_shaken -> carry_trade_unwind -> global_liquidity_contraction -> btc_short-term_correction_&_volatility_spike"
+      },
+      "terminal_effect": "btc_short-term_correction_&_volatility_spike",
+      "mechanism": "Query event (155.90 level, 1.6% daily move, official warnings) matches intervention risk threshold → triggers mechanisms documented in Sources 2, 3, 4 → carry unwind reduces liquidity → BTC experiences downside pressure and elevated volatility",
+      "source_attribution": "Source 1 (df0468450c5fb327_71) event description + Source 2, 3, 4 logic chains",
+      "id": "rel_975f7eac",
+      "discovered_at": "2026-02-05T04:52:00.361981",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.68
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "JPY surge due to intervention risk",
+            "cause_normalized": "jpy_intervention_risk",
+            "effect": "USD strength shaken",
+            "effect_normalized": "usd_strength_shaken",
+            "mechanism": "intervention risk limits further USD appreciation, signals policy support for JPY → carry positions unwind as funding costs/FX moves trigger deleveraging, liquidity withdraws → heightened easing expectations increase risk appetite, support risk assets"
+          },
+          {
+            "cause": "USD strength shaken",
+            "cause_normalized": "usd_strength_shaken",
+            "effect": "yen carry unwind and global liquidity contraction",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": ""
+          },
+          {
+            "cause": "yen carry unwind and global liquidity contraction",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "bitcoin medium-term positive",
+            "effect_normalized": "btc_midterm_positive",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "jpy_intervention_risk -> usd_strength_shaken -> carry_trade_unwind -> btc_midterm_positive"
+      },
+      "terminal_effect": "btc_midterm_positive",
+      "mechanism": "intervention risk limits further USD appreciation, signals policy support for JPY → carry positions unwind as funding costs/FX moves trigger deleveraging, liquidity withdraws → heightened easing expectations increase risk appetite, support risk assets",
+      "source_attribution": "7b77309cfd6630df_70",
+      "id": "rel_669282c9",
+      "discovered_at": "2026-02-05T04:56:00.942443",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.65
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "operational_signalling",
+            "cause_normalized": "operational_signalling",
+            "effect": "fx_vol_spill",
+            "effect_normalized": "fx_vol_spill",
+            "mechanism": "PM's direct warning escalates to operational intervention signaling (Source 5eb637a4c093a7b6_15) → FX volatility transmits to high-beta assets → triggers carry position liquidation (Sources 78c9945a42691062_43, 407f42bd9bfc3d8a_453) → increases BTC volatility and correction risk"
+          },
+          {
+            "cause": "fx_vol_spill",
+            "cause_normalized": "fx_vol_spill",
+            "effect": "carry_unwind",
+            "effect_normalized": "carry_unwind",
+            "mechanism": ""
+          },
+          {
+            "cause": "carry_unwind",
+            "cause_normalized": "carry_unwind",
+            "effect": "btc_volatility",
+            "effect_normalized": "btc_volatility",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "operational_signalling -> fx_vol_spill -> carry_unwind -> btc_volatility"
+      },
+      "terminal_effect": "btc_volatility",
+      "mechanism": "PM's direct warning escalates to operational intervention signaling (Source 5eb637a4c093a7b6_15) → FX volatility transmits to high-beta assets → triggers carry position liquidation (Sources 78c9945a42691062_43, 407f42bd9bfc3d8a_453) → increases BTC volatility and correction risk",
+      "source_attribution": "5eb637a4c093a7b6_15 → 78c9945a42691062_43/407f42bd9bfc3d8a_453",
+      "id": "rel_d7a8d20d",
+      "discovered_at": "2026-02-05T04:56:00.942507",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.65
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Short-term: carry_unwind",
+            "cause_normalized": "short-term:_carry_unwind",
+            "effect": "btc_volatility + btc_price_down | Medium-term: fx_intervention",
+            "effect_normalized": "btc_volatility_+_btc_price_down_|_medium-term:_fx_intervention",
+            "mechanism": "Immediate forced liquidations create downward pressure and volatility → but intervention signals policy support and future easing, reversing sentiment medium-term"
+          },
+          {
+            "cause": "btc_volatility + btc_price_down | Medium-term: fx_intervention",
+            "cause_normalized": "btc_volatility_+_btc_price_down_|_medium-term:_fx_intervention",
+            "effect": "policy_easing_expectations",
+            "effect_normalized": "policy_easing_expectations",
+            "mechanism": ""
+          },
+          {
+            "cause": "policy_easing_expectations",
+            "cause_normalized": "policy_easing_expectations",
+            "effect": "btc_midterm_positive",
+            "effect_normalized": "btc_midterm_positive",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "short-term:_carry_unwind -> btc_volatility_+_btc_price_down_|_medium-term:_fx_intervention -> policy_easing_expectations -> btc_midterm_positive"
+      },
+      "terminal_effect": "btc_midterm_positive",
+      "mechanism": "Immediate forced liquidations create downward pressure and volatility → but intervention signals policy support and future easing, reversing sentiment medium-term",
+      "source_attribution": "78c9945a42691062_43, 7b77309cfd6630df_70, cfbe53872aafa7ad_157",
+      "id": "rel_c6b8095e",
+      "discovered_at": "2026-02-05T04:56:00.942537",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.65
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "actual FX intervention",
+            "cause_normalized": "fx_intervention",
+            "effect": "easing monetary policy expectations",
+            "effect_normalized": "policy_easing_expectations",
+            "mechanism": "Intervention may be followed by looser policy outlook, supporting risk assets medium-term"
+          },
+          {
+            "cause": "easing monetary policy expectations",
+            "cause_normalized": "policy_easing_expectations",
+            "effect": "BTC medium-term positive",
+            "effect_normalized": "btc_medium-term_positive",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "fx_intervention -> policy_easing_expectations -> btc_medium-term_positive"
+      },
+      "terminal_effect": "btc_medium-term_positive",
+      "mechanism": "Intervention may be followed by looser policy outlook, supporting risk assets medium-term",
+      "source_attribution": "78c9945a42691062_43",
+      "id": "rel_2d1ea59c",
+      "discovered_at": "2026-02-05T05:43:56.159822",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.62
     }
   ]
 }

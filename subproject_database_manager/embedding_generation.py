@@ -80,6 +80,8 @@ def generate_embeddings_from_csv(csv_path: str) -> list[dict]:
             "id": unique_id,
             "embedding": embeddings[idx],
             "metadata": {
+                # Deduplication key - Telegram message ID for tracking
+                "telegram_msg_id": str(row.get('telegram_msg_id', '')),
                 # Core fields for filtering
                 "date": str(row.get('date', '')),
                 "tg_channel": str(row.get('tg_channel', '')),
