@@ -11,3 +11,6 @@ Contents include:
 - `EVALUATION_SUBPROJECT1_DATABASE_MANAGER.md` - Database Manager evaluation (all issues fixed)
 - `EVALUATION_SUBPROJECT2_DATABASE_RETRIEVER.md` - Database Retriever evaluation (high priority issues fixed)
 - `EVALUATION_SUBPROJECT3_VARIABLE_MAPPER.md` - Variable Mapper evaluation (high priority issues fixed)
+- `PLAN_*.md` - Historical implementation plans (completed)
+- `STATUS_*.md` - Archived session histories from each subproject
+- `README_database_manager.md` - Archived Database Manager README (content in CLAUDE.md)
