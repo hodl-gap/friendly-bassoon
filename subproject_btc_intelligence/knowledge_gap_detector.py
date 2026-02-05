@@ -396,10 +396,12 @@ def fill_gaps_with_search(
             "termination_reason": "all_processed" | "max_searches" | "all_unfillable"
         }
     """
-    # Filter to only gaps with search queries
+    # Filter to only web_search gaps with search queries
     searchable_gaps = [
         g for g in gaps
-        if g.get("status") == "GAP" and g.get("search_query")
+        if g.get("status") == "GAP"
+        and g.get("fill_method", "web_search") == "web_search"
+        and g.get("search_query")
     ]
 
     if not searchable_gaps:
@@ -512,4 +514,127 @@ def fill_gaps_with_search(
         "enrichment_text": "\n\n".join(enrichment_parts),
         "total_searches": search_count,
         "termination_reason": termination_reason
+    }
+
+
+def fill_gaps_with_data(
+    gaps: List[Dict[str, Any]]
+) -> Dict[str, Any]:
+    """
+    Fill data_fetch gaps by fetching instruments and computing metrics.
+
+    For quantified_relationships gaps: fetches price series from Yahoo/FRED
+    and computes correlation.
+
+    Args:
+        gaps: List of gap dicts with fill_method=="data_fetch".
+              Each gap should contain:
+              - category: str
+              - instruments: list of variable names (e.g., ["btc", "usdjpy"])
+
+    Returns:
+        Same format as fill_gaps_with_search() for easy merging.
+    """
+    import numpy as np
+    from .current_data_fetcher import resolve_variable, fetch_yahoo_with_history, fetch_fred_with_history
+
+    data_gaps = [
+        g for g in gaps
+        if g.get("status") == "GAP" and g.get("fill_method") == "data_fetch"
+    ]
+
+    if not data_gaps:
+        return _empty_fill_result("no_data_gaps")
+
+    filled = []
+    unfillable = []
+    enrichment_parts = []
+
+    for gap in data_gaps:
+        category = gap.get("category", "unknown")
+        instruments = gap.get("instruments", [])
+
+        print(f"\n[Gap: {category}] (data_fetch)")
+        print(f"  Instruments: {instruments}")
+
+        if len(instruments) < 2:
+            print(f"  → Need at least 2 instruments for correlation, got {len(instruments)}")
+            unfillable.append({**gap, "status": "UNFILLABLE", "reason": "insufficient_instruments"})
+            continue
+
+        # Fetch price history for each instrument (use 1y lookback)
+        series_data = {}
+        for inst in instruments[:2]:
+            mapping = resolve_variable(inst)
+            if not mapping:
+                print(f"  → Could not resolve: {inst}")
+                continue
+
+            source = mapping["source"]
+            series_id = mapping["series_id"]
+            data = None
+
+            if source == "Yahoo":
+                data = fetch_yahoo_with_history(series_id, lookback_days=90)
+            elif source == "FRED":
+                data = fetch_fred_with_history(series_id, lookback_days=120)
+
+            if data and data.get("history"):
+                series_data[inst] = {
+                    "history": data["history"],
+                    "source": source,
+                    "series_id": series_id
+                }
+                print(f"  → Fetched {inst}: {len(data['history'])} data points from {source}")
+
+        if len(series_data) < 2:
+            print(f"  → Could not fetch enough instruments")
+            unfillable.append({**gap, "status": "UNFILLABLE", "reason": "fetch_failed"})
+            continue
+
+        # Align dates and compute correlation
+        inst_names = list(series_data.keys())
+        hist_a = {d: v for d, v in series_data[inst_names[0]]["history"]}
+        hist_b = {d: v for d, v in series_data[inst_names[1]]["history"]}
+
+        common_dates = sorted(set(hist_a.keys()) & set(hist_b.keys()))
+        if len(common_dates) < 10:
+            print(f"  → Only {len(common_dates)} overlapping dates, need at least 10")
+            unfillable.append({**gap, "status": "UNFILLABLE", "reason": "insufficient_overlap"})
+            continue
+
+        values_a = np.array([hist_a[d] for d in common_dates])
+        values_b = np.array([hist_b[d] for d in common_dates])
+        correlation = float(np.corrcoef(values_a, values_b)[0, 1])
+
+        print(f"  → Correlation({inst_names[0]}, {inst_names[1]}): {correlation:.4f} over {len(common_dates)} days")
+
+        # Build enrichment text
+        enrichment = (
+            f"## Additional Context: {category.replace('_', ' ').title()}\n"
+            f"(Source: Computed from {series_data[inst_names[0]]['source']}/{series_data[inst_names[1]]['source']} data)\n"
+            f"- {inst_names[0].upper()} vs {inst_names[1].upper()} correlation: {correlation:.4f} "
+            f"(over {len(common_dates)} trading days)\n"
+            f"- Period: {common_dates[0]} to {common_dates[-1]}\n"
+        )
+
+        filled.append({
+            **gap,
+            "status": "FILLED",
+            "confidence": 0.9,
+            "computed_correlation": correlation,
+            "data_points": len(common_dates),
+            "period": f"{common_dates[0]} to {common_dates[-1]}"
+        })
+        enrichment_parts.append(enrichment)
+
+    print(f"\n[Knowledge Gap] Data fetch: {len(filled)} filled, {len(unfillable)} unfillable")
+
+    return {
+        "filled_gaps": filled,
+        "partially_filled_gaps": [],
+        "unfillable_gaps": unfillable,
+        "enrichment_text": "\n\n".join(enrichment_parts),
+        "total_searches": 0,
+        "termination_reason": "all_processed"
     }

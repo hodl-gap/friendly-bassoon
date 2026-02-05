@@ -176,6 +176,9 @@ Rules:
   BAD: "Search for 'FOMC schedule 2026' and 'BOJ dates 2026' separately"
   BAD: "Bitcoin SOFR correlation OR carry trade sensitivity OR BTC drawdown analysis"
 - The refined query should try a different angle (different keywords, narrower scope, one topic)
+- Refinement queries must ask for RAW FACTS (dates, levels, schedules, analyst targets), NOT derived analysis. We compute price reactions, correlations, and impacts ourselves.
+  GOOD: "BOJ rate hike dates 2023 2024"
+  BAD: "BOJ rate hike Bitcoin price reaction" (we compute that ourselves)
 - Be strict about relevance - partial matches are NOT filled gaps
 
 Return valid JSON only, no other text."""

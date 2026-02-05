@@ -33,7 +33,7 @@ from .relationship_store import (
 )
 from .historical_event_detector import detect_historical_gap, identify_instruments, get_date_range
 from .historical_data_fetcher import fetch_historical_event_data, compare_to_current
-from .knowledge_gap_detector import detect_knowledge_gaps, fill_gaps_with_search
+from .knowledge_gap_detector import detect_knowledge_gaps, fill_gaps_with_search, fill_gaps_with_data
 from . import config
 
 
@@ -432,40 +432,51 @@ def detect_and_fill_knowledge_gaps(state: BTCImpactState) -> BTCImpactState:
 
     state["knowledge_gaps"] = gap_result
 
-    # Step 2: Filter gaps that need filling (status == "GAP")
+    # Step 2: Filter gaps that need filling (status == "GAP"), split by fill_method
     gaps = gap_result.get("gaps", [])
     gaps_to_fill = [g for g in gaps if g.get("status") == "GAP"]
     gap_count = len(gaps_to_fill)
 
-    # Step 3: Attempt to fill gaps with web search (if gaps detected)
-    if gap_count > 0 and config.ENABLE_GAP_FILLING:
-        fill_result = fill_gaps_with_search(
-            gaps=gaps_to_fill,
+    web_search_gaps = [g for g in gaps_to_fill if g.get("fill_method", "web_search") == "web_search"]
+    data_fetch_gaps = [g for g in gaps_to_fill if g.get("fill_method") == "data_fetch"]
+
+    all_filled = []
+    all_partial = []
+    all_unfillable = []
+    all_enrichment = []
+
+    # Step 3a: Fill data_fetch gaps (compute from our own data)
+    if data_fetch_gaps:
+        data_result = fill_gaps_with_data(gaps=data_fetch_gaps)
+        all_filled.extend(data_result.get("filled_gaps", []))
+        all_unfillable.extend(data_result.get("unfillable_gaps", []))
+        if data_result.get("enrichment_text"):
+            all_enrichment.append(data_result["enrichment_text"])
+
+    # Step 3b: Fill web_search gaps (search the web for facts)
+    if web_search_gaps and config.ENABLE_GAP_FILLING:
+        search_result = fill_gaps_with_search(
+            gaps=web_search_gaps,
             max_searches=config.MAX_GAP_SEARCHES,
             max_attempts_per_gap=config.MAX_ATTEMPTS_PER_GAP
         )
+        all_filled.extend(search_result.get("filled_gaps", []))
+        all_partial.extend(search_result.get("partially_filled_gaps", []))
+        all_unfillable.extend(search_result.get("unfillable_gaps", []))
+        if search_result.get("enrichment_text"):
+            all_enrichment.append(search_result["enrichment_text"])
 
-        # Store all results in state
-        state["gap_enrichment_text"] = fill_result.get("enrichment_text", "")
-        state["filled_gaps"] = fill_result.get("filled_gaps", [])
-        state["partially_filled_gaps"] = fill_result.get("partially_filled_gaps", [])
-        state["unfillable_gaps"] = fill_result.get("unfillable_gaps", [])
+    # Store all results in state
+    state["gap_enrichment_text"] = "\n\n".join(all_enrichment)
+    state["filled_gaps"] = all_filled
+    state["partially_filled_gaps"] = all_partial
+    state["unfillable_gaps"] = all_unfillable
 
-        # Log summary
-        filled_count = len(fill_result.get("filled_gaps", []))
-        partial_count = len(fill_result.get("partially_filled_gaps", []))
-        unfillable_count = len(fill_result.get("unfillable_gaps", []))
-        total_searches = fill_result.get("total_searches", 0)
-        termination = fill_result.get("termination_reason", "unknown")
-
-        print(f"[Knowledge Gap] Filled {filled_count}/{gap_count} gaps, "
-              f"partially filled {partial_count}, unfillable {unfillable_count}")
-        print(f"[Knowledge Gap] Total searches: {total_searches}, termination: {termination}")
+    if gap_count > 0:
+        print(f"[Knowledge Gap] Filled {len(all_filled)}/{gap_count} gaps, "
+              f"partially filled {len(all_partial)}, unfillable {len(all_unfillable)}")
     else:
-        state["gap_enrichment_text"] = ""
-        state["filled_gaps"] = []
-        state["partially_filled_gaps"] = []
-        state["unfillable_gaps"] = []
+        print("[Knowledge Gap] No gaps detected")
 
     return state
 

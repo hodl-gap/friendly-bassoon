@@ -222,7 +222,7 @@ RISK FACTORS:
 | Phase 2b: Pattern Validation | ✅ Done | Extract & validate research patterns vs current data |
 | Phase 3: Chain Store | ✅ Done | Persist discovered logic chains |
 | Phase 4: Historical Event Detection | ✅ Done | Detect historical event gaps, fetch actual market data |
-| Phase 5: Polish | Pending | Error handling, enhancements |
+| Phase 5: Knowledge Gap Filling | Done | Detect gaps, fill via web search (Tavily) or data computation |
 
 ## Historical Event Detection (Phase 4)
 
@@ -351,20 +351,56 @@ The system detects historical analog gaps when:
 ### Cost
 ~$0.001 per query when gap detected (zero when no gap)
 
+## Knowledge Gap Filling (Phase 5)
+
+### Purpose
+Before the main impact analysis, detect what information is missing and fill gaps using the appropriate method:
+- **Web search** (Tavily) — for facts we can't compute: dates, analyst targets, event schedules
+- **Data fetch** (Yahoo/FRED) — for quantifiable data: correlations, drawdowns, price changes
+
+### Gap Categories & Fill Methods
+
+| Category | fill_method | What it searches for |
+|----------|------------|---------------------|
+| historical_precedent_depth | web_search | Event DATES only (we compute BTC impact ourselves) |
+| quantified_relationships | data_fetch | Fetches instruments, computes correlation from price data |
+| monitoring_thresholds | web_search | Analyst targets, intervention levels, price forecasts |
+| event_calendar | web_search | Meeting dates, economic calendar |
+| mechanism_conditions | web_search | Preconditions for causal mechanism |
+| exit_criteria | web_search | Thesis resolution conditions |
+
+### Key Design Principle
+**Do not ask the web for things we can compute.** Correlations, drawdowns, and price reactions are computed from our own data adapters (Yahoo Finance, FRED). Web search is reserved for facts not derivable from price data: dates, announcements, analyst opinions, policy decisions.
+
+### Configuration (`config.py`)
+```python
+ENABLE_GAP_FILLING = True       # Toggle gap filling
+MAX_GAP_SEARCHES = 6            # Max web searches per query
+MAX_ATTEMPTS_PER_GAP = 2        # Primary + 1 refinement per gap
+```
+
+### Search Backend
+- **Tavily API** (default) — returns full page content, `topic="finance"`, ~$0.005/search
+- **DuckDuckGo** (fallback) — free, snippets only, poor quality for financial queries
+- Backend configured via `WEB_SEARCH_BACKEND` in `subproject_data_collection/config.py`
+
+### Cost
+~$0.035 per query with Tavily (6 searches + 6 Haiku extractions + 1 gap detection)
+
 ## Dependencies
 
 ### Sibling Subprojects
 - `subproject_database_retriever` - Provides `run_retrieval()` function
-- `subproject_data_collection` - Provides `WebSearchAdapter` for historical date lookup (Phase 4)
+- `subproject_data_collection` - Provides `WebSearchAdapter` for web search (Phase 4, 5)
 
 ### Parent Directory
 - `models.py` - AI model functions (`call_claude_sonnet`, `call_claude_haiku`)
-- `.env` - API keys (FRED_API_KEY required)
+- `.env` - API keys (FRED_API_KEY, TAVILY_API_KEY required)
 
 ### External APIs
 - **FRED API** - Federal Reserve Economic Data (TGA, SOFR, reserves, Fed BS)
 - **Yahoo Finance** - Market data (BTC, ETH, DXY, VIX, etc.) via `yfinance`
-- **DuckDuckGo** - Web search for historical event dates (via WebSearchAdapter)
+- **Tavily** - Web search for knowledge gap filling (via WebSearchAdapter)
 
 ## Notes for AI Assistants
 - **Follow established patterns** from other subprojects

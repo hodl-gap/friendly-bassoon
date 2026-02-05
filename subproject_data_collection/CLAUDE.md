@@ -226,9 +226,13 @@ Data stored as JSON in `data/scraped/{category}/{source_name}/`:
 ### Web Search Scrapers
 
 Some sources (BofA FMS, Japan insurer news) use web search + LLM extraction:
-1. DuckDuckGo search for leaked summaries/announcements
+1. Search via configurable backend (Tavily or DuckDuckGo)
 2. Claude Haiku extracts structured data from search results
 3. Captures publicly available data points only
+
+**Search Backend** (`WEB_SEARCH_BACKEND` in `config.py`):
+- `"tavily"` (default) — Tavily API, returns full page content, `topic="finance"`, requires `TAVILY_API_KEY`
+- `"duckduckgo"` — Free, snippets only, no API key needed
 
 ## Data Adapter Pattern
 

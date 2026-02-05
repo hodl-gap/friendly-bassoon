@@ -7,6 +7,7 @@ Unlike other adapters, this doesn't fetch time series - it finds qualitative dat
 Cost: ~$0.0003 per search (Haiku extraction from snippets)
 """
 
+import os
 import sys
 from pathlib import Path
 from typing import Dict, Any, List, Optional
@@ -19,7 +20,7 @@ import time
 sys.path.append(str(Path(__file__).parent.parent))
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
-from config import CACHE_DIR, ENABLE_CACHE, CACHE_EXPIRY_HOURS
+from config import CACHE_DIR, ENABLE_CACHE, CACHE_EXPIRY_HOURS, WEB_SEARCH_BACKEND
 from models import call_claude_haiku
 from web_search_prompts import (
     EXTRACT_DATA_POINTS_PROMPT,
@@ -32,7 +33,11 @@ class WebSearchAdapter:
     """
     Web search adapter that extracts structured data from search results.
 
-    Uses DuckDuckGo for search (free, no API key) and Haiku for extraction.
+    Supports multiple backends:
+    - "tavily": Tavily API (returns full page content, better quality)
+    - "duckduckgo": DuckDuckGo (free, snippets only)
+
+    Backend is controlled by WEB_SEARCH_BACKEND in config.py.
 
     Example usage:
         adapter = WebSearchAdapter()
@@ -50,14 +55,16 @@ class WebSearchAdapter:
         )
     """
 
-    def __init__(self, max_results: int = 8):
+    def __init__(self, max_results: int = 8, backend: str = None):
         """
         Initialize the web search adapter.
 
         Args:
             max_results: Maximum search results to fetch (default 8)
+            backend: Search backend override ("tavily" or "duckduckgo"). Defaults to config.
         """
         self.max_results = max_results
+        self.backend = backend or WEB_SEARCH_BACKEND
         self.source_name = "WebSearch"
 
     def _get_cache_key(self, query: str, extract_type: str) -> str:
@@ -140,14 +147,74 @@ class WebSearchAdapter:
             print(f"[{self.source_name}] Search error: {e}")
             return []
 
+    def _search_tavily(self, query: str) -> List[Dict[str, str]]:
+        """
+        Search using Tavily API. Returns results with full page content.
+
+        Returns:
+            List of dicts with 'title', 'snippet', 'url', and 'content' (full page text)
+        """
+        try:
+            from tavily import TavilyClient
+        except ImportError:
+            print(f"[{self.source_name}] tavily-python not installed. Run: pip install tavily-python")
+            return []
+
+        try:
+            api_key = os.getenv("TAVILY_API_KEY")
+            if not api_key:
+                print(f"[{self.source_name}] TAVILY_API_KEY not set in .env")
+                return []
+
+            client = TavilyClient(api_key=api_key)
+            response = client.search(
+                query=query,
+                max_results=self.max_results,
+                include_raw_content=True,
+                topic="finance"
+            )
+
+            results = []
+            for r in response.get("results", []):
+                raw_content = r.get("raw_content") or ""
+                # Truncate raw content to avoid blowing up the prompt
+                if len(raw_content) > 3000:
+                    raw_content = raw_content[:3000] + "\n... [truncated]"
+
+                results.append({
+                    "title": r.get("title", ""),
+                    "snippet": r.get("content", ""),
+                    "url": r.get("url", ""),
+                    "content": raw_content
+                })
+
+            print(f"[{self.source_name}] Tavily found {len(results)} results for: {query[:50]}...")
+            return results
+
+        except Exception as e:
+            print(f"[{self.source_name}] Tavily search error: {e}")
+            return []
+
+    def _search(self, query: str) -> List[Dict[str, str]]:
+        """Route to the configured search backend."""
+        if self.backend == "tavily":
+            return self._search_tavily(query)
+        else:
+            return self._search_duckduckgo(query)
+
     def _format_search_results(self, results: List[Dict[str, str]]) -> str:
-        """Format search results for LLM consumption."""
+        """Format search results for LLM consumption. Includes full content when available."""
         if not results:
             return "No search results found."
 
         formatted = []
         for i, r in enumerate(results, 1):
-            formatted.append(f"[{i}] {r['title']}\n{r['snippet']}\nSource: {r['url']}\n")
+            entry = f"[{i}] {r['title']}\n{r['snippet']}\nSource: {r['url']}"
+            # Include full page content if available (from Tavily)
+            content = r.get("content", "")
+            if content:
+                entry += f"\n\n--- Full Content ---\n{content}"
+            formatted.append(entry + "\n")
 
         return "\n".join(formatted)
 
@@ -260,7 +327,7 @@ class WebSearchAdapter:
             return cached
 
         # Perform search
-        search_results = self._search_duckduckgo(query)
+        search_results = self._search(query)
 
         if not search_results:
             result = {
