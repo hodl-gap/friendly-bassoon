@@ -222,7 +222,8 @@ RISK FACTORS:
 | Phase 2b: Pattern Validation | ✅ Done | Extract & validate research patterns vs current data |
 | Phase 3: Chain Store | ✅ Done | Persist discovered logic chains |
 | Phase 4: Historical Event Detection | ✅ Done | Detect historical event gaps, fetch actual market data |
-| Phase 5: Knowledge Gap Filling | Done | Detect gaps, fill via web search (Tavily) or data computation |
+| Phase 5: Knowledge Gap Filling | ✅ Done | Detect gaps, fill via web search (Tavily) or data computation |
+| Phase 6: Web Chain Extraction | ✅ Done | Extract logic chains from trusted web sources when topic not covered |
 
 ## Historical Event Detection (Phase 4)
 
@@ -387,11 +388,87 @@ MAX_ATTEMPTS_PER_GAP = 2        # Primary + 1 refinement per gap
 ### Cost
 ~$0.035 per query with Tavily (6 searches + 6 Haiku extractions + 1 gap detection)
 
+## Web Chain Extraction from Trusted Sources (Phase 6)
+
+### Purpose
+When retrieval finds **no relevant chunks** for a topic (e.g., "AI CAPEX impact on tech stocks"), search trusted web sources and extract logic chains on-the-fly.
+
+### Trusted Domain Filtering
+Only extract from verified financial institutions:
+
+| Tier | Sources |
+|------|---------|
+| **Tier 1** | Goldman Sachs, Morgan Stanley, JPMorgan, BofA, Citi, UBS, Bloomberg, Reuters, FT, WSJ, Fed, ECB, BOJ, Bridgewater, BlackRock, VanEck, ARK Invest, Fundstrat, Yardeni |
+| **Tier 2** | MarketWatch, CNBC, Economist, Grayscale, Glassnode, CryptoQuant, CoinDesk (optional, configurable) |
+
+### Flow
+```
+Query → Retrieval → [LOW COVERAGE: match_ratio < 0.3]
+                          ↓
+           detect_topic_coverage() returns needs_web_chain_extraction=True
+                          ↓
+           fill_gaps_with_web_chains() in knowledge_gap_detector.py
+                          ↓
+           WebSearchAdapter.search_and_extract_chains()
+             - Filter to trusted domains only
+             - Extract chains with cause/effect/mechanism/evidence_quote
+             - Verify quotes appear verbatim in source
+                          ↓
+           merge_web_chains_with_db_chains() (web=0.7 weight, db=1.0 weight)
+                          ↓
+           Impact Analysis with merged chains
+```
+
+### Key Functions
+
+| Function | File | Purpose |
+|----------|------|---------|
+| `search_and_extract_chains()` | `web_search_adapter.py` | Search + filter + extract chains |
+| `fill_gaps_with_web_chains()` | `knowledge_gap_detector.py` | Orchestrate web chain extraction |
+| `merge_web_chains_with_db_chains()` | `knowledge_gap_detector.py` | Merge with confidence weighting |
+| `is_trusted_domain()` | `trusted_domains.py` | Check if URL is from trusted source |
+| `filter_to_trusted_sources()` | `trusted_domains.py` | Filter search results to trusted only |
+
+### Configuration (`subproject_data_collection/config.py`)
+```python
+ENABLE_WEB_CHAIN_EXTRACTION = True   # Toggle feature
+TRUSTED_DOMAIN_MIN_TIER = 1          # 1 = Tier 1 only, 2 = include Tier 2
+MAX_WEB_CHAINS_PER_QUERY = 5         # Limit chains per query
+MIN_TRUSTED_SOURCES = 2              # Minimum sources required
+WEB_CHAIN_CONFIDENCE_WEIGHT = 0.7    # Weight vs DB chains (1.0)
+```
+
+### Output Format (per chain)
+```json
+{
+  "cause": "AI boom and need for advanced AI models",
+  "effect": "Data center capex investment increases",
+  "mechanism": "Companies must build infrastructure to support AI",
+  "polarity": "positive",
+  "evidence_quote": "VERBATIM quote from source (verified)",
+  "source_name": "Goldman Sachs",
+  "source_url": "https://...",
+  "confidence": "high",
+  "quote_verified": true,
+  "source_type": "web",
+  "confidence_weight": 0.7
+}
+```
+
+### Graceful Degradation
+- Feature disabled → proceed with DB chains only
+- No trusted sources found → proceed with DB chains only
+- Extraction fails → proceed with DB chains only
+- Web chains are **transient** (not persisted to Pinecone)
+
+### Cost
+~$0.01 per web chain extraction query (1 Tavily search + 1 Haiku extraction)
+
 ## Dependencies
 
 ### Sibling Subprojects
-- `subproject_database_retriever` - Provides `run_retrieval()` function
-- `subproject_data_collection` - Provides `WebSearchAdapter` for web search (Phase 4, 5)
+- `subproject_database_retriever` - Provides `run_retrieval()` function, `detect_topic_coverage()`
+- `subproject_data_collection` - Provides `WebSearchAdapter` for web search (Phase 4, 5, 6), `trusted_domains` for source filtering
 
 ### Parent Directory
 - `models.py` - AI model functions (`call_claude_sonnet`, `call_claude_haiku`)

@@ -182,3 +182,53 @@ Rules:
 - Be strict about relevance - partial matches are NOT filled gaps
 
 Return valid JSON only, no other text."""
+
+
+# =============================================================================
+# LOGIC CHAIN EXTRACTION
+# =============================================================================
+# For extracting causal logic chains from trusted web sources
+
+EXTRACT_LOGIC_CHAINS_PROMPT = """Extract causal logic chains from these search results.
+
+QUERY: {query}
+TOPIC: {topic}
+
+SEARCH RESULTS:
+{search_results}
+
+Extract logic chains that explain cause-and-effect relationships relevant to the topic.
+Each chain should trace a causal path (A causes B, which leads to C, etc.)
+
+Return JSON with this structure:
+
+{{
+    "chains": [
+        {{
+            "cause": "The initiating event or condition",
+            "effect": "The resulting outcome or impact",
+            "mechanism": "How the cause leads to the effect (the why/how)",
+            "polarity": "positive|negative|mixed",
+            "evidence_quote": "VERBATIM quote from source supporting this chain",
+            "source_url": "URL where this chain was found",
+            "source_name": "Name of the source (e.g., Goldman Sachs, Bloomberg)",
+            "confidence": "high|medium|low"
+        }}
+    ],
+    "summary": "2-3 sentence synthesis of the key causal relationships found",
+    "chain_count": 0
+}}
+
+Rules:
+- Extract ONLY chains with clear cause-effect logic
+- polarity: "positive" = cause increases effect, "negative" = cause decreases effect, "mixed" = depends on conditions
+- evidence_quote MUST be a VERBATIM quote from the source (copy-paste exact text)
+- Keep evidence_quote SHORT (1-2 sentences max, under 200 characters) - just enough to prove the claim
+- Do NOT paraphrase or summarize for evidence_quote - it must be the exact words from the source
+- confidence: "high" = explicit causal statement, "medium" = implied causation, "low" = speculative
+- source_name should be the institution/publication name (e.g., "Goldman Sachs", "Bloomberg")
+- source_url should be the URL where this was found (keep it short if possible)
+- If no relevant chains found, return empty chains array
+- Maximum 5 chains per query
+
+Return valid JSON only, no other text."""

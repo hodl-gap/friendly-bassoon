@@ -119,6 +119,13 @@ def detect_topic_coverage(query: str, chunks: list) -> dict:
     match_ratio = len(matched) / len(query_entities) if query_entities else 1.0
     direct_match = match_ratio >= 0.5  # At least half of query entities found
 
+    # Determine gap type for severe mismatches
+    gap_type = None
+    needs_web_chain_extraction = False
+    if match_ratio < 0.3:
+        gap_type = "topic_not_covered"
+        needs_web_chain_extraction = True
+
     # Build extrapolation note if needed
     extrapolation_note = None
     if not direct_match:
@@ -138,7 +145,9 @@ def detect_topic_coverage(query: str, chunks: list) -> dict:
         "found_entities": list(found_entities),
         "direct_match": direct_match,
         "match_ratio": match_ratio,
-        "extrapolation_note": extrapolation_note
+        "extrapolation_note": extrapolation_note,
+        "gap_type": gap_type,
+        "needs_web_chain_extraction": needs_web_chain_extraction
     }
 
 

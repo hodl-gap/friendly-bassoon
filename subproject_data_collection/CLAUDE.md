@@ -46,6 +46,7 @@ subproject_data_collection/
 │   ├── yahoo_adapter.py             # Yahoo Finance adapter
 │   ├── coingecko_adapter.py         # CoinGecko API adapter
 │   ├── web_search_adapter.py        # Web search + LLM extraction
+│   ├── trusted_domains.py           # Trusted domain filtering for web chains
 │   ├── news_adapters/
 │   │   ├── __init__.py
 │   │   ├── base_news_adapter.py     # Abstract news adapter
@@ -233,6 +234,46 @@ Some sources (BofA FMS, Japan insurer news) use web search + LLM extraction:
 **Search Backend** (`WEB_SEARCH_BACKEND` in `config.py`):
 - `"tavily"` (default) — Tavily API, returns full page content, `topic="finance"`, requires `TAVILY_API_KEY`
 - `"duckduckgo"` — Free, snippets only, no API key needed
+
+### Web Chain Extraction (On-the-Fly)
+
+When the retriever finds no relevant chunks for a topic, the system can extract logic chains from trusted web sources on-the-fly.
+
+**Trusted Domain Filtering** (`adapters/trusted_domains.py`):
+- **Tier 1**: Investment banks (Goldman, Morgan Stanley, JPMorgan, BofA, Citi, UBS), major news (Bloomberg, Reuters, FT, WSJ), central banks (Fed, ECB, BOJ), research firms (Fundstrat, Yardeni, BCA), asset managers (BlackRock, Bridgewater, VanEck, ARK)
+- **Tier 2**: Secondary news (CNBC, MarketWatch), crypto sources (Grayscale, Glassnode, CoinDesk)
+
+**Key Functions** (`adapters/web_search_adapter.py`):
+- `search_and_extract_chains(query, topic, min_tier)` — Main extraction method
+- Filters search results to trusted domains before LLM extraction
+- Verifies evidence quotes appear verbatim in source content
+
+**Configuration** (`config.py`):
+```python
+ENABLE_WEB_CHAIN_EXTRACTION = True   # Toggle feature
+ENFORCE_TRUSTED_DOMAINS = True       # Only extract from trusted sources
+TRUSTED_DOMAIN_MIN_TIER = 1          # 1 = Tier 1 only, 2 = include Tier 2
+MAX_WEB_CHAINS_PER_QUERY = 5         # Limit chains per query
+MIN_TRUSTED_SOURCES = 2              # Minimum sources required
+WEB_CHAIN_CONFIDENCE_WEIGHT = 0.7    # Weight vs DB chains (1.0)
+```
+
+**Output Format**:
+```json
+{
+  "cause": "AI boom and need for advanced AI models",
+  "effect": "Data center capex investment increases",
+  "mechanism": "Companies must build infrastructure to support AI",
+  "polarity": "positive",
+  "evidence_quote": "VERBATIM quote from source",
+  "source_name": "Goldman Sachs",
+  "source_url": "https://...",
+  "confidence": "high",
+  "quote_verified": true
+}
+```
+
+**Usage**: Called by `btc_intelligence/knowledge_gap_detector.py` when `topic_not_covered` gap detected. Chains are transient (not persisted to Pinecone).
 
 ## Data Adapter Pattern
 

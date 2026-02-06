@@ -31,6 +31,13 @@ Evaluate the retrieved information against these 6 knowledge categories. For eac
 
 ## CATEGORIES TO EVALUATE
 
+0. **Topic not covered**
+   - COVERED: Query topic explicitly discussed in synthesis/chains (e.g., query about "AI CAPEX" finds "AI CAPEX" mentioned)
+   - GAP: Query topic NOT mentioned at all in synthesis - database has no relevant research on this topic
+   - fill_method: `"web_chain_extraction"` — search trusted sources for logic chains on this topic
+   - search_query should be the query topic + relevant context (e.g., "AI CAPEX impact tech stocks investment banks analysis")
+   - ONLY mark as GAP if the topic is completely absent from synthesis (not just partially covered)
+
 1. **Historical precedent depth**
    - COVERED: Multiple (≥2) similar historical episodes with specific dates
    - GAP: Only 1 example, or no specific dates for similar episodes
@@ -79,9 +86,9 @@ Respond in this EXACT JSON format:
   "coverage_rating": "COMPLETE|PARTIAL|INSUFFICIENT",
   "gaps": [
     {{
-      "category": "historical_precedent_depth|quantified_relationships|monitoring_thresholds|event_calendar|mechanism_conditions|exit_criteria",
+      "category": "topic_not_covered|historical_precedent_depth|quantified_relationships|monitoring_thresholds|event_calendar|mechanism_conditions|exit_criteria",
       "status": "COVERED|GAP",
-      "fill_method": "web_search|data_fetch",
+      "fill_method": "web_chain_extraction|web_search|data_fetch",
       "found": "what was found (be specific)",
       "missing": "what specific information would fill this gap (null if COVERED)",
       "search_query": "web search query (null if COVERED or if fill_method is data_fetch)",
@@ -95,6 +102,7 @@ Respond in this EXACT JSON format:
 Rules:
 - coverage_rating: COMPLETE (0 gaps), PARTIAL (1-3 gaps), INSUFFICIENT (4+ gaps)
 - gap_count must match the number of items with status=GAP
+- fill_method: Use "web_chain_extraction" for topic_not_covered gaps (extracts logic chains from trusted sources)
 - fill_method is REQUIRED for every GAP. Use "data_fetch" for quantified_relationships. Use "web_search" for all others.
 - search_query: only for web_search gaps. Must be a single-topic query (5-12 words) asking for RAW FACTS (dates, schedules, analyst targets), NOT derived analysis.
 - instruments: only for data_fetch gaps. List of normalized variable names (e.g., ["btc", "usdjpy"]) to fetch and compute correlation from.

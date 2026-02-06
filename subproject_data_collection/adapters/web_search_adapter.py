@@ -25,8 +25,10 @@ from models import call_claude_haiku
 from web_search_prompts import (
     EXTRACT_DATA_POINTS_PROMPT,
     EXTRACT_ANNOUNCEMENTS_PROMPT,
-    EXTRACT_KNOWLEDGE_GAP_PROMPT
+    EXTRACT_KNOWLEDGE_GAP_PROMPT,
+    EXTRACT_LOGIC_CHAINS_PROMPT
 )
+from adapters.trusted_domains import filter_to_trusted_sources, is_trusted_domain
 
 
 class WebSearchAdapter:
@@ -224,7 +226,8 @@ class WebSearchAdapter:
         search_results: str,
         extract_type: str,
         gap_category: str = None,
-        missing_description: str = None
+        missing_description: str = None,
+        topic: str = None
     ) -> Dict[str, Any]:
         """
         Extract structured data from search results using Haiku.
@@ -232,9 +235,10 @@ class WebSearchAdapter:
         Args:
             query: Original search query
             search_results: Formatted search results text
-            extract_type: "data_points", "announcements", or "knowledge_gap"
+            extract_type: "data_points", "announcements", "knowledge_gap", or "logic_chains"
             gap_category: (for knowledge_gap) Category of the gap being filled
             missing_description: (for knowledge_gap) What information is needed
+            topic: (for logic_chains) Topic for chain extraction
 
         Returns:
             Extracted data as dict
@@ -259,6 +263,13 @@ class WebSearchAdapter:
                 query=query,
                 search_results=search_results
             )
+        elif extract_type == "logic_chains":
+            prompt_template = EXTRACT_LOGIC_CHAINS_PROMPT
+            user_prompt = prompt_template.format(
+                query=query,
+                topic=topic or query,
+                search_results=search_results
+            )
         else:
             raise ValueError(f"Unknown extract_type: {extract_type}")
 
@@ -266,8 +277,11 @@ class WebSearchAdapter:
 
         print(f"[{self.source_name}] Extracting {extract_type} with Haiku...")
 
+        # Use higher token limit for logic_chains (more structured output)
+        max_tokens = 3000 if extract_type == "logic_chains" else 1500
+
         try:
-            response = call_claude_haiku(messages, temperature=0.0, max_tokens=1500)
+            response = call_claude_haiku(messages, temperature=0.0, max_tokens=max_tokens)
             print(f"[{self.source_name}] Raw LLM response:\n{response}")
 
             # Try to parse JSON from response
@@ -397,6 +411,157 @@ class WebSearchAdapter:
                 time.sleep(delay_seconds)
 
         return results
+
+
+    def _verify_evidence_quote(
+        self,
+        quote: str,
+        search_results: List[Dict[str, str]]
+    ) -> bool:
+        """
+        Verify that an evidence quote actually appears in source content.
+
+        Args:
+            quote: The evidence quote to verify
+            search_results: Raw search results with content
+
+        Returns:
+            True if quote appears verbatim (or close match) in any source
+        """
+        if not quote or len(quote) < 20:
+            return False
+
+        # Normalize quote for comparison
+        quote_normalized = quote.lower().strip()
+
+        for result in search_results:
+            content = result.get("content", "") + " " + result.get("snippet", "")
+            content_normalized = content.lower()
+
+            # Check for exact substring match
+            if quote_normalized in content_normalized:
+                return True
+
+            # Check for fuzzy match (quote words appear in sequence)
+            quote_words = quote_normalized.split()[:10]  # First 10 words
+            if len(quote_words) >= 5:
+                # Check if first 5 words appear in sequence
+                first_words = " ".join(quote_words[:5])
+                if first_words in content_normalized:
+                    return True
+
+        return False
+
+    def search_and_extract_chains(
+        self,
+        query: str,
+        topic: str,
+        min_tier: int = 2,
+        verify_quotes: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Search trusted sources and extract logic chains.
+
+        This is the main method for on-the-fly chain extraction from web sources.
+        It filters to trusted domains before extraction and optionally verifies
+        evidence quotes.
+
+        Args:
+            query: Search query
+            topic: Topic for chain extraction (used in prompt)
+            min_tier: Minimum source tier (1 = Tier 1 only, 2 = include Tier 2)
+            verify_quotes: Whether to verify evidence quotes appear in sources
+
+        Returns:
+            Dict containing:
+            - query: Original query
+            - topic: Topic used for extraction
+            - chains: List of extracted logic chains
+            - trusted_sources_count: Number of trusted sources found
+            - filtered_sources: List of trusted source URLs
+            - all_sources: List of all source URLs (before filtering)
+            - verification_results: Quote verification status per chain
+        """
+        print(f"[{self.source_name}] Searching for logic chains on: {query[:50]}...")
+
+        # Perform search
+        search_results = self._search(query)
+
+        if not search_results:
+            return {
+                "query": query,
+                "topic": topic,
+                "chains": [],
+                "trusted_sources_count": 0,
+                "filtered_sources": [],
+                "all_sources": [],
+                "error": "No search results found"
+            }
+
+        all_sources = [r["url"] for r in search_results]
+
+        # Filter to trusted sources
+        trusted_results = filter_to_trusted_sources(search_results, min_tier)
+
+        if not trusted_results:
+            print(f"[{self.source_name}] No trusted sources found in {len(search_results)} results")
+            return {
+                "query": query,
+                "topic": topic,
+                "chains": [],
+                "trusted_sources_count": 0,
+                "filtered_sources": [],
+                "all_sources": all_sources,
+                "warning": "No trusted sources found"
+            }
+
+        filtered_sources = [r["url"] for r in trusted_results]
+        print(f"[{self.source_name}] Found {len(trusted_results)} trusted sources from {len(search_results)} total")
+
+        # Format trusted results for LLM
+        formatted_results = self._format_search_results(trusted_results)
+
+        # Extract logic chains
+        extracted = self._extract_with_llm(
+            query,
+            formatted_results,
+            extract_type="logic_chains",
+            topic=topic
+        )
+
+        chains = extracted.get("chains", [])
+
+        # Verify evidence quotes if requested
+        verification_results = []
+        if verify_quotes and chains:
+            for i, chain in enumerate(chains):
+                quote = chain.get("evidence_quote", "")
+                is_verified = self._verify_evidence_quote(quote, trusted_results)
+                verification_results.append({
+                    "chain_index": i,
+                    "quote_verified": is_verified,
+                    "quote_preview": quote[:50] + "..." if len(quote) > 50 else quote
+                })
+
+                if not is_verified:
+                    print(f"[{self.source_name}] Warning: Quote not verified for chain {i}")
+                    # Mark chain as unverified but don't remove it
+                    chain["quote_verified"] = False
+                else:
+                    chain["quote_verified"] = True
+
+        return {
+            "query": query,
+            "topic": topic,
+            "chains": chains,
+            "summary": extracted.get("summary", ""),
+            "chain_count": len(chains),
+            "trusted_sources_count": len(trusted_results),
+            "filtered_sources": filtered_sources,
+            "all_sources": all_sources,
+            "verification_results": verification_results,
+            "source_tier": min_tier
+        }
 
 
 # Convenience functions for direct use

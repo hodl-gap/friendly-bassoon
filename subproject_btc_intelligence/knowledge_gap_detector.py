@@ -638,3 +638,308 @@ def fill_gaps_with_data(
         "total_searches": 0,
         "termination_reason": "all_processed"
     }
+
+
+def _get_web_chain_adapter():
+    """
+    Get WebSearchAdapter configured for chain extraction.
+
+    Similar to _get_web_search_adapter but with proper module handling
+    for chain extraction functionality.
+    """
+    try:
+        data_collection_path = str(Path(__file__).parent.parent / "subproject_data_collection")
+
+        # Clear cached modules that would shadow data_collection's imports
+        saved_modules = {}
+        for mod_name in ['config', 'web_search_prompts']:
+            if mod_name in sys.modules:
+                saved_modules[mod_name] = sys.modules.pop(mod_name)
+
+        # Ensure data_collection path is at the front of sys.path
+        if data_collection_path in sys.path:
+            sys.path.remove(data_collection_path)
+        sys.path.insert(0, data_collection_path)
+
+        from adapters.web_search_adapter import WebSearchAdapter
+
+        # Restore previously cached modules
+        for mod_name, mod in saved_modules.items():
+            if mod_name not in sys.modules:
+                sys.modules[mod_name] = mod
+
+        return WebSearchAdapter(max_results=8)
+    except ImportError as e:
+        print(f"[Knowledge Gap] WebSearchAdapter import failed: {e}")
+        # Restore on failure too
+        for mod_name, mod in saved_modules.items():
+            if mod_name not in sys.modules:
+                sys.modules[mod_name] = mod
+        return None
+
+
+def _format_chain_enrichment(chains: List[Dict[str, Any]], sources: List[str]) -> str:
+    """Format extracted web chains as enrichment text for impact analysis."""
+    if not chains:
+        return ""
+
+    lines = [
+        "## Additional Context: Logic Chains from Trusted Web Sources",
+        "(Source: Web search - chains extracted from trusted financial sources)"
+    ]
+
+    for i, chain in enumerate(chains, 1):
+        cause = chain.get("cause", "Unknown cause")
+        effect = chain.get("effect", "Unknown effect")
+        mechanism = chain.get("mechanism", "")
+        polarity = chain.get("polarity", "unknown")
+        source_name = chain.get("source_name", "Unknown source")
+        confidence = chain.get("confidence", "medium")
+        verified = chain.get("quote_verified", False)
+
+        polarity_symbol = {"positive": "+", "negative": "-", "mixed": "±"}.get(polarity, "?")
+
+        lines.append(f"\n### Chain {i} ({source_name})")
+        lines.append(f"- **Cause**: {cause}")
+        lines.append(f"- **Effect**: {effect} [{polarity_symbol}]")
+        if mechanism:
+            lines.append(f"- **Mechanism**: {mechanism}")
+        lines.append(f"- **Confidence**: {confidence}" + (" (quote verified)" if verified else ""))
+
+        # Include evidence quote if present
+        quote = chain.get("evidence_quote", "")
+        if quote and len(quote) > 20:
+            lines.append(f"- **Evidence**: \"{quote[:150]}...\"" if len(quote) > 150 else f"- **Evidence**: \"{quote}\"")
+
+    if sources:
+        lines.append(f"\n**Sources**: {', '.join(sources[:3])}")
+
+    return "\n".join(lines)
+
+
+def fill_gaps_with_web_chains(
+    gaps: List[Dict[str, Any]],
+    min_tier: int = 2,
+    min_trusted_sources: int = 2,
+    confidence_weight: float = 0.7
+) -> Dict[str, Any]:
+    """
+    Fill topic_not_covered gaps by extracting logic chains from trusted web sources.
+
+    This is the main integration point for on-the-fly chain extraction when
+    the database has no relevant research on a query topic.
+
+    Args:
+        gaps: List of gap dicts with fill_method=="web_chain_extraction"
+        min_tier: Minimum source tier (1 = Tier 1 only, 2 = include Tier 2)
+        min_trusted_sources: Minimum trusted sources required to proceed
+        confidence_weight: Weight for web chains (vs 1.0 for DB chains)
+
+    Returns:
+        {
+            "filled_gaps": [...],
+            "partially_filled_gaps": [...],
+            "unfillable_gaps": [...],
+            "enrichment_text": "...",
+            "extracted_chains": [...],  # Raw chains for merging with DB chains
+            "total_searches": N,
+            "termination_reason": "..."
+        }
+    """
+    # Filter to web_chain_extraction gaps
+    chain_gaps = [
+        g for g in gaps
+        if g.get("status") == "GAP" and g.get("fill_method") == "web_chain_extraction"
+    ]
+
+    if not chain_gaps:
+        return {
+            "filled_gaps": [],
+            "partially_filled_gaps": [],
+            "unfillable_gaps": [],
+            "enrichment_text": "",
+            "extracted_chains": [],
+            "total_searches": 0,
+            "termination_reason": "no_chain_gaps"
+        }
+
+    adapter = _get_web_chain_adapter()
+    if not adapter:
+        print("[Knowledge Gap] WebSearchAdapter not available for chain extraction")
+        return {
+            "filled_gaps": [],
+            "partially_filled_gaps": [],
+            "unfillable_gaps": chain_gaps,
+            "enrichment_text": "",
+            "extracted_chains": [],
+            "total_searches": 0,
+            "termination_reason": "adapter_unavailable"
+        }
+
+    filled = []
+    partial = []
+    unfillable = []
+    all_chains = []
+    enrichment_parts = []
+    search_count = 0
+
+    print(f"[Knowledge Gap] Extracting logic chains for {len(chain_gaps)} topic gaps...")
+
+    for gap in chain_gaps:
+        category = gap.get("category", "unknown")
+        search_query = gap.get("search_query", "")
+        topic = gap.get("missing", search_query)
+
+        if not search_query:
+            unfillable.append({**gap, "status": "UNFILLABLE", "reason": "no_search_query"})
+            continue
+
+        print(f"\n[Gap: {category}] (web_chain_extraction)")
+        print(f"  Query: {search_query}")
+
+        # Extract chains from trusted sources
+        result = adapter.search_and_extract_chains(
+            query=search_query,
+            topic=topic,
+            min_tier=min_tier,
+            verify_quotes=True
+        )
+        search_count += 1
+
+        chains = result.get("chains", [])
+        trusted_count = result.get("trusted_sources_count", 0)
+        filtered_sources = result.get("filtered_sources", [])
+
+        print(f"  → Found {len(chains)} chains from {trusted_count} trusted sources")
+
+        # Check minimum trusted sources requirement
+        if trusted_count < min_trusted_sources:
+            print(f"  → Insufficient trusted sources ({trusted_count} < {min_trusted_sources})")
+            unfillable.append({
+                **gap,
+                "status": "UNFILLABLE",
+                "reason": f"insufficient_trusted_sources ({trusted_count})",
+                "trusted_sources_count": trusted_count
+            })
+            continue
+
+        if not chains:
+            print(f"  → No chains extracted despite trusted sources")
+            unfillable.append({
+                **gap,
+                "status": "UNFILLABLE",
+                "reason": "no_chains_extracted",
+                "trusted_sources_count": trusted_count
+            })
+            continue
+
+        # Apply confidence weight to chains
+        for chain in chains:
+            chain["source_type"] = "web"
+            chain["confidence_weight"] = confidence_weight
+
+        all_chains.extend(chains)
+
+        # Determine fill status based on chain quality
+        verified_count = sum(1 for c in chains if c.get("quote_verified", False))
+        high_confidence_count = sum(1 for c in chains if c.get("confidence") == "high")
+
+        if verified_count >= 2 or high_confidence_count >= 2:
+            filled.append({
+                **gap,
+                "status": "FILLED",
+                "chain_count": len(chains),
+                "verified_quotes": verified_count,
+                "trusted_sources_count": trusted_count,
+                "sources": filtered_sources
+            })
+            enrichment_parts.append(_format_chain_enrichment(chains, filtered_sources))
+            print(f"  → Status: FILLED ({len(chains)} chains, {verified_count} verified)")
+        elif len(chains) >= 1:
+            partial.append({
+                **gap,
+                "status": "PARTIALLY_FILLED",
+                "chain_count": len(chains),
+                "verified_quotes": verified_count,
+                "trusted_sources_count": trusted_count,
+                "sources": filtered_sources
+            })
+            enrichment_parts.append(_format_chain_enrichment(chains, filtered_sources))
+            print(f"  → Status: PARTIALLY_FILLED ({len(chains)} chains)")
+        else:
+            unfillable.append({
+                **gap,
+                "status": "UNFILLABLE",
+                "reason": "low_quality_chains",
+                "chain_count": len(chains)
+            })
+
+    print(f"\n[Knowledge Gap] Web chain extraction: {len(filled)} filled, {len(partial)} partial, {len(unfillable)} unfillable")
+    print(f"[Knowledge Gap] Total chains extracted: {len(all_chains)}")
+
+    return {
+        "filled_gaps": filled,
+        "partially_filled_gaps": partial,
+        "unfillable_gaps": unfillable,
+        "enrichment_text": "\n\n".join(enrichment_parts),
+        "extracted_chains": all_chains,
+        "total_searches": search_count,
+        "termination_reason": "all_processed"
+    }
+
+
+def merge_web_chains_with_db_chains(
+    db_chains: List[Dict[str, Any]],
+    web_chains: List[Dict[str, Any]],
+    db_weight: float = 1.0,
+    web_weight: float = 0.7
+) -> List[Dict[str, Any]]:
+    """
+    Merge logic chains from database and web sources with appropriate weighting.
+
+    DB chains get full weight (1.0), web chains get reduced weight (0.7).
+    Deduplicates by cause+effect pair.
+
+    Args:
+        db_chains: Logic chains from vector database
+        web_chains: Logic chains extracted from web
+        db_weight: Weight for DB chains (default 1.0)
+        web_weight: Weight for web chains (default 0.7)
+
+    Returns:
+        Merged and weighted list of chains
+    """
+    seen_pairs = set()
+    merged = []
+
+    # Add DB chains first (higher priority)
+    for chain in db_chains:
+        cause = chain.get("cause", "") or ""
+        effect = chain.get("effect", "") or ""
+        pair_key = (cause.lower().strip(), effect.lower().strip())
+
+        if pair_key not in seen_pairs and cause and effect:
+            seen_pairs.add(pair_key)
+            merged.append({
+                **chain,
+                "source_type": "database",
+                "confidence_weight": db_weight
+            })
+
+    # Add web chains (avoid duplicates)
+    for chain in web_chains:
+        cause = chain.get("cause", "") or ""
+        effect = chain.get("effect", "") or ""
+        pair_key = (cause.lower().strip(), effect.lower().strip())
+
+        if pair_key not in seen_pairs and cause and effect:
+            seen_pairs.add(pair_key)
+            merged.append({
+                **chain,
+                "source_type": "web",
+                "confidence_weight": chain.get("confidence_weight", web_weight)
+            })
+
+    print(f"[Chain Merge] {len(db_chains)} DB + {len(web_chains)} web → {len(merged)} merged (deduplicated)")
+
+    return merged

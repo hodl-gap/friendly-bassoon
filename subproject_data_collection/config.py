@@ -119,6 +119,18 @@ WEB_SEARCH_DELAY_SECONDS = 1.0  # Delay between searches to avoid rate limiting
 WEB_SEARCH_EXTRACTION_MODEL = "claude_haiku"  # Model for extraction (cheap)
 
 # =============================================================================
+# WEB CHAIN EXTRACTION SETTINGS
+# =============================================================================
+
+# On-the-fly logic chain extraction from trusted web sources
+ENABLE_WEB_CHAIN_EXTRACTION = True  # Enable/disable web chain extraction feature
+ENFORCE_TRUSTED_DOMAINS = True  # Only extract from trusted domains (Tier 1/2)
+TRUSTED_DOMAIN_MIN_TIER = 1  # Minimum tier: 1 = Tier 1 only, 2 = include Tier 2
+MAX_WEB_CHAINS_PER_QUERY = 5  # Maximum chains to extract per query
+MIN_TRUSTED_SOURCES = 2  # Minimum trusted sources required to proceed
+WEB_CHAIN_CONFIDENCE_WEIGHT = 0.7  # Confidence weight for web chains (vs 1.0 for DB chains)
+
+# =============================================================================
 # KNOWN DATA SOURCES
 # =============================================================================
 
