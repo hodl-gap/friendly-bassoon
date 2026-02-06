@@ -207,14 +207,21 @@ def retrieve_context(query: str) -> BTCImpactState:
 
 
 def format_output(state: BTCImpactState, as_json: bool = False) -> str:
-    """Format the final output for display."""
+    """Format the final output for display - Belief Space format."""
 
     current_values = state.get("current_values", {})
     topic_coverage = state.get("topic_coverage", {})
     historical_event_data = state.get("historical_event_data", {})
+    scenarios = state.get("scenarios", [])
+    belief_space = state.get("belief_space", {})
 
     if as_json:
         output = {
+            # Belief Space Output (Primary)
+            "scenarios": scenarios,
+            "belief_space": belief_space,
+            # Legacy fields (backward compatibility)
+            "primary_direction": state.get("direction", "NEUTRAL"),
             "direction": state.get("direction", "NEUTRAL"),
             "confidence": state.get("confidence", {}),
             "time_horizon": state.get("time_horizon", "unknown"),
@@ -228,7 +235,7 @@ def format_output(state: BTCImpactState, as_json: bool = False) -> str:
         }
         return json.dumps(output, indent=2, default=str)
 
-    # Human-readable format
+    # Human-readable format - Belief Space
     direction = state.get("direction", "NEUTRAL")
     confidence = state.get("confidence", {})
     time_horizon = state.get("time_horizon", "unknown")
@@ -243,11 +250,14 @@ def format_output(state: BTCImpactState, as_json: bool = False) -> str:
 
     lines = [
         "=" * 60,
+        "BELIEF SPACE ANALYSIS",
+        "=" * 60,
     ]
 
     # Add extrapolation warning if topic mismatch detected
     if topic_coverage.get("extrapolation_note"):
         lines.extend([
+            "",
             "⚠️  DATA SOURCE WARNING:",
             f"    {topic_coverage['extrapolation_note']}",
             f"    Query entities: {topic_coverage.get('query_entities', [])}",
@@ -255,10 +265,70 @@ def format_output(state: BTCImpactState, as_json: bool = False) -> str:
             "-" * 60,
         ])
 
+    # Display all scenarios (the core belief space output)
+    if scenarios:
+        lines.append("")
+        lines.append("SCENARIOS (Market Belief Paths):")
+        lines.append("-" * 40)
+
+        # Sort by likelihood descending
+        sorted_scenarios = sorted(scenarios, key=lambda s: s.get("likelihood", 0), reverse=True)
+
+        for i, scenario in enumerate(sorted_scenarios, 1):
+            name = scenario.get("name", f"Scenario {i}")
+            direction_s = scenario.get("direction", "NEUTRAL")
+            likelihood = scenario.get("likelihood", 0)
+            chain = scenario.get("chain", "N/A")
+            likelihood_basis = scenario.get("likelihood_basis", "")
+
+            # Direction indicator
+            dir_symbol = "↑" if direction_s == "BULLISH" else "↓" if direction_s == "BEARISH" else "→"
+
+            lines.append("")
+            lines.append(f"  [{i}] {name}")
+            lines.append(f"      Direction: {direction_s} {dir_symbol}")
+            lines.append(f"      Likelihood: {likelihood*100:.0f}%{' - ' + likelihood_basis if likelihood_basis else ''}")
+            lines.append(f"      Chain: {chain}")
+
+            # Key data points if available
+            key_data = scenario.get("key_data_points", [])
+            if key_data:
+                lines.append(f"      Key Data: {', '.join(key_data)}")
+
+            # Rationale if available
+            scenario_rationale = scenario.get("rationale", "")
+            if scenario_rationale:
+                lines.append(f"      Rationale: {scenario_rationale[:150]}...")
+
+    # Display contradictions (critical for belief space)
+    contradictions = belief_space.get("contradictions", [])
+    if contradictions:
+        lines.append("")
+        lines.append("-" * 40)
+        lines.append("CONTRADICTIONS (Coexisting Beliefs):")
+
+        for contra in contradictions:
+            thesis_a = contra.get("thesis_a", "")
+            thesis_b = contra.get("thesis_b", "")
+            description = contra.get("description", "")
+            implication = contra.get("implication", "")
+
+            if thesis_a and thesis_b:
+                lines.append(f"  • \"{thesis_a}\" vs \"{thesis_b}\"")
+            elif description:
+                lines.append(f"  • {description}")
+
+            if implication:
+                lines.append(f"    → {implication}")
+
+    lines.append("")
+    lines.append("-" * 40)
+    lines.append("SUMMARY:")
     lines.extend([
-        f"DIRECTION: {direction}",
-        f"CONFIDENCE: {conf_score} ({chain_count} chains, {source_div} sources)",
-        f"TIME HORIZON: {time_horizon} ({decay_profile} decay)",
+        f"  Primary Direction: {direction}",
+        f"  Confidence: {conf_score} ({chain_count} chains, {source_div} sources)",
+        f"  Regime Uncertainty: {belief_space.get('regime_uncertainty', 'unknown')}",
+        f"  Time Horizon: {time_horizon} ({decay_profile} decay)",
     ])
 
     # Add current values section if available

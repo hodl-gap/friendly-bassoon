@@ -22,7 +22,11 @@ from config import (
     ENABLE_CHAIN_EXPANSION,
     MIN_CHUNKS_BEFORE_EXPANSION,
     MAX_DANGLING_TO_FOLLOW,
-    USE_STRUCTURED_SYNTHESIS
+    USE_STRUCTURED_SYNTHESIS,
+    ENABLE_CHAIN_COMPLETENESS_CHECK,
+    CHAIN_TARGET_KEYWORDS,
+    ENABLE_UNRESOLVED_DANGLING_CHECK,
+    MIN_UNRESOLVED_FOR_WEB_EXTRACTION
 )
 
 
@@ -151,6 +155,303 @@ def detect_topic_coverage(query: str, chunks: list) -> dict:
     }
 
 
+def extract_query_target(query: str) -> dict:
+    """
+    Extract the target outcome from a query.
+
+    For "What is the impact of AI CAPEX on tech stocks?":
+    - subject: "AI CAPEX"
+    - target: "tech stocks"
+    - outcome_type: "impact" (direction expected)
+
+    Returns:
+        {
+            "subject": str,           # What's causing the effect
+            "target": str,            # What's being affected
+            "outcome_type": str,      # Type of outcome expected (impact, direction, etc.)
+            "target_keywords": list   # Keywords to look for in chain endpoints
+        }
+    """
+    query_lower = query.lower()
+
+    # Detect outcome type
+    outcome_type = None
+    for keyword in CHAIN_TARGET_KEYWORDS:
+        if keyword in query_lower:
+            outcome_type = keyword
+            break
+
+    if not outcome_type:
+        # No outcome keyword detected - might not need completeness check
+        return {
+            "subject": None,
+            "target": None,
+            "outcome_type": None,
+            "target_keywords": []
+        }
+
+    # Common patterns for extracting subject and target
+    # "impact of X on Y" → subject=X, target=Y
+    # "effect of X on Y" → subject=X, target=Y
+    # "how does X affect Y" → subject=X, target=Y
+
+    import re
+
+    # Pattern: "impact/effect of X on Y"
+    pattern1 = re.search(r'(?:impact|effect|influence)\s+of\s+(.+?)\s+on\s+(.+?)(?:\?|$)', query_lower)
+    if pattern1:
+        subject = pattern1.group(1).strip()
+        target = pattern1.group(2).strip().rstrip('?')
+
+        # Extract keywords from target
+        target_keywords = extract_target_keywords(target)
+
+        return {
+            "subject": subject,
+            "target": target,
+            "outcome_type": outcome_type,
+            "target_keywords": target_keywords
+        }
+
+    # Pattern: "how does X affect Y"
+    pattern2 = re.search(r'how\s+(?:does|do|will|would)\s+(.+?)\s+(?:affect|impact|influence)\s+(.+?)(?:\?|$)', query_lower)
+    if pattern2:
+        subject = pattern2.group(1).strip()
+        target = pattern2.group(2).strip().rstrip('?')
+        target_keywords = extract_target_keywords(target)
+
+        return {
+            "subject": subject,
+            "target": target,
+            "outcome_type": outcome_type,
+            "target_keywords": target_keywords
+        }
+
+    # Pattern: "X impact on Y" or "X's impact on Y"
+    pattern3 = re.search(r"(.+?)(?:'s)?\s+impact\s+on\s+(.+?)(?:\?|$)", query_lower)
+    if pattern3:
+        subject = pattern3.group(1).strip()
+        target = pattern3.group(2).strip().rstrip('?')
+        target_keywords = extract_target_keywords(target)
+
+        return {
+            "subject": subject,
+            "target": target,
+            "outcome_type": outcome_type,
+            "target_keywords": target_keywords
+        }
+
+    # Fallback: just return outcome type detected
+    return {
+        "subject": None,
+        "target": None,
+        "outcome_type": outcome_type,
+        "target_keywords": []
+    }
+
+
+def extract_target_keywords(target: str) -> list:
+    """
+    Extract keywords from target that should appear in chain endpoints.
+
+    "tech stocks" → ["tech", "stock", "equity", "nasdaq", "technology"]
+    "BTC" → ["btc", "bitcoin", "crypto"]
+    "risk assets" → ["risk", "asset", "equity", "stock"]
+    """
+    target_lower = target.lower()
+    keywords = []
+
+    # Direct keywords from target
+    words = re.findall(r'\b\w+\b', target_lower)
+    keywords.extend(words)
+
+    # Add related keywords based on common terms
+    keyword_expansions = {
+        "tech": ["technology", "nasdaq", "software", "semiconductor", "equity", "stock"],
+        "stock": ["equity", "equities", "share", "index", "market"],
+        "btc": ["bitcoin", "crypto", "cryptocurrency"],
+        "bitcoin": ["btc", "crypto", "cryptocurrency"],
+        "risk": ["equity", "stock", "asset"],
+        "asset": ["equity", "stock", "market"],
+        "market": ["equity", "stock", "index"],
+        "bond": ["fixed income", "treasury", "yield", "credit"],
+        "gold": ["precious metal", "commodity", "safe haven"],
+        "dollar": ["usd", "dxy", "currency", "fx"],
+        "yen": ["jpy", "usdjpy", "currency", "fx"],
+    }
+
+    for word in words:
+        if word in keyword_expansions:
+            keywords.extend(keyword_expansions[word])
+
+    # Add directional keywords that indicate completion
+    directional_keywords = [
+        "up", "down", "rise", "fall", "rally", "crash", "bullish", "bearish",
+        "increase", "decrease", "gain", "loss", "positive", "negative",
+        "outperform", "underperform", "benefit", "hurt", "pressure"
+    ]
+    keywords.extend(directional_keywords)
+
+    return list(set(keywords))
+
+
+def check_chain_completeness(stage1_answer: str, query_target: dict) -> dict:
+    """
+    Option 1: Check if extracted chains reach the query target.
+
+    Parses Stage 1 output to find chain endpoints and checks if any
+    endpoint relates to the target outcome.
+
+    Args:
+        stage1_answer: The raw Stage 1 LLM output containing chains
+        query_target: Output from extract_query_target()
+
+    Returns:
+        {
+            "chains_complete": bool,
+            "chain_endpoints": list,       # All detected endpoints
+            "target_reached_by": list,     # Endpoints that reach target
+            "gap_reason": str or None      # Why chains are incomplete
+        }
+    """
+    if not query_target.get("target_keywords"):
+        # No target to check against
+        return {
+            "chains_complete": True,  # Assume complete if no target specified
+            "chain_endpoints": [],
+            "target_reached_by": [],
+            "gap_reason": None
+        }
+
+    target_keywords = set(kw.lower() for kw in query_target["target_keywords"])
+
+    # Extract chain endpoints from Stage 1 answer
+    # Look for patterns like "→ endpoint" or "-> endpoint" at end of chains
+    import re
+
+    # Pattern: captures the last effect in a chain (after last →)
+    # Example: "AI CAPEX → infrastructure → **tech stocks rise**"
+    chain_patterns = [
+        r'→\s*([^→\n\[]+?)(?:\s*\[|\s*\n|$)',  # → endpoint [normalized] or end of line
+        r'->\s*([^->\n\[]+?)(?:\s*\[|\s*\n|$)',  # -> endpoint
+        r'\*\*CHAIN:\*\*.*?→\s*([^→\n]+?)(?:\n|$)',  # **CHAIN:** ... → final
+    ]
+
+    all_endpoints = []
+    for pattern in chain_patterns:
+        matches = re.findall(pattern, stage1_answer)
+        all_endpoints.extend([m.strip().lower() for m in matches])
+
+    # Deduplicate and clean
+    all_endpoints = list(set(all_endpoints))
+    all_endpoints = [e for e in all_endpoints if len(e) > 2]  # Filter noise
+
+    # Check which endpoints contain target keywords
+    target_reached_by = []
+    for endpoint in all_endpoints:
+        endpoint_words = set(re.findall(r'\b\w+\b', endpoint.lower()))
+        if endpoint_words & target_keywords:
+            target_reached_by.append(endpoint)
+
+    chains_complete = len(target_reached_by) > 0
+
+    gap_reason = None
+    if not chains_complete:
+        target_str = query_target.get("target", "unknown")
+        gap_reason = f"Chains stop at intermediate effects, none reach '{target_str}'"
+
+    return {
+        "chains_complete": chains_complete,
+        "chain_endpoints": all_endpoints[:20],  # Limit for logging
+        "target_reached_by": target_reached_by,
+        "gap_reason": gap_reason
+    }
+
+
+def check_unresolved_dangles(
+    original_dangling: list,
+    followed_effects: list,
+    chunks_after_expansion: list,
+    query_target: dict
+) -> dict:
+    """
+    Option 2: Check if dangling effects remain unresolved after expansion.
+
+    An effect is "resolved" if after follow-up retrieval, we found chunks
+    where that effect appears as a CAUSE (i.e., chain continues).
+
+    Args:
+        original_dangling: Dangling effects detected before expansion
+        followed_effects: Effects that were followed up with queries
+        chunks_after_expansion: All chunks after expansion
+        query_target: Output from extract_query_target()
+
+    Returns:
+        {
+            "unresolved_count": int,
+            "unresolved_effects": list,
+            "resolution_rate": float,      # 0.0-1.0
+            "needs_web_extraction": bool,
+            "reason": str or None
+        }
+    """
+    if not original_dangling:
+        return {
+            "unresolved_count": 0,
+            "unresolved_effects": [],
+            "resolution_rate": 1.0,
+            "needs_web_extraction": False,
+            "reason": None
+        }
+
+    # Find all causes in expanded chunks
+    causes_in_expanded = set()
+    for chunk in chunks_after_expansion:
+        extracted_data = parse_extracted_data(chunk)
+        for chain in extracted_data.get("logic_chains", []):
+            for step in chain.get("steps", []):
+                cause_norm = step.get("cause_normalized", "")
+                if cause_norm:
+                    causes_in_expanded.add(cause_norm)
+
+    # Check which followed effects are now resolved (appear as causes)
+    resolved = []
+    unresolved = []
+
+    for effect in followed_effects:
+        if effect in causes_in_expanded:
+            resolved.append(effect)
+        else:
+            unresolved.append(effect)
+
+    # Also check original dangling that weren't followed
+    for effect in original_dangling:
+        if effect not in followed_effects and effect not in causes_in_expanded:
+            # Was dangling and not followed, check if it's now a cause
+            if effect not in unresolved:
+                unresolved.append(effect)
+
+    resolution_rate = len(resolved) / len(followed_effects) if followed_effects else 1.0
+
+    # Determine if web extraction needed
+    needs_web = (
+        ENABLE_UNRESOLVED_DANGLING_CHECK and
+        len(unresolved) >= MIN_UNRESOLVED_FOR_WEB_EXTRACTION
+    )
+
+    reason = None
+    if needs_web:
+        reason = f"{len(unresolved)} dangling effects unresolved after expansion: {unresolved[:3]}"
+
+    return {
+        "unresolved_count": len(unresolved),
+        "unresolved_effects": unresolved,
+        "resolution_rate": resolution_rate,
+        "needs_web_extraction": needs_web,
+        "reason": reason
+    }
+
+
 def generate_answer(state: RetrieverState) -> RetrieverState:
     """
     Generate logic chain answer from retrieved chunks (two-stage + conditional Stage 3).
@@ -167,6 +468,13 @@ def generate_answer(state: RetrieverState) -> RetrieverState:
     query_temporal_ref = state.get("query_temporal_reference", {})
     query_type = state.get("query_type", "research_question")
 
+    # Option 1: Extract query target for chain completeness check
+    query_target = None
+    if ENABLE_CHAIN_COMPLETENESS_CHECK:
+        query_target = extract_query_target(query)
+        if query_target.get("target"):
+            print(f"[answer_generation] Query target: '{query_target['target']}' (outcome: {query_target['outcome_type']})")
+
     # Detect topic coverage (extrapolation warning)
     topic_coverage = detect_topic_coverage(query, chunks)
     if topic_coverage.get("extrapolation_note"):
@@ -177,14 +485,15 @@ def generate_answer(state: RetrieverState) -> RetrieverState:
 
     # Chain expansion: detect and follow dangling effects
     dangling_followed = []
+    original_dangling = []
     if ENABLE_CHAIN_EXPANSION and len(chunks) >= MIN_CHUNKS_BEFORE_EXPANSION:
         print(f"[answer_generation] Detecting dangling chains...")
-        dangling = detect_dangling_chains(chunks)
+        original_dangling = detect_dangling_chains(chunks)
 
-        if dangling:
-            print(f"[answer_generation] Found {len(dangling)} dangling effects: {dangling[:5]}...")
+        if original_dangling:
+            print(f"[answer_generation] Found {len(original_dangling)} dangling effects: {original_dangling[:5]}...")
             additional_chunks, dangling_followed = expand_dangling_chains(
-                dangling,
+                original_dangling,
                 chunks,
                 max_to_follow=MAX_DANGLING_TO_FOLLOW
             )
@@ -201,6 +510,21 @@ def generate_answer(state: RetrieverState) -> RetrieverState:
             print(f"[answer_generation] Chain expansion disabled")
         else:
             print(f"[answer_generation] Too few chunks ({len(chunks)}) for chain expansion")
+
+    # Option 2: Check for unresolved dangling effects after expansion
+    unresolved_check = None
+    if ENABLE_UNRESOLVED_DANGLING_CHECK and original_dangling:
+        unresolved_check = check_unresolved_dangles(
+            original_dangling,
+            dangling_followed,
+            chunks,
+            query_target or {}
+        )
+        if unresolved_check["unresolved_count"] > 0:
+            print(f"[answer_generation] Unresolved dangles: {unresolved_check['unresolved_count']} "
+                  f"(resolution rate: {unresolved_check['resolution_rate']:.1%})")
+            if unresolved_check["needs_web_extraction"]:
+                print(f"[answer_generation] ⚠️ CHAIN INCOMPLETE: {unresolved_check['reason']}")
 
     print(f"[answer_generation] Stage 1: Extracting logic chains from {len(chunks)} chunks...")
 
@@ -222,6 +546,16 @@ def generate_answer(state: RetrieverState) -> RetrieverState:
     answer = generate_logic_chains(query, context)
 
     print(f"[answer_generation] Stage 1 complete: {answer[:200]}...")
+
+    # Option 1: Check chain completeness after Stage 1
+    chain_completeness = None
+    if ENABLE_CHAIN_COMPLETENESS_CHECK and query_target and query_target.get("target"):
+        chain_completeness = check_chain_completeness(answer, query_target)
+        if chain_completeness["chains_complete"]:
+            print(f"[answer_generation] ✓ Chains reach target: {chain_completeness['target_reached_by'][:3]}")
+        else:
+            print(f"[answer_generation] ⚠️ CHAINS INCOMPLETE: {chain_completeness['gap_reason']}")
+            print(f"[answer_generation]   Endpoints found: {chain_completeness['chain_endpoints'][:5]}...")
 
     # Stage 2: Synthesize consensus and variables
     print(f"[answer_generation] Stage 2: Synthesizing consensus and variables...")
@@ -247,6 +581,32 @@ def generate_answer(state: RetrieverState) -> RetrieverState:
         contradictions = identify_contradictions(query, synthesis_text, context)
         print(f"[answer_generation] Stage 3 complete: {contradictions[:200]}...")
 
+    # Update topic_coverage with chain completeness info
+    # Trigger web extraction if either check indicates incomplete chains
+    needs_web = topic_coverage.get("needs_web_chain_extraction", False)
+
+    # Option 1: Chain completeness check
+    if chain_completeness and not chain_completeness["chains_complete"]:
+        needs_web = True
+        topic_coverage["chains_incomplete"] = True
+        topic_coverage["chain_gap_reason"] = chain_completeness["gap_reason"]
+        topic_coverage["chain_endpoints"] = chain_completeness["chain_endpoints"]
+        if not topic_coverage.get("gap_type"):
+            topic_coverage["gap_type"] = "chains_incomplete"
+
+    # Option 2: Unresolved dangles check
+    if unresolved_check and unresolved_check["needs_web_extraction"]:
+        needs_web = True
+        topic_coverage["unresolved_dangles"] = unresolved_check["unresolved_effects"]
+        topic_coverage["dangle_gap_reason"] = unresolved_check["reason"]
+        if not topic_coverage.get("gap_type"):
+            topic_coverage["gap_type"] = "unresolved_dangles"
+
+    topic_coverage["needs_web_chain_extraction"] = needs_web
+
+    if needs_web:
+        print(f"[answer_generation] 🔍 WEB CHAIN EXTRACTION NEEDED: gap_type={topic_coverage.get('gap_type')}")
+
     return {
         **state,
         "synthesized_context": context,
@@ -256,7 +616,10 @@ def generate_answer(state: RetrieverState) -> RetrieverState:
         "contradictions": contradictions,
         "data_temporal_summary": data_temporal_summary,
         "dangling_effects_followed": dangling_followed,
-        "topic_coverage": topic_coverage
+        "topic_coverage": topic_coverage,
+        "query_target": query_target,
+        "chain_completeness": chain_completeness,
+        "unresolved_check": unresolved_check
     }
 
 

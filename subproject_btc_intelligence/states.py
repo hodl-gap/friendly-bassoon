@@ -29,7 +29,21 @@ class BTCImpactState(TypedDict, total=False):
     historical_chains: List[Dict]  # Loaded from btc_relationships.json
     discovered_chains: List[Dict]  # New logic chains found this run
 
-    # Output
+    # Output - Belief Space (Multi-Scenario)
+    scenarios: List[Dict[str, Any]]
+    # Each scenario:
+    # {
+    #     "name": "Liquidity Crunch",
+    #     "direction": "BEARISH",
+    #     "likelihood": 0.65,
+    #     "chain": "tga_increase -> reserve_drain -> funding_stress -> btc_pressure",
+    #     "chain_steps": [{"cause": "...", "effect": "...", "mechanism": "..."}],
+    #     "rationale": "TGA increased 10%, draining reserves...",
+    #     "key_data_points": ["TGA: $923B (+10%)", "Reserves: -$50B"],
+    #     "polarity": "BEARISH"  # Explicit outcome polarity
+    # }
+
+    # Primary direction (highest likelihood scenario) - for backward compatibility
     direction: str  # BULLISH / BEARISH / NEUTRAL
     confidence: Dict[str, Any]
     # {
@@ -42,6 +56,23 @@ class BTCImpactState(TypedDict, total=False):
     decay_profile: str  # "fast" | "medium" | "slow"
     rationale: str  # Explanation text
     risk_factors: List[str]  # What could invalidate the thesis
+
+    # Belief Space Metadata
+    belief_space: Dict[str, Any]
+    # {
+    #     "contradictions": [
+    #         {
+    #             "thesis_a": "CAPEX increase implies value destruction",
+    #             "thesis_b": "CAPEX increase confirms AI leadership",
+    #             "source_a": "BofA",
+    #             "source_b": "Morgan Stanley",
+    #             "implication": "Market pricing both scenarios simultaneously"
+    #         }
+    #     ],
+    #     "regime_uncertainty": "high" | "medium" | "low",
+    #     "narrative_count": 3,
+    #     "dominant_narrative": "Scenario A: Liquidity Crunch"
+    # }
 
     # Debug
     retrieval_answer: str  # Raw answer from retriever

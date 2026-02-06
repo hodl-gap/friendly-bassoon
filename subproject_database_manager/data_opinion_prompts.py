@@ -187,6 +187,10 @@ For EACH message, extract the following fields:
        - "effect_normalized": Normalized variable name (snake_case, for cross-chunk linking)
        - "mechanism": How cause leads to effect
        - "evidence_quote": 1-3 sentences from the original message that support this step (REQUIRED)
+       - "polarity": Directional outcome for risk assets - "BULLISH" | "BEARISH" | "NEUTRAL" (REQUIRED)
+         - BULLISH: This step implies positive impact on risk assets (BTC, equities)
+         - BEARISH: This step implies negative impact on risk assets
+         - NEUTRAL: No clear directional implication
    - Chains should have 2+ steps when the logic continues
    - Single-step chains are acceptable if no further effects
    - Empty array [] if no causal relationships
@@ -255,7 +259,7 @@ For EACH message, extract the following fields:
         "logic_chains": [
             {
                 "steps": [
-                    {"cause": "TGA drawdown", "cause_normalized": "tga", "effect": "bank reserves increase", "effect_normalized": "bank_reserves", "mechanism": "Treasury spending releases TGA funds", "evidence_quote": "TGA 잔고가 750B로 감소하면서 시스템 유동성이 증가"}
+                    {"cause": "TGA drawdown", "cause_normalized": "tga", "effect": "bank reserves increase", "effect_normalized": "bank_reserves", "mechanism": "Treasury spending releases TGA funds", "evidence_quote": "TGA 잔고가 750B로 감소하면서 시스템 유동성이 증가", "polarity": "BULLISH"}
                 ]
             }
         ],
@@ -490,6 +494,10 @@ For EACH message, extract the following fields:
        - "effect_normalized": Normalized variable name (snake_case, for cross-chunk linking)
        - "mechanism": How cause leads to effect
        - "evidence_quote": 1-3 sentences from the original message that support this step (REQUIRED)
+       - "polarity": Directional outcome for risk assets - "BULLISH" | "BEARISH" | "NEUTRAL" (REQUIRED)
+         - BULLISH: This step implies positive impact on risk assets (BTC, equities)
+         - BEARISH: This step implies negative impact on risk assets
+         - NEUTRAL: No clear directional implication
    - Chains should have 2+ steps when the logic continues
    - Single-step chains are acceptable if no further effects
    - Empty array [] if no causal relationships

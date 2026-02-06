@@ -152,6 +152,121 @@ class YahooAdapter(BaseDataAdapter):
             print(f"[Yahoo] Metadata error: {e}")
             return {}
 
+    def fetch_fundamentals(self, series_id: str) -> Dict[str, Any]:
+        """
+        Fetch fundamental data for a stock/ETF (P/E, market cap, etc.).
+
+        This is critical for belief-space analysis where valuation context matters
+        (e.g., "P/E compressed from 85x to 60x").
+
+        Args:
+            series_id: Yahoo ticker symbol (e.g., 'IGV', 'GOOGL', 'AMZN')
+
+        Returns:
+            Dict with valuation metrics, financials, and price data
+        """
+        print(f"[Yahoo] Fetching fundamentals for {series_id}")
+
+        if not YFINANCE_AVAILABLE:
+            raise ImportError("yfinance library not installed")
+
+        try:
+            ticker = yf.Ticker(series_id)
+            info = ticker.info
+
+            # Current price data
+            current_price = info.get("regularMarketPrice") or info.get("previousClose")
+            price_change_pct = info.get("regularMarketChangePercent", 0)
+
+            # 52-week range for drawdown calculation
+            fifty_two_week_high = info.get("fiftyTwoWeekHigh")
+            fifty_two_week_low = info.get("fiftyTwoWeekLow")
+            drawdown_from_high = None
+            if fifty_two_week_high and current_price:
+                drawdown_from_high = ((current_price - fifty_two_week_high) / fifty_two_week_high) * 100
+
+            result = {
+                "ticker": series_id,
+                "name": info.get("longName", info.get("shortName", "")),
+                "quote_type": info.get("quoteType", ""),
+                "sector": info.get("sector", ""),
+                "industry": info.get("industry", ""),
+
+                # Price data
+                "current_price": current_price,
+                "price_change_pct": price_change_pct,
+                "fifty_two_week_high": fifty_two_week_high,
+                "fifty_two_week_low": fifty_two_week_low,
+                "drawdown_from_high_pct": drawdown_from_high,
+
+                # Valuation metrics (critical for belief-space)
+                "forward_pe": info.get("forwardPE"),
+                "trailing_pe": info.get("trailingPE"),
+                "peg_ratio": info.get("pegRatio"),
+                "price_to_book": info.get("priceToBook"),
+                "price_to_sales": info.get("priceToSalesTrailing12Months"),
+                "enterprise_value": info.get("enterpriseValue"),
+                "ev_to_ebitda": info.get("enterpriseToEbitda"),
+                "ev_to_revenue": info.get("enterpriseToRevenue"),
+
+                # Size
+                "market_cap": info.get("marketCap"),
+                "shares_outstanding": info.get("sharesOutstanding"),
+
+                # Financials (for CAPEX analysis)
+                "total_revenue": info.get("totalRevenue"),
+                "revenue_growth": info.get("revenueGrowth"),
+                "gross_margins": info.get("grossMargins"),
+                "operating_margins": info.get("operatingMargins"),
+                "profit_margins": info.get("profitMargins"),
+                "ebitda": info.get("ebitda"),
+                "free_cash_flow": info.get("freeCashflow"),
+                "operating_cash_flow": info.get("operatingCashflow"),
+                "total_cash": info.get("totalCash"),
+                "total_debt": info.get("totalDebt"),
+
+                # Analyst estimates
+                "target_mean_price": info.get("targetMeanPrice"),
+                "target_high_price": info.get("targetHighPrice"),
+                "target_low_price": info.get("targetLowPrice"),
+                "recommendation_mean": info.get("recommendationMean"),
+                "recommendation_key": info.get("recommendationKey"),
+                "number_of_analyst_opinions": info.get("numberOfAnalystOpinions"),
+
+                # ETF specific (for sector ETFs like IGV)
+                "category": info.get("category"),
+                "fund_family": info.get("fundFamily"),
+                "total_assets": info.get("totalAssets"),
+
+                "source": "Yahoo",
+                "timestamp": datetime.now().isoformat()
+            }
+
+            # Filter out None values
+            result = {k: v for k, v in result.items() if v is not None}
+
+            print(f"[Yahoo] Fetched {len(result)} fundamental fields for {series_id}")
+            return result
+
+        except Exception as e:
+            print(f"[Yahoo] Error fetching fundamentals for {series_id}: {e}")
+            return {"error": str(e), "ticker": series_id}
+
+    def fetch_fundamentals_batch(self, tickers: list) -> Dict[str, Dict[str, Any]]:
+        """
+        Fetch fundamentals for multiple tickers.
+
+        Args:
+            tickers: List of Yahoo ticker symbols
+
+        Returns:
+            Dict mapping ticker to fundamentals
+        """
+        results = {}
+        for ticker in tickers:
+            results[ticker] = self.fetch_fundamentals(ticker)
+        return results
+
 
 # Common Yahoo ticker mappings
 COMMON_YAHOO_TICKERS = {

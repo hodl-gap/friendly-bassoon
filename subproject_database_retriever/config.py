@@ -55,3 +55,14 @@ FOLLOWUP_THRESHOLD = 0.40           # Similarity threshold for follow-ups
 
 # Structured Synthesis Settings (Issue 4: replaces regex parsing with tool_use)
 USE_STRUCTURED_SYNTHESIS = True     # Use tool_use for guaranteed JSON confidence metadata
+
+# Chain Completeness Check Settings (Option 1: detect if chains reach query target)
+ENABLE_CHAIN_COMPLETENESS_CHECK = True  # Check if chains complete to query outcome
+CHAIN_TARGET_KEYWORDS = [               # Keywords indicating "outcome" in query
+    "impact", "effect", "affect", "influence", "lead to", "result in",
+    "bullish", "bearish", "up", "down", "rise", "fall", "rally", "crash"
+]
+
+# Unresolved Dangling Check Settings (Option 2: trigger web extraction if chains incomplete)
+ENABLE_UNRESOLVED_DANGLING_CHECK = True  # Check if dangling effects remain unresolved
+MIN_UNRESOLVED_FOR_WEB_EXTRACTION = 2    # Trigger web extraction if >= N unresolved dangles

@@ -91,7 +91,11 @@ def analyze_impact(state: BTCImpactState) -> BTCImpactState:
     # Parse response
     parsed = parse_impact_response(response)
 
-    # Update state
+    # Update state - Belief Space (Multi-Scenario)
+    state["scenarios"] = parsed.get("scenarios", [])
+    state["belief_space"] = parsed.get("belief_space", {})
+
+    # Primary direction (for backward compatibility)
     state["direction"] = parsed.get("direction", "NEUTRAL")
     state["confidence"] = parsed.get("confidence", {})
     state["time_horizon"] = parsed.get("time_horizon", "unknown")
@@ -102,10 +106,123 @@ def analyze_impact(state: BTCImpactState) -> BTCImpactState:
     return state
 
 
+def parse_scenarios(response: str) -> List[Dict[str, Any]]:
+    """Parse all scenarios from the SCENARIOS section of the LLM response."""
+    scenarios = []
+
+    # Find the SCENARIOS section
+    scenarios_match = re.search(
+        r"SCENARIOS:\s*\n(.+?)(?=\nPRIMARY_DIRECTION:|\nCONTRADICTIONS:|\nDIRECTION:|\Z)",
+        response,
+        re.DOTALL | re.IGNORECASE
+    )
+
+    if not scenarios_match:
+        return scenarios
+
+    scenarios_text = scenarios_match.group(1)
+
+    # Split by "- Scenario" to get each scenario block
+    scenario_blocks = re.split(r"\n-\s*Scenario\s*", scenarios_text)
+
+    for block in scenario_blocks:
+        if not block.strip():
+            continue
+
+        scenario = {}
+
+        # Extract scenario name (first line or after letter like "A:")
+        # Handle various formats: "A: Name", "A - Name", just "Name"
+        first_line = block.strip().split('\n')[0].strip()
+        # Remove leading "- Scenario" prefix if present (edge case from split)
+        first_line = re.sub(r'^-?\s*Scenario\s*', '', first_line, flags=re.IGNORECASE)
+        # Parse "A: Name" or "A - Name" or just "Name"
+        name_match = re.match(r"([A-Z])[\s:.-]+(.+?)$", first_line.strip())
+        if name_match:
+            scenario["name"] = name_match.group(2).strip()
+        else:
+            scenario["name"] = first_line.strip()
+
+        # Extract Chain
+        chain_match = re.search(r"-\s*Chain:\s*(.+?)(?:\n|$)", block)
+        if chain_match:
+            scenario["chain"] = chain_match.group(1).strip()
+
+        # Extract Direction
+        dir_match = re.search(r"-\s*Direction:\s*(BULLISH|BEARISH|NEUTRAL)", block, re.IGNORECASE)
+        if dir_match:
+            scenario["direction"] = dir_match.group(1).upper()
+            scenario["polarity"] = dir_match.group(1).upper()
+
+        # Extract Likelihood
+        likelihood_match = re.search(r"-\s*Likelihood:\s*(\d+)%?\s*(?:based on\s*)?(.+)?(?:\n|$)", block, re.IGNORECASE)
+        if likelihood_match:
+            scenario["likelihood"] = int(likelihood_match.group(1)) / 100.0
+            if likelihood_match.group(2):
+                scenario["likelihood_basis"] = likelihood_match.group(2).strip()
+
+        # Extract Rationale if present
+        rationale_match = re.search(r"-\s*Rationale:\s*(.+?)(?:\n-|\n\n|$)", block, re.DOTALL)
+        if rationale_match:
+            scenario["rationale"] = rationale_match.group(1).strip()
+
+        if scenario.get("name") or scenario.get("chain"):
+            scenarios.append(scenario)
+
+    return scenarios
+
+
+def parse_contradictions(response: str) -> List[Dict[str, Any]]:
+    """Parse contradictions from the CONTRADICTIONS section."""
+    contradictions = []
+
+    # Find CONTRADICTIONS section
+    contra_match = re.search(
+        r"CONTRADICTIONS:\s*\n(.+?)(?=\nPRIMARY_DIRECTION:|\nCONFIDENCE:|\nTIME_HORIZON:|\Z)",
+        response,
+        re.DOTALL | re.IGNORECASE
+    )
+
+    if not contra_match:
+        return contradictions
+
+    contra_text = contra_match.group(1)
+
+    # Parse each contradiction block (marked by - or bullet)
+    contra_blocks = re.findall(
+        r"-\s*(.+?)(?=\n-|\n\n|$)",
+        contra_text,
+        re.DOTALL
+    )
+
+    for block in contra_blocks:
+        contradiction = {}
+
+        # Try to parse structured format: "Thesis A vs Thesis B"
+        vs_match = re.search(r"(.+?)\s+(?:vs\.?|versus)\s+(.+?)(?:\n|$)", block, re.IGNORECASE)
+        if vs_match:
+            contradiction["thesis_a"] = vs_match.group(1).strip()
+            contradiction["thesis_b"] = vs_match.group(2).strip()
+        else:
+            contradiction["description"] = block.strip()
+
+        # Extract implication if present
+        impl_match = re.search(r"(?:Implication|Result|Means):\s*(.+?)(?:\n|$)", block, re.IGNORECASE)
+        if impl_match:
+            contradiction["implication"] = impl_match.group(1).strip()
+
+        if contradiction:
+            contradictions.append(contradiction)
+
+    return contradictions
+
+
 def parse_impact_response(response: str) -> Dict[str, Any]:
     """Parse the structured LLM response into components."""
     result = {
         "direction": "NEUTRAL",
+        "scenarios": [],
+        "belief_space": {},
         "confidence": {},
         "time_horizon": "unknown",
         "decay_profile": "unknown",
@@ -113,12 +230,30 @@ def parse_impact_response(response: str) -> Dict[str, Any]:
         "risk_factors": []
     }
 
-    # Parse PRIMARY_DIRECTION (or fallback to DIRECTION for backward compatibility)
-    direction_match = re.search(r"PRIMARY_DIRECTION:\s*(BULLISH|BEARISH|NEUTRAL)", response, re.IGNORECASE)
-    if not direction_match:
-        direction_match = re.search(r"DIRECTION:\s*(BULLISH|BEARISH|NEUTRAL)", response, re.IGNORECASE)
-    if direction_match:
-        result["direction"] = direction_match.group(1).upper()
+    # Parse all scenarios (CRITICAL for belief-space output)
+    scenarios = parse_scenarios(response)
+    result["scenarios"] = scenarios
+
+    # Parse contradictions
+    contradictions = parse_contradictions(response)
+    result["belief_space"] = {
+        "contradictions": contradictions,
+        "narrative_count": len(scenarios),
+        "regime_uncertainty": "high" if len(scenarios) > 2 else "medium" if len(scenarios) == 2 else "low"
+    }
+
+    # Determine primary direction from highest likelihood scenario
+    if scenarios:
+        sorted_scenarios = sorted(scenarios, key=lambda s: s.get("likelihood", 0), reverse=True)
+        result["direction"] = sorted_scenarios[0].get("direction", "NEUTRAL")
+        result["belief_space"]["dominant_narrative"] = sorted_scenarios[0].get("name", "Unknown")
+    else:
+        # Fallback: Parse PRIMARY_DIRECTION (or DIRECTION for backward compatibility)
+        direction_match = re.search(r"PRIMARY_DIRECTION:\s*(BULLISH|BEARISH|NEUTRAL)", response, re.IGNORECASE)
+        if not direction_match:
+            direction_match = re.search(r"DIRECTION:\s*(BULLISH|BEARISH|NEUTRAL)", response, re.IGNORECASE)
+        if direction_match:
+            result["direction"] = direction_match.group(1).upper()
 
     # Parse CONFIDENCE section
     confidence = {}

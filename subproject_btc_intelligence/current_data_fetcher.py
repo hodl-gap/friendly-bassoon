@@ -345,7 +345,11 @@ def format_current_values_for_prompt(current_values: Dict[str, Any]) -> str:
         "Crypto": ["btc", "eth"],
         "Liquidity": ["tga", "bank_reserves", "reserves", "fed_balance_sheet", "rrp"],
         "Rates": ["sofr", "fed_funds", "us10y", "us02y"],
-        "Markets": ["dxy", "vix", "sp500", "gold", "spy", "qqq"],
+        "Indices": ["sp500", "nasdaq", "dow", "russell2000", "spy", "qqq"],
+        "Sectors": ["igv", "xlk", "smh", "soxx", "xly", "xlf", "xle"],
+        "Big Tech": ["googl", "amzn", "msft", "meta", "aapl", "nvda", "orcl"],
+        "FX & Commodities": ["dxy", "usdjpy", "eurusd", "gold", "gld"],
+        "Volatility": ["vix", "vvix"],
     }
 
     for category, vars in categories.items():

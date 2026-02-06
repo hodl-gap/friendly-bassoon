@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "last_updated": "2026-02-05T05:43:56.159863",
-    "total_relationships": 125
+    "last_updated": "2026-02-06T06:55:57.825247",
+    "total_relationships": 132
   },
   "relationships": [
     {
@@ -4090,6 +4090,216 @@
       "validation_count": 1,
       "relationship_type": "positive",
       "confidence": 0.62
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Fed balance sheet monthly MACD golden cross",
+            "cause_normalized": "fed_bs_macd_golden_cross",
+            "effect": "fed_balance_sheet upward momentum",
+            "effect_normalized": "fed_balance_sheet",
+            "mechanism": "golden cross indicates upward trend in balance sheet aggregates → historical precedent: 2019 occurrence preceded BTC surge from ~$10k to ~$60k"
+          },
+          {
+            "cause": "fed_balance_sheet upward momentum",
+            "cause_normalized": "fed_balance_sheet",
+            "effect": "bitcoin rally potential",
+            "effect_normalized": "btc_up_signal",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "fed_bs_macd_golden_cross -> fed_balance_sheet -> btc_up_signal"
+      },
+      "terminal_effect": "btc_up_signal",
+      "mechanism": "golden cross indicates upward trend in balance sheet aggregates → historical precedent: 2019 occurrence preceded BTC surge from ~$10k to ~$60k",
+      "source_attribution": "Source 5 (explicit chain), Source 1 (historical validation showing 2019 golden cross → major BTC rally)",
+      "id": "rel_607fd2a7",
+      "discovered_at": "2026-02-06T06:55:57.825063",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.45
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "QE implementation",
+            "cause_normalized": "qe",
+            "effect": "Fed balance sheet expansion",
+            "effect_normalized": "fed_balance_sheet",
+            "mechanism": "Quantitative easing expands Fed holdings → increased monetary base and liquidity → risk asset rally including BTC (pattern observed in 2013, 2017, 2021 cycles)"
+          },
+          {
+            "cause": "Fed balance sheet expansion",
+            "cause_normalized": "fed_balance_sheet",
+            "effect": "liquidity increase",
+            "effect_normalized": "liquidity_increase",
+            "mechanism": ""
+          },
+          {
+            "cause": "liquidity increase",
+            "cause_normalized": "liquidity_increase",
+            "effect": "Bitcoin price appreciation",
+            "effect_normalized": "bitcoin_price_appreciation",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "qe -> fed_balance_sheet -> liquidity_increase -> bitcoin_price_appreciation"
+      },
+      "terminal_effect": "bitcoin_price_appreciation",
+      "mechanism": "Quantitative easing expands Fed holdings → increased monetary base and liquidity → risk asset rally including BTC (pattern observed in 2013, 2017, 2021 cycles)",
+      "source_attribution": "Source 9 (showing correlation between Fed asset expansion and BTC bull runs), Source 7 (QE1 2009 example)",
+      "id": "rel_c7661b5a",
+      "discovered_at": "2026-02-06T06:55:57.825102",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.45
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "TGA increase",
+            "cause_normalized": "tga",
+            "effect": "bank reserves decrease",
+            "effect_normalized": "bank_reserves",
+            "mechanism": "Treasury cash accumulation withdraws reserves from banking system → reduced reserve availability tightens funding conditions (SOFR/REPO rates rise) → liquidity tightening pressures risk assets including Bitcoin"
+          },
+          {
+            "cause": "bank reserves decrease",
+            "cause_normalized": "bank_reserves",
+            "effect": "funding stress indicators rise",
+            "effect_normalized": "sofr",
+            "mechanism": ""
+          },
+          {
+            "cause": "funding stress indicators rise",
+            "cause_normalized": "sofr",
+            "effect": "risk asset pressure",
+            "effect_normalized": "btc_weakness",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "tga -> bank_reserves -> sofr -> btc_weakness"
+      },
+      "terminal_effect": "btc_weakness",
+      "mechanism": "Treasury cash accumulation withdraws reserves from banking system → reduced reserve availability tightens funding conditions (SOFR/REPO rates rise) → liquidity tightening pressures risk assets including Bitcoin",
+      "source_attribution": "Source 6 (inverse of stated mechanism), Sources 16-17 (SOFR volume/rate stress indicators), Source 15 (news-driven BTC weakness pattern)",
+      "id": "rel_6ee3048c",
+      "discovered_at": "2026-02-06T06:55:57.825130",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.45
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "TGA accumulation",
+            "cause_normalized": "tga",
+            "effect": "liquidity withdrawal",
+            "effect_normalized": "liquidity_withdrawal",
+            "mechanism": "Treasury building cash balances at Fed drains reserves even if Fed balance sheet stable/expanding → net liquidity effect determines risk asset behavior → TGA increase neutralizes bullish Fed balance sheet signals"
+          },
+          {
+            "cause": "liquidity withdrawal",
+            "cause_normalized": "liquidity_withdrawal",
+            "effect": "offset to Fed balance sheet expansion",
+            "effect_normalized": "fed_balance_sheet",
+            "mechanism": ""
+          },
+          {
+            "cause": "offset to Fed balance sheet expansion",
+            "cause_normalized": "fed_balance_sheet",
+            "effect": "dampened BTC rally potential",
+            "effect_normalized": "btc_up_signal",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "tga -> liquidity_withdrawal -> fed_balance_sheet -> btc_up_signal"
+      },
+      "terminal_effect": "btc_up_signal",
+      "mechanism": "Treasury building cash balances at Fed drains reserves even if Fed balance sheet stable/expanding → net liquidity effect determines risk asset behavior → TGA increase neutralizes bullish Fed balance sheet signals",
+      "source_attribution": "Source 6 (TGA-reserves mechanism), Source 5 (Fed balance sheet-BTC relationship), Source 1 (Fed balance sheet correlation with BTC)",
+      "id": "rel_aee3f4f6",
+      "discovered_at": "2026-02-06T06:55:57.825156",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.45
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "VanEck market breadth bullish signal",
+            "cause_normalized": "market_breadth_signal",
+            "effect": "Bitcoin rally signaled/ Bitcoin price rise signaled",
+            "effect_normalized": "btc_uptrend",
+            "mechanism": "breadth turn/improvement precedes price reversals → signal forecasts upside after cycle low (bullish since 2025-04-07)"
+          }
+        ],
+        "chain_summary": "market_breadth_signal -> btc_uptrend"
+      },
+      "terminal_effect": "btc_uptrend",
+      "mechanism": "breadth turn/improvement precedes price reversals → signal forecasts upside after cycle low (bullish since 2025-04-07)",
+      "source_attribution": "Sources 11-12 (identical chains from different extractions)",
+      "id": "rel_192c6464",
+      "discovered_at": "2026-02-06T06:55:57.825182",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.45
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Coinbase premium positive",
+            "cause_normalized": "coinbase_premium",
+            "effect": "Bitcoin attempting reversal(amid equity weakness context)",
+            "effect_normalized": "btc_reversal_attempt",
+            "mechanism": "positive premium indicates US institutional buying pressure → relative flows/rotation prompt BTC price action"
+          }
+        ],
+        "chain_summary": "coinbase_premium -> btc_reversal_attempt"
+      },
+      "terminal_effect": "btc_reversal_attempt",
+      "mechanism": "positive premium indicates US institutional buying pressure → relative flows/rotation prompt BTC price action",
+      "source_attribution": "Source 13",
+      "id": "rel_f4a5b47e",
+      "discovered_at": "2026-02-06T06:55:57.825206",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.45
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "PMI bottoms and recovers above 50",
+            "cause_normalized": "pmi_recovery",
+            "effect": "liquidity returns",
+            "effect_normalized": "liquidity_expansion",
+            "mechanism": "economic recovery phase brings expansionary monetary policy and liquidity return → risk asset appreciation including BTC (historical pattern: 2013, 2017, 2021 cycles)"
+          },
+          {
+            "cause": "liquidity returns",
+            "cause_normalized": "liquidity_expansion",
+            "effect": "cryptocurrency prices rise",
+            "effect_normalized": "btc_rally",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "pmi_recovery -> liquidity_expansion -> btc_rally"
+      },
+      "terminal_effect": "btc_rally",
+      "mechanism": "economic recovery phase brings expansionary monetary policy and liquidity return → risk asset appreciation including BTC (historical pattern: 2013, 2017, 2021 cycles)",
+      "source_attribution": "Source 9",
+      "id": "rel_072e5990",
+      "discovered_at": "2026-02-06T06:55:57.825234",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.45
     }
   ]
 }

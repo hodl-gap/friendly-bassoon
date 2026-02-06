@@ -17,17 +17,48 @@ MAPPINGS_PATH = Path(__file__).parent.parent / "subproject_variable_mapper" / "m
 # Fallback mappings for Yahoo tickers (not in discovered_data_ids.json)
 # These are market tickers that don't go through the discovery process
 YAHOO_FALLBACK = {
+    # Major indices
     "spy": {"source": "Yahoo", "series_id": "SPY"},
     "qqq": {"source": "Yahoo", "series_id": "QQQ"},
-    "gld": {"source": "Yahoo", "series_id": "GLD"},
-    "tlt": {"source": "Yahoo", "series_id": "TLT"},
     "sp500": {"source": "Yahoo", "series_id": "^GSPC"},
     "nasdaq": {"source": "Yahoo", "series_id": "^IXIC"},
+    "dow": {"source": "Yahoo", "series_id": "^DJI"},
+    "russell2000": {"source": "Yahoo", "series_id": "^RUT"},
+
+    # Sector ETFs (for belief-space analysis)
+    "igv": {"source": "Yahoo", "series_id": "IGV"},          # iShares Expanded Tech-Software Sector
+    "xlk": {"source": "Yahoo", "series_id": "XLK"},          # Technology Select Sector SPDR
+    "smh": {"source": "Yahoo", "series_id": "SMH"},          # VanEck Semiconductor
+    "soxx": {"source": "Yahoo", "series_id": "SOXX"},        # iShares Semiconductor
+    "xly": {"source": "Yahoo", "series_id": "XLY"},          # Consumer Discretionary
+    "xlf": {"source": "Yahoo", "series_id": "XLF"},          # Financials
+    "xle": {"source": "Yahoo", "series_id": "XLE"},          # Energy
+    "xlu": {"source": "Yahoo", "series_id": "XLU"},          # Utilities
+
+    # Big Tech (for CAPEX/earnings analysis)
+    "googl": {"source": "Yahoo", "series_id": "GOOGL"},      # Alphabet
+    "amzn": {"source": "Yahoo", "series_id": "AMZN"},        # Amazon
+    "msft": {"source": "Yahoo", "series_id": "MSFT"},        # Microsoft
+    "meta": {"source": "Yahoo", "series_id": "META"},        # Meta
+    "aapl": {"source": "Yahoo", "series_id": "AAPL"},        # Apple
+    "nvda": {"source": "Yahoo", "series_id": "NVDA"},        # Nvidia
+    "orcl": {"source": "Yahoo", "series_id": "ORCL"},        # Oracle
+
+    # Fixed Income & Commodities
+    "gld": {"source": "Yahoo", "series_id": "GLD"},
+    "tlt": {"source": "Yahoo", "series_id": "TLT"},
+    "gold": {"source": "Yahoo", "series_id": "GC=F"},
+
+    # FX & Crypto
     "dxy": {"source": "Yahoo", "series_id": "DX-Y.NYB"},
     "btc": {"source": "Yahoo", "series_id": "BTC-USD"},
     "eth": {"source": "Yahoo", "series_id": "ETH-USD"},
-    "gold": {"source": "Yahoo", "series_id": "GC=F"},
     "usdjpy": {"source": "Yahoo", "series_id": "USDJPY=X"},
+    "eurusd": {"source": "Yahoo", "series_id": "EURUSD=X"},
+
+    # Volatility
+    "vix": {"source": "Yahoo", "series_id": "^VIX"},
+    "vvix": {"source": "Yahoo", "series_id": "^VVIX"},
 }
 
 # Cache for loaded mappings
