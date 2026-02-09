@@ -456,6 +456,79 @@ Remaining gaps (C category) are data availability issues, not architectural limi
 
 ---
 
+## Final Output Achieved
+
+### Query
+```
+"What caused the SaaS meltdown in Feb 2026?"
+```
+
+### Synthesis
+
+```markdown
+## Consensus Chains: What Caused the SaaS Meltdown in Feb 2026
+
+### Primary Convergence: Technology Sector Exhaustion → Feb/Mar 2026 Correction
+
+**Multiple paths converge on late Feb/early March 2026 as the correction trigger:**
+
+1. **Tech Momentum Exhaustion Path**: Major tech stocks (NVDA, MSFT) trading sideways after 3-year run → momentum exhaustion → correction starts late Feb/early Mar 2026 (Fundstrat)
+
+2. **Sector Rotation Path**: All sectors positive except Tech down -1.8% (Jan 8, 2026) → extremely rare rotation pattern → tech sector weakness → Feb/Mar correction (Multiple sources)
+
+3. **Sentiment Shift Path**: AI Bubble mentions spike 10x (Dec 2024/Jan 2025) → growing skepticism about AI valuations → tech sector concerns → Feb 2026 correction (Bloomberg + Fundstrat)
+
+### Secondary Convergence: Bubble Formation and Concentration Risk
+
+**Multiple paths identify dangerous concentration levels:**
+
+1. **Historical Concentration Path**: Market concentration 38% in top 10 (2025) exceeds 2000 dotcom (27%) and 2020 (32%) → tech-centric vulnerability → amplified SaaS/tech meltdown (BofA)
+
+2. **Velocity Bubble Path**: Mag 7 rapid 192% rise, PER 42x → late-stage bubble dynamics → real rates ~3% trigger correction (BofA)
+
+3. **Policy-Driven Bubble Path**: Fiscal pressure → Fed rate cuts → asset bubble formation → bond yield spike ends bubble (BofA)
+
+### Tertiary Convergence: Rate Environment as Catalyst
+
+**Multiple chains identify rising yields/real rates as the ultimate trigger:**
+
+1. **Real Rate Threshold**: Real rates exceed ~3% threshold → delayed asset market collapse (BofA historical analysis)
+
+2. **Bond Yield Reversal**: Bond yields rise → bank stock strength reversal → risk appetite falls → SaaS/tech decline (BofA)
+
+## Conclusion
+
+The SaaS meltdown in February 2026 appears to have resulted from the convergence of multiple structural vulnerabilities: extreme market concentration in tech stocks (38% in top 10), momentum exhaustion after a 3-year run, and a critical shift in the rate environment as real rates approached the 3% threshold that historically triggers bubble collapses. The timing was amplified by seasonal February-March weakness patterns and a dramatic shift in AI sentiment (10x spike in "AI Bubble" mentions). The correction that began in late February extended through May 2026.
+```
+
+### Extracted Web Chains (13 from trusted sources)
+
+| # | Cause | Effect | Source | Confidence |
+|---|-------|--------|--------|------------|
+| 1 | AI disrupts seat-based pricing | SaaS valuation compression | PitchBook | high |
+| 2 | Bearish sentiment cascade | "SaaSpocalypse" sell-off | Bloomberg/Jefferies | high |
+| 3 | Macro pressures | Near-term SaaS headwinds | Rosenblatt Securities | high |
+| 4 | SaaS-specific reset | SaaS index -6.5% vs S&P +17.6% | Yahoo Finance | high |
+| 5 | Goldman "valuation reset" thesis | Institutional sell-side consensus | Goldman Sachs | medium |
+| 6 | Defensive investment increases | FCF margin drops 10.8pp | Yahoo Finance | high |
+| 7 | Weak FCF margin (8.3%) | Restricted capital allocation | Yahoo Finance | high |
+| 8 | End-market challenges | Sales decline 2.1% annually | Yahoo Finance | high |
+| 9 | Mega-cap concentration | SaaS underperforms broad tech | Yahoo Finance | medium |
+| 10 | Sub-$15K ARR churn | ARR growth deceleration | DHI Group earnings | high |
+| 11 | Enterprise spending cuts | Selective low-tier SaaS churn | Toast earnings | medium |
+| 12 | Guidance maintained | NOT sector-wide meltdown | Tecsys earnings | high |
+| 13 | Platform SaaS outperforms | Divergence from legacy software | FICO earnings | high |
+
+### Key Evidence Quotes
+
+> *"If a customer uses AI to reduce their headcount by 30%, your portfolio company's revenue drops by 30% automatically under current pricing models."* — PitchBook
+
+> *"While all software stocks have beaten earnings expectations, that's mattered little in the face of concerns about long-term prospects..."* — Jefferies (via Bloomberg)
+
+> *"SaaSpocalypse"* — Term coined by Jefferies equity traders
+
+---
+
 ## TODO
 
 - [ ] **Persist high-confidence web chains to DB** - Currently web chains are transient (discarded after response). Consider storing chains with `quote_verified=True` and `confidence=high` to Pinecone to build knowledge over time. Needs: QA pipeline integration, staleness management, deduplication logic.
