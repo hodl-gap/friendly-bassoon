@@ -453,3 +453,45 @@ The core blocking issue (gap detection prompt) is fixed. The system now correctl
 4. Merges web chains with DB chains
 
 Remaining gaps (C category) are data availability issues, not architectural limitations.
+
+---
+
+## TODO
+
+- [ ] **Persist high-confidence web chains to DB** - Currently web chains are transient (discarded after response). Consider storing chains with `quote_verified=True` and `confidence=high` to Pinecone to build knowledge over time. Needs: QA pipeline integration, staleness management, deduplication logic.
+
+---
+
+## Fixes Applied This Session
+
+### Edit 1: `subproject_database_retriever/knowledge_gap_prompts.py` (lines 38-46)
+
+**BEFORE:**
+```
+0. **Topic not covered**
+   - COVERED: Query topic explicitly discussed in synthesis/chains
+   - GAP: Query topic NOT mentioned at all in synthesis
+   - ONLY mark as GAP if the topic is completely absent from synthesis (not just partially covered)
+   - When gap detected, provide a GENERAL search query for the topic (not domain-specific)
+```
+
+**AFTER:**
+```
+0. **Topic not covered (CRITICAL - evaluate carefully)**
+   - COVERED: Synthesis directly ANSWERS the specific question asked
+   - GAP: Synthesis does NOT answer the question, even if it mentions related topics or timeframes
+   - IMPORTANT: Tangentially related content is NOT "covered". If query asks "What caused X?" and synthesis discusses Y (even if Y happened around the same time), that's a GAP.
+   - Example: Query asks "What caused the SaaS meltdown?" → Synthesis discusses Fed policy in same timeframe → GAP
+   - When gap detected, provide a SPECIFIC search query targeting the actual question
+```
+
+### Edit 2: `subproject_data_collection/adapters/trusted_domains.py` (line 39)
+
+**ADDED:**
+```python
+"yahoo.com": {"name": "Yahoo Finance", "tier": 1},
+"finance.yahoo.com": {"name": "Yahoo Finance", "tier": 1},
+"forbes.com": {"name": "Forbes", "tier": 1},
+```
+
+**Why:** Bloomberg, WSJ, FT are paywalled. Yahoo Finance and Forbes have accessible article content for web chain extraction.
