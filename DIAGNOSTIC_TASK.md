@@ -114,99 +114,99 @@ Must stop and report, not fix.
 
 ---
 
-## Evaluation Rubric
+## Evaluation Rubric (Concrete - Graded Against Sample Output)
+
+Score system output against the illustrative example. Each item is 1 point.
+
+### A. Trigger Identification (3 points)
+
+| # | Item | Description | Points |
+|---|------|-------------|--------|
+| A1 | SaaS meltdown | Core event identified (SaaS stocks, software sector crash) | 1 |
+| A2 | AI product trigger | Anthropic Claude Cowork or similar AI product launch as catalyst | 1 |
+| A3 | "AI eats software" narrative | BofA or analyst narrative that AI disrupts/obsoletes SaaS | 1 |
+
+### B. CAPEX Valuation Chain (4 points)
+
+| # | Item | Description | Points |
+|---|------|-------------|--------|
+| B1 | Hyperscaler CAPEX total | $570bn aggregate or similar magnitude for 2026 | 1 |
+| B2 | Alphabet CAPEX | $185bn or "doubled CAPEX" + Jan 30 announcement | 1 |
+| B3 | Amazon CAPEX | $200bn guidance, exceeded expectations by ~$50bn | 1 |
+| B4 | CAPEX → value destruction chain | Explicit chain: CAPEX increase → overinvestment fear → value destruction | 1 |
+
+### C. Contradiction Preservation (2 points)
+
+| # | Item | Description | Points |
+|---|------|-------------|--------|
+| C1 | "Logically impossible" | BofA or analyst noting contradictory market pricing | 1 |
+| C2 | Both sides preserved | (a) AI CAPEX = weak ROI / overbuild AND (b) AI = eating software / long-term upside | 1 |
+
+### D. Quantitative Anchoring (3 points)
+
+| # | Item | Description | Points |
+|---|------|-------------|--------|
+| D1 | Market cap destruction | $0.5tn or similar magnitude of SaaS value lost | 1 |
+| D2 | Valuation compression | P/E multiple compression (85x → 60x or similar) | 1 |
+| D3 | Index drawdown | IGV -27% from peak, or equivalent sector index decline | 1 |
+
+### E. Concrete Example (1 point)
+
+| # | Item | Description | Points |
+|---|------|-------------|--------|
+| E1 | Company case study | Oracle $155-$175 swing, or similar single-stock example showing valuation uncertainty | 1 |
+
+---
+
+### Scoring Summary
+
+| Category | Max Points |
+|----------|------------|
+| A. Trigger Identification | 3 |
+| B. CAPEX Valuation Chain | 4 |
+| C. Contradiction Preservation | 2 |
+| D. Quantitative Anchoring | 3 |
+| E. Concrete Example | 1 |
+| **TOTAL** | **13** |
+
+**Passing threshold**: 8/13 (62%) with at least 1 point from 3 of 4 categories A-D.
+
+---
+
+<!--
+## Archived: Abstract Evaluation Rubric (Not Currently Used)
+
+The following criteria are preserved for future reference but not used for current grading.
+They evaluate architectural capabilities rather than output relevance.
 
 ### I. Logical Chain Formation
-
-**Pass if:**
-- The system can produce explicit, ordered chains
-- Chains follow a structure like: `Trigger -> Interpretation -> Mechanism -> Outcome`
-
-**Fail if:**
-- Output is purely narrative
-- Causality is implicit or vague
-
-If Fail -> Report: Missing causal / logical representation capability.
+- Pass: Explicit, ordered chains (Trigger -> Interpretation -> Mechanism -> Outcome)
+- Fail: Purely narrative, implicit causality
 
 ### II. Branching From a Single Trigger (CRITICAL)
-
-**Pass if:**
-- A single trigger can generate multiple parallel chains
-- Chains may lead to opposing outcomes (up and down)
-- The system does not enforce one outcome per trigger
-
-**Fail if:**
-- Architecture forces a single terminal outcome
-- Alternative interpretations are collapsed or suppressed
-
-If Fail -> Report: System enforces convergence or lacks branching belief representation.
+- Pass: Single trigger generates multiple parallel chains with opposing outcomes
+- Fail: Architecture forces single terminal outcome
 
 ### III. Contradiction Preservation (NOT RESOLUTION)
-
-**Pass if:**
-- Contradictory chains are explicitly surfaced
-- The system can state: "Markets were pricing X and NOT-X simultaneously"
-- Contradictions are treated as:
-  - Sources of volatility
-  - Evidence of regime confusion
-  - First-class explanatory objects
-
-**Fail if:**
-- Contradictions are smoothed over
-- Conflicting paths are merged implicitly
-- The system resolves tension without instruction
-
-**Resolution is NOT required. Preservation IS required.**
-
-If Fail -> Report: Missing assumption tracking or belief-branch persistence.
+- Pass: Contradictory chains explicitly surfaced, treated as first-class objects
+- Fail: Contradictions smoothed over or resolved without instruction
 
 ### IV. Outcome Polarity Support
-
-**Pass if:**
-- Chains can explicitly encode directional outcomes (e.g. risk assets up vs down)
-- Polarity is part of the chain, not an afterthought
-
-**Fail if:**
-- Outcomes are forced to be uniform
-- Directionality cannot be represented
-
-If Fail -> Report: Missing outcome polarity or scenario representation.
+- Pass: Chains encode directional outcomes (up/down)
+- Fail: Outcomes forced uniform
 
 ### V. Event, Time, and Magnitude Anchoring
-
-**Pass if:**
-- Chains reference concrete events, timing, or scale
-- Magnitude explains why something mattered
-
-**Fail if:**
-- Events are generic
-- Numbers exist without reasoning
-
-If Fail -> Report: Missing event extraction, temporal ordering, or scale reasoning.
+- Pass: Concrete events, timing, scale with reasoning
+- Fail: Generic events, numbers without context
 
 ### VI. Reasoning Architecture
-
-**Pass if:**
-- The system supports inspectable or stepwise reasoning
-- Intermediate chains or hypotheses can be examined
-
-**Fail if:**
-- Output is purely one-shot
-- No intermediate reasoning state exists
-
-If Fail -> Report: Reasoning control-flow limitation.
+- Pass: Inspectable, stepwise intermediate states
+- Fail: Purely one-shot output
 
 ### VII. Epistemic Coverage
-
-**Pass if:**
-- Output reflects a belief space, not a clean narrative
-- Multiple narratives coexist, even if messy
-
-**Fail if:**
-- Output is overly clean or singular
-- Known competing interpretations are absent
-
-If Fail -> Report: Insufficient search breadth or belief diversity support.
+- Pass: Multiple narratives coexist (belief space)
+- Fail: Overly clean or singular output
+-->
 
 ---
 
@@ -238,3 +238,152 @@ Do not:
 - Write code
 - Resolve contradictions
 - Select a "correct" narrative
+
+---
+
+## Actual Pipeline Run Results (2026-02-09)
+
+### Test Query
+```
+"What triggered the risk asset crash in 2026 Feb?"
+```
+
+### Expected Output (per Illustrative Example above)
+- SaaS meltdown chains
+- CAPEX valuation chains (Hyperscaler $570bn, Alphabet, Amazon)
+- BofA "logically impossible" contradiction
+- Software sector valuation compression
+
+### Actual Output
+The system returned **Fed policy/rate expectation content**:
+- Market rate cut expectations → Fed policy divergence → expectation disappointment
+- High market consensus → low probability assigned to alternatives → regime change vulnerability
+- Fed pause expectations → positioning for stable rates → vulnerability to hawkish surprise
+
+### What Went Wrong
+
+**Gap Detection Failure**: The gap detector marked `topic_not_covered = False` because it found *something* about "Feb 2026 crash" in the database. However, the content was about:
+- Fed rate expectations (Jan 2026 FOMC probabilities, 80-85% hold)
+- Market positioning (crowded trades, consensus in 325-375 bps range)
+- Financial stress indicators ("low stress levels")
+
+This is **tangentially related macro context**, NOT the **actual trigger factors** (SaaS disruption, AI CAPEX concerns, valuation compression).
+
+### Root Cause
+The gap detector checks if the query topic appears in retrieved content, but does not verify whether the content **actually answers the question**. Finding "Feb 2026" and "crash vulnerability" in the DB was enough to mark the topic as "covered", even though:
+1. The DB content explains *vulnerability mechanisms* (why markets were fragile)
+2. The expected output requires *actual trigger factors* (what specifically caused the crash)
+
+### Consequence
+Multi-angle web chain extraction was **never triggered** because no `topic_not_covered` gap was detected:
+```
+[Knowledge Gap] Gap split: 0 web_chain, 4 web_search, 1 data_fetch
+```
+
+The system should have generated queries like:
+- "SaaS AI disruption software stocks meltdown"
+- "hyperscaler CAPEX 2026 valuation concerns"
+- "AI investment ROI analyst warnings"
+
+But instead, it only ran generic web searches for dates and thresholds.
+
+### Classification
+| Aspect | Classification |
+|--------|----------------|
+| Failure Type | Gap Detection Logic |
+| Severity | Foundational - blocks core use case |
+| Fix Complexity | Moderate - requires smarter gap detection that checks if content *answers* the query, not just *mentions* related terms |
+
+### Suggested Fix Direction (Not Implementation)
+Gap detection should distinguish between:
+1. **Topic mentioned** - DB has content containing query keywords
+2. **Question answered** - DB content provides the specific information requested
+
+Current system only checks (1). Needs to also verify (2) before marking topic as "covered".
+
+---
+
+## Second Pipeline Run (2026-02-09) - Rephrased Query
+
+### Test Query
+```
+"What caused the SaaS meltdown in Feb 2026? What was the exact catalyst, were there any premonitions, and what other triggers contributed?"
+```
+
+### Query Expansion (Working Correctly)
+The query expansion generated 6 appropriate dimensions:
+```
+1. [Direct Catalyst Event] What single event or announcement triggered the SaaS meltdown Feb 2026
+2. [Valuation Mechanics] SaaS software valuation multiples compression 2026 growth stock repricing
+3. [Warning Signs] Early warning premonitions indicators before SaaS selloff Feb 2026
+4. [AI Disruption Narrative] AI threat to software business model SaaS obsolescence concerns 2026
+5. [Contagion Triggers] Other triggers contributing factors SaaS tech crash Feb 2026 CAPEX
+6. [Sector Spillover] SaaS meltdown spillover effect risk assets tech sector crash 2026
+```
+
+### Gap Detection Result
+Same fundamental issue:
+```
+[Knowledge Gap] Gap split: 0 web_chain, 3 web_search, 1 data_fetch
+```
+
+**No `topic_not_covered` gap detected** - meaning web chain extraction was NOT triggered.
+
+### Actual Output (Summary)
+The system returned content about:
+- JGB crisis as catalyst (from DB content about Japan bond market)
+- Fed policy / FOMC expectations
+- Credit spreads and financial stress indicators
+
+This is again **tangentially related macro context**, not the expected **SaaS-specific triggers**.
+
+### Why It Failed Again
+
+The gap detection prompt explicitly says:
+```
+0. **Topic not covered**
+   - COVERED: Query topic explicitly discussed in synthesis/chains
+   - GAP: Query topic NOT mentioned at all in synthesis
+   - ONLY mark as GAP if the topic is completely absent from synthesis (not just partially covered)
+```
+
+The phrase **"ONLY mark as GAP if the topic is completely absent"** is too lenient. The DB content mentions "Feb 2026", "crash", and "risk assets" - so the topic appears "partially covered" even though:
+1. The actual SaaS meltdown is NOT explained
+2. The AI CAPEX valuation issue is NOT covered
+3. The BofA "logically impossible" contradiction is NOT present
+
+### Prompt Design Flaw
+The gap detector is answering: "Is there ANY content about this topic?"
+It should be answering: "Does the content ANSWER the specific question asked?"
+
+### Evidence of Prompt Issue
+From `knowledge_gap_prompts.py`:
+```python
+"ONLY mark as GAP if the topic is completely absent from synthesis (not just partially covered)"
+```
+
+This explicitly tells the LLM to NOT mark tangentially related content as a gap.
+
+### Classification Update
+| Aspect | Classification |
+|--------|----------------|
+| Failure Type | Gap Detection **Prompt Design** |
+| Severity | Foundational - blocks core use case |
+| Fix Complexity | Low - requires prompt rewrite to check "question answered" not "topic mentioned" |
+| Location | `knowledge_gap_prompts.py` lines 40-46 |
+
+### Required Prompt Change (Conceptual)
+```
+# BEFORE (current):
+- COVERED: Query topic explicitly discussed in synthesis/chains
+- GAP: Query topic NOT mentioned at all
+- ONLY mark as GAP if topic is completely absent
+
+# AFTER (needed):
+- COVERED: Synthesis directly answers the SPECIFIC question asked
+- GAP: Synthesis mentions related topics but does NOT answer the question
+- Mark as GAP if synthesis is tangentially related but misses the core question
+```
+
+The key insight: "Does the synthesis contain content about Feb 2026 crash?" is the wrong question.
+The right question: "Does the synthesis explain what CAUSED the crash (the triggers, catalysts, specific events)?"
