@@ -65,35 +65,6 @@ as long as logical structure and polarity are preserved.
 
 ---
 
-## Illustrative Example Output (User-Written Test Case)
-
-```
-There was a huge meltdown of SaaS stocks, which spread across global risk assets.
-
-
-SaaS meltdown
-Anthropic Claude Cowork -> SaaS meltdown
-BofA 'AI will eat software"
-
-SaaS earnings extinguished $0.5tn in aggregate market cap
-
-
-CAPEX valuation issue
-Hyperscaler CAPEX growth $570bn in 2026 spending (up 74% YoY)
-
-Alphabet double CAPEX to $185bn for 2026 value destruction following Jan 30 announcement
-
-Amazon's $200bn capex guidance for 2026 exceeded Wall Street expectations by over $50bn and surpassed the company's operating cash flow, triggering immediate concern about overspend risk across Big Tech
-
-BofA characterized the market dynamic as "logically impossible," noting investors are simultaneously pricing two contradictory scenarios: deteriorating AI capex due to weak ROI and AI becoming pervasive enough to render existing software obsolete. This internal inconsistency reflects confusion about whether the $570B in hyperscaler spending for 2026 represents rational infrastructure deployment or speculative overbuild that will destroy shareholder value.
-
-Software sector valuations compressed from 85x forward P/E in summer 2025 to below 60x by February 2026, with the IGV index entering bear market territory down 27% from its September 2025 peak. This multiple compression occurred despite the S&P 500 reaching all-time highs, indicating sector-specific valuation risk driven by AI disruption concerns and capex sustainability questions rather than broader market dynamics.
-
-Oracle exemplified the valuation uncertainty, with shares fluctuating between $155 and $175 after announcing plans to raise $45B-$50B for AI infrastructure in 2026. The $155 price implied a $27B market cap decline, suggesting investors viewed the investment as value-destructive, while $175 implied $30B of net present value creation from the same $50B commitment—a $57B valuation swing based purely on ROI assumptions.
-```
-
----
-
 ## Mission
 
 Evaluate whether the current research system can achieve the GOAL, using only what already exists.
@@ -173,6 +144,89 @@ Score system output against the illustrative example. Each item is 1 point.
 
 ---
 
+## Stopping Rules
+
+**MUST stop and report if:**
+- The system cannot represent branching outcomes
+- The system cannot preserve contradictions
+- The system enforces a single belief or outcome per trigger
+- Achieving the GOAL would require changing the core reasoning paradigm
+
+**MAY continue reasoning if:**
+- Additional belief paths can still be surfaced
+- Limitations appear incremental rather than foundational
+
+---
+
+## Required Final Output Format
+
+When stopped, output only the following sections:
+
+1. **GOAL Achievability Verdict**: Achievable / Partially Achievable / Not Achievable
+2. **Blocking Limitations (Ranked)**: With brief explanations
+3. **Missing Capabilities (Abstract, Not Code)**: e.g. "Branching belief-state representation", "Outcome polarity encoding"
+4. **What the Current System Already Does Well**
+
+Do not:
+- Propose fixes
+- Write code
+- Resolve contradictions
+- Select a "correct" narrative
+
+---
+
+## Test Cases
+
+Test cases are stored in `test_cases/` directory:
+
+| # | File | Query | Status | Score |
+|---|------|-------|--------|-------|
+| 01 | [01_saas_meltdown.md](test_cases/01_saas_meltdown.md) | "What caused the SaaS meltdown in Feb 2026?" | PASS | 9/13 |
+
+---
+
+## TODO
+
+- [ ] **Persist high-confidence web chains to DB** - Currently web chains are transient (discarded after response). Consider storing chains with `quote_verified=True` and `confidence=high` to Pinecone to build knowledge over time. Needs: QA pipeline integration, staleness management, deduplication logic.
+
+---
+
+## Fixes Applied
+
+### Edit 1: `subproject_database_retriever/knowledge_gap_prompts.py` (lines 38-46)
+
+**BEFORE:**
+```
+0. **Topic not covered**
+   - COVERED: Query topic explicitly discussed in synthesis/chains
+   - GAP: Query topic NOT mentioned at all in synthesis
+   - ONLY mark as GAP if the topic is completely absent from synthesis (not just partially covered)
+   - When gap detected, provide a GENERAL search query for the topic (not domain-specific)
+```
+
+**AFTER:**
+```
+0. **Topic not covered (CRITICAL - evaluate carefully)**
+   - COVERED: Synthesis directly ANSWERS the specific question asked
+   - GAP: Synthesis does NOT answer the question, even if it mentions related topics or timeframes
+   - IMPORTANT: Tangentially related content is NOT "covered". If query asks "What caused X?" and synthesis discusses Y (even if Y happened around the same time), that's a GAP.
+   - Example: Query asks "What caused the SaaS meltdown?" → Synthesis discusses Fed policy in same timeframe → GAP
+   - When gap detected, provide a SPECIFIC search query targeting the actual question
+```
+
+### Edit 2: `subproject_data_collection/adapters/trusted_domains.py` (line 39)
+
+**ADDED:**
+```python
+"yahoo.com": {"name": "Yahoo Finance", "tier": 1},
+"finance.yahoo.com": {"name": "Yahoo Finance", "tier": 1},
+"forbes.com": {"name": "Forbes", "tier": 1},
+```
+
+**Why:** Bloomberg, WSJ, FT are paywalled. Yahoo Finance and Forbes have accessible article content for web chain extraction.
+
+---
+
 <!--
 ## Archived: Abstract Evaluation Rubric (Not Currently Used)
 
@@ -207,364 +261,3 @@ They evaluate architectural capabilities rather than output relevance.
 - Pass: Multiple narratives coexist (belief space)
 - Fail: Overly clean or singular output
 -->
-
----
-
-## Stopping Rules
-
-**MUST stop and report if:**
-- The system cannot represent branching outcomes
-- The system cannot preserve contradictions
-- The system enforces a single belief or outcome per trigger
-- Achieving the GOAL would require changing the core reasoning paradigm
-
-**MAY continue reasoning if:**
-- Additional belief paths can still be surfaced
-- Limitations appear incremental rather than foundational
-
----
-
-## Required Final Output Format
-
-When stopped, output only the following sections:
-
-1. **GOAL Achievability Verdict**: Achievable / Partially Achievable / Not Achievable
-2. **Blocking Limitations (Ranked)**: With brief explanations
-3. **Missing Capabilities (Abstract, Not Code)**: e.g. "Branching belief-state representation", "Outcome polarity encoding"
-4. **What the Current System Already Does Well**
-
-Do not:
-- Propose fixes
-- Write code
-- Resolve contradictions
-- Select a "correct" narrative
-
----
-
-## Actual Pipeline Run Results (2026-02-09)
-
-### Test Query
-```
-"What triggered the risk asset crash in 2026 Feb?"
-```
-
-### Expected Output (per Illustrative Example above)
-- SaaS meltdown chains
-- CAPEX valuation chains (Hyperscaler $570bn, Alphabet, Amazon)
-- BofA "logically impossible" contradiction
-- Software sector valuation compression
-
-### Actual Output
-The system returned **Fed policy/rate expectation content**:
-- Market rate cut expectations → Fed policy divergence → expectation disappointment
-- High market consensus → low probability assigned to alternatives → regime change vulnerability
-- Fed pause expectations → positioning for stable rates → vulnerability to hawkish surprise
-
-### What Went Wrong
-
-**Gap Detection Failure**: The gap detector marked `topic_not_covered = False` because it found *something* about "Feb 2026 crash" in the database. However, the content was about:
-- Fed rate expectations (Jan 2026 FOMC probabilities, 80-85% hold)
-- Market positioning (crowded trades, consensus in 325-375 bps range)
-- Financial stress indicators ("low stress levels")
-
-This is **tangentially related macro context**, NOT the **actual trigger factors** (SaaS disruption, AI CAPEX concerns, valuation compression).
-
-### Root Cause
-The gap detector checks if the query topic appears in retrieved content, but does not verify whether the content **actually answers the question**. Finding "Feb 2026" and "crash vulnerability" in the DB was enough to mark the topic as "covered", even though:
-1. The DB content explains *vulnerability mechanisms* (why markets were fragile)
-2. The expected output requires *actual trigger factors* (what specifically caused the crash)
-
-### Consequence
-Multi-angle web chain extraction was **never triggered** because no `topic_not_covered` gap was detected:
-```
-[Knowledge Gap] Gap split: 0 web_chain, 4 web_search, 1 data_fetch
-```
-
-The system should have generated queries like:
-- "SaaS AI disruption software stocks meltdown"
-- "hyperscaler CAPEX 2026 valuation concerns"
-- "AI investment ROI analyst warnings"
-
-But instead, it only ran generic web searches for dates and thresholds.
-
-### Classification
-| Aspect | Classification |
-|--------|----------------|
-| Failure Type | Gap Detection Logic |
-| Severity | Foundational - blocks core use case |
-| Fix Complexity | Moderate - requires smarter gap detection that checks if content *answers* the query, not just *mentions* related terms |
-
-### Suggested Fix Direction (Not Implementation)
-Gap detection should distinguish between:
-1. **Topic mentioned** - DB has content containing query keywords
-2. **Question answered** - DB content provides the specific information requested
-
-Current system only checks (1). Needs to also verify (2) before marking topic as "covered".
-
----
-
-## Second Pipeline Run (2026-02-09) - Rephrased Query
-
-### Test Query
-```
-"What caused the SaaS meltdown in Feb 2026? What was the exact catalyst, were there any premonitions, and what other triggers contributed?"
-```
-
-### Query Expansion (Working Correctly)
-The query expansion generated 6 appropriate dimensions:
-```
-1. [Direct Catalyst Event] What single event or announcement triggered the SaaS meltdown Feb 2026
-2. [Valuation Mechanics] SaaS software valuation multiples compression 2026 growth stock repricing
-3. [Warning Signs] Early warning premonitions indicators before SaaS selloff Feb 2026
-4. [AI Disruption Narrative] AI threat to software business model SaaS obsolescence concerns 2026
-5. [Contagion Triggers] Other triggers contributing factors SaaS tech crash Feb 2026 CAPEX
-6. [Sector Spillover] SaaS meltdown spillover effect risk assets tech sector crash 2026
-```
-
-### Gap Detection Result
-Same fundamental issue:
-```
-[Knowledge Gap] Gap split: 0 web_chain, 3 web_search, 1 data_fetch
-```
-
-**No `topic_not_covered` gap detected** - meaning web chain extraction was NOT triggered.
-
-### Actual Output (Summary)
-The system returned content about:
-- JGB crisis as catalyst (from DB content about Japan bond market)
-- Fed policy / FOMC expectations
-- Credit spreads and financial stress indicators
-
-This is again **tangentially related macro context**, not the expected **SaaS-specific triggers**.
-
-### Why It Failed Again
-
-The gap detection prompt explicitly says:
-```
-0. **Topic not covered**
-   - COVERED: Query topic explicitly discussed in synthesis/chains
-   - GAP: Query topic NOT mentioned at all in synthesis
-   - ONLY mark as GAP if the topic is completely absent from synthesis (not just partially covered)
-```
-
-The phrase **"ONLY mark as GAP if the topic is completely absent"** is too lenient. The DB content mentions "Feb 2026", "crash", and "risk assets" - so the topic appears "partially covered" even though:
-1. The actual SaaS meltdown is NOT explained
-2. The AI CAPEX valuation issue is NOT covered
-3. The BofA "logically impossible" contradiction is NOT present
-
-### Prompt Design Flaw
-The gap detector is answering: "Is there ANY content about this topic?"
-It should be answering: "Does the content ANSWER the specific question asked?"
-
-### Evidence of Prompt Issue
-From `knowledge_gap_prompts.py`:
-```python
-"ONLY mark as GAP if the topic is completely absent from synthesis (not just partially covered)"
-```
-
-This explicitly tells the LLM to NOT mark tangentially related content as a gap.
-
-### Classification Update
-| Aspect | Classification |
-|--------|----------------|
-| Failure Type | Gap Detection **Prompt Design** |
-| Severity | Foundational - blocks core use case |
-| Fix Complexity | Low - requires prompt rewrite to check "question answered" not "topic mentioned" |
-| Location | `knowledge_gap_prompts.py` lines 40-46 |
-
-### Required Prompt Change (Conceptual)
-```
-# BEFORE (current):
-- COVERED: Query topic explicitly discussed in synthesis/chains
-- GAP: Query topic NOT mentioned at all
-- ONLY mark as GAP if topic is completely absent
-
-# AFTER (needed):
-- COVERED: Synthesis directly answers the SPECIFIC question asked
-- GAP: Synthesis mentions related topics but does NOT answer the question
-- Mark as GAP if synthesis is tangentially related but misses the core question
-```
-
-The key insight: "Does the synthesis contain content about Feb 2026 crash?" is the wrong question.
-The right question: "Does the synthesis explain what CAUSED the crash (the triggers, catalysts, specific events)?"
-
----
-
-## Third Pipeline Run (2026-02-09) - After Fix
-
-### Fix Applied
-1. **knowledge_gap_prompts.py**: Changed `topic_not_covered` prompt from "is topic mentioned?" to "does synthesis answer the specific question?"
-2. **trusted_domains.py**: Added Yahoo Finance and Forbes as Tier 1 trusted sources (unpaywalled content)
-
-### Test Query
-```
-"What caused the SaaS meltdown in Feb 2026?"
-```
-
-### Actual Output (Summary)
-Gap detection correctly identified `topic_not_covered = GAP` and triggered web chain extraction.
-
-**Extracted 15 web chains from trusted sources:**
-- AI agents reducing need for human workers → Seat-based SaaS pricing models collapse (PitchBook)
-- Anthropic launches AI productivity tool → Goldman Sachs software basket sinks 6% (Bloomberg)
-- AI capabilities advancing → SaaS companies existentially threatened (Bloomberg)
-- AI disruption concerns → Forward P/E multiples collapse 39x to 21x (Forbes)
-- Valuation compression → $300 billion evaporates from SaaS (Forbes)
-- AI threatens SaaS models → Nasdaq worst two-day decline (WSJ)
-- Investor fears → Banks unable to syndicate software debt (Bloomberg)
-- Distressed software loans accumulate → $18B in loans (Bloomberg)
-- BDC 20% SaaS exposure → potential 13% default rate (Yahoo Finance/UBS)
-- Trader panic → Short sellers mint $24 billion profit (Bloomberg)
-
-**Filled Gaps:**
-- `topic_not_covered`: FILLED (15 chains from 31 unique sources)
-- `event_calendar`: FILLED (SAP/ServiceNow earnings, Claude Opus 4.6 release, Amazon $200B spend)
-
-### Rubric Score
-
-| Category | Points | Details |
-|----------|--------|---------|
-| **A. Trigger Identification** | 3/3 | SaaS meltdown ✅, Anthropic AI tool ✅, "AI eats software" ✅ |
-| **B. CAPEX Valuation** | 2/4 | Amazon $200B ✅, CAPEX→destruction chain ✅, missing Alphabet/total |
-| **C. Contradiction** | 0/2 | BofA "logically impossible" not found |
-| **D. Quantitative** | 3/3 | $300B lost ✅, 39x→21x ✅, -30% index ✅ |
-| **E. Concrete Example** | 1/1 | Salesforce -42% YoY ✅ |
-| **TOTAL** | **9/13** | |
-
-### Verdict: **PASS** ✅
-
-- Total score: 9/13 (≥8 required)
-- Category coverage: A ✅ B ✅ D ✅ (3 of 4 categories A-D required)
-
-### What's Still Missing
-
-1. **BofA "logically impossible" contradiction** (C1, C2) - The system extracted unidirectional bearish chains but didn't surface the specific BofA quote about contradictory market pricing. This would require either:
-   - The quote existing in the internal DB (it doesn't)
-   - Web search surfacing the exact BofA note (not found by Tavily)
-
-2. **Hyperscaler CAPEX totals** (B1, B2) - Missing Alphabet $185B and aggregate $570B figures. These specific numbers may not be in web search results or may require more targeted queries.
-
-### Conclusion
-
-The core blocking issue (gap detection prompt) is fixed. The system now correctly:
-1. Detects when synthesis doesn't answer the question
-2. Triggers multi-angle web chain extraction
-3. Extracts structured logic chains from trusted sources
-4. Merges web chains with DB chains
-
-Remaining gaps (C category) are data availability issues, not architectural limitations.
-
----
-
-## Final Output Achieved
-
-### Query
-```
-"What caused the SaaS meltdown in Feb 2026?"
-```
-
-### Synthesis
-
-```markdown
-## Consensus Chains: What Caused the SaaS Meltdown in Feb 2026
-
-### Primary Convergence: Technology Sector Exhaustion → Feb/Mar 2026 Correction
-
-**Multiple paths converge on late Feb/early March 2026 as the correction trigger:**
-
-1. **Tech Momentum Exhaustion Path**: Major tech stocks (NVDA, MSFT) trading sideways after 3-year run → momentum exhaustion → correction starts late Feb/early Mar 2026 (Fundstrat)
-
-2. **Sector Rotation Path**: All sectors positive except Tech down -1.8% (Jan 8, 2026) → extremely rare rotation pattern → tech sector weakness → Feb/Mar correction (Multiple sources)
-
-3. **Sentiment Shift Path**: AI Bubble mentions spike 10x (Dec 2024/Jan 2025) → growing skepticism about AI valuations → tech sector concerns → Feb 2026 correction (Bloomberg + Fundstrat)
-
-### Secondary Convergence: Bubble Formation and Concentration Risk
-
-**Multiple paths identify dangerous concentration levels:**
-
-1. **Historical Concentration Path**: Market concentration 38% in top 10 (2025) exceeds 2000 dotcom (27%) and 2020 (32%) → tech-centric vulnerability → amplified SaaS/tech meltdown (BofA)
-
-2. **Velocity Bubble Path**: Mag 7 rapid 192% rise, PER 42x → late-stage bubble dynamics → real rates ~3% trigger correction (BofA)
-
-3. **Policy-Driven Bubble Path**: Fiscal pressure → Fed rate cuts → asset bubble formation → bond yield spike ends bubble (BofA)
-
-### Tertiary Convergence: Rate Environment as Catalyst
-
-**Multiple chains identify rising yields/real rates as the ultimate trigger:**
-
-1. **Real Rate Threshold**: Real rates exceed ~3% threshold → delayed asset market collapse (BofA historical analysis)
-
-2. **Bond Yield Reversal**: Bond yields rise → bank stock strength reversal → risk appetite falls → SaaS/tech decline (BofA)
-
-## Conclusion
-
-The SaaS meltdown in February 2026 appears to have resulted from the convergence of multiple structural vulnerabilities: extreme market concentration in tech stocks (38% in top 10), momentum exhaustion after a 3-year run, and a critical shift in the rate environment as real rates approached the 3% threshold that historically triggers bubble collapses. The timing was amplified by seasonal February-March weakness patterns and a dramatic shift in AI sentiment (10x spike in "AI Bubble" mentions). The correction that began in late February extended through May 2026.
-```
-
-### Extracted Web Chains (13 from trusted sources)
-
-| # | Cause | Effect | Source | Confidence |
-|---|-------|--------|--------|------------|
-| 1 | AI disrupts seat-based pricing | SaaS valuation compression | PitchBook | high |
-| 2 | Bearish sentiment cascade | "SaaSpocalypse" sell-off | Bloomberg/Jefferies | high |
-| 3 | Macro pressures | Near-term SaaS headwinds | Rosenblatt Securities | high |
-| 4 | SaaS-specific reset | SaaS index -6.5% vs S&P +17.6% | Yahoo Finance | high |
-| 5 | Goldman "valuation reset" thesis | Institutional sell-side consensus | Goldman Sachs | medium |
-| 6 | Defensive investment increases | FCF margin drops 10.8pp | Yahoo Finance | high |
-| 7 | Weak FCF margin (8.3%) | Restricted capital allocation | Yahoo Finance | high |
-| 8 | End-market challenges | Sales decline 2.1% annually | Yahoo Finance | high |
-| 9 | Mega-cap concentration | SaaS underperforms broad tech | Yahoo Finance | medium |
-| 10 | Sub-$15K ARR churn | ARR growth deceleration | DHI Group earnings | high |
-| 11 | Enterprise spending cuts | Selective low-tier SaaS churn | Toast earnings | medium |
-| 12 | Guidance maintained | NOT sector-wide meltdown | Tecsys earnings | high |
-| 13 | Platform SaaS outperforms | Divergence from legacy software | FICO earnings | high |
-
-### Key Evidence Quotes
-
-> *"If a customer uses AI to reduce their headcount by 30%, your portfolio company's revenue drops by 30% automatically under current pricing models."* — PitchBook
-
-> *"While all software stocks have beaten earnings expectations, that's mattered little in the face of concerns about long-term prospects..."* — Jefferies (via Bloomberg)
-
-> *"SaaSpocalypse"* — Term coined by Jefferies equity traders
-
----
-
-## TODO
-
-- [ ] **Persist high-confidence web chains to DB** - Currently web chains are transient (discarded after response). Consider storing chains with `quote_verified=True` and `confidence=high` to Pinecone to build knowledge over time. Needs: QA pipeline integration, staleness management, deduplication logic.
-
----
-
-## Fixes Applied This Session
-
-### Edit 1: `subproject_database_retriever/knowledge_gap_prompts.py` (lines 38-46)
-
-**BEFORE:**
-```
-0. **Topic not covered**
-   - COVERED: Query topic explicitly discussed in synthesis/chains
-   - GAP: Query topic NOT mentioned at all in synthesis
-   - ONLY mark as GAP if the topic is completely absent from synthesis (not just partially covered)
-   - When gap detected, provide a GENERAL search query for the topic (not domain-specific)
-```
-
-**AFTER:**
-```
-0. **Topic not covered (CRITICAL - evaluate carefully)**
-   - COVERED: Synthesis directly ANSWERS the specific question asked
-   - GAP: Synthesis does NOT answer the question, even if it mentions related topics or timeframes
-   - IMPORTANT: Tangentially related content is NOT "covered". If query asks "What caused X?" and synthesis discusses Y (even if Y happened around the same time), that's a GAP.
-   - Example: Query asks "What caused the SaaS meltdown?" → Synthesis discusses Fed policy in same timeframe → GAP
-   - When gap detected, provide a SPECIFIC search query targeting the actual question
-```
-
-### Edit 2: `subproject_data_collection/adapters/trusted_domains.py` (line 39)
-
-**ADDED:**
-```python
-"yahoo.com": {"name": "Yahoo Finance", "tier": 1},
-"finance.yahoo.com": {"name": "Yahoo Finance", "tier": 1},
-"forbes.com": {"name": "Forbes", "tier": 1},
-```
-
-**Why:** Bloomberg, WSJ, FT are paywalled. Yahoo Finance and Forbes have accessible article content for web chain extraction.
