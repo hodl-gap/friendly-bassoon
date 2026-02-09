@@ -114,6 +114,17 @@ For each precedent, expected structure:
 | D3 | Monitoring guidance | What to watch (short interest changes, catalysts) | 1 |
 | D4 | Time horizon | Acknowledges timing uncertainty | 1 |
 
+### E. Data Retrieval (4 points)
+
+| # | Item | Description | Points |
+|---|------|-------------|--------|
+| E1 | Web search for precedents | Triggers web search to find historical short positioning events | 1 |
+| E2 | Dated events retrieved | Web search returns specific dated episodes (not just general descriptions) | 1 |
+| E3 | Price data requested | Requests/retrieves price data (Yahoo Finance or similar) to validate squeeze magnitude | 1 |
+| E4 | Quantified outcome | Provides quantified price movement (e.g., "GME +1600% in Jan 2021", "VIX +115% Feb 2018") | 1 |
+
+**Note**: E3/E4 test whether pipeline uses data collection tools to verify claims, not just web search summaries.
+
 ---
 
 ### Scoring Summary
@@ -124,9 +135,10 @@ For each precedent, expected structure:
 | B. Historical Precedents | 5 |
 | C. Conditional Chains | 4 |
 | D. Interpretive Judgments | 4 |
-| **TOTAL** | **18** |
+| E. Data Retrieval | 4 |
+| **TOTAL** | **22** |
 
-**Passing threshold**: 11/18 (62%) with at least 1 point from 3 of 4 categories.
+**Passing threshold**: 14/22 (64%) with at least 1 point from 4 of 5 categories.
 
 ---
 
