@@ -387,3 +387,69 @@ This explicitly tells the LLM to NOT mark tangentially related content as a gap.
 
 The key insight: "Does the synthesis contain content about Feb 2026 crash?" is the wrong question.
 The right question: "Does the synthesis explain what CAUSED the crash (the triggers, catalysts, specific events)?"
+
+---
+
+## Third Pipeline Run (2026-02-09) - After Fix
+
+### Fix Applied
+1. **knowledge_gap_prompts.py**: Changed `topic_not_covered` prompt from "is topic mentioned?" to "does synthesis answer the specific question?"
+2. **trusted_domains.py**: Added Yahoo Finance and Forbes as Tier 1 trusted sources (unpaywalled content)
+
+### Test Query
+```
+"What caused the SaaS meltdown in Feb 2026?"
+```
+
+### Actual Output (Summary)
+Gap detection correctly identified `topic_not_covered = GAP` and triggered web chain extraction.
+
+**Extracted 15 web chains from trusted sources:**
+- AI agents reducing need for human workers → Seat-based SaaS pricing models collapse (PitchBook)
+- Anthropic launches AI productivity tool → Goldman Sachs software basket sinks 6% (Bloomberg)
+- AI capabilities advancing → SaaS companies existentially threatened (Bloomberg)
+- AI disruption concerns → Forward P/E multiples collapse 39x to 21x (Forbes)
+- Valuation compression → $300 billion evaporates from SaaS (Forbes)
+- AI threatens SaaS models → Nasdaq worst two-day decline (WSJ)
+- Investor fears → Banks unable to syndicate software debt (Bloomberg)
+- Distressed software loans accumulate → $18B in loans (Bloomberg)
+- BDC 20% SaaS exposure → potential 13% default rate (Yahoo Finance/UBS)
+- Trader panic → Short sellers mint $24 billion profit (Bloomberg)
+
+**Filled Gaps:**
+- `topic_not_covered`: FILLED (15 chains from 31 unique sources)
+- `event_calendar`: FILLED (SAP/ServiceNow earnings, Claude Opus 4.6 release, Amazon $200B spend)
+
+### Rubric Score
+
+| Category | Points | Details |
+|----------|--------|---------|
+| **A. Trigger Identification** | 3/3 | SaaS meltdown ✅, Anthropic AI tool ✅, "AI eats software" ✅ |
+| **B. CAPEX Valuation** | 2/4 | Amazon $200B ✅, CAPEX→destruction chain ✅, missing Alphabet/total |
+| **C. Contradiction** | 0/2 | BofA "logically impossible" not found |
+| **D. Quantitative** | 3/3 | $300B lost ✅, 39x→21x ✅, -30% index ✅ |
+| **E. Concrete Example** | 1/1 | Salesforce -42% YoY ✅ |
+| **TOTAL** | **9/13** | |
+
+### Verdict: **PASS** ✅
+
+- Total score: 9/13 (≥8 required)
+- Category coverage: A ✅ B ✅ D ✅ (3 of 4 categories A-D required)
+
+### What's Still Missing
+
+1. **BofA "logically impossible" contradiction** (C1, C2) - The system extracted unidirectional bearish chains but didn't surface the specific BofA quote about contradictory market pricing. This would require either:
+   - The quote existing in the internal DB (it doesn't)
+   - Web search surfacing the exact BofA note (not found by Tavily)
+
+2. **Hyperscaler CAPEX totals** (B1, B2) - Missing Alphabet $185B and aggregate $570B figures. These specific numbers may not be in web search results or may require more targeted queries.
+
+### Conclusion
+
+The core blocking issue (gap detection prompt) is fixed. The system now correctly:
+1. Detects when synthesis doesn't answer the question
+2. Triggers multi-angle web chain extraction
+3. Extracts structured logic chains from trusted sources
+4. Merges web chains with DB chains
+
+Remaining gaps (C category) are data availability issues, not architectural limitations.
