@@ -66,3 +66,9 @@ CHAIN_TARGET_KEYWORDS = [               # Keywords indicating "outcome" in query
 # Unresolved Dangling Check Settings (Option 2: trigger web extraction if chains incomplete)
 ENABLE_UNRESOLVED_DANGLING_CHECK = True  # Check if dangling effects remain unresolved
 MIN_UNRESOLVED_FOR_WEB_EXTRACTION = 2    # Trigger web extraction if >= N unresolved dangles
+
+# Knowledge Gap Detection & Filling Settings
+ENABLE_GAP_DETECTION = True              # Run gap detection after answer generation
+ENABLE_GAP_FILLING = True                # Attempt to fill detected gaps
+MAX_GAP_SEARCHES = 6                     # Maximum web searches for gap filling
+MAX_ATTEMPTS_PER_GAP = 2                 # Max refinement attempts per gap

@@ -23,6 +23,8 @@ subproject_database_retriever/
 ├── vector_search.py             # Function: semantic search in Pinecone
 ├── context_synthesis.py         # Function: synthesize retrieved chunks
 ├── answer_generation.py         # Function: generate final answers
+├── knowledge_gap_detector.py    # Function: detect and fill knowledge gaps
+├── knowledge_gap_prompts.py     # Prompts for gap detection
 ├── query_routing.py             # Function: route queries to appropriate handlers
 ├── {other}_prompts.py           # Prompts for each workflow
 ├── states.py                    # LangGraph state definitions
@@ -349,6 +351,80 @@ FOLLOWUP_THRESHOLD = 0.40           # Similarity threshold for follow-ups
 **State Fields Added**:
 - `dangling_effects_followed`: List of effects that were followed up with additional queries
 
+### Knowledge Gap Detection & Filling (NEW)
+
+The retrieval layer now handles gap detection and filling, providing enriched context to consumers (e.g., BTC Intelligence).
+
+**Architecture Change**: Gap detection was moved FROM `subproject_btc_intelligence` TO here to make it topic-agnostic. The retrieval layer returns enriched results with merged DB + web chains.
+
+**Workflow Step Added**:
+```
+process_query → search → generate → fill_gaps → END
+```
+
+**Gap Categories**:
+| Category | fill_method | What it searches for |
+|----------|------------|---------------------|
+| topic_not_covered | web_chain_extraction | Extract logic chains from trusted web sources |
+| historical_precedent_depth | web_search | Event DATES only (we compute impact ourselves) |
+| quantified_relationships | data_fetch | Fetches instruments, computes correlation from price data |
+| monitoring_thresholds | web_search | Analyst targets, intervention levels, price forecasts |
+| event_calendar | web_search | Meeting dates, economic calendar |
+| mechanism_conditions | web_search | Preconditions for causal mechanism |
+| exit_criteria | web_search | Thesis resolution conditions |
+
+**Key Functions**:
+| Function | File | Purpose |
+|----------|------|---------|
+| `detect_knowledge_gaps()` | `knowledge_gap_detector.py` | LLM call to identify missing information |
+| `fill_gaps_with_search()` | `knowledge_gap_detector.py` | Fill gaps via Tavily web search |
+| `fill_gaps_with_data()` | `knowledge_gap_detector.py` | Fill gaps by computing from price data |
+| `fill_gaps_with_web_chains()` | `knowledge_gap_detector.py` | Extract chains from trusted web sources |
+| `expand_for_web_chain_extraction()` | `query_processing.py` | Generate multi-angle queries for web chain extraction |
+| `merge_web_chains_with_db_chains()` | `knowledge_gap_detector.py` | Merge with confidence weighting |
+| `detect_and_fill_gaps()` | `knowledge_gap_detector.py` | Main orchestration function |
+
+**Multi-Angle Web Chain Extraction**:
+When `topic_not_covered` gap is detected, generates multiple factor-focused queries instead of a single query:
+```python
+# Example: Query about "AI CAPEX impact on tech stocks"
+# Instead of: "Bitcoin AI CAPEX tech stocks" (BTC-centric, wrong)
+# Generates:
+#   - "SaaS AI disruption software stocks"
+#   - "hyperscaler CAPEX ROI concerns 2026"
+#   - "AI investment contradictions analyst"
+```
+
+**Configuration (`config.py`)**:
+```python
+ENABLE_GAP_DETECTION = True       # Run gap detection after answer generation
+ENABLE_GAP_FILLING = True         # Attempt to fill detected gaps
+MAX_GAP_SEARCHES = 6              # Maximum web searches for gap filling
+MAX_ATTEMPTS_PER_GAP = 2          # Max refinement attempts per gap
+```
+
+**State Fields Added**:
+- `knowledge_gaps`: Gap detection results
+- `gap_enrichment_text`: Additional context from filled gaps
+- `filled_gaps`: Gaps successfully filled
+- `partially_filled_gaps`: Gaps with partial information
+- `unfillable_gaps`: Gaps that could not be filled
+- `extracted_web_chains`: Logic chains from web extraction
+- `logic_chains`: Merged DB + web chains
+
+**Return Format**:
+```python
+{
+    "synthesis": "...",
+    "logic_chains": [...],  # DB + web chains merged
+    "knowledge_gaps": {...},
+    "filled_gaps": [...],
+    "gap_enrichment_text": "..."
+}
+```
+
+**Cost**: ~$0.035 per query with Tavily (6 searches + 6 Haiku extractions + 1 gap detection)
+
 ## Flexible Design Decisions (TBD)
 The following are intentionally left flexible for future decisions:
 - **Retrieval strategy** - Top-k, MMR, hybrid search, etc.
@@ -430,12 +506,24 @@ index = pc.Index("research-papers")
 - Data stored in Pinecone "research-papers" index
 
 ## TODO
-- [ ] Set up initial project structure
-- [ ] Create `states.py` with basic state definitions
-- [ ] Implement `retrieval_orchestrator.py` skeleton
-- [ ] Create vector search module
-- [ ] Create query processing module
-- [ ] Create answer generation module
-- [ ] Implement agentic iteration logic
-- [ ] Test basic query-answer workflow
-- (More items will be added as development progresses)
+
+### Gap Detection Prompt Fix (BLOCKING)
+- [ ] **Prompt asks "topic mentioned?" instead of "question answered?"**
+  - **File**: `knowledge_gap_prompts.py` lines 40-46
+  - **Current prompt**: `"ONLY mark as GAP if the topic is completely absent from synthesis (not just partially covered)"`
+  - **Problem**: This tells the LLM to mark tangentially related content as "covered", even when it doesn't answer the question
+  - **Example**: Query asks "What caused the SaaS meltdown?" → DB has Fed policy content mentioning "Feb 2026 crash" → LLM marks topic as "covered" → No web chain extraction triggered
+  - **Fix needed**: Change prompt to check "Does synthesis ANSWER the specific question?" not "Does synthesis MENTION the topic?"
+  - **Impact**: Foundational - blocks the core diagnostic use case
+  - **See**: `DIAGNOSTIC_TASK.md` for full test results
+
+### Original TODOs (mostly done)
+- [x] Set up initial project structure
+- [x] Create `states.py` with basic state definitions
+- [x] Implement `retrieval_orchestrator.py` skeleton
+- [x] Create vector search module
+- [x] Create query processing module
+- [x] Create answer generation module
+- [x] Implement agentic iteration logic
+- [x] Test basic query-answer workflow
+- [x] Add gap detection and filling (moved from BTC Intelligence)

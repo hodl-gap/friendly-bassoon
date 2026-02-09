@@ -97,3 +97,10 @@ class BTCImpactState(TypedDict, total=False):
     #     "correlations": {"BTC_vs_VIX": 0.82, ...},
     #     "comparison_to_current": {...}
     # }
+
+    # Knowledge Gap Detection (from retrieval layer)
+    knowledge_gaps: Dict[str, Any]  # Gap detection results
+    gap_enrichment_text: str  # Additional context from filled gaps
+    filled_gaps: List[Dict[str, Any]]  # Gaps successfully filled
+    partially_filled_gaps: List[Dict[str, Any]]  # Gaps with partial info
+    unfillable_gaps: List[Dict[str, Any]]  # Gaps that could not be filled

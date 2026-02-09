@@ -189,6 +189,83 @@ def refine_query(original_query: str, previous_chunks: list) -> str:
     return original_query
 
 
+def expand_for_web_chain_extraction(query: str, gap_description: str) -> list:
+    """
+    Generate multi-angle queries for web chain extraction.
+
+    When a topic is not covered in the database, we use the same
+    multi-dimension expansion logic to search the web from multiple angles.
+    This ensures we don't just search with a single BTC-centric query.
+
+    Args:
+        query: Original user query
+        gap_description: Description of what's missing (from gap detector)
+
+    Returns:
+        List of dicts: [{"dimension": "...", "query": "...", "reasoning": "..."}]
+    """
+    # Combine query context with gap description for better expansion
+    combined_topic = f"{query}. Specifically missing: {gap_description}" if gap_description else query
+
+    # Use the complex expansion prompt for multi-angle search
+    prompt = f"""You are a query expansion engine for web search on financial/economic topics.
+
+Your task: Generate 3-4 search queries that approach this topic from different angles.
+These queries will be used to search the web for logic chains (cause → effect relationships).
+
+## Guidelines
+- Each query should target a DIFFERENT ANGLE of the topic
+- Use concrete market terms: "equities", "stocks", "CAPEX", "valuation", etc.
+- Include relevant entities: company names, sectors, market terms
+- Keep queries searchable (5-12 words each)
+- DO NOT include specific domain names like "Bitcoin" or "crypto" unless the topic requires it
+
+Topic to cover: {combined_topic}
+
+## Output Format
+DIMENSION: [short name for this angle]
+REASONING: [one sentence - why this angle matters]
+QUERY: [the search query]
+
+(repeat for each, 3-4 total)"""
+
+    messages = [{"role": "user", "content": prompt}]
+    response = call_claude_haiku(messages, temperature=0.3, max_tokens=800)
+
+    print(f"[query_processing] Web chain expansion response:\n{response}")
+
+    # Parse structured output (same logic as expand_query)
+    results = []
+    current_layer = None
+    current_reasoning = None
+
+    for line in response.strip().split("\n"):
+        line = line.strip()
+        if not line:
+            continue
+
+        if "DIMENSION:" in line.upper():
+            current_layer = line.split(":", 1)[-1].strip().strip("*").strip()
+        elif line.upper().startswith("REASONING:") or "REASONING:" in line:
+            current_reasoning = line.split(":", 1)[-1].strip().strip("*").strip()
+        elif line.upper().startswith("QUERY:") or "QUERY:" in line:
+            query_text = line.split(":", 1)[-1].strip().strip("`").strip("*").strip()
+            if query_text:
+                results.append({
+                    "dimension": current_layer or "general",
+                    "reasoning": current_reasoning or "",
+                    "query": query_text
+                })
+                current_layer = None
+                current_reasoning = None
+
+    print(f"[query_processing] Parsed {len(results)} web chain queries:")
+    for item in results:
+        print(f"  [{item['dimension']}] {item['query']}")
+
+    return results
+
+
 def extract_temporal_reference(query: str) -> dict:
     """
     Extract temporal reference from user query.

@@ -1,8 +1,8 @@
 """
 Knowledge Gap Detector Module
 
-First-pass LLM call to identify what information is missing before impact analysis.
-This separates "assess what's missing" from "analyze what you have".
+Detects gaps in retrieved information and fills them via web search or data fetching.
+This is part of the retrieval layer - topic-agnostic gap detection that works for any query.
 """
 
 import sys
@@ -14,8 +14,8 @@ from typing import Dict, Any, List, Optional
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from models import call_claude_haiku
-from .knowledge_gap_prompts import SYSTEM_PROMPT, GAP_DETECTION_PROMPT
-from .current_data_fetcher import format_current_values_for_prompt
+from knowledge_gap_prompts import SYSTEM_PROMPT, GAP_DETECTION_PROMPT
+from query_processing import expand_for_web_chain_extraction
 
 
 def format_chains_for_prompt(logic_chains: list) -> str:
@@ -41,20 +41,20 @@ def detect_knowledge_gaps(
     query: str,
     synthesis: str,
     logic_chains: list,
-    current_values: Dict[str, Any]
+    topic_coverage: Dict[str, Any] = None
 ) -> Dict[str, Any]:
     """
     Detect knowledge gaps in retrieved information.
 
-    This is a separate LLM call BEFORE the impact analysis to identify
-    what information is missing. Gaps can then be filled via web search
-    before the final analysis.
+    This is a separate LLM call to identify what information is missing
+    before passing context to the consumer (e.g., BTC Intelligence).
+    Gaps can then be filled via web search before the final context is returned.
 
     Args:
         query: User's original query
         synthesis: Retrieved synthesis text from database
         logic_chains: Extracted logic chains
-        current_values: Current market data dict
+        topic_coverage: Topic coverage dict from answer_generation
 
     Returns:
         {
@@ -64,8 +64,8 @@ def detect_knowledge_gaps(
                     "category": "historical_precedent_depth",
                     "status": "GAP",
                     "found": "July 2024 BOJ hike example only",
-                    "missing": "Other intervention episodes with BTC impact %",
-                    "search_query": "JPY intervention 2022 2023 Bitcoin impact percentage"
+                    "missing": "Other intervention episodes with impact %",
+                    "search_query": "JPY intervention 2022 2023 impact percentage"
                 },
                 ...
             ],
@@ -75,17 +75,29 @@ def detect_knowledge_gaps(
     """
     # Format inputs
     chains_text = format_chains_for_prompt(logic_chains)
-    current_values_text = format_current_values_for_prompt(current_values)
+
+    # Build topic coverage text for prompt
+    topic_text = ""
+    if topic_coverage:
+        topic_text = f"""
+Topic Coverage Analysis:
+- Query entities: {topic_coverage.get('query_entities', [])}
+- Found entities: {topic_coverage.get('found_entities', [])}
+- Match ratio: {topic_coverage.get('match_ratio', 0):.2f}
+- Direct match: {topic_coverage.get('direct_match', True)}
+"""
+        if topic_coverage.get('extrapolation_note'):
+            topic_text += f"- Note: {topic_coverage['extrapolation_note']}\n"
 
     # Build prompt
     prompt = GAP_DETECTION_PROMPT.format(
         query=query,
         synthesis=synthesis[:4000],  # Truncate to save tokens
         chains_text=chains_text,
-        current_values_text=current_values_text
+        topic_coverage_text=topic_text
     )
 
-    # Combine system prompt with user prompt (Anthropic API doesn't accept system role in messages)
+    # Combine system prompt with user prompt
     full_prompt = f"{SYSTEM_PROMPT}\n\n{prompt}"
     messages = [
         {"role": "user", "content": full_prompt}
@@ -150,20 +162,13 @@ def _get_web_search_adapter():
     """
     Get WebSearchAdapter instance with proper import handling.
 
-    The btc_impact_orchestrator adds subproject_database_retriever to sys.path,
-    which causes its config.py to shadow the data_collection config.py.
-    We temporarily clear the cached 'config' module so the adapter can import
-    the correct one from subproject_data_collection.
-
     Returns:
         WebSearchAdapter instance or None if import fails
     """
     try:
         data_collection_path = str(Path(__file__).parent.parent / "subproject_data_collection")
 
-        # Clear cached modules that would shadow data_collection's imports.
-        # The retriever's config.py is already cached as 'config' in sys.modules,
-        # which prevents data_collection's config.py from being loaded.
+        # Clear cached modules that would shadow data_collection's imports
         saved_modules = {}
         for mod_name in ['config', 'web_search_prompts']:
             if mod_name in sys.modules:
@@ -176,9 +181,7 @@ def _get_web_search_adapter():
 
         from adapters.web_search_adapter import WebSearchAdapter
 
-        # Restore previously cached modules so other code isn't broken.
-        # The adapter module already has its own bound references to the
-        # correct config values, so restoring the old 'config' is safe.
+        # Restore previously cached modules
         for mod_name, mod in saved_modules.items():
             if mod_name not in sys.modules:
                 sys.modules[mod_name] = mod
@@ -263,7 +266,7 @@ def _search_and_evaluate(
 
 
 def _format_enrichment(category: str, result: Dict[str, Any]) -> str:
-    """Format filled gap result as enrichment text for the impact analysis prompt."""
+    """Format filled gap result as enrichment text."""
     extracted = result.get("extracted_info", {})
     if not extracted:
         return ""
@@ -314,9 +317,6 @@ def _sanitize_query(query: str) -> Optional[str]:
     """
     Validate that a query string is a usable search engine query.
 
-    LLMs sometimes return instructions ("Search for X and Y separately")
-    instead of actual query strings. This catches those cases.
-
     Returns:
         The query if valid, or None if it looks like instructions.
     """
@@ -364,27 +364,12 @@ def fill_gaps_with_search(
     max_attempts_per_gap: int = 2
 ) -> Dict[str, Any]:
     """
-    Attempt to fill knowledge gaps with limited iteration.
+    Attempt to fill knowledge gaps via web search with limited iteration.
 
     Args:
         gaps: List of gap dicts from detect_knowledge_gaps()
-              Each gap MUST contain:
-              - category: str (e.g., "historical_precedent_depth")
-              - missing: str (what info is needed)
-              - search_query: str (suggested query from detector)
         max_searches: Maximum total web searches (default: 6)
-        max_attempts_per_gap: Max attempts per gap, primary + refinements (default: 2)
-
-    Strategy:
-    1. For each gap, try primary search query (gap["search_query"])
-    2. Evaluate: Did search return useful data?
-       - YES (confidence >= 0.6) → Mark gap as FILLED, move to next gap
-       - NO → Try ONE refined query (LLM suggests refinement)
-    3. Evaluate refined query result:
-       - YES → Mark gap as FILLED
-       - PARTIAL (0.3 <= confidence < 0.6) → Mark as PARTIALLY_FILLED
-       - NO → Mark gap as UNFILLABLE, move to next gap
-    4. Terminate when: all gaps processed OR max searches reached
+        max_attempts_per_gap: Max attempts per gap (default: 2)
 
     Returns:
         {
@@ -422,7 +407,6 @@ def fill_gaps_with_search(
 
     for gap in searchable_gaps:
         if search_count >= max_searches:
-            # Budget exhausted, mark remaining as unfillable
             unfillable.append({**gap, "reason": "max_searches_reached"})
             continue
 
@@ -503,7 +487,6 @@ def fill_gaps_with_search(
         filled, partial, unfillable, search_count, max_searches
     )
 
-    # Summary
     print(f"\n[Knowledge Gap] Summary: {len(filled)} filled, {len(partial)} partial, {len(unfillable)} unfillable")
     print(f"[Knowledge Gap] Total searches: {search_count}, termination: {termination_reason}")
 
@@ -528,15 +511,32 @@ def fill_gaps_with_data(
 
     Args:
         gaps: List of gap dicts with fill_method=="data_fetch".
-              Each gap should contain:
-              - category: str
-              - instruments: list of variable names (e.g., ["btc", "usdjpy"])
 
     Returns:
         Same format as fill_gaps_with_search() for easy merging.
     """
     import numpy as np
-    from .current_data_fetcher import resolve_variable, fetch_yahoo_with_history, fetch_fred_with_history
+
+    # Import data fetcher from btc_intelligence (has the fetch logic)
+    try:
+        btc_intel_path = str(Path(__file__).parent.parent / "subproject_btc_intelligence")
+        # Save and clear modules that might conflict
+        saved_modules = {}
+        for mod_name in ['states', 'config']:
+            if mod_name in sys.modules:
+                saved_modules[mod_name] = sys.modules.pop(mod_name)
+
+        if btc_intel_path not in sys.path:
+            sys.path.insert(0, btc_intel_path)
+        from current_data_fetcher import resolve_variable, fetch_yahoo_with_history, fetch_fred_with_history
+
+        # Restore saved modules
+        for mod_name, mod in saved_modules.items():
+            if mod_name not in sys.modules:
+                sys.modules[mod_name] = mod
+    except ImportError as e:
+        print(f"[Knowledge Gap] Data fetcher import failed: {e}")
+        return _empty_fill_result("data_fetcher_unavailable")
 
     data_gaps = [
         g for g in gaps
@@ -562,7 +562,7 @@ def fill_gaps_with_data(
             unfillable.append({**gap, "status": "UNFILLABLE", "reason": "insufficient_instruments"})
             continue
 
-        # Fetch price history for each instrument (use 1y lookback)
+        # Fetch price history for each instrument
         series_data = {}
         for inst in instruments[:2]:
             mapping = resolve_variable(inst)
@@ -641,29 +641,21 @@ def fill_gaps_with_data(
 
 
 def _get_web_chain_adapter():
-    """
-    Get WebSearchAdapter configured for chain extraction.
-
-    Similar to _get_web_search_adapter but with proper module handling
-    for chain extraction functionality.
-    """
+    """Get WebSearchAdapter configured for chain extraction."""
     try:
         data_collection_path = str(Path(__file__).parent.parent / "subproject_data_collection")
 
-        # Clear cached modules that would shadow data_collection's imports
         saved_modules = {}
         for mod_name in ['config', 'web_search_prompts']:
             if mod_name in sys.modules:
                 saved_modules[mod_name] = sys.modules.pop(mod_name)
 
-        # Ensure data_collection path is at the front of sys.path
         if data_collection_path in sys.path:
             sys.path.remove(data_collection_path)
         sys.path.insert(0, data_collection_path)
 
         from adapters.web_search_adapter import WebSearchAdapter
 
-        # Restore previously cached modules
         for mod_name, mod in saved_modules.items():
             if mod_name not in sys.modules:
                 sys.modules[mod_name] = mod
@@ -671,7 +663,6 @@ def _get_web_chain_adapter():
         return WebSearchAdapter(max_results=8)
     except ImportError as e:
         print(f"[Knowledge Gap] WebSearchAdapter import failed: {e}")
-        # Restore on failure too
         for mod_name, mod in saved_modules.items():
             if mod_name not in sys.modules:
                 sys.modules[mod_name] = mod
@@ -679,7 +670,7 @@ def _get_web_chain_adapter():
 
 
 def _format_chain_enrichment(chains: List[Dict[str, Any]], sources: List[str]) -> str:
-    """Format extracted web chains as enrichment text for impact analysis."""
+    """Format extracted web chains as enrichment text."""
     if not chains:
         return ""
 
@@ -706,7 +697,6 @@ def _format_chain_enrichment(chains: List[Dict[str, Any]], sources: List[str]) -
             lines.append(f"- **Mechanism**: {mechanism}")
         lines.append(f"- **Confidence**: {confidence}" + (" (quote verified)" if verified else ""))
 
-        # Include evidence quote if present
         quote = chain.get("evidence_quote", "")
         if quote and len(quote) > 20:
             lines.append(f"- **Evidence**: \"{quote[:150]}...\"" if len(quote) > 150 else f"- **Evidence**: \"{quote}\"")
@@ -719,6 +709,7 @@ def _format_chain_enrichment(chains: List[Dict[str, Any]], sources: List[str]) -
 
 def fill_gaps_with_web_chains(
     gaps: List[Dict[str, Any]],
+    query: str,
     min_tier: int = 2,
     min_trusted_sources: int = 2,
     confidence_weight: float = 0.7
@@ -726,13 +717,14 @@ def fill_gaps_with_web_chains(
     """
     Fill topic_not_covered gaps by extracting logic chains from trusted web sources.
 
-    This is the main integration point for on-the-fly chain extraction when
-    the database has no relevant research on a query topic.
+    Uses multi-angle query expansion to search from multiple dimensions,
+    just like the regular query expansion does for DB retrieval.
 
     Args:
         gaps: List of gap dicts with fill_method=="web_chain_extraction"
+        query: Original user query (used for multi-angle expansion)
         min_tier: Minimum source tier (1 = Tier 1 only, 2 = include Tier 2)
-        min_trusted_sources: Minimum trusted sources required to proceed
+        min_trusted_sources: Minimum trusted sources required
         confidence_weight: Weight for web chains (vs 1.0 for DB chains)
 
     Returns:
@@ -741,12 +733,11 @@ def fill_gaps_with_web_chains(
             "partially_filled_gaps": [...],
             "unfillable_gaps": [...],
             "enrichment_text": "...",
-            "extracted_chains": [...],  # Raw chains for merging with DB chains
+            "extracted_chains": [...],
             "total_searches": N,
             "termination_reason": "..."
         }
     """
-    # Filter to web_chain_extraction gaps
     chain_gaps = [
         g for g in gaps
         if g.get("status") == "GAP" and g.get("fill_method") == "web_chain_extraction"
@@ -787,91 +778,119 @@ def fill_gaps_with_web_chains(
 
     for gap in chain_gaps:
         category = gap.get("category", "unknown")
-        search_query = gap.get("search_query", "")
-        topic = gap.get("missing", search_query)
+        gap_description = gap.get("missing", "")
+        primary_query = gap.get("search_query", "")
+        topic = gap_description or primary_query
 
-        if not search_query:
-            unfillable.append({**gap, "status": "UNFILLABLE", "reason": "no_search_query"})
+        if not topic:
+            unfillable.append({**gap, "status": "UNFILLABLE", "reason": "no_topic"})
             continue
 
         print(f"\n[Gap: {category}] (web_chain_extraction)")
-        print(f"  Query: {search_query}")
+        print(f"  Topic: {topic}")
 
-        # Extract chains from trusted sources
-        result = adapter.search_and_extract_chains(
-            query=search_query,
-            topic=topic,
-            min_tier=min_tier,
-            verify_quotes=True
-        )
-        search_count += 1
+        # Generate multi-angle queries using query expansion logic
+        expanded_queries = expand_for_web_chain_extraction(query, gap_description)
+        print(f"  Expanded to {len(expanded_queries)} dimension queries:")
+        for eq in expanded_queries:
+            print(f"    [{eq.get('dimension', '?')}] {eq.get('query', '')}")
 
-        chains = result.get("chains", [])
-        trusted_count = result.get("trusted_sources_count", 0)
-        filtered_sources = result.get("filtered_sources", [])
+        # Search each dimension and collect chains
+        gap_chains = []
+        gap_sources = []
 
-        print(f"  → Found {len(chains)} chains from {trusted_count} trusted sources")
+        for dim_query in expanded_queries:
+            dim_name = dim_query.get("dimension", "unknown")
+            search_q = dim_query.get("query", "")
 
-        # Check minimum trusted sources requirement
-        if trusted_count < min_trusted_sources:
-            print(f"  → Insufficient trusted sources ({trusted_count} < {min_trusted_sources})")
+            if not search_q:
+                continue
+
+            print(f"  Searching: {search_q}")
+            result = adapter.search_and_extract_chains(
+                query=search_q,
+                topic=topic,
+                min_tier=min_tier,
+                verify_quotes=True
+            )
+            search_count += 1
+
+            chains = result.get("chains", [])
+            trusted_count = result.get("trusted_sources_count", 0)
+            filtered_sources = result.get("filtered_sources", [])
+
+            print(f"    → Found {len(chains)} chains from {trusted_count} trusted sources")
+
+            # Add dimension info to chains
+            for chain in chains:
+                chain["dimension"] = dim_name
+                chain["source_type"] = "web"
+                chain["confidence_weight"] = confidence_weight
+
+            gap_chains.extend(chains)
+            gap_sources.extend(filtered_sources)
+
+        # Deduplicate sources
+        gap_sources = list(set(gap_sources))
+
+        print(f"  Total: {len(gap_chains)} chains from {len(gap_sources)} unique sources")
+
+        # Check minimum requirements
+        if len(gap_sources) < min_trusted_sources:
+            print(f"  → Insufficient trusted sources ({len(gap_sources)} < {min_trusted_sources})")
             unfillable.append({
                 **gap,
                 "status": "UNFILLABLE",
-                "reason": f"insufficient_trusted_sources ({trusted_count})",
-                "trusted_sources_count": trusted_count
+                "reason": f"insufficient_trusted_sources ({len(gap_sources)})",
+                "trusted_sources_count": len(gap_sources)
             })
             continue
 
-        if not chains:
+        if not gap_chains:
             print(f"  → No chains extracted despite trusted sources")
             unfillable.append({
                 **gap,
                 "status": "UNFILLABLE",
                 "reason": "no_chains_extracted",
-                "trusted_sources_count": trusted_count
+                "trusted_sources_count": len(gap_sources)
             })
             continue
 
-        # Apply confidence weight to chains
-        for chain in chains:
-            chain["source_type"] = "web"
-            chain["confidence_weight"] = confidence_weight
-
-        all_chains.extend(chains)
+        all_chains.extend(gap_chains)
 
         # Determine fill status based on chain quality
-        verified_count = sum(1 for c in chains if c.get("quote_verified", False))
-        high_confidence_count = sum(1 for c in chains if c.get("confidence") == "high")
+        verified_count = sum(1 for c in gap_chains if c.get("quote_verified", False))
+        high_confidence_count = sum(1 for c in gap_chains if c.get("confidence") == "high")
 
         if verified_count >= 2 or high_confidence_count >= 2:
             filled.append({
                 **gap,
                 "status": "FILLED",
-                "chain_count": len(chains),
+                "chain_count": len(gap_chains),
                 "verified_quotes": verified_count,
-                "trusted_sources_count": trusted_count,
-                "sources": filtered_sources
+                "trusted_sources_count": len(gap_sources),
+                "sources": gap_sources,
+                "dimensions_searched": [q.get("dimension") for q in expanded_queries]
             })
-            enrichment_parts.append(_format_chain_enrichment(chains, filtered_sources))
-            print(f"  → Status: FILLED ({len(chains)} chains, {verified_count} verified)")
-        elif len(chains) >= 1:
+            enrichment_parts.append(_format_chain_enrichment(gap_chains, gap_sources))
+            print(f"  → Status: FILLED ({len(gap_chains)} chains, {verified_count} verified)")
+        elif len(gap_chains) >= 1:
             partial.append({
                 **gap,
                 "status": "PARTIALLY_FILLED",
-                "chain_count": len(chains),
+                "chain_count": len(gap_chains),
                 "verified_quotes": verified_count,
-                "trusted_sources_count": trusted_count,
-                "sources": filtered_sources
+                "trusted_sources_count": len(gap_sources),
+                "sources": gap_sources
             })
-            enrichment_parts.append(_format_chain_enrichment(chains, filtered_sources))
-            print(f"  → Status: PARTIALLY_FILLED ({len(chains)} chains)")
+            enrichment_parts.append(_format_chain_enrichment(gap_chains, gap_sources))
+            print(f"  → Status: PARTIALLY_FILLED ({len(gap_chains)} chains)")
         else:
             unfillable.append({
                 **gap,
                 "status": "UNFILLABLE",
                 "reason": "low_quality_chains",
-                "chain_count": len(chains)
+                "chain_count": len(gap_chains)
             })
 
     print(f"\n[Knowledge Gap] Web chain extraction: {len(filled)} filled, {len(partial)} partial, {len(unfillable)} unfillable")
@@ -943,3 +962,141 @@ def merge_web_chains_with_db_chains(
     print(f"[Chain Merge] {len(db_chains)} DB + {len(web_chains)} web → {len(merged)} merged (deduplicated)")
 
     return merged
+
+
+def detect_and_fill_gaps(
+    query: str,
+    synthesis: str,
+    logic_chains: list,
+    topic_coverage: Dict[str, Any] = None,
+    enable_gap_filling: bool = True,
+    max_searches: int = 6,
+    max_attempts_per_gap: int = 2
+) -> Dict[str, Any]:
+    """
+    Main entry point: detect gaps and fill them.
+
+    This orchestrates the full gap detection and filling workflow:
+    1. Detect gaps using LLM
+    2. Fill web_chain_extraction gaps (multi-angle)
+    3. Fill data_fetch gaps (computed from data)
+    4. Fill web_search gaps (factual lookups)
+
+    Args:
+        query: User's original query
+        synthesis: Retrieved synthesis from database
+        logic_chains: Extracted logic chains from DB
+        topic_coverage: Topic coverage analysis from answer_generation
+        enable_gap_filling: Whether to attempt filling gaps
+        max_searches: Maximum web searches
+        max_attempts_per_gap: Max refinement attempts per gap
+
+    Returns:
+        {
+            "knowledge_gaps": {...},
+            "gap_enrichment_text": "...",
+            "filled_gaps": [...],
+            "partially_filled_gaps": [...],
+            "unfillable_gaps": [...],
+            "extracted_web_chains": [...],
+            "merged_logic_chains": [...]
+        }
+    """
+    # Step 1: Detect gaps
+    gap_result = detect_knowledge_gaps(
+        query=query,
+        synthesis=synthesis,
+        logic_chains=logic_chains,
+        topic_coverage=topic_coverage
+    )
+
+    # Initialize result
+    result = {
+        "knowledge_gaps": gap_result,
+        "gap_enrichment_text": "",
+        "filled_gaps": [],
+        "partially_filled_gaps": [],
+        "unfillable_gaps": [],
+        "extracted_web_chains": [],
+        "merged_logic_chains": logic_chains
+    }
+
+    if not enable_gap_filling:
+        print("[Knowledge Gap] Gap filling disabled")
+        return result
+
+    # Step 2: Split gaps by fill method
+    gaps = gap_result.get("gaps", [])
+    gaps_to_fill = [g for g in gaps if g.get("status") == "GAP"]
+
+    web_chain_gaps = [g for g in gaps_to_fill if g.get("fill_method") == "web_chain_extraction"]
+    web_search_gaps = [g for g in gaps_to_fill if g.get("fill_method", "web_search") == "web_search"]
+    data_fetch_gaps = [g for g in gaps_to_fill if g.get("fill_method") == "data_fetch"]
+
+    print(f"[Knowledge Gap] Gap split: {len(web_chain_gaps)} web_chain, {len(web_search_gaps)} web_search, {len(data_fetch_gaps)} data_fetch")
+
+    all_filled = []
+    all_partial = []
+    all_unfillable = []
+    all_enrichment = []
+    extracted_web_chains = []
+
+    # Step 3a: Fill web_chain_extraction gaps (multi-angle)
+    if web_chain_gaps:
+        chain_result = fill_gaps_with_web_chains(
+            gaps=web_chain_gaps,
+            query=query
+        )
+        all_filled.extend(chain_result.get("filled_gaps", []))
+        all_partial.extend(chain_result.get("partially_filled_gaps", []))
+        all_unfillable.extend(chain_result.get("unfillable_gaps", []))
+        extracted_web_chains = chain_result.get("extracted_chains", [])
+        if chain_result.get("enrichment_text"):
+            all_enrichment.append(chain_result["enrichment_text"])
+
+    # Step 3b: Fill data_fetch gaps
+    if data_fetch_gaps:
+        data_result = fill_gaps_with_data(gaps=data_fetch_gaps)
+        all_filled.extend(data_result.get("filled_gaps", []))
+        all_unfillable.extend(data_result.get("unfillable_gaps", []))
+        if data_result.get("enrichment_text"):
+            all_enrichment.append(data_result["enrichment_text"])
+
+    # Step 3c: Fill web_search gaps
+    if web_search_gaps:
+        search_result = fill_gaps_with_search(
+            gaps=web_search_gaps,
+            max_searches=max_searches,
+            max_attempts_per_gap=max_attempts_per_gap
+        )
+        all_filled.extend(search_result.get("filled_gaps", []))
+        all_partial.extend(search_result.get("partially_filled_gaps", []))
+        all_unfillable.extend(search_result.get("unfillable_gaps", []))
+        if search_result.get("enrichment_text"):
+            all_enrichment.append(search_result["enrichment_text"])
+
+    # Step 4: Merge web chains with DB chains
+    merged_chains = logic_chains
+    if extracted_web_chains:
+        merged_chains = merge_web_chains_with_db_chains(
+            db_chains=logic_chains,
+            web_chains=extracted_web_chains
+        )
+
+    result.update({
+        "gap_enrichment_text": "\n\n".join(all_enrichment),
+        "filled_gaps": all_filled,
+        "partially_filled_gaps": all_partial,
+        "unfillable_gaps": all_unfillable,
+        "extracted_web_chains": extracted_web_chains,
+        "merged_logic_chains": merged_chains
+    })
+
+    gap_count = len(gaps_to_fill)
+    if gap_count > 0:
+        print(f"[Knowledge Gap] Summary: {len(all_filled)}/{gap_count} filled, "
+              f"{len(all_partial)} partial, {len(all_unfillable)} unfillable")
+    else:
+        print("[Knowledge Gap] No gaps detected")
+
+    return result

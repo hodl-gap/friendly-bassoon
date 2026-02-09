@@ -41,6 +41,15 @@ class RetrieverState(TypedDict, total=False):
     # Topic Coverage (detects when query topic not found in retrieved chunks)
     topic_coverage: Dict[str, Any]  # {query_entities, found_entities, direct_match, extrapolation_note}
 
+    # Knowledge Gap Detection & Filling
+    knowledge_gaps: Dict[str, Any]  # Gap detection results from detect_knowledge_gaps()
+    gap_enrichment_text: str  # Additional context from filled gaps
+    filled_gaps: List[Dict[str, Any]]  # Gaps successfully filled
+    partially_filled_gaps: List[Dict[str, Any]]  # Gaps with partial information
+    unfillable_gaps: List[Dict[str, Any]]  # Gaps that could not be filled
+    extracted_web_chains: List[Dict[str, Any]]  # Logic chains from web extraction
+    logic_chains: List[Dict[str, Any]]  # Merged DB + web chains
+
     # Agentic Control
     iteration_count: int  # Number of retrieval iterations
     needs_refinement: bool  # Whether to iterate again

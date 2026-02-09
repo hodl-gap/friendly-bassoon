@@ -4,6 +4,10 @@ BTC Impact Orchestrator - Main Entry Point
 Phase 1 (MVP): query → retrieve → analyze → output
 Phase 2: query → retrieve → extract_variables → fetch_data → analyze → output
 No LangGraph yet - simple sequential workflow.
+
+Architecture: BTC Intelligence now receives ENRICHED context from retrieval layer.
+Gap detection and web chain extraction are handled by the retrieval layer.
+BTC Intelligence focuses only on BTC impact analysis.
 """
 
 import sys
@@ -33,7 +37,6 @@ from .relationship_store import (
 )
 from .historical_event_detector import detect_historical_gap, identify_instruments, get_date_range
 from .historical_data_fetcher import fetch_historical_event_data, compare_to_current
-from .knowledge_gap_detector import detect_knowledge_gaps, fill_gaps_with_search, fill_gaps_with_data
 from . import config
 
 
@@ -144,9 +147,16 @@ def parse_logic_chains_from_answer(answer_text: str) -> List[Dict]:
 
 def retrieve_context(query: str) -> BTCImpactState:
     """
-    Step 1: Call database_retriever to get relevant context.
+    Step 1: Call database_retriever to get enriched context.
 
-    Returns state populated with retrieval results.
+    The retrieval layer now handles:
+    - Query expansion
+    - Vector search
+    - Answer generation
+    - Gap detection & filling (moved from BTC Intelligence)
+    - Web chain extraction
+
+    Returns state populated with retrieval results including merged logic chains.
     """
     print(f"\n[Retrieve] Querying: {query}")
     print("-" * 50)
@@ -154,10 +164,10 @@ def retrieve_context(query: str) -> BTCImpactState:
     # Import retriever
     from retrieval_orchestrator import run_retrieval
 
-    # Run retrieval
+    # Run retrieval (now includes gap detection and filling)
     result = run_retrieval(query)
 
-    # Extract relevant fields
+    # Extract relevant fields - retriever now provides enriched context
     state = BTCImpactState(
         query=query,
         retrieved_chunks=result.get("retrieved_chunks", []),
@@ -172,18 +182,35 @@ def retrieve_context(query: str) -> BTCImpactState:
     if topic_coverage.get("extrapolation_note"):
         print(f"\n[Retrieve] ⚠️ {topic_coverage['extrapolation_note']}")
 
-    # Extract logic chains from chunks (pre-indexed in metadata)
-    chunk_chains = extract_logic_chains(state["retrieved_chunks"])
+    # Use logic chains from retriever (already merged DB + web chains)
+    # The retriever now handles gap detection and web chain extraction
+    logic_chains = result.get("logic_chains", [])
 
-    # Also parse logic chains from Stage 1 answer text (query-time extracted)
-    answer_chains = parse_logic_chains_from_answer(state.get("retrieval_answer", ""))
+    if logic_chains:
+        state["logic_chains"] = logic_chains
+        web_chain_count = sum(1 for c in logic_chains if c.get("source_type") == "web")
+        db_chain_count = len(logic_chains) - web_chain_count
+        print(f"\n[Retrieve] Got {len(logic_chains)} merged chains ({db_chain_count} DB, {web_chain_count} web)")
+    else:
+        # Fallback: extract from chunks if not provided by retriever
+        chunk_chains = extract_logic_chains(state["retrieved_chunks"])
+        answer_chains = parse_logic_chains_from_answer(state.get("retrieval_answer", ""))
+        state["logic_chains"] = chunk_chains + answer_chains
+        print(f"\n[Retrieve] Extracted {len(state['logic_chains'])} chains from chunks/answer")
 
-    # Combine both sources
-    state["logic_chains"] = chunk_chains + answer_chains
+    # Copy gap-related fields from retriever result
+    state["knowledge_gaps"] = result.get("knowledge_gaps", {})
+    state["gap_enrichment_text"] = result.get("gap_enrichment_text", "")
+    state["filled_gaps"] = result.get("filled_gaps", [])
+    state["partially_filled_gaps"] = result.get("partially_filled_gaps", [])
+    state["unfillable_gaps"] = result.get("unfillable_gaps", [])
+
+    # Log gap filling results if any
+    filled_count = len(state.get("filled_gaps", []))
+    if filled_count > 0:
+        print(f"[Retrieve] Gap filling: {filled_count} gaps filled by retriever")
 
     print(f"\n[Retrieve] Got {len(state['retrieved_chunks'])} chunks")
-    print(f"[Retrieve] Extracted {len(chunk_chains)} chains from chunk metadata")
-    print(f"[Retrieve] Parsed {len(answer_chains)} chains from Stage 1 answer")
     print(f"[Retrieve] Total logic chains: {len(state['logic_chains'])}")
 
     # Debug: Print raw retrieved chunks (per CLAUDE.md: print full LLM outputs)
@@ -386,6 +413,37 @@ def format_output(state: BTCImpactState, as_json: bool = False) -> str:
     return "\n".join(lines)
 
 
+def request_additional_context(state: BTCImpactState, topic: str) -> BTCImpactState:
+    """
+    Request additional context on a specific topic.
+
+    BTC Intelligence can REQUEST more info on a topic if the initial
+    retrieval doesn't cover something needed for analysis. This doesn't
+    format the query - just passes the topic to retrieval.
+
+    Args:
+        state: Current BTC impact state
+        topic: Topic to get more information on
+
+    Returns:
+        Updated state with additional chains merged
+    """
+    print(f"\n[BTC Intelligence] Requesting additional context on: {topic}")
+
+    from retrieval_orchestrator import run_retrieval
+
+    additional = run_retrieval(topic)
+    additional_chains = additional.get("logic_chains", [])
+
+    if additional_chains:
+        existing_chains = state.get("logic_chains", [])
+        # Simple merge - could deduplicate in future
+        state["logic_chains"] = existing_chains + additional_chains
+        print(f"[BTC Intelligence] Added {len(additional_chains)} chains, total: {len(state['logic_chains'])}")
+
+    return state
+
+
 def run_btc_impact_analysis(
     query: str,
     output_json: bool = False,
@@ -395,6 +453,10 @@ def run_btc_impact_analysis(
 ) -> Dict[str, Any]:
     """
     Main entry point for BTC impact analysis.
+
+    Architecture: BTC Intelligence receives ENRICHED context from retrieval layer.
+    Gap detection and web chain extraction are now handled by retrieval.
+    BTC Intelligence focuses on analyzing BTC impact.
 
     Args:
         query: User's question about BTC impact
@@ -416,7 +478,7 @@ def run_btc_impact_analysis(
     if regime_state.get("liquidity_regime"):
         print(f"[Regime] Current: {regime_state.get('liquidity_regime')} (driver: {regime_state.get('dominant_driver')})")
 
-    # Step 1: Retrieve context
+    # Step 1: Retrieve enriched context (now includes gap detection & web chain extraction)
     state = retrieve_context(query)
 
     # Add regime context to state for use in analysis
@@ -445,9 +507,8 @@ def run_btc_impact_analysis(
     if not skip_data_fetch:
         state = enrich_with_historical_event(state)
 
-    # Step 5.6: Knowledge gap detection (separate LLM call before main analysis)
-    if not skip_data_fetch:
-        state = detect_and_fill_knowledge_gaps(state)
+    # Note: Gap detection is now handled by retrieval layer (Step 1)
+    # The state already contains gap_enrichment_text, filled_gaps, etc.
 
     # Step 6: Analyze impact (LLM call with current data + validated patterns + gap enrichment)
     state = analyze_impact(state)
@@ -468,87 +529,6 @@ def run_btc_impact_analysis(
     print("\n" + output)
 
     return dict(state)
-
-
-def detect_and_fill_knowledge_gaps(state: BTCImpactState) -> BTCImpactState:
-    """
-    Step 5.6: Detect knowledge gaps and optionally fill them with web search.
-
-    This is a SEPARATE LLM call before the main impact analysis to identify
-    what information is missing. This allows the system to:
-    1. Know what it doesn't know (meta-cognition)
-    2. Attempt to fill gaps via web search
-    3. Pass gap awareness to the main analysis
-
-    Updates state with:
-    - knowledge_gaps: Structured gap detection results
-    - gap_enrichment_text: Additional context from web search (if any)
-    - filled_gaps: Gaps that were successfully filled
-    - partially_filled_gaps: Gaps with partial information
-    - unfillable_gaps: Gaps that could not be filled
-    """
-    query = state.get("query", "")
-    synthesis = state.get("retrieval_synthesis", "")
-    logic_chains = state.get("logic_chains", [])
-    current_values = state.get("current_values", {})
-
-    # Step 1: Detect gaps (first LLM call - Haiku)
-    gap_result = detect_knowledge_gaps(
-        query=query,
-        synthesis=synthesis,
-        logic_chains=logic_chains,
-        current_values=current_values
-    )
-
-    state["knowledge_gaps"] = gap_result
-
-    # Step 2: Filter gaps that need filling (status == "GAP"), split by fill_method
-    gaps = gap_result.get("gaps", [])
-    gaps_to_fill = [g for g in gaps if g.get("status") == "GAP"]
-    gap_count = len(gaps_to_fill)
-
-    web_search_gaps = [g for g in gaps_to_fill if g.get("fill_method", "web_search") == "web_search"]
-    data_fetch_gaps = [g for g in gaps_to_fill if g.get("fill_method") == "data_fetch"]
-
-    all_filled = []
-    all_partial = []
-    all_unfillable = []
-    all_enrichment = []
-
-    # Step 3a: Fill data_fetch gaps (compute from our own data)
-    if data_fetch_gaps:
-        data_result = fill_gaps_with_data(gaps=data_fetch_gaps)
-        all_filled.extend(data_result.get("filled_gaps", []))
-        all_unfillable.extend(data_result.get("unfillable_gaps", []))
-        if data_result.get("enrichment_text"):
-            all_enrichment.append(data_result["enrichment_text"])
-
-    # Step 3b: Fill web_search gaps (search the web for facts)
-    if web_search_gaps and config.ENABLE_GAP_FILLING:
-        search_result = fill_gaps_with_search(
-            gaps=web_search_gaps,
-            max_searches=config.MAX_GAP_SEARCHES,
-            max_attempts_per_gap=config.MAX_ATTEMPTS_PER_GAP
-        )
-        all_filled.extend(search_result.get("filled_gaps", []))
-        all_partial.extend(search_result.get("partially_filled_gaps", []))
-        all_unfillable.extend(search_result.get("unfillable_gaps", []))
-        if search_result.get("enrichment_text"):
-            all_enrichment.append(search_result["enrichment_text"])
-
-    # Store all results in state
-    state["gap_enrichment_text"] = "\n\n".join(all_enrichment)
-    state["filled_gaps"] = all_filled
-    state["partially_filled_gaps"] = all_partial
-    state["unfillable_gaps"] = all_unfillable
-
-    if gap_count > 0:
-        print(f"[Knowledge Gap] Filled {len(all_filled)}/{gap_count} gaps, "
-              f"partially filled {len(all_partial)}, unfillable {len(all_unfillable)}")
-    else:
-        print("[Knowledge Gap] No gaps detected")
-
-    return state
 
 
 def enrich_with_historical_event(state: BTCImpactState) -> BTCImpactState:

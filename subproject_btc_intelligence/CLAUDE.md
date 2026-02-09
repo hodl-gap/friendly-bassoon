@@ -60,7 +60,7 @@ subproject_btc_intelligence/
 ├── current_data_fetcher.py          # Fetch live data with period changes (Phase 2)
 ├── pattern_validator.py             # Validate research patterns vs current data (Phase 2)
 ├── relationship_store.py            # Logic chain persistence (Phase 3)
-├── historical_event_detector.py     # Gap detection + instrument mapping (Phase 4)
+├── historical_event_detector.py     # Historical event detection + instrument mapping (Phase 4)
 ├── historical_event_prompts.py      # LLM prompts for historical detection (Phase 4)
 ├── historical_data_fetcher.py       # Fetch historical data + metrics (Phase 4)
 │
@@ -70,15 +70,22 @@ subproject_btc_intelligence/
 └── CLAUDE.md                        # This file
 ```
 
-### Workflow (Phase 4 - Complete)
+**Note**: Knowledge gap detection files (`knowledge_gap_detector.py`, `knowledge_gap_prompts.py`) were moved to `subproject_database_retriever` to make gap detection topic-agnostic. BTC Intelligence now receives enriched context from the retrieval layer.
+
+### Workflow (Current)
 ```
 query (CLI input)
     │
     ▼
 ┌─────────────────────────┐
 │ 1. retrieve_context     │  Call run_retrieval(query) from database_retriever
-│                         │  Extract logic_chains from retrieved_chunks
-│                         │  + parse_logic_chains_from_answer() for Stage 1 chains
+│                         │  Retriever now handles:
+│                         │    - Query expansion
+│                         │    - Vector search
+│                         │    - Answer generation
+│                         │    - Gap detection & filling (moved here)
+│                         │    - Web chain extraction
+│                         │  Returns: enriched context with merged DB + web chains
 └───────────┬─────────────┘
             │
             ▼
@@ -124,11 +131,11 @@ query (CLI input)
 ┌─────────────────────────┐
 │ 6. analyze_impact       │  LLM call with:
 │                         │    - Retrieved answer/synthesis
-│                         │    - Logic chains + current data
-│                         │    - Historical chains context
+│                         │    - Logic chains (DB + web merged)
+│                         │    - Current data + historical chains
 │                         │    - Validated patterns (triggered status)
 │                         │    - Historical event comparison (if detected)
-│                         │    - Confidence metadata
+│                         │    - Gap enrichment text (from retriever)
 │                         │  Output: direction, confidence, rationale, risks
 └───────────┬─────────────┘
             │
@@ -142,6 +149,8 @@ query (CLI input)
             ▼
         Output (CLI display with current values + changes)
 ```
+
+**Note**: Step 5.6 (Knowledge Gap Detection) was removed. Gap detection is now handled by the retrieval layer in Step 1. BTC Intelligence receives enriched context with merged logic chains and gap enrichment text.
 
 ## Usage
 
@@ -222,8 +231,8 @@ RISK FACTORS:
 | Phase 2b: Pattern Validation | ✅ Done | Extract & validate research patterns vs current data |
 | Phase 3: Chain Store | ✅ Done | Persist discovered logic chains |
 | Phase 4: Historical Event Detection | ✅ Done | Detect historical event gaps, fetch actual market data |
-| Phase 5: Knowledge Gap Filling | ✅ Done | Detect gaps, fill via web search (Tavily) or data computation |
-| Phase 6: Web Chain Extraction | ✅ Done | Extract logic chains from trusted web sources when topic not covered |
+| Phase 5: Knowledge Gap Filling | ➡️ Moved | **Moved to `subproject_database_retriever`** - now topic-agnostic |
+| Phase 6: Web Chain Extraction | ➡️ Moved | **Moved to `subproject_database_retriever`** - now topic-agnostic |
 
 ## Historical Event Detection (Phase 4)
 
@@ -352,123 +361,50 @@ The system detects historical analog gaps when:
 ### Cost
 ~$0.001 per query when gap detected (zero when no gap)
 
-## Knowledge Gap Filling (Phase 5)
+## Knowledge Gap Filling (Phase 5) - MOVED
 
-### Purpose
-Before the main impact analysis, detect what information is missing and fill gaps using the appropriate method:
-- **Web search** (Tavily) — for facts we can't compute: dates, analyst targets, event schedules
-- **Data fetch** (Yahoo/FRED) — for quantifiable data: correlations, drawdowns, price changes
+**This functionality has been moved to `subproject_database_retriever`.**
 
-### Gap Categories & Fill Methods
+Gap detection and filling is now handled by the retrieval layer to make it topic-agnostic. BTC Intelligence receives enriched context from the retriever with:
+- `logic_chains`: Merged DB + web chains
+- `gap_enrichment_text`: Additional context from filled gaps
+- `filled_gaps`, `partially_filled_gaps`, `unfillable_gaps`: Gap status
 
-| Category | fill_method | What it searches for |
-|----------|------------|---------------------|
-| historical_precedent_depth | web_search | Event DATES only (we compute BTC impact ourselves) |
-| quantified_relationships | data_fetch | Fetches instruments, computes correlation from price data |
-| monitoring_thresholds | web_search | Analyst targets, intervention levels, price forecasts |
-| event_calendar | web_search | Meeting dates, economic calendar |
-| mechanism_conditions | web_search | Preconditions for causal mechanism |
-| exit_criteria | web_search | Thesis resolution conditions |
+See `subproject_database_retriever/CLAUDE.md` for full documentation.
 
-### Key Design Principle
-**Do not ask the web for things we can compute.** Correlations, drawdowns, and price reactions are computed from our own data adapters (Yahoo Finance, FRED). Web search is reserved for facts not derivable from price data: dates, announcements, analyst opinions, policy decisions.
+### BTC Intelligence Can Still Request More Info
 
-### Configuration (`config.py`)
+If the initial retrieval doesn't cover something needed for analysis, BTC Intelligence can request additional context:
+
 ```python
-ENABLE_GAP_FILLING = True       # Toggle gap filling
-MAX_GAP_SEARCHES = 6            # Max web searches per query
-MAX_ATTEMPTS_PER_GAP = 2        # Primary + 1 refinement per gap
+from btc_impact_orchestrator import request_additional_context
+
+# Request more info on a specific topic
+state = request_additional_context(state, topic="analyst price targets BTC 2026")
 ```
 
-### Search Backend
-- **Tavily API** (default) — returns full page content, `topic="finance"`, ~$0.005/search
-- **DuckDuckGo** (fallback) — free, snippets only, poor quality for financial queries
-- Backend configured via `WEB_SEARCH_BACKEND` in `subproject_data_collection/config.py`
+This triggers another retrieval call and merges the additional chains with existing ones.
 
-### Cost
-~$0.035 per query with Tavily (6 searches + 6 Haiku extractions + 1 gap detection)
+## Web Chain Extraction (Phase 6) - MOVED
 
-## Web Chain Extraction from Trusted Sources (Phase 6)
+**This functionality has been moved to `subproject_database_retriever`.**
 
-### Purpose
-When retrieval finds **no relevant chunks** for a topic (e.g., "AI CAPEX impact on tech stocks"), search trusted web sources and extract logic chains on-the-fly.
+Web chain extraction is now part of the retrieval layer's gap filling workflow. When `topic_not_covered` gap is detected, the retriever:
+1. Generates multi-angle queries using `expand_for_web_chain_extraction()`
+2. Searches trusted web sources for each dimension
+3. Extracts logic chains with cause/effect/mechanism
+4. Merges web chains with DB chains (web=0.7 weight, db=1.0 weight)
 
-### Trusted Domain Filtering
-Only extract from verified financial institutions:
-
-| Tier | Sources |
-|------|---------|
-| **Tier 1** | Goldman Sachs, Morgan Stanley, JPMorgan, BofA, Citi, UBS, Bloomberg, Reuters, FT, WSJ, Fed, ECB, BOJ, Bridgewater, BlackRock, VanEck, ARK Invest, Fundstrat, Yardeni |
-| **Tier 2** | MarketWatch, CNBC, Economist, Grayscale, Glassnode, CryptoQuant, CoinDesk (optional, configurable) |
-
-### Flow
-```
-Query → Retrieval → [LOW COVERAGE: match_ratio < 0.3]
-                          ↓
-           detect_topic_coverage() returns needs_web_chain_extraction=True
-                          ↓
-           fill_gaps_with_web_chains() in knowledge_gap_detector.py
-                          ↓
-           WebSearchAdapter.search_and_extract_chains()
-             - Filter to trusted domains only
-             - Extract chains with cause/effect/mechanism/evidence_quote
-             - Verify quotes appear verbatim in source
-                          ↓
-           merge_web_chains_with_db_chains() (web=0.7 weight, db=1.0 weight)
-                          ↓
-           Impact Analysis with merged chains
-```
-
-### Key Functions
-
-| Function | File | Purpose |
-|----------|------|---------|
-| `search_and_extract_chains()` | `web_search_adapter.py` | Search + filter + extract chains |
-| `fill_gaps_with_web_chains()` | `knowledge_gap_detector.py` | Orchestrate web chain extraction |
-| `merge_web_chains_with_db_chains()` | `knowledge_gap_detector.py` | Merge with confidence weighting |
-| `is_trusted_domain()` | `trusted_domains.py` | Check if URL is from trusted source |
-| `filter_to_trusted_sources()` | `trusted_domains.py` | Filter search results to trusted only |
-
-### Configuration (`subproject_data_collection/config.py`)
-```python
-ENABLE_WEB_CHAIN_EXTRACTION = True   # Toggle feature
-TRUSTED_DOMAIN_MIN_TIER = 1          # 1 = Tier 1 only, 2 = include Tier 2
-MAX_WEB_CHAINS_PER_QUERY = 5         # Limit chains per query
-MIN_TRUSTED_SOURCES = 2              # Minimum sources required
-WEB_CHAIN_CONFIDENCE_WEIGHT = 0.7    # Weight vs DB chains (1.0)
-```
-
-### Output Format (per chain)
-```json
-{
-  "cause": "AI boom and need for advanced AI models",
-  "effect": "Data center capex investment increases",
-  "mechanism": "Companies must build infrastructure to support AI",
-  "polarity": "positive",
-  "evidence_quote": "VERBATIM quote from source (verified)",
-  "source_name": "Goldman Sachs",
-  "source_url": "https://...",
-  "confidence": "high",
-  "quote_verified": true,
-  "source_type": "web",
-  "confidence_weight": 0.7
-}
-```
-
-### Graceful Degradation
-- Feature disabled → proceed with DB chains only
-- No trusted sources found → proceed with DB chains only
-- Extraction fails → proceed with DB chains only
-- Web chains are **transient** (not persisted to Pinecone)
-
-### Cost
-~$0.01 per web chain extraction query (1 Tavily search + 1 Haiku extraction)
+See `subproject_database_retriever/CLAUDE.md` for full documentation.
 
 ## Dependencies
 
 ### Sibling Subprojects
-- `subproject_database_retriever` - Provides `run_retrieval()` function, `detect_topic_coverage()`
-- `subproject_data_collection` - Provides `WebSearchAdapter` for web search (Phase 4, 5, 6), `trusted_domains` for source filtering
+- `subproject_database_retriever` - Provides `run_retrieval()` function which now returns enriched context with:
+  - Gap detection results
+  - Merged logic chains (DB + web)
+  - Gap enrichment text
+- `subproject_data_collection` - Provides `WebSearchAdapter` for web search (Phase 4), `trusted_domains` for source filtering
 
 ### Parent Directory
 - `models.py` - AI model functions (`call_claude_sonnet`, `call_claude_haiku`)
@@ -481,7 +417,7 @@ WEB_CHAIN_CONFIDENCE_WEIGHT = 0.7    # Weight vs DB chains (1.0)
 
 ## TODO
 
-- **Gap detection prompt examples are JPY/BOJ-specific** (`knowledge_gap_prompts.py`): The GOOD/BAD search query examples in categories 1 (historical_precedent_depth), 3 (monitoring_thresholds), and 6 (exit_criteria) are all from the JPY carry trade case study. Run 2-3 different query types (e.g., TGA, Fed rate cut, DXY) through the pipeline first. If the gap detector generates poor queries for those, diversify the examples using validated results from those runs.
+- None currently. Gap detection moved to retriever.
 
 ## Notes for AI Assistants
 - **Follow established patterns** from other subprojects
