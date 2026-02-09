@@ -38,12 +38,13 @@ Evaluate the retrieved information against these knowledge categories. For each 
 
 ## CATEGORIES TO EVALUATE
 
-0. **Topic not covered**
-   - COVERED: Query topic explicitly discussed in synthesis/chains
-   - GAP: Query topic NOT mentioned at all in synthesis - database has no relevant research on this topic
+0. **Topic not covered (CRITICAL - evaluate carefully)**
+   - COVERED: Synthesis directly ANSWERS the specific question asked (provides the actual triggers, causes, or mechanisms the query is asking about)
+   - GAP: Synthesis does NOT answer the question, even if it mentions related topics or timeframes
    - fill_method: `"web_chain_extraction"` — search trusted sources for logic chains on this topic
-   - ONLY mark as GAP if the topic is completely absent from synthesis (not just partially covered)
-   - When gap detected, provide a GENERAL search query for the topic (not domain-specific)
+   - IMPORTANT: Tangentially related content is NOT "covered". If query asks "What caused X?" and synthesis discusses Y (even if Y happened around the same time), that's a GAP.
+   - Example: Query asks "What caused the SaaS meltdown?" → Synthesis discusses Fed policy in same timeframe → GAP (Fed policy ≠ SaaS meltdown cause)
+   - When gap detected, provide a SPECIFIC search query targeting the actual question (e.g., "SaaS software stock meltdown causes triggers 2026")
 
 1. **Historical precedent depth**
    - COVERED: Multiple (≥2) similar historical episodes with specific dates

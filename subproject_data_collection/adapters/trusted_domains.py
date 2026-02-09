@@ -36,6 +36,9 @@ TRUSTED_DOMAINS: Dict[str, Dict[str, Any]] = {
     "ft.com": {"name": "Financial Times", "tier": 1},
     "wsj.com": {"name": "Wall Street Journal", "tier": 1},
     "nikkei.com": {"name": "Nikkei", "tier": 1},
+    "yahoo.com": {"name": "Yahoo Finance", "tier": 1},
+    "finance.yahoo.com": {"name": "Yahoo Finance", "tier": 1},
+    "forbes.com": {"name": "Forbes", "tier": 1},
 
     # Tier 1: Central Banks
     "federalreserve.gov": {"name": "Federal Reserve", "tier": 1},
