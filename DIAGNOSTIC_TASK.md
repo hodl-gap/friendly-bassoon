@@ -182,6 +182,7 @@ Test cases are stored in `test_cases/` directory:
 | # | File | Query | Status | Score |
 |---|------|-------|--------|-------|
 | 01 | [01_saas_meltdown.md](test_cases/01_saas_meltdown.md) | "What caused the SaaS meltdown in Feb 2026?" | PASS | 9/13 |
+| 02 | [02_japan_election.md](test_cases/02_japan_election.md) | "How does the February 2026 Japan snap election (Takaichi) affect risk assets and yen carry trades?" | PENDING | -/18 |
 
 ---
 
