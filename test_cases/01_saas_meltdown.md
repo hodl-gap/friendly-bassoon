@@ -74,6 +74,37 @@ Oracle exemplified the valuation uncertainty, with shares fluctuating between $1
 1. `knowledge_gap_prompts.py`: Changed prompt from "is topic mentioned?" to "does synthesis answer the specific question?"
 2. `trusted_domains.py`: Added Yahoo Finance and Forbes as Tier 1 trusted sources
 
+**Code Changes**:
+
+1. **`subproject_database_retriever/knowledge_gap_prompts.py`**:
+   - Changed `topic_not_covered` category from checking "topic mentioned" to "question answered"
+   - Added example to guide LLM: tangentially related content is NOT "covered"
+   ```python
+   # BEFORE:
+   # 0. **Topic not covered**
+   #    - COVERED: Query topic explicitly discussed in synthesis/chains
+   #    - GAP: Query topic NOT mentioned at all in synthesis
+   #    - ONLY mark as GAP if the topic is completely absent (not just partially covered)
+   #    - When gap detected, provide a GENERAL search query for the topic
+
+   # AFTER:
+   # 0. **Topic not covered (CRITICAL - evaluate carefully)**
+   #    - COVERED: Synthesis directly ANSWERS the specific question asked
+   #    - GAP: Synthesis does NOT answer the question, even if it mentions related topics
+   #    - IMPORTANT: Tangentially related content is NOT "covered"
+   #    - Example: Query asks "What caused the SaaS meltdown?" → Synthesis discusses Fed policy → GAP
+   #    - When gap detected, provide a SPECIFIC search query targeting the actual question
+   ```
+
+2. **`subproject_data_collection/adapters/trusted_domains.py`**:
+   - Added Yahoo Finance and Forbes as Tier 1 sources (unpaywalled content for web chain extraction)
+   ```python
+   # Added lines:
+   "yahoo.com": {"name": "Yahoo Finance", "tier": 1},
+   "finance.yahoo.com": {"name": "Yahoo Finance", "tier": 1},
+   "forbes.com": {"name": "Forbes", "tier": 1},
+   ```
+
 **Query**: `"What caused the SaaS meltdown in Feb 2026?"`
 
 **Result**: Gap detection correctly identified `topic_not_covered = GAP` and triggered web chain extraction.
