@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "last_updated": "2026-02-06T06:55:57.825247",
-    "total_relationships": 132
+    "last_updated": "2026-02-10T07:39:13.436837",
+    "total_relationships": 141
   },
   "relationships": [
     {
@@ -4297,6 +4297,302 @@
       "source_attribution": "Source 9",
       "id": "rel_072e5990",
       "discovered_at": "2026-02-06T06:55:57.825234",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.45
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Goldman Sachs Prime Brokerage record short positioning",
+            "cause_normalized": "gs_prime_short_zscore",
+            "effect": "institutional short pressure",
+            "effect_normalized": "institutional_short_pressure",
+            "mechanism": "Z-score +3 indicates extreme institutional short positioning → concentrated bearish bets by prime brokerage clients create selling pressure"
+          },
+          {
+            "cause": "institutional short pressure",
+            "cause_normalized": "institutional_short_pressure",
+            "effect": "BTC selling pressure",
+            "effect_normalized": "btc_selling",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "gs_prime_short_zscore -> institutional_short_pressure -> btc_selling"
+      },
+      "terminal_effect": "btc_selling",
+      "mechanism": "Z-score +3 indicates extreme institutional short positioning → concentrated bearish bets by prime brokerage clients create selling pressure",
+      "source_attribution": "Query input (GS Prime data), CME (id: 37d8c1eb04cd4d51_651 - selling pressure context)",
+      "id": "rel_5727138f",
+      "discovered_at": "2026-02-10T07:39:13.436689",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.45
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BTC selling pressure",
+            "cause_normalized": "btc_selling",
+            "effect": "large long position liquidations (~$300M)",
+            "effect_normalized": "crypto_long_liquidations",
+            "mechanism": "selling pressure drops price → triggers margin calls on leveraged longs → automated liquidation cascade"
+          },
+          {
+            "cause": "large long position liquidations (~$300M)",
+            "cause_normalized": "crypto_long_liquidations",
+            "effect": "forced deleveraging",
+            "effect_normalized": "mass_liquidations",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "btc_selling -> crypto_long_liquidations -> mass_liquidations"
+      },
+      "terminal_effect": "mass_liquidations",
+      "mechanism": "selling pressure drops price → triggers margin calls on leveraged longs → automated liquidation cascade",
+      "source_attribution": "CME (id: 37d8c1eb04cd4d51_651), Liquidation data (id: 83239156e271e491_103, id: 0f7bcc32a97a775e_102)",
+      "id": "rel_81393b76",
+      "discovered_at": "2026-02-10T07:39:13.436716",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.45
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "retail investor bearish sentiment",
+            "cause_normalized": "retail_sentiment",
+            "effect": "contrarian investment signal",
+            "effect_normalized": "contrarian_signal",
+            "mechanism": "historical inverse relation between retail bearishness and price troughs → sentiment extremes mark turning points"
+          },
+          {
+            "cause": "contrarian investment signal",
+            "cause_normalized": "contrarian_signal",
+            "effect": "Bitcoin price rise signaled",
+            "effect_normalized": "btc_price",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "retail_sentiment -> contrarian_signal -> btc_price"
+      },
+      "terminal_effect": "btc_price",
+      "mechanism": "historical inverse relation between retail bearishness and price troughs → sentiment extremes mark turning points",
+      "source_attribution": "Retail sentiment (id: ce6f98a4b12b54d2_513), VanEck (id: 7921ccad2c9906d4_258), Consumer sentiment (id: 621fe86161dfc3f1_440)",
+      "id": "rel_4f589c37",
+      "discovered_at": "2026-02-10T07:39:13.436734",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.45
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BTC price falls",
+            "cause_normalized": "btc_price",
+            "effect": "Bitfinex longs increase",
+            "effect_normalized": "bitfinex_long_positions",
+            "mechanism": "traders open/add longs on price declines (buy the dip) → accumulates leveraged positions during downtrend → creates liquidation risk if decline continues"
+          },
+          {
+            "cause": "Bitfinex longs increase",
+            "cause_normalized": "bitfinex_long_positions",
+            "effect": "potential liquidation vulnerability",
+            "effect_normalized": "liquidation_risk",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "btc_price -> bitfinex_long_positions -> liquidation_risk"
+      },
+      "terminal_effect": "liquidation_risk",
+      "mechanism": "traders open/add longs on price declines (buy the dip) → accumulates leveraged positions during downtrend → creates liquidation risk if decline continues",
+      "source_attribution": "Bitfinex (id: b238c13e432d4935_521), TradingView Bitfinex analysis (id: a888b02a156615d3_522)",
+      "id": "rel_f7f57453",
+      "discovered_at": "2026-02-10T07:39:13.436750",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.45
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Goldman Sachs Prime record shorts",
+            "cause_normalized": "gs_prime_short_zscore",
+            "effect": "institutional short pressure",
+            "effect_normalized": "institutional_short_pressure",
+            "mechanism": "institutional shorts create selling → price drops → retail/smaller traders add longs (contrarian accumulation) → creates institutional-retail positioning split"
+          },
+          {
+            "cause": "institutional short pressure",
+            "cause_normalized": "institutional_short_pressure",
+            "effect": "BTC price falls",
+            "effect_normalized": "btc_price",
+            "mechanism": ""
+          },
+          {
+            "cause": "BTC price falls",
+            "cause_normalized": "btc_price",
+            "effect": "Bitfinex longs increase",
+            "effect_normalized": "bitfinex_long_positions",
+            "mechanism": ""
+          },
+          {
+            "cause": "Bitfinex longs increase",
+            "cause_normalized": "bitfinex_long_positions",
+            "effect": "positioning divergence",
+            "effect_normalized": "positioning_divergence",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "gs_prime_short_zscore -> institutional_short_pressure -> btc_price -> bitfinex_long_positions -> positioning_divergence"
+      },
+      "terminal_effect": "positioning_divergence",
+      "mechanism": "institutional shorts create selling → price drops → retail/smaller traders add longs (contrarian accumulation) → creates institutional-retail positioning split",
+      "source_attribution": "Query input, Bitfinex (id: b238c13e432d4935_521), TradingView (id: a888b02a156615d3_522)",
+      "id": "rel_e8d6760c",
+      "discovered_at": "2026-02-10T07:39:13.436766",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.45
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BTC price decline",
+            "cause_normalized": "btc_price",
+            "effect": "oversold territory (RSI <30)",
+            "effect_normalized": "oversold_condition",
+            "mechanism": "current decline into oversold matches five previous instances → historical average showed recovery to ~$175K within 80 days → pattern-based upside projection"
+          },
+          {
+            "cause": "oversold territory (RSI <30)",
+            "cause_normalized": "oversold_condition",
+            "effect": "historical recovery pattern",
+            "effect_normalized": "historical_pattern",
+            "mechanism": ""
+          },
+          {
+            "cause": "historical recovery pattern",
+            "cause_normalized": "historical_pattern",
+            "effect": "potential +75% rally to ~$175K",
+            "effect_normalized": "price_target",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "btc_price -> oversold_condition -> historical_pattern -> price_target"
+      },
+      "terminal_effect": "price_target",
+      "mechanism": "current decline into oversold matches five previous instances → historical average showed recovery to ~$175K within 80 days → pattern-based upside projection",
+      "source_attribution": "LSEG Datastream (id: 306161b33060a65b_496), BOJ rate hike analysis (id: 90f98eee5ecd8f33_464)",
+      "id": "rel_dc576408",
+      "discovered_at": "2026-02-10T07:39:13.436783",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.45
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ rate hikes",
+            "cause_normalized": "boj_rate_hike",
+            "effect": "yen carry trade unwind",
+            "effect_normalized": "carry_unwind",
+            "mechanism": "BOJ tightening triggers carry trade unwinding → global liquidity tightening hits risk assets → Bitcoin drops then recovers as positioning resets"
+          },
+          {
+            "cause": "yen carry trade unwind",
+            "cause_normalized": "carry_unwind",
+            "effect": "BTC selloff (5-7% declines)",
+            "effect_normalized": "btc_price",
+            "mechanism": ""
+          },
+          {
+            "cause": "BTC selloff (5-7% declines)",
+            "cause_normalized": "btc_price",
+            "effect": "subsequent recovery (+6-9%)",
+            "effect_normalized": "price_recovery",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "boj_rate_hike -> carry_unwind -> btc_price -> price_recovery"
+      },
+      "terminal_effect": "price_recovery",
+      "mechanism": "BOJ tightening triggers carry trade unwinding → global liquidity tightening hits risk assets → Bitcoin drops then recovers as positioning resets",
+      "source_attribution": "BOJ rate hike analysis (id: 90f98eee5ecd8f33_464)",
+      "id": "rel_0fa42646",
+      "discovered_at": "2026-02-10T07:39:13.436798",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.45
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Bitcoin -25% from peak",
+            "cause_normalized": "btc_drawdown",
+            "effect": "investor rotation to traditional assets",
+            "effect_normalized": "asset_rotation",
+            "mechanism": "underperformance vs stocks/gold → loss of confidence → capital flows to conventional assets → reinforces downtrend"
+          },
+          {
+            "cause": "investor rotation to traditional assets",
+            "cause_normalized": "asset_rotation",
+            "effect": "reduced crypto demand",
+            "effect_normalized": "crypto_demand",
+            "mechanism": ""
+          },
+          {
+            "cause": "reduced crypto demand",
+            "cause_normalized": "crypto_demand",
+            "effect": "further selling pressure",
+            "effect_normalized": "btc_selling",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "btc_drawdown -> asset_rotation -> crypto_demand -> btc_selling"
+      },
+      "terminal_effect": "btc_selling",
+      "mechanism": "underperformance vs stocks/gold → loss of confidence → capital flows to conventional assets → reinforces downtrend",
+      "source_attribution": "Bloomberg (id: 9d6b8d4a197ef962_9)",
+      "id": "rel_0d22044b",
+      "discovered_at": "2026-02-10T07:39:13.436814",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.45
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "VanEck market-breadth signal bullish",
+            "cause_normalized": "market_breadth_signal",
+            "effect": "Bitcoin price rise signaled",
+            "effect_normalized": "btc_price",
+            "mechanism": "breadth improvement precedes price advance → signal forecasts upside after cycle low → could trigger short covering if confirmed"
+          },
+          {
+            "cause": "Bitcoin price rise signaled",
+            "cause_normalized": "btc_price",
+            "effect": "potential short squeeze",
+            "effect_normalized": "squeeze_potential",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "market_breadth_signal -> btc_price -> squeeze_potential"
+      },
+      "terminal_effect": "squeeze_potential",
+      "mechanism": "breadth improvement precedes price advance → signal forecasts upside after cycle low → could trigger short covering if confirmed",
+      "source_attribution": "VanEck (id: 7921ccad2c9906d4_258)",
+      "id": "rel_49c4b87f",
+      "discovered_at": "2026-02-10T07:39:13.436829",
       "validation_count": 1,
       "relationship_type": "positive",
       "confidence": 0.45

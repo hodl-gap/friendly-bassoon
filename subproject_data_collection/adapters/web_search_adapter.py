@@ -149,12 +149,18 @@ class WebSearchAdapter:
             print(f"[{self.source_name}] Search error: {e}")
             return []
 
-    def _search_tavily(self, query: str) -> List[Dict[str, str]]:
+    def _search_tavily(self, query: str, include_raw_content: bool = True) -> List[Dict[str, str]]:
         """
-        Search using Tavily API. Returns results with full page content.
+        Search using Tavily API. Returns results with optional full page content.
+
+        Args:
+            query: Search query
+            include_raw_content: Whether to fetch full page content. Set to False for
+                                 knowledge gap searches (snippets sufficient, better results).
+                                 Set to True for logic chain extraction (quote verification needs content).
 
         Returns:
-            List of dicts with 'title', 'snippet', 'url', and 'content' (full page text)
+            List of dicts with 'title', 'snippet', 'url', and optionally 'content' (full page text)
         """
         try:
             from tavily import TavilyClient
@@ -172,7 +178,7 @@ class WebSearchAdapter:
             response = client.search(
                 query=query,
                 max_results=self.max_results,
-                include_raw_content=True,
+                include_raw_content=include_raw_content,
                 topic="finance"
             )
 
@@ -197,10 +203,16 @@ class WebSearchAdapter:
             print(f"[{self.source_name}] Tavily search error: {e}")
             return []
 
-    def _search(self, query: str) -> List[Dict[str, str]]:
-        """Route to the configured search backend."""
+    def _search(self, query: str, include_raw_content: bool = True) -> List[Dict[str, str]]:
+        """Route to the configured search backend.
+
+        Args:
+            query: Search query
+            include_raw_content: For Tavily, whether to fetch full page content.
+                                 Ignored for DuckDuckGo (always snippets only).
+        """
         if self.backend == "tavily":
-            return self._search_tavily(query)
+            return self._search_tavily(query, include_raw_content=include_raw_content)
         else:
             return self._search_duckduckgo(query)
 
@@ -341,7 +353,10 @@ class WebSearchAdapter:
             return cached
 
         # Perform search
-        search_results = self._search(query)
+        # For knowledge_gap searches, don't fetch raw content - snippets are sufficient
+        # and Tavily returns better results without raw content for news/fact queries
+        include_raw_content = extract_type != "knowledge_gap"
+        search_results = self._search(query, include_raw_content=include_raw_content)
 
         if not search_results:
             result = {

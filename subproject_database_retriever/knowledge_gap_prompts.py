@@ -45,18 +45,29 @@ Evaluate the retrieved information against these knowledge categories. For each 
    - IMPORTANT: Tangentially related content is NOT "covered". If query asks "What caused X?" and synthesis discusses Y (even if Y happened around the same time), that's a GAP.
    - Example: Query asks "What caused the SaaS meltdown?" → Synthesis discusses Fed policy in same timeframe → GAP (Fed policy ≠ SaaS meltdown cause)
    - When gap detected, provide a SPECIFIC search query targeting the actual question (e.g., "SaaS software stock meltdown causes triggers 2026")
+   - **INPUT CLAIM VALIDATION**: If the query contains specific data claims (e.g., "Z-score +3", "record shorting"), search for corroborating evidence. Example: Query claims "GS Prime Book shows record shorting Feb 2026" → search "Goldman Sachs Prime Book record shorting February 2026" to validate and enrich
 
 1. **Historical precedent depth**
-   - COVERED: Multiple (≥2) similar historical episodes with specific dates
+   - COVERED: Multiple (≥2) similar historical episodes with specific dates AND outcomes
    - GAP: Only 1 example, or no specific dates for similar episodes
-   - fill_method: `"web_search"` — search for EVENT DATES only. We compute price reactions ourselves.
-   - GOOD search_query: "event X dates 2022 2023 2024"
-   - BAD search_query: "event X price impact 2022" (we compute impact ourselves)
+   - **CRITICAL FOR INDICATOR QUERIES**: If the query mentions a SPECIFIC INDICATOR with an extreme reading (e.g., "GS Prime Book Z-score +3", "VIX at 40", "put/call ratio at 1.5"), the gap should ask: "What happened in PRIOR instances when THIS SAME INDICATOR reached similar extremes?"
+   - fill_method: `"historical_analog"` — when query references a specific indicator at extreme level
+   - fill_method: `"web_search"` — for generic historical precedent (no specific indicator)
+   - For historical_analog: We will fetch price data (SPY, VIX) for prior extreme dates and compute what happened after
+   - indicator_name: Name of the indicator (e.g., "GS Prime Book short positioning Z-score")
+   - Example: Query says "GS Prime Book Z-score +3" → GAP should be "What happened after prior GS Prime Book extreme readings (+2 or higher)?" with fill_method="historical_analog"
 
 2. **Quantified relationships**
    - COVERED: Specific correlation coefficients or measured relationships
    - GAP: Only qualitative descriptions like "X correlates with Y"
-   - fill_method: `"data_fetch"` — specify `instruments` (variable names) and we fetch data and compute correlation ourselves
+   - fill_method: `"data_fetch"` — specify `instruments` using ONLY these known variable names:
+     * Indices: spy, qqq, sp500, nasdaq, dow, russell2000
+     * Sectors: igv (software), xlk (tech), smh/soxx (semis), xlf (financials), xle (energy)
+     * Stocks: googl, amzn, msft, meta, aapl, nvda, orcl
+     * FX/Crypto: btc, eth, dxy, usdjpy, eurusd
+     * Volatility: vix, vvix
+     * Rates: tlt, gld, gold
+   - IMPORTANT: Only use data_fetch for PUBLIC data (Yahoo/FRED). Proprietary data (GS Prime Book, hedge fund positioning) must use web_search instead.
 
 3. **Monitoring thresholds**
    - COVERED: Specific levels from analyst research (e.g., "analysts target X range")
@@ -89,11 +100,12 @@ Respond in this EXACT JSON format:
     {{
       "category": "topic_not_covered|historical_precedent_depth|quantified_relationships|monitoring_thresholds|event_calendar|mechanism_conditions|exit_criteria",
       "status": "COVERED|GAP",
-      "fill_method": "web_chain_extraction|web_search|data_fetch",
+      "fill_method": "web_chain_extraction|web_search|data_fetch|historical_analog",
       "found": "what was found (be specific)",
       "missing": "what specific information would fill this gap (null if COVERED)",
-      "search_query": "web search query (null if COVERED or if fill_method is data_fetch)",
-      "instruments": ["var1", "var2"]
+      "search_query": "web search query (null if COVERED or if fill_method is data_fetch/historical_analog)",
+      "instruments": ["var1", "var2"],
+      "indicator_name": "name of specific indicator for historical_analog (null otherwise)"
     }}
   ],
   "gap_count": 0
@@ -105,8 +117,10 @@ Rules:
 - gap_count must match the number of items with status=GAP
 - fill_method: Use "web_chain_extraction" for topic_not_covered gaps
 - fill_method: Use "data_fetch" for quantified_relationships
+- fill_method: Use "historical_analog" for historical_precedent_depth when query mentions a SPECIFIC INDICATOR at extreme level
 - fill_method: Use "web_search" for all others
 - search_query: only for web_search/web_chain_extraction gaps. Must be a single-topic query (5-12 words) asking for RAW FACTS
 - instruments: only for data_fetch gaps. List of normalized variable names to fetch
+- indicator_name: only for historical_analog gaps. The specific indicator mentioned in query (e.g., "GS Prime Book Z-score")
 - IMPORTANT: Keep "found" and "missing" fields BRIEF (1-2 sentences max, under 50 words each)
 """

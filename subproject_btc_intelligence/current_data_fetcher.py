@@ -21,7 +21,10 @@ from dotenv import load_dotenv
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from shared.variable_resolver import resolve_variable as _resolve_variable
-from .states import BTCImpactState
+
+# BTCImpactState imported lazily inside fetch_current_data() to allow
+# standalone imports of utility functions (resolve_variable, fetch_*_with_history)
+# from outside the package context
 
 # Load environment
 load_dotenv(Path(__file__).parent.parent / ".env")
@@ -261,7 +264,7 @@ def calculate_changes(history: List[Tuple[str, float]]) -> Dict[str, Any]:
     return changes
 
 
-def fetch_current_data(state: BTCImpactState) -> BTCImpactState:
+def fetch_current_data(state: "BTCImpactState") -> "BTCImpactState":
     """
     Fetch current values for extracted variables with period-over-period changes.
 
@@ -270,6 +273,9 @@ def fetch_current_data(state: BTCImpactState) -> BTCImpactState:
     - btc_price: Current BTC price
     - fetch_errors: List of failed variables
     """
+    # Lazy import to allow standalone imports from outside package context
+    from .states import BTCImpactState  # noqa: F401
+
     variables = state.get("extracted_variables", [])
 
     if not variables:

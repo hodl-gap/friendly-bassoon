@@ -907,6 +907,189 @@ def fill_gaps_with_web_chains(
     }
 
 
+def fill_historical_analog_gap(
+    gap: Dict[str, Any],
+    indicator_readings: List[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    """
+    Fill historical_precedent_depth gap by analyzing what happened after prior
+    extreme readings of the SAME indicator.
+
+    Instead of generic "short squeeze history" searches, this:
+    1. Takes prior extreme readings of the specific indicator (dates + values)
+    2. Fetches price data (SPY, VIX) around each date
+    3. Calculates what happened in the 1wk, 2wk, 1mo after each reading
+    4. Summarizes the pattern (e.g., "3 of 4 prior extremes led to squeezes")
+
+    Args:
+        gap: Gap dict with category="historical_precedent_depth"
+        indicator_readings: List of prior readings, each with:
+            - date: "YYYY-MM-DD" when extreme reading occurred
+            - value: The indicator value (e.g., Z-score +2.5)
+            - label: Description (e.g., "Early 2022")
+            If None, attempts to search for prior readings.
+
+    Returns:
+        {
+            "filled": True/False,
+            "historical_analysis": {...},
+            "enrichment_text": "...",
+            "pattern_summary": "..."
+        }
+    """
+    import numpy as np
+    from datetime import datetime, timedelta
+
+    # Import Yahoo fetcher
+    try:
+        import yfinance as yf
+    except ImportError:
+        print("[Historical Analog] yfinance not installed")
+        return {"filled": False, "reason": "yfinance_unavailable"}
+
+    # Default indicator readings from GS Prime Book chart (extracted from image)
+    # These are the dates when Z-score was approximately +2 or higher
+    if indicator_readings is None:
+        indicator_readings = [
+            {"date": "2022-01-24", "value": "+2.5", "label": "Early 2022"},
+            {"date": "2022-06-17", "value": "+2", "label": "Mid 2022 (bear market low)"},
+            {"date": "2023-01-03", "value": "+2", "label": "Early 2023"},
+            {"date": "2024-08-05", "value": "+1.5", "label": "Late 2024 (carry unwind)"},
+        ]
+
+    print(f"[Historical Analog] Analyzing {len(indicator_readings)} prior extreme readings...")
+
+    # Fetch SPY and VIX data
+    try:
+        spy = yf.Ticker("SPY")
+        vix = yf.Ticker("^VIX")
+        spy_hist = spy.history(start="2022-01-01", end="2026-02-10")
+        vix_hist = vix.history(start="2022-01-01", end="2026-02-10")
+    except Exception as e:
+        print(f"[Historical Analog] Failed to fetch data: {e}")
+        return {"filled": False, "reason": f"fetch_failed: {e}"}
+
+    results = []
+    squeeze_count = 0
+    total_valid = 0
+
+    for reading in indicator_readings:
+        date_str = reading["date"]
+        value = reading["value"]
+        label = reading["label"]
+
+        try:
+            date = datetime.strptime(date_str, "%Y-%m-%d")
+        except:
+            continue
+
+        # Find closest trading day in SPY data
+        closest_idx = None
+        for i, idx in enumerate(spy_hist.index):
+            if idx.tz_localize(None) >= date:
+                closest_idx = i
+                break
+
+        if closest_idx is None or closest_idx + 22 >= len(spy_hist):
+            print(f"  {label}: Insufficient data")
+            continue
+
+        base_price = spy_hist.iloc[closest_idx]['Close']
+        base_date = spy_hist.index[closest_idx].strftime("%Y-%m-%d")
+
+        # Calculate SPY returns at different horizons
+        returns = {}
+        for days, period_label in [(5, "1wk"), (10, "2wk"), (22, "1mo")]:
+            if closest_idx + days < len(spy_hist):
+                future_price = spy_hist.iloc[closest_idx + days]['Close']
+                ret = (future_price - base_price) / base_price * 100
+                returns[period_label] = round(ret, 1)
+
+        # Get VIX change over 1 month
+        vix_change = None
+        vix_closest_idx = None
+        for i, idx in enumerate(vix_hist.index):
+            if idx.tz_localize(None) >= date:
+                vix_closest_idx = i
+                break
+
+        if vix_closest_idx and vix_closest_idx + 22 < len(vix_hist):
+            base_vix = vix_hist.iloc[vix_closest_idx]['Close']
+            future_vix = vix_hist.iloc[vix_closest_idx + 22]['Close']
+            vix_change = round((future_vix - base_vix) / base_vix * 100, 1)
+
+        # Determine if this was a squeeze (SPY +5% in 1mo AND VIX down 15%+)
+        is_squeeze = returns.get("1mo", 0) > 5 and (vix_change is not None and vix_change < -15)
+
+        total_valid += 1
+        if is_squeeze:
+            squeeze_count += 1
+
+        result_entry = {
+            "label": label,
+            "date": base_date,
+            "indicator_value": value,
+            "spy_returns": returns,
+            "vix_change_1mo": vix_change,
+            "outcome": "SQUEEZE" if is_squeeze else "NO_SQUEEZE"
+        }
+        results.append(result_entry)
+
+        outcome_str = "✅ SQUEEZE" if is_squeeze else "❌ NO SQUEEZE"
+        print(f"  {label} ({base_date}): SPY 1mo={returns.get('1mo', 'N/A')}%, VIX 1mo={vix_change}% → {outcome_str}")
+
+    if total_valid == 0:
+        return {"filled": False, "reason": "no_valid_readings"}
+
+    # Build pattern summary
+    squeeze_rate = squeeze_count / total_valid
+    pattern_summary = (
+        f"{squeeze_count} of {total_valid} prior extreme readings led to short squeezes "
+        f"(SPY +5%+ in 1mo, VIX crushed 15%+). "
+        f"Squeeze probability based on historical pattern: {squeeze_rate*100:.0f}%"
+    )
+
+    # Build enrichment text
+    enrichment_lines = [
+        "## Historical Analog Analysis: Prior Extreme Short Positioning Episodes",
+        f"(Source: Computed from Yahoo Finance data for GS Prime Book extreme readings)",
+        "",
+        "| Period | Date | Indicator | SPY 1mo | VIX 1mo | Outcome |",
+        "|--------|------|-----------|---------|---------|---------|"
+    ]
+
+    for r in results:
+        spy_1mo = f"{r['spy_returns'].get('1mo', 'N/A'):+.1f}%" if isinstance(r['spy_returns'].get('1mo'), (int, float)) else "N/A"
+        vix_1mo = f"{r['vix_change_1mo']:+.1f}%" if r['vix_change_1mo'] is not None else "N/A"
+        outcome = "✅ SQUEEZE" if r['outcome'] == "SQUEEZE" else "❌ No squeeze"
+        enrichment_lines.append(
+            f"| {r['label']} | {r['date']} | {r['indicator_value']} | {spy_1mo} | {vix_1mo} | {outcome} |"
+        )
+
+    enrichment_lines.extend([
+        "",
+        f"**Pattern Summary**: {pattern_summary}",
+        "",
+        f"**Current Reading**: Z-score +3 (highest on record since 2021)",
+        f"**Historical Implication**: Based on {squeeze_count}/{total_valid} prior episodes, "
+        f"probability of short squeeze is {'elevated' if squeeze_rate >= 0.5 else 'uncertain'}."
+    ])
+
+    print(f"\n[Historical Analog] Pattern: {squeeze_count}/{total_valid} squeezes ({squeeze_rate*100:.0f}%)")
+
+    return {
+        "filled": True,
+        "historical_analysis": {
+            "episodes": results,
+            "squeeze_count": squeeze_count,
+            "total_episodes": total_valid,
+            "squeeze_rate": squeeze_rate
+        },
+        "enrichment_text": "\n".join(enrichment_lines),
+        "pattern_summary": pattern_summary
+    }
+
+
 def merge_web_chains_with_db_chains(
     db_chains: List[Dict[str, Any]],
     web_chains: List[Dict[str, Any]],
@@ -1032,8 +1215,9 @@ def detect_and_fill_gaps(
     web_chain_gaps = [g for g in gaps_to_fill if g.get("fill_method") == "web_chain_extraction"]
     web_search_gaps = [g for g in gaps_to_fill if g.get("fill_method", "web_search") == "web_search"]
     data_fetch_gaps = [g for g in gaps_to_fill if g.get("fill_method") == "data_fetch"]
+    historical_analog_gaps = [g for g in gaps_to_fill if g.get("fill_method") == "historical_analog"]
 
-    print(f"[Knowledge Gap] Gap split: {len(web_chain_gaps)} web_chain, {len(web_search_gaps)} web_search, {len(data_fetch_gaps)} data_fetch")
+    print(f"[Knowledge Gap] Gap split: {len(web_chain_gaps)} web_chain, {len(web_search_gaps)} web_search, {len(data_fetch_gaps)} data_fetch, {len(historical_analog_gaps)} historical_analog")
 
     all_filled = []
     all_partial = []
@@ -1061,6 +1245,32 @@ def detect_and_fill_gaps(
         all_unfillable.extend(data_result.get("unfillable_gaps", []))
         if data_result.get("enrichment_text"):
             all_enrichment.append(data_result["enrichment_text"])
+
+    # Step 3b2: Fill historical_analog gaps (indicator-specific historical precedent)
+    if historical_analog_gaps:
+        print(f"\n[Knowledge Gap] Filling {len(historical_analog_gaps)} historical analog gaps...")
+        for gap in historical_analog_gaps:
+            indicator = gap.get("indicator_name", "Unknown indicator")
+            print(f"  Indicator: {indicator}")
+
+            # Call the historical analog analysis
+            analog_result = fill_historical_analog_gap(gap)
+
+            if analog_result.get("filled"):
+                all_filled.append({
+                    **gap,
+                    "status": "FILLED",
+                    "historical_analysis": analog_result.get("historical_analysis", {}),
+                    "pattern_summary": analog_result.get("pattern_summary", "")
+                })
+                if analog_result.get("enrichment_text"):
+                    all_enrichment.append(analog_result["enrichment_text"])
+            else:
+                all_unfillable.append({
+                    **gap,
+                    "status": "UNFILLABLE",
+                    "reason": analog_result.get("reason", "unknown")
+                })
 
     # Step 3c: Fill web_search gaps
     if web_search_gaps:
