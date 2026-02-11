@@ -26,6 +26,7 @@ from .states import RiskImpactState
 from .impact_analysis import analyze_impact
 from .variable_extraction import extract_variables
 from .current_data_fetcher import fetch_current_data, format_current_values_for_prompt
+from shared.snapshot import snapshot_state, start_run as _start_run, ENABLE_SNAPSHOTS
 from .pattern_validator import validate_patterns, format_validated_patterns_for_prompt
 from .relationship_store import (
     load_chains,
@@ -481,6 +482,8 @@ def prepare_shared_context(
     # Step 1: Retrieve enriched context
     state = retrieve_context(query, image_path=image_path)
     state["asset_class"] = asset_class
+    if ENABLE_SNAPSHOTS:
+        snapshot_state("retrieve_context", state, "out")
 
     # Step 2: Variable extraction and data fetching
     if not skip_data_fetch:
@@ -488,16 +491,24 @@ def prepare_shared_context(
             state = _run_integrated_pipeline(state)
         else:
             state = extract_variables(state)
+            if ENABLE_SNAPSHOTS:
+                snapshot_state("extract_variables", state, "out")
             if state.get("extracted_variables"):
                 state = fetch_current_data(state)
+                if ENABLE_SNAPSHOTS:
+                    snapshot_state("fetch_current_data", state, "out")
 
     # Step 3: Validate research patterns against current data
     if not skip_data_fetch:
         state = validate_patterns(state)
+        if ENABLE_SNAPSHOTS:
+            snapshot_state("validate_patterns", state, "out")
 
     # Step 4: Historical event data enrichment
     if not skip_data_fetch:
         state = enrich_with_historical_event(state)
+        if ENABLE_SNAPSHOTS:
+            snapshot_state("enrich_historical_event", state, "out")
 
     return state
 
@@ -537,6 +548,8 @@ def run_asset_impact(
 
     # Run impact analysis with asset-specific prompt
     state = analyze_impact(state, asset_class=asset_class)
+    if ENABLE_SNAPSHOTS:
+        snapshot_state(f"analyze_impact_{asset_class}", state, "out")
 
     # Store asset-specific chains
     if not skip_chain_store:
@@ -578,6 +591,9 @@ def run_multi_asset_analysis(
     """
     if assets is None:
         assets = ["btc"]
+
+    if ENABLE_SNAPSHOTS:
+        _start_run()
 
     print("\n" + "=" * 60)
     asset_names = [get_asset_config(a)["name"] for a in assets]

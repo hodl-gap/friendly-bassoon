@@ -24,11 +24,24 @@ from config import (
     MAX_GAP_SEARCHES,
     MAX_ATTEMPTS_PER_GAP
 )
+from shared.snapshot import snapshot_state, ENABLE_SNAPSHOTS
 
 # Import function modules
 from query_processing import process_query
 from vector_search import search_vectors
-from answer_generation import generate_answer
+from answer_generation import generate_answer, regenerate_synthesis
+
+
+def _wrap(name, func):
+    """Wrap a node function with snapshot capture."""
+    def wrapper(state):
+        if ENABLE_SNAPSHOTS:
+            snapshot_state(name, state, "in")
+        result = func(state)
+        if ENABLE_SNAPSHOTS:
+            snapshot_state(name, result, "out")
+        return result
+    return wrapper
 
 
 def route_after_retrieval(state: RetrieverState) -> str:
@@ -90,6 +103,41 @@ def detect_and_fill_gaps(state: RetrieverState) -> RetrieverState:
         "extracted_web_chains": gap_result.get("extracted_web_chains", []),
         "logic_chains": gap_result.get("merged_logic_chains", all_chains)
     }
+
+
+def conditional_resynthesis(state: RetrieverState) -> RetrieverState:
+    """
+    Step 5: Conditionally re-synthesize after gap filling.
+
+    Only fires when significant new information was discovered during gap filling
+    (web_chains >= 3 or filled_gaps >= 2). Integrates web chains and gap enrichment
+    into an updated synthesis using Sonnet.
+    """
+    web_chains = state.get("extracted_web_chains", [])
+    filled_gaps = state.get("filled_gaps", [])
+
+    if len(web_chains) < 3 and len(filled_gaps) < 2:
+        print(f"[retrieval] Skipping re-synthesis (web_chains={len(web_chains)}, filled_gaps={len(filled_gaps)})")
+        return state
+
+    query = state.get("query", "")
+    original_synthesis = state.get("synthesis", "")
+    gap_enrichment = state.get("gap_enrichment_text", "")
+
+    if not original_synthesis:
+        print("[retrieval] No original synthesis to re-synthesize")
+        return state
+
+    print(f"[retrieval] Re-synthesizing with {len(web_chains)} web chains and {len(filled_gaps)} filled gaps...")
+
+    new_synthesis = regenerate_synthesis(
+        query=query,
+        original_synthesis=original_synthesis,
+        web_chains=web_chains,
+        gap_enrichment=gap_enrichment
+    )
+
+    return {**state, "synthesis": new_synthesis}
 
 
 def _extract_logic_chains_from_chunks(chunks: list) -> list:
@@ -168,11 +216,12 @@ def build_graph() -> StateGraph:
     """Build the LangGraph workflow."""
     graph = StateGraph(RetrieverState)
 
-    # Add nodes (function modules)
-    graph.add_node("process_query", process_query)
-    graph.add_node("search", search_vectors)
-    graph.add_node("generate", generate_answer)
-    graph.add_node("fill_gaps", detect_and_fill_gaps)
+    # Add nodes (function modules) — wrapped for snapshot capture
+    graph.add_node("process_query", _wrap("process_query", process_query))
+    graph.add_node("search", _wrap("search", search_vectors))
+    graph.add_node("generate", _wrap("generate", generate_answer))
+    graph.add_node("fill_gaps", _wrap("fill_gaps", detect_and_fill_gaps))
+    graph.add_node("conditional_resynthesis", _wrap("conditional_resynthesis", conditional_resynthesis))
 
     # Define edges
     graph.set_entry_point("process_query")
@@ -185,9 +234,10 @@ def build_graph() -> StateGraph:
             "generate": "generate"
         }
     )
-    # After generation, detect and fill gaps
+    # After generation, detect and fill gaps, then conditionally re-synthesize
     graph.add_edge("generate", "fill_gaps")
-    graph.add_edge("fill_gaps", END)
+    graph.add_edge("fill_gaps", "conditional_resynthesis")
+    graph.add_edge("conditional_resynthesis", END)
 
     return graph.compile()
 
@@ -203,6 +253,10 @@ def run_retrieval(query: str, image_path: str = None) -> dict:
     Returns:
         Final state containing answer and retrieved context
     """
+    from shared.snapshot import start_run as _start_run
+    if ENABLE_SNAPSHOTS:
+        _start_run()
+
     graph = build_graph()
 
     initial_state = RetrieverState(

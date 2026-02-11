@@ -32,7 +32,24 @@ DIMENSION: [short name for this angle]
 REASONING: [one sentence - why this angle matters]
 QUERY: [the search query]
 
-(repeat for each, 2-3 total)"""
+(repeat for each, 2-3 total)
+
+## Example (simple query → 3 focused dimensions)
+<!-- [FEW-SHOT v1] Source: run_20260211_075133. Review & improve with more diverse examples. -->
+
+Original query: What does rising RDE indicate about liquidity conditions?
+
+DIMENSION: Direct RDE-Liquidity Link
+REASONING: Targets the core relationship between RDE movements and liquidity assessment in financial markets.
+QUERY: RDE rising liquidity conditions market
+
+DIMENSION: RDE as Liquidity Indicator
+REASONING: Frames RDE explicitly as a diagnostic tool for understanding systemic liquidity tightness or ease.
+QUERY: RDE liquidity indicator financial stress
+
+DIMENSION: RDE and Money Market Conditions
+REASONING: Connects RDE signals to the operational liquidity environment where short-term funding occurs.
+QUERY: RDE money market liquidity tightening"""
 
 
 # Prompt for COMPLEX queries (multi-concept, relationships) - generates 4-6 variations
@@ -72,7 +89,36 @@ DIMENSION: [short name for this angle]
 REASONING: [one sentence - why this angle matters]
 QUERY: [the search query]
 
-(repeat for each, 4-6 total)"""
+(repeat for each, 4-6 total)
+
+## Example (complex multi-factor → 6 orthogonal dimensions)
+<!-- [FEW-SHOT v1] Source: run_20260211_081106. Review & improve with more diverse examples. -->
+
+Original query: What is the impact on global liquidity and fiat currency from: (1) global stockpiling demand, (2) AI investment cycle, (3) global fiscal spending expansion, (4) defense and public investment increase, (5) China domestic demand policy pivot, and (6) China demand recovery from deeply negative to neutral levels?
+
+DIMENSION: Monetary Base Expansion & Reserve Accumulation
+REASONING: These demand shocks will mechanically increase central bank balance sheets and fiat money supply as central banks intervene to manage currency pressures and liquidity.
+QUERY: Central bank balance sheet expansion, reserve accumulation, and monetary base growth from increased global demand and fiscal spending
+
+DIMENSION: Commodity & FX Pressure from Demand Surge
+REASONING: Stockpiling, AI capex, and China demand recovery will drive commodity prices and currency flows, forcing central banks to manage inflation and exchange rate volatility.
+QUERY: Commodity price inflation, currency appreciation pressures, and foreign exchange intervention from global investment cycle and China demand recovery
+
+DIMENSION: Real Rates & Liquidity Conditions
+REASONING: Fiscal expansion and defense spending increase nominal demand and inflation expectations, which compresses real rates and affects global liquidity availability.
+QUERY: Real interest rates, liquidity conditions, and inflation expectations from fiscal expansion, defense spending, and China policy pivot
+
+DIMENSION: Capital Flows & Cross-Border Liquidity
+REASONING: AI investment and stockpiling create uneven capital allocation across regions, generating liquidity mismatches and currency carry dynamics.
+QUERY: Cross-border capital flows, emerging market liquidity, and currency carry trades from AI investment concentration and global demand shifts
+
+DIMENSION: Fiat Currency Debasement & Purchasing Power
+REASONING: Sustained fiscal spending and monetary accommodation to support these demand shocks will erode fiat currency value and purchasing power globally.
+QUERY: Fiat currency debasement, purchasing power erosion, and inflation from sustained fiscal spending and monetary accommodation
+
+DIMENSION: Debt Issuance & Credit Expansion
+REASONING: Funding defense, infrastructure, and AI investment requires massive government and corporate debt issuance, expanding credit and money supply.
+QUERY: Government debt issuance, credit expansion, and money supply growth from defense spending, public investment, and AI capex cycle"""
 
 
 # Legacy prompt for backward compatibility

@@ -26,12 +26,12 @@ def parse_claims(state: DataCollectionState) -> DataCollectionState:
     LangGraph node function.
 
     Args:
-        state: Current workflow state with retriever_synthesis
+        state: Current workflow state with synthesis
 
     Returns:
         Updated state with parsed_claims
     """
-    synthesis = state.get("retriever_synthesis", "")
+    synthesis = state.get("synthesis", "")
     claims_input = state.get("claims_input", [])
 
     # If pre-parsed claims provided, use those
@@ -296,7 +296,7 @@ if __name__ == "__main__":
 
     state = DataCollectionState(
         mode="claim_validation",
-        retriever_synthesis=sample_synthesis
+        synthesis=sample_synthesis
     )
 
     result = parse_claims(state)

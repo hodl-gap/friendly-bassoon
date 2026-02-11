@@ -112,6 +112,49 @@ Respond in this EXACT JSON format:
 }}
 ```
 
+## Examples
+<!-- [FEW-SHOT v1] Source: run_20260211_075133 (RDE) + run_20260211_081110 (JPY Rally). Review & improve — add COMPLETE and INSUFFICIENT examples. -->
+
+### Example 1: Simple query — broad taxonomy, 4 COVERED / 3 GAP
+
+Query: "What does rising RDE indicate about liquidity conditions?"
+
+```json
+{{
+  "coverage_rating": "PARTIAL",
+  "gap_count": 3,
+  "gaps": [
+    {{"category": "topic_not_covered", "status": "COVERED", "found": "Synthesis directly answers the query with multiple causal chains for rising RDE → liquidity stress.", "missing": null, "fill_method": "web_chain_extraction", "search_query": null, "instruments": null, "indicator_name": null}},
+    {{"category": "historical_precedent_depth", "status": "GAP", "found": "Mentions 2008, 2020, 2023 crises but no specific dates or detailed outcomes.", "missing": "Specific dates and Primary Credit levels during 2008, 2020, 2023 crises.", "fill_method": "historical_analog", "search_query": null, "instruments": null, "indicator_name": "Primary Credit"}},
+    {{"category": "quantified_relationships", "status": "GAP", "found": "Directional relationships only, no correlation coefficients.", "missing": "Correlation between Primary Credit usage and market drawdowns.", "fill_method": "data_fetch", "search_query": null, "instruments": ["spy", "qqq", "vix"], "indicator_name": null}},
+    {{"category": "monitoring_thresholds", "status": "COVERED", "found": "Thresholds specified: Primary Credit $50B+ crisis, overnight repo >$25B, bank reserves $3T.", "missing": null, "fill_method": "web_search", "search_query": null, "instruments": null, "indicator_name": null}},
+    {{"category": "event_calendar", "status": "GAP", "found": "No upcoming dated events.", "missing": "Upcoming Fed meetings affecting Primary Credit demand.", "fill_method": "web_search", "search_query": "Fed FOMC meeting schedule 2025 policy decisions", "instruments": null, "indicator_name": null}},
+    {{"category": "mechanism_conditions", "status": "COVERED", "found": "Preconditions specified: TGA drawdown, RRP depletion, T-bill issuance surges.", "missing": null, "fill_method": "web_search", "search_query": null, "instruments": null, "indicator_name": null}},
+    {{"category": "exit_criteria", "status": "COVERED", "found": "Bank reserves rebound to $3T+ resolves stress.", "missing": null, "fill_method": "web_search", "search_query": null, "instruments": null, "indicator_name": null}}
+  ],
+  "gap_count": 3
+}}
+```
+
+### Example 2: Event query with data claim — validates specific claim + computes correlation
+
+Query: "On 2026-01-24, JPY/USD rallied to 155.90 rising 1.6% daily, and Japan finance minister warned speculators. What is the BTC impact?"
+
+```json
+{{
+  "coverage_rating": "PARTIAL",
+  "gap_count": 3,
+  "gaps": [
+    {{"category": "topic_not_covered", "status": "GAP", "found": "Synthesis provides BTC downward pressure thesis but does not validate the specific claim that JPY/USD rallied 1.6% to 155.90 on 2026-01-24.", "missing": "Corroborating evidence for the 2026-01-24 JPY/USD rally and finance minister warning.", "fill_method": "web_search", "search_query": "JPY USD 155.90 January 24 2026 Japan finance minister warning", "instruments": null, "indicator_name": null}},
+    {{"category": "quantified_relationships", "status": "GAP", "found": "Historical BTC drawdowns of 20-30% during BOJ tightening mentioned but no measured USDJPY-BTC correlation.", "missing": "Correlation coefficient between USDJPY and BTC price changes.", "fill_method": "data_fetch", "search_query": null, "instruments": ["usdjpy", "btc"], "indicator_name": null}},
+    {{"category": "event_calendar", "status": "GAP", "found": "BOJ rate hike identified as key trigger but no scheduled date.", "missing": "Next BOJ monetary policy decision date.", "fill_method": "web_search", "search_query": "BOJ monetary policy decision date January 2026 rate hike schedule", "instruments": null, "indicator_name": null}}
+  ],
+  "gap_count": 3
+}}
+```
+
+---
+
 Rules:
 - coverage_rating: COMPLETE (0 gaps), PARTIAL (1-3 gaps), INSUFFICIENT (4+ gaps)
 - gap_count must match the number of items with status=GAP

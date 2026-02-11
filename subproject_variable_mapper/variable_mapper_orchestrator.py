@@ -15,12 +15,25 @@ import json
 from langgraph.graph import StateGraph, END
 from states import VariableMapperState
 from config import SAMPLE_INPUT_FILE, USE_COMBINED_EXTRACTION
+from shared.snapshot import snapshot_state, ENABLE_SNAPSHOTS
 
 # Import function modules
 from variable_extraction import extract_variables
 from normalization import normalize_variables
 from missing_variable_detection import detect_missing_variables
 from data_id_mapping import map_to_data_ids
+
+
+def _wrap(name, func):
+    """Wrap a node function with snapshot capture."""
+    def wrapper(state):
+        if ENABLE_SNAPSHOTS:
+            snapshot_state(name, state, "in")
+        result = func(state)
+        if ENABLE_SNAPSHOTS:
+            snapshot_state(name, result, "out")
+        return result
+    return wrapper
 
 
 def should_skip_step3(state: VariableMapperState) -> str:
@@ -40,11 +53,11 @@ def build_graph() -> StateGraph:
     """Build the LangGraph workflow with conditional Step 3."""
     graph = StateGraph(VariableMapperState)
 
-    # Add nodes (function modules)
-    graph.add_node("extract_variables", extract_variables)
-    graph.add_node("normalize_variables", normalize_variables)
-    graph.add_node("detect_missing", detect_missing_variables)
-    graph.add_node("map_data_ids", map_to_data_ids)
+    # Add nodes (function modules) — wrapped for snapshot capture
+    graph.add_node("extract_variables", _wrap("extract_variables", extract_variables))
+    graph.add_node("normalize_variables", _wrap("normalize_variables", normalize_variables))
+    graph.add_node("detect_missing", _wrap("detect_missing", detect_missing_variables))
+    graph.add_node("map_data_ids", _wrap("map_data_ids", map_to_data_ids))
 
     # Wire edges with conditional routing
     graph.set_entry_point("extract_variables")
@@ -92,9 +105,13 @@ def run_variable_mapper(
     if logic_chains:
         print(f"[orchestrator] Logic chains provided: {len(logic_chains)} chains")
 
+    from shared.snapshot import start_run as _start_run
+    if ENABLE_SNAPSHOTS:
+        _start_run()
+
     graph = build_graph()
     initial_state = VariableMapperState(
-        synthesis_input=synthesis_text,
+        synthesis=synthesis_text,
         data_temporal_context=data_temporal_context or {},
         logic_chains=logic_chains or []
     )

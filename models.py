@@ -217,6 +217,21 @@ def call_gpt5_nano(messages, temperature=1.0, max_tokens=2000):
 # ANTHROPIC MODELS - Claude 4.5 Series (Latest - Nov 2025)
 # =============================================================================
 
+def _log_usage(model_id: str, usage):
+    """Log token usage to the run logger if active."""
+    try:
+        from shared.run_logger import log_llm_call
+        log_llm_call(
+            model=model_id,
+            input_tokens=getattr(usage, 'input_tokens', 0),
+            output_tokens=getattr(usage, 'output_tokens', 0),
+            cache_read=getattr(usage, 'cache_read_input_tokens', 0),
+            cache_creation=getattr(usage, 'cache_creation_input_tokens', 0),
+        )
+    except Exception:
+        pass  # Logging should never break the pipeline
+
+
 def call_claude_opus(messages, temperature=0.7, max_tokens=8000):
     """
     Call Claude Opus 4.5 (most powerful Claude model - released Nov 24, 2025)
@@ -236,6 +251,7 @@ def call_claude_opus(messages, temperature=0.7, max_tokens=8000):
         temperature=temperature,
         max_tokens=max_tokens
     )
+    _log_usage("claude-opus-4-5-20251101", response.usage)
     return response.content[0].text
 
 def call_claude_sonnet(messages, temperature=0.7, max_tokens=8000):
@@ -256,6 +272,7 @@ def call_claude_sonnet(messages, temperature=0.7, max_tokens=8000):
         temperature=temperature,
         max_tokens=max_tokens
     )
+    _log_usage("claude-sonnet-4-5-20250929", response.usage)
     return response.content[0].text
 
 def call_claude_haiku(messages, temperature=0.7, max_tokens=4000):
@@ -277,6 +294,7 @@ def call_claude_haiku(messages, temperature=0.7, max_tokens=4000):
         temperature=temperature,
         max_tokens=max_tokens
     )
+    _log_usage("claude-haiku-4-5-20251001", response.usage)
     return response.content[0].text
 
 
@@ -361,6 +379,8 @@ def call_claude_with_cache(
         "input_tokens": response.usage.input_tokens,
         "output_tokens": response.usage.output_tokens,
     }
+
+    _log_usage(model_map[model], response.usage)
 
     return response.content[0].text, cache_stats
 

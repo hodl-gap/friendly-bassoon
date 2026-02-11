@@ -45,13 +45,54 @@ Output Format:
 **SOURCE:** which source(s) support this chain
 **CONNECTION:** [if multi-source] "Connected via [normalized_var] from Source X to Source Y"
 
-Example:
-## Direct Monetary Effects
+## Examples
+<!-- [FEW-SHOT v1] Source: run_20260211_075133 (RDE) + run_20260211_081108 (JPY). Review & improve with more diverse examples. -->
 
-**CHAIN:** Fed rate cuts [rate_cut] → real rates down [real_rates] → risk asset valuations up [risk_asset_valuation]
-**MECHANISM:** rate cuts reduce nominal yields → lower real yields increase present value of future cash flows
-**SOURCE:** Goldman Sachs (step 1), UBS (step 2)
-**CONNECTION:** Connected via [real_rates] from Goldman Sachs to UBS"""
+### Example 1: Single-concept query with direct + multi-hop chains
+
+Query: What does rising RDE indicate about liquidity conditions?
+
+## Direct Liquidity Indicators
+
+**CHAIN:** rising Primary Credit usage [primary_credit] → banking system liquidity stress [liquidity_stress]
+**MECHANISM:** Banks only use the discount window when unable to obtain liquidity elsewhere at market rates, as it carries higher-than-market interest rates and potential stigma; rising usage directly signals inability to access normal funding channels
+**SOURCE:** Source 1, Source 2
+**CONNECTION:** Single mechanism across multiple sources
+
+**CHAIN:** large repo usage detected [repo_usage] → sign of funding demand/stress [funding_stress]
+**MECHANISM:** Elevated repo usage signals banks need short-term cash and are turning to Federal Reserve facilities for emergency overnight liquidity
+**SOURCE:** Source 8, Source 3, Source 4
+**CONNECTION:** Single mechanism observed across multiple Fed data sources
+
+## Multi-Hop Liquidity Resolution Chains
+
+**CHAIN:** bank reserves rebound to $3T [bank_reserves] → short-term funding liquidity issue largely resolved [funding_liquidity] → shift to long-biased futures positioning [futures_bias]
+**MECHANISM:** Higher reserves ease money-market funding stress → eased funding stress reduces risk-off pressure and supports long positioning in futures markets
+**SOURCE:** Source 6 (steps 1-2), Source 6 (steps 2-3)
+**CONNECTION:** Connected via [funding_liquidity] within Source 6
+
+**CHAIN:** TGA being released [tga] → bank reserves increase [bank_reserves] → SOFR/REPO/HIBOR stabilize [sofr]
+**MECHANISM:** Treasury drawdown releases cash into banking system increasing reserves → higher reserves reduce funding pressure and rate volatility in money markets
+**SOURCE:** Source 10 (step 1), Source 10 (step 2)
+**CONNECTION:** Connected via [bank_reserves] from Source 10 step 1 to step 2
+
+### Example 2: Mechanical operation with cross-market analogies
+
+Query: What is the direct effect of MOF or BOJ selling dollars to buy yen?
+
+## Direct FX Intervention Effects
+
+**CHAIN:** MOF/BOJ dollar sell orders [fx_intervention_volume] → USD/JPY exchange rate falls [usd_jpy] → yen strengthens [jpy_strength]
+**MECHANISM:** Large USD sell supply from authorities increases yen demand, directly pushing USD/JPY lower. Parallel: Korean intervention ($5B+ → 30+ won intraday move)
+**SOURCE:** Source 1, Source 3
+**CONNECTION:** Single mechanism across multiple sources
+
+## Multi-Hop: Intervention → Carry Unwind → Global Liquidity
+
+**CHAIN:** JPY surge [jpy_intervention_risk] → USD strength shaken [usd_strength_shaken] → yen carry unwind and global liquidity contraction [carry_trade_unwind] → BTC short-term adjustment and higher volatility [btc_volatility]
+**MECHANISM:** Intervention risk limits USD appreciation → carry positions unwind → reduced liquidity triggers corrections
+**SOURCE:** Source 2 (all steps), Source 4 (intervention context)
+**CONNECTION:** Multi-step chain within single source, supported by intervention context from Source 4"""
 
 
 # Stage 2: Synthesize consensus and extract variables
@@ -107,10 +148,57 @@ Confidence Guidelines:
 - Variable 1 - threshold/level if known [referenced in: chain groups]
 - Variable 2 - threshold/level if known [referenced in: chain groups]
 
-Note: For variables with specific values, indicate these are from historical data context and would need updating for current application."""
+Note: For variables with specific values, indicate these are from historical data context and would need updating for current application.
+
+## Example
+<!-- [FEW-SHOT v1] Source: run_20260211_081110 (JPY Rally BTC). Review & improve — consider adding a lower-confidence example. -->
+
+Query: On 2026-01-24, JPY/USD rallied to 155.90 rising 1.6% daily, and Japan finance minister warned speculators. What is the BTC impact?
+
+## CONSENSUS CONCLUSIONS
+
+**CONCLUSION:** BTC faces downward pressure from JPY intervention risk through carry trade unwind
+**SUPPORTING PATHS:**
+- Path 1: JPY intervention risk → carry trade unwind → BTC selling pressure (Source: Plan G Research, Macro Jungle)
+- Path 2: BOJ tightening events → BTC drawdowns of 20-30% (Source: historical pattern — Mar 2024 -22.28%, Jul 2024 -26.63%, Jan 2025 -30.34%)
+- Path 3: BOJ rate expectations → yen strength → global liquidity tightening → carry unwind → BTC pressure (Source: Plan G Research)
+- Path 4: BOJ hike + Fed cut expectations → carry profitability compression → risk asset liquidation (Source: Plan G Research)
+**PATH_COUNT:** 4
+**SOURCE_DIVERSITY:** 3
+**CONFIDENCE:** High
+**CONFIDENCE_SCORE:** 0.85
+**CONFIDENCE_REASONING:** 4 independent paths from 3+ sources converge; historical pattern validated across 3 BOJ tightening episodes
+
+**CONCLUSION:** Carry trade unwind is the primary transmission mechanism
+**SUPPORTING PATHS:**
+- Path 1: Intervention risk → carry position liquidation → forced USD repurchase → dollar shortage → SOFR spike (Source: Plan G Research)
+- Path 2: BOJ rate hike → market liquidity drain → margin calls → forced deleveraging (Source: Macro Jungle)
+- Path 3: Yen strength → global liquidity tightening concerns → carry trade compression (Source: Plan G Research)
+**PATH_COUNT:** 3
+**SOURCE_DIVERSITY:** 2
+**CONFIDENCE:** High
+**CONFIDENCE_SCORE:** 0.80
+**CONFIDENCE_REASONING:** 3 paths from 2 sources with detailed mechanism descriptions
+
+## KEY VARIABLES TO MONITOR
+
+**Immediate Triggers:**
+- JPY/USD level (currently 155.90, 1.6% daily rally) [referenced in: Direct Intervention Impact]
+- BOJ intervention signals beyond jawboning [referenced in: Direct Intervention Impact]
+- NY Fed rate check activity (operational coordination) [referenced in: Direct Intervention Impact]
+
+**Liquidity Indicators:**
+- SOFR spikes (carry unwind stress signal) [referenced in: Carry Trade Unwind]
+- Global dollar liquidity conditions [referenced in: Multi-Hop chains]
+
+**BTC Technical Levels:**
+- Bear market targets: $70,000, $56,000 [referenced in: Historical Pattern]
+- Tail risk: 42% market-implied probability for <$60k [referenced in: Historical Pattern]"""
 
 
 # Stage 3: Identify contradicting evidence (Issue 5: Negative Evidence Handling)
+# NOTE: Works from synthesis only (raw chunk context removed to reduce redundant tokens).
+# The synthesis already contains all relevant logic chains, sources, and data points.
 CONTRADICTION_PROMPT = """You are analyzing financial research to identify contradicting or weakening evidence.
 
 Query: {query}
@@ -118,25 +206,23 @@ Query: {query}
 Consensus Synthesis:
 {synthesis}
 
-Original Research Context:
-{context}
-
 Instructions:
-1. Identify any evidence that CONTRADICTS or WEAKENS the consensus conclusions
+1. Identify any evidence WITHIN the synthesis that CONTRADICTS or WEAKENS the consensus conclusions
 2. Look for:
-   - Sources that explicitly disagree with the consensus
-   - Conditions where the logic chain breaks down
+   - Sources mentioned in the synthesis that disagree with each other
+   - Conditions where the logic chain breaks down or has weak links
    - Historical examples where similar logic failed
    - Missing considerations that could invalidate conclusions
-   - Alternative interpretations of the same data
+   - Alternative interpretations of the same data points
 3. Be conservative - only flag genuine contradictions, not minor nuances or caveats
+4. Use the sources, data points, and logic chains referenced in the synthesis as your evidence base
 
 Output Format:
 
 ## CONTRADICTING EVIDENCE
 
 **CONTRADICTION:** [what contradicts the consensus]
-**SOURCE:** [which source/context]
+**SOURCE:** [which source from the synthesis]
 **IMPACT:** [High/Medium/Low - how much this weakens the conclusion]
 **REASONING:** [why this is a genuine contradiction, not just a caveat]
 
@@ -151,9 +237,41 @@ If no genuine contradictions found, output:
 
 ## CONTRADICTING EVIDENCE
 
-No significant contradicting evidence identified in the retrieved context.
+No significant contradicting evidence identified in the synthesis.
 
 **OVERALL ASSESSMENT:**
 - Number of contradictions found: 0
 - Net impact on confidence: None
 - Recommendation: Conclusion supported by available evidence"""
+
+
+# Re-synthesis prompt: integrates gap-filling results into existing synthesis
+RESYNTHESIS_PROMPT = """You are updating a research synthesis with newly discovered information from web sources and gap-filling.
+
+Query: {query}
+
+## ORIGINAL SYNTHESIS
+{original_synthesis}
+
+## NEW INFORMATION (from web chain extraction and gap filling)
+
+### Web-Sourced Logic Chains
+{web_chains_text}
+
+### Gap Enrichment
+{gap_enrichment}
+
+## Instructions
+
+Produce an UPDATED synthesis that integrates the new information with the original.
+
+Rules:
+1. **Preserve** all valid conclusions from the original synthesis
+2. **Integrate** new logic chains and data points from web sources
+3. **Update confidence** if new evidence strengthens or weakens conclusions
+4. **Add new conclusions** if web chains reveal patterns not in the original
+5. **Flag contradictions** if new information contradicts original conclusions
+6. **Weight appropriately**: Database-sourced chains (weight 1.0) are more authoritative than web-sourced chains (weight 0.7)
+7. Keep the same output format as the original synthesis (consensus conclusions + key variables)
+
+Output the updated synthesis directly. Do not include meta-commentary about what changed."""

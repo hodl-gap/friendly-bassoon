@@ -20,13 +20,13 @@ def test_state_creation():
     """Test DataCollectionState creation."""
     state = DataCollectionState(
         mode="claim_validation",
-        retriever_synthesis="Test synthesis",
+        synthesis="Test synthesis",
         errors=[],
         warnings=[]
     )
 
     assert state["mode"] == "claim_validation"
-    assert state["retriever_synthesis"] == "Test synthesis"
+    assert state["synthesis"] == "Test synthesis"
     print("[PASS] State creation works correctly")
 
 
@@ -34,7 +34,7 @@ def test_claim_parsing_structure():
     """Test claim parsing returns expected structure."""
     state = DataCollectionState(
         mode="claim_validation",
-        retriever_synthesis="""
+        synthesis="""
         ## Consensus Conclusions
         - BTC follows gold with a lag of 63-428 days
         - Fed rate cuts correlate with equity rallies
@@ -44,8 +44,8 @@ def test_claim_parsing_structure():
     )
 
     # Note: This would call the LLM, so we test structure only
-    assert "retriever_synthesis" in state
-    assert len(state["retriever_synthesis"]) > 0
+    assert "synthesis" in state
+    assert len(state["synthesis"]) > 0
     print("[PASS] Claim parsing state structure is correct")
 
 

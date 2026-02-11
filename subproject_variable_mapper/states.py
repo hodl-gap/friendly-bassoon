@@ -7,14 +7,19 @@ Keep states minimal - add fields as needed during development.
 
 from typing import TypedDict, List, Optional, Dict, Any
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from shared.schemas import LogicChain
+
 
 class VariableMapperState(TypedDict, total=False):
     """Main state for the variable mapping workflow."""
 
     # Input
-    synthesis_input: str  # Raw synthesis text from database_retriever
+    synthesis: str  # Raw synthesis text from database_retriever (renamed from synthesis_input)
     data_temporal_context: Dict[str, Any]  # Optional: temporal context from retriever (data_years, etc.)
-    logic_chains: List[Dict[str, Any]]  # Optional: structured logic_chains from retriever
+    logic_chains: List[LogicChain]  # Optional: structured logic_chains from retriever
 
     # Step 1: Variable Extraction
     extracted_variables: List[Dict[str, Any]]  # Variables found in text

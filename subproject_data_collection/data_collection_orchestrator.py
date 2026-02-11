@@ -23,6 +23,7 @@ from config import (
     DEFAULT_NEWS_SOURCES,
     DEFAULT_TIME_WINDOW_DAYS
 )
+from shared.snapshot import snapshot_state, ENABLE_SNAPSHOTS
 
 # Import function modules - Claim Validation Path (Phase 3)
 from claim_parsing import parse_claims
@@ -33,6 +34,18 @@ from output_formatter import format_output
 # Import function modules - News Collection Path (Phase 4)
 from news_collection import collect_news
 from news_analysis import filter_relevant_articles, analyze_news_actionability, generate_retriever_queries
+
+
+def _wrap(name, func):
+    """Wrap a node function with snapshot capture."""
+    def wrapper(state):
+        if ENABLE_SNAPSHOTS:
+            snapshot_state(name, state, "in")
+        result = func(state)
+        if ENABLE_SNAPSHOTS:
+            snapshot_state(name, result, "out")
+        return result
+    return wrapper
 
 
 # =============================================================================
@@ -92,21 +105,21 @@ def build_graph() -> StateGraph:
     """Build the LangGraph workflow with conditional routing."""
     graph = StateGraph(DataCollectionState)
 
-    # Add all nodes
+    # Add all nodes — wrapped for snapshot capture
     # Claim validation path
-    graph.add_node("parse_claims", parse_claims)
-    graph.add_node("resolve_data_ids", resolve_data_ids)
-    graph.add_node("fetch_data", fetch_historical_data)
-    graph.add_node("validate_claims", validate_claims)
+    graph.add_node("parse_claims", _wrap("parse_claims", parse_claims))
+    graph.add_node("resolve_data_ids", _wrap("resolve_data_ids", resolve_data_ids))
+    graph.add_node("fetch_data", _wrap("fetch_data", fetch_historical_data))
+    graph.add_node("validate_claims", _wrap("validate_claims", validate_claims))
 
     # News collection path
-    graph.add_node("collect_news", collect_news)
-    graph.add_node("filter_relevant", filter_relevant_articles)
-    graph.add_node("analyze_news", analyze_news_actionability)
-    graph.add_node("generate_queries", generate_retriever_queries)
+    graph.add_node("collect_news", _wrap("collect_news", collect_news))
+    graph.add_node("filter_relevant", _wrap("filter_relevant", filter_relevant_articles))
+    graph.add_node("analyze_news", _wrap("analyze_news", analyze_news_actionability))
+    graph.add_node("generate_queries", _wrap("generate_queries", generate_retriever_queries))
 
     # Shared
-    graph.add_node("format_output", format_output)
+    graph.add_node("format_output", _wrap("format_output", format_output))
 
     # Entry point with mode routing
     graph.set_conditional_entry_point(
@@ -171,10 +184,14 @@ def run_claim_validation(
     print(f"[orchestrator] Starting claim validation...")
     print(f"[orchestrator] Input length: {len(synthesis_text)} chars")
 
+    from shared.snapshot import start_run as _start_run
+    if ENABLE_SNAPSHOTS:
+        _start_run()
+
     graph = build_graph()
     initial_state = DataCollectionState(
         mode="claim_validation",
-        retriever_synthesis=synthesis_text,
+        synthesis=synthesis_text,
         variable_mappings=variable_mappings or {},
         errors=[],
         warnings=[]
@@ -203,6 +220,10 @@ def run_news_collection(
     """
     print(f"[orchestrator] Starting news collection...")
     print(f"[orchestrator] Query: {query}")
+
+    from shared.snapshot import start_run as _start_run
+    if ENABLE_SNAPSHOTS:
+        _start_run()
 
     graph = build_graph()
     initial_state = DataCollectionState(

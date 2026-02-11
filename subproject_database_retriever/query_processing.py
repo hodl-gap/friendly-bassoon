@@ -17,7 +17,6 @@ from states import RetrieverState
 from query_processing_prompts import (
     QUERY_EXPANSION_PROMPT_SIMPLE,
     QUERY_EXPANSION_PROMPT_COMPLEX,
-    QUERY_TYPE_PROMPT
 )
 from config import SIMPLE_QUERY_MAX_WORDS, SIMPLE_QUERY_DIMENSIONS, COMPLEX_QUERY_DIMENSIONS
 
@@ -69,13 +68,17 @@ def process_query(state: RetrieverState) -> RetrieverState:
 
 
 def classify_query(query: str) -> str:
-    """Classify query as research_question or data_lookup."""
-    messages = [{"role": "user", "content": QUERY_TYPE_PROMPT.format(query=query)}]
-    response = call_claude_haiku(messages, temperature=0.0, max_tokens=50)
+    """Classify query type using pattern matching (no LLM needed).
 
-    print(f"[query_processing] Classification response: {response}")
-
-    if "data_lookup" in response.lower():
+    The system only processes research questions, so this is a lightweight check
+    to conditionally skip contradiction detection for simple data lookups.
+    """
+    data_lookup_patterns = [
+        "find all", "what level", "what threshold", "how much is",
+        "get the value", "what is the current", "show me the",
+        "list all", "what are the values"
+    ]
+    if any(p in query.lower() for p in data_lookup_patterns):
         return "data_lookup"
     return "research_question"
 

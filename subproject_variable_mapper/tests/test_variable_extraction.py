@@ -26,7 +26,7 @@ def test_extraction_from_sample():
     print("-" * 50)
 
     # Create test state
-    test_state = VariableMapperState(synthesis_input=sample_text)
+    test_state = VariableMapperState(synthesis=sample_text)
 
     # Run extraction
     result = extract_variables(test_state)

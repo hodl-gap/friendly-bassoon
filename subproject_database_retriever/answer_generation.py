@@ -14,7 +14,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from models import call_claude_sonnet, call_claude_haiku
 from states import RetrieverState
-from answer_generation_prompts import LOGIC_CHAIN_PROMPT, SYNTHESIS_PROMPT, CONTRADICTION_PROMPT
+from answer_generation_prompts import LOGIC_CHAIN_PROMPT, SYNTHESIS_PROMPT, CONTRADICTION_PROMPT, RESYNTHESIS_PROMPT
 from config import (
     MAX_CHUNKS_FOR_ANSWER,
     SKIP_CONTRADICTION_FOR_DATA_LOOKUP,
@@ -578,7 +578,7 @@ def generate_answer(state: RetrieverState) -> RetrieverState:
         contradictions = f"Skipped: {skip_reason}"
     else:
         print(f"[answer_generation] Stage 3: Identifying contradicting evidence...")
-        contradictions = identify_contradictions(query, synthesis_text, context)
+        contradictions = identify_contradictions(query, synthesis_text)
         print(f"[answer_generation] Stage 3 complete: {contradictions[:200]}...")
 
     # Update topic_coverage with chain completeness info
@@ -1017,7 +1017,7 @@ def synthesize_chains(query: str, chains: str) -> dict:
     if not chains or "couldn't find" in chains.lower():
         return {
             "synthesis_text": "No chains to synthesize.",
-            "confidence_metadata": {"overall_score": 0.0, "path_count": 0, "source_diversity": 0}
+            "confidence_metadata": {"overall_score": 0.0, "chain_count": 0, "source_diversity": 0}
         }
 
     # Use structured output if enabled (replaces fragile regex parsing)
@@ -1076,7 +1076,7 @@ def synthesize_chains_structured(query: str, chains: str) -> dict:
                     "type": "number",
                     "description": "Confidence score from 0.0 to 1.0. High (0.8+): 3+ paths from 2+ sources. Medium (0.5-0.8): 2 paths OR single source. Low (<0.5): Single path or weak support."
                 },
-                "path_count": {
+                "chain_count": {
                     "type": "integer",
                     "description": "Number of supporting paths/chains that converge on the main conclusion"
                 },
@@ -1094,7 +1094,7 @@ def synthesize_chains_structured(query: str, chains: str) -> dict:
                     "description": "The most well-supported logic chain, formatted as 'A → B → C'"
                 }
             },
-            "required": ["synthesis_text", "overall_score", "path_count", "source_diversity", "confidence_level"]
+            "required": ["synthesis_text", "overall_score", "chain_count", "source_diversity", "confidence_level"]
         }
     }
 
@@ -1137,6 +1137,13 @@ Use the submit_synthesis tool to submit your analysis with confidence metadata."
             messages=[{"role": "user", "content": user_prompt}]
         )
 
+        # Log token usage
+        try:
+            from shared.run_logger import log_llm_call
+            log_llm_call("claude-sonnet-4-20250514", response.usage.input_tokens, response.usage.output_tokens)
+        except Exception:
+            pass
+
         # Extract tool use result
         for content_block in response.content:
             if content_block.type == "tool_use" and content_block.name == "submit_synthesis":
@@ -1145,7 +1152,7 @@ Use the submit_synthesis tool to submit your analysis with confidence metadata."
                 synthesis_text = tool_input.get("synthesis_text", "")
                 confidence_metadata = {
                     "overall_score": float(tool_input.get("overall_score", 0.0)),
-                    "path_count": int(tool_input.get("path_count", 0)),
+                    "chain_count": int(tool_input.get("chain_count", 0)),
                     "source_diversity": int(tool_input.get("source_diversity", 0)),
                     "confidence_level": tool_input.get("confidence_level", "Low"),
                     "strongest_chain": tool_input.get("strongest_chain", "")
@@ -1197,7 +1204,7 @@ def extract_confidence_metadata(synthesis_response: str) -> dict:
     """
     metadata = {
         "overall_score": 0.0,
-        "path_count": 0,
+        "chain_count": 0,
         "source_diversity": 0,
         "confidence_level": "Low"
     }
@@ -1214,7 +1221,7 @@ def extract_confidence_metadata(synthesis_response: str) -> dict:
     path_match = re.search(r'\*\*PATH_COUNT:\*\*\s*(\d+)', synthesis_response)
     if path_match:
         try:
-            metadata["path_count"] = int(path_match.group(1))
+            metadata["chain_count"] = int(path_match.group(1))
         except ValueError:
             pass
 
@@ -1236,16 +1243,17 @@ def extract_confidence_metadata(synthesis_response: str) -> dict:
     return metadata
 
 
-def identify_contradictions(query: str, synthesis: str, context: str) -> str:
+def identify_contradictions(query: str, synthesis: str) -> str:
     """
     Stage 3: Find contradicting evidence (Issue 5: Negative Evidence Handling).
 
-    Runs on EVERY query per user decision.
+    Runs on EVERY query per user decision. Works from synthesis only -
+    raw chunk context is not passed since the synthesis already contains
+    all relevant logic chains, sources, and data points.
 
     Args:
         query: Original user query
         synthesis: The consensus synthesis from Stage 2
-        context: The synthesized context from retrieved chunks
 
     Returns:
         Contradiction analysis text
@@ -1255,8 +1263,7 @@ def identify_contradictions(query: str, synthesis: str, context: str) -> str:
 
     prompt = CONTRADICTION_PROMPT.format(
         query=query,
-        synthesis=synthesis,
-        context=context
+        synthesis=synthesis
     )
     messages = [{"role": "user", "content": prompt}]
 
@@ -1264,5 +1271,59 @@ def identify_contradictions(query: str, synthesis: str, context: str) -> str:
     response = call_claude_haiku(messages, temperature=0.3, max_tokens=2000)
 
     print(f"[answer_generation] Contradiction analysis:\n{response}")
+
+    return response
+
+
+def regenerate_synthesis(query: str, original_synthesis: str, web_chains: list, gap_enrichment: str) -> str:
+    """
+    Re-synthesize after gap filling when significant new information was discovered.
+
+    Takes the original synthesis and integrates newly discovered web chains and
+    gap enrichment text into an updated synthesis.
+
+    Args:
+        query: Original user query
+        original_synthesis: The synthesis from Stage 2
+        web_chains: List of logic chain dicts from web extraction
+        gap_enrichment: Additional context text from filled gaps
+
+    Returns:
+        Updated synthesis text integrating all new information
+    """
+    # Format web chains for the prompt
+    web_chains_lines = []
+    for i, chain in enumerate(web_chains, 1):
+        summary = chain.get("chain_summary", "")
+        source = chain.get("source", "Unknown")
+        source_type = chain.get("source_type", "web")
+        weight = chain.get("confidence_weight", 0.7)
+        steps = chain.get("steps", [])
+
+        web_chains_lines.append(f"Chain {i} (source: {source}, type: {source_type}, weight: {weight}):")
+        if summary:
+            web_chains_lines.append(f"  Summary: {summary}")
+        for step in steps:
+            cause = step.get("cause", "?")
+            effect = step.get("effect", "?")
+            mechanism = step.get("mechanism", "")
+            line = f"  - {cause} → {effect}"
+            if mechanism:
+                line += f" ({mechanism})"
+            web_chains_lines.append(line)
+
+    web_chains_text = "\n".join(web_chains_lines) if web_chains_lines else "No additional web chains."
+
+    prompt = RESYNTHESIS_PROMPT.format(
+        query=query,
+        original_synthesis=original_synthesis,
+        web_chains_text=web_chains_text,
+        gap_enrichment=gap_enrichment or "No additional gap enrichment."
+    )
+    messages = [{"role": "user", "content": prompt}]
+
+    response = call_claude_sonnet(messages, temperature=0.3, max_tokens=3000)
+
+    print(f"[answer_generation] Re-synthesis complete ({len(response)} chars)")
 
     return response

@@ -18,7 +18,7 @@ class DataCollectionState(TypedDict, total=False):
 
     # For claim_validation mode
     claims_input: List[Dict[str, Any]]  # Pre-parsed claims (optional)
-    retriever_synthesis: str  # Full synthesis text from database_retriever
+    synthesis: str  # Full synthesis text from database_retriever
     variable_mappings: Dict[str, Any]  # Data ID mappings from variable_mapper
 
     # For news_collection mode

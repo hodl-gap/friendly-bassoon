@@ -25,7 +25,7 @@ def extract_variables(state: VariableMapperState) -> VariableMapperState:
     """
     Extract variables from synthesis text.
 
-    Input: synthesis_input (raw text from database_retriever)
+    Input: synthesis (raw text from database_retriever)
            logic_chains (optional): structured chains for efficient extraction
     Output: extracted_variables (list of variable dicts)
 
@@ -37,7 +37,7 @@ def extract_variables(state: VariableMapperState) -> VariableMapperState:
     If logic_chains are provided, extracts from structure first (no LLM needed),
     then supplements with LLM extraction for variables not in structure.
     """
-    synthesis_text = state.get("synthesis_input", "")
+    synthesis_text = state.get("synthesis", "")
     logic_chains = state.get("logic_chains", [])
 
     if not synthesis_text and not logic_chains:
@@ -305,7 +305,7 @@ if __name__ == "__main__":
         sample_text = f.read()
 
     # Create test state
-    test_state = VariableMapperState(synthesis_input=sample_text)
+    test_state = VariableMapperState(synthesis=sample_text)
 
     # Run extraction
     result = extract_variables(test_state)

@@ -7,9 +7,9 @@ import time
 import asyncio
 import re
 sys.path.append('../')
-from models import call_claude_sonnet, call_gpt41_mini, call_gpt5, process_batch_parallel, process_batch_parallel_with_retry, process_batch_parallel_with_retry_sync
+from models import call_claude_sonnet, call_gpt41_mini, call_gpt5, process_batch_parallel, process_batch_parallel_with_retry, process_batch_parallel_with_retry_sync, call_claude_with_cache, call_claude_with_cache_async
 from categorization_prompts import get_categorization_prompt
-from data_opinion_prompts import get_data_opinion_extraction_prompt
+from data_opinion_prompts import get_data_opinion_extraction_prompt, get_data_opinion_system_prompt, get_data_opinion_user_prompt
 from interview_meeting_prompts import get_interview_extraction_prompt
 from image_extraction_prompts import get_image_summary_prompt, get_image_structured_extraction_prompt, get_combined_image_extraction_prompt
 from metrics_mapping_utils import append_new_metrics, collect_new_metrics_from_extractions, normalize_sources_in_csv
@@ -241,13 +241,19 @@ def process_batch(messages_batch, category, channel_name, use_gpt5=True):
 
     if category == 'data_opinion':
         # Extract with opinion grouping
-        prompt = get_data_opinion_extraction_prompt(messages_batch, channel_name)
-        messages_api = [{"role": "user", "content": prompt}]
+        # Use prompt caching for Claude Sonnet (system prompt cached for 5 min)
+        system_prompt = get_data_opinion_system_prompt()
+        user_prompt = get_data_opinion_user_prompt(messages_batch, channel_name)
 
         if use_gpt5:
+            # GPT-5 doesn't support prompt caching, use combined prompt
+            prompt = get_data_opinion_extraction_prompt(messages_batch, channel_name)
+            messages_api = [{"role": "user", "content": prompt}]
             response = call_gpt5(messages_api)
         else:
-            response = call_claude_sonnet(messages_api)
+            response, cache_stats = call_claude_with_cache(system_prompt, user_prompt, model="sonnet")
+            print(f"  Cache stats: created={cache_stats.get('cache_creation_input_tokens', 0)}, "
+                  f"read={cache_stats.get('cache_read_input_tokens', 0)}")
 
         print(f"\n=== RAW EXTRACTION RESPONSE ===")
         print(response[:500] + "..." if len(response) > 500 else response)
@@ -357,7 +363,10 @@ def process_batch(messages_batch, category, channel_name, use_gpt5=True):
 
 async def process_batches_parallel(all_batches, channel_name):
     """
-    Process multiple batches in parallel using GPT-5.
+    Process multiple batches in parallel.
+
+    Uses prompt caching for data_opinion batches via Claude (system prompt cached for 5 min).
+    Non-data_opinion batches use the standard model with retry/fallback.
 
     Args:
         all_batches: List of tuples (messages_batch, category)
@@ -366,36 +375,92 @@ async def process_batches_parallel(all_batches, channel_name):
     Returns:
         List of all results from all batches
     """
-    # Build list of prompts for parallel processing
-    messages_list = []
-    batch_info = []  # Track which batch each request belongs to
+    if not all_batches:
+        return []
+
+    # Separate data_opinion (cached Claude) from other batches
+    cached_batches = []  # (original_idx, messages_batch, category) for data_opinion
+    standard_batches = []  # (original_idx, messages_batch, category) for others
+    standard_messages_list = []  # prompts for standard path
+
+    # Pre-compute system prompt once for all data_opinion batches (will be cached by Claude)
+    system_prompt = get_data_opinion_system_prompt()
 
     for i, (messages_batch, category) in enumerate(all_batches):
         if category == 'data_opinion':
-            prompt = get_data_opinion_extraction_prompt(messages_batch, channel_name)
+            cached_batches.append((i, messages_batch, category))
         else:  # interview_meeting
             prompt = get_interview_extraction_prompt(messages_batch, channel_name)
+            standard_messages_list.append([{"role": "user", "content": prompt}])
+            standard_batches.append((i, messages_batch, category))
 
-        messages_list.append([{"role": "user", "content": prompt}])
-        batch_info.append((i, messages_batch, category))
-
-    if not messages_list:
-        return []
-
-    print(f"\n  🚀 Processing {len(messages_list)} batches in parallel (max {MAX_CONCURRENT_REQUESTS} concurrent)...", flush=True)
-    print(f"     Primary: {EXTRACTION_MODEL} | Fallback: {FALLBACK_MODEL}", flush=True)
+    total_batches = len(all_batches)
+    print(f"\n  🚀 Processing {total_batches} batches in parallel (max {MAX_CONCURRENT_REQUESTS} concurrent)...", flush=True)
+    print(f"     data_opinion: {len(cached_batches)} batches (Claude with prompt caching)", flush=True)
+    print(f"     other: {len(standard_batches)} batches (Primary: {EXTRACTION_MODEL} | Fallback: {FALLBACK_MODEL})", flush=True)
     parallel_start = time.time()
 
-    # Process all batches in parallel with retry and fallback
-    responses = await process_batch_parallel_with_retry(
-        messages_list,
-        model_func=EXTRACTION_MODEL,
-        max_concurrent=MAX_CONCURRENT_REQUESTS,
-        temperature=0.7,  # GPT-5 only supports temperature=1.0, will be adjusted internally
-        max_tokens=8000,
-        max_retries=2,
-        fallback_model=FALLBACK_MODEL
-    )
+    # Process cached data_opinion batches via Claude with prompt caching
+    semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
+    cached_responses = {}  # idx -> response
+    total_cache_stats = {"cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}
+
+    async def process_cached_batch(idx, messages_batch):
+        async with semaphore:
+            user_prompt = get_data_opinion_user_prompt(messages_batch, channel_name)
+            try:
+                response, cache_stats = await call_claude_with_cache_async(
+                    system_prompt, user_prompt, model="sonnet", temperature=0.7, max_tokens=8000
+                )
+                total_cache_stats["cache_creation_input_tokens"] += cache_stats.get("cache_creation_input_tokens", 0)
+                total_cache_stats["cache_read_input_tokens"] += cache_stats.get("cache_read_input_tokens", 0)
+                return (idx, response)
+            except Exception as e:
+                print(f"  [Batch {idx+1}] Cached call failed: {e}, retrying without cache...", flush=True)
+                try:
+                    # Fallback: use combined prompt without caching
+                    prompt = get_data_opinion_extraction_prompt(messages_batch, channel_name)
+                    from models import call_claude_sonnet_async
+                    response = await call_claude_sonnet_async(
+                        [{"role": "user", "content": prompt}], temperature=0.7, max_tokens=8000
+                    )
+                    return (idx, response)
+                except Exception as e2:
+                    print(f"  [Batch {idx+1}] Fallback also failed: {e2}", flush=True)
+                    return (idx, None)
+
+    # Run cached batches
+    if cached_batches:
+        cached_tasks = [process_cached_batch(idx, mb) for idx, mb, _ in cached_batches]
+        cached_results = await asyncio.gather(*cached_tasks)
+        for idx, response in cached_results:
+            cached_responses[idx] = response
+        print(f"  Cache stats: created={total_cache_stats['cache_creation_input_tokens']}, "
+              f"read={total_cache_stats['cache_read_input_tokens']}", flush=True)
+
+    # Run standard batches with retry/fallback
+    standard_responses_list = []
+    if standard_messages_list:
+        standard_responses_list = await process_batch_parallel_with_retry(
+            standard_messages_list,
+            model_func=EXTRACTION_MODEL,
+            max_concurrent=MAX_CONCURRENT_REQUESTS,
+            temperature=0.7,
+            max_tokens=8000,
+            max_retries=2,
+            fallback_model=FALLBACK_MODEL
+        )
+
+    # Merge responses back in original order
+    responses = [None] * total_batches
+    for idx in cached_responses:
+        responses[idx] = cached_responses[idx]
+    for j, (idx, _, _) in enumerate(standard_batches):
+        if j < len(standard_responses_list):
+            responses[idx] = standard_responses_list[j]
+
+    # Build batch_info for parsing
+    batch_info = [(i, mb, cat) for i, (mb, cat) in enumerate(all_batches)]
 
     parallel_time = time.time() - parallel_start
     print(f"  ✓ Parallel processing completed in {parallel_time:.1f}s", flush=True)

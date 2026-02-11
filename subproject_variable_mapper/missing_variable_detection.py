@@ -82,7 +82,7 @@ def detect_missing_variables(state: VariableMapperState) -> VariableMapperState:
     Parse logic chains to find variables that weren't explicitly extracted.
 
     Input (from State):
-        - synthesis_input: str (original text)
+        - synthesis: str (original text)
         - normalized_variables: List[Dict] from Step 2
 
     Output (to State):
@@ -91,7 +91,7 @@ def detect_missing_variables(state: VariableMapperState) -> VariableMapperState:
 
     Note: This step is SKIPPED when USE_COMBINED_EXTRACTION=True.
     """
-    synthesis_text = state.get("synthesis_input", "")
+    synthesis_text = state.get("synthesis", "")
     normalized_variables = state.get("normalized_variables", [])
 
     if not synthesis_text:
@@ -259,7 +259,7 @@ if __name__ == "__main__":
     """
 
     test_state = VariableMapperState(
-        synthesis_input=sample_text,
+        synthesis=sample_text,
         normalized_variables=[
             {"raw_name": "TGA", "normalized_name": "tga"},
             {"raw_name": "Fed funds rate", "normalized_name": "fed_funds_rate"},

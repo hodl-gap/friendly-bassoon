@@ -6,6 +6,7 @@ Replaces hard-coded mappings in BTC Intelligence with dynamic lookup.
 """
 
 import json
+import threading
 from pathlib import Path
 from typing import Dict, Any, Optional
 
@@ -61,13 +62,15 @@ YAHOO_FALLBACK = {
     "vvix": {"source": "Yahoo", "series_id": "^VVIX"},
 }
 
-# Cache for loaded mappings
+# Thread-safe cache for loaded mappings
 _mappings_cache: Optional[Dict[str, Any]] = None
+_mappings_lock = threading.Lock()
 
 
 def load_mappings() -> Dict[str, Any]:
     """
     Load discovered data ID mappings from JSON file.
+    Thread-safe with double-check locking for parallel data fetching.
 
     Returns:
         Dict with 'metadata' and 'mappings' keys
@@ -77,25 +80,31 @@ def load_mappings() -> Dict[str, Any]:
     if _mappings_cache is not None:
         return _mappings_cache
 
-    if not MAPPINGS_PATH.exists():
-        print(f"[variable_resolver] Warning: Mappings file not found at {MAPPINGS_PATH}")
-        _mappings_cache = {"metadata": {}, "mappings": {}}
-        return _mappings_cache
+    with _mappings_lock:
+        # Double-check after acquiring lock
+        if _mappings_cache is not None:
+            return _mappings_cache
 
-    try:
-        with open(MAPPINGS_PATH, 'r') as f:
-            _mappings_cache = json.load(f)
-        return _mappings_cache
-    except Exception as e:
-        print(f"[variable_resolver] Error loading mappings: {e}")
-        _mappings_cache = {"metadata": {}, "mappings": {}}
-        return _mappings_cache
+        if not MAPPINGS_PATH.exists():
+            print(f"[variable_resolver] Warning: Mappings file not found at {MAPPINGS_PATH}")
+            _mappings_cache = {"metadata": {}, "mappings": {}}
+            return _mappings_cache
+
+        try:
+            with open(MAPPINGS_PATH, 'r') as f:
+                _mappings_cache = json.load(f)
+            return _mappings_cache
+        except Exception as e:
+            print(f"[variable_resolver] Error loading mappings: {e}")
+            _mappings_cache = {"metadata": {}, "mappings": {}}
+            return _mappings_cache
 
 
 def clear_cache():
     """Clear the mappings cache (useful for testing)."""
     global _mappings_cache
-    _mappings_cache = None
+    with _mappings_lock:
+        _mappings_cache = None
 
 
 def resolve_variable(variable: str) -> Optional[Dict[str, Any]]:

@@ -7,6 +7,11 @@ Keep states minimal - add fields as needed during development.
 
 from typing import TypedDict, List, Optional, Dict, Any
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from shared.schemas import LogicChain, ConfidenceMetadata
+
 
 class RetrieverState(TypedDict, total=False):
     """Main state for the retrieval workflow."""
@@ -31,13 +36,12 @@ class RetrieverState(TypedDict, total=False):
     dangling_effects_followed: List[str]  # Effects that were followed up with additional queries
 
     # Synthesis & Answer
-    synthesized_context: str  # Combined relevant context
     answer: str  # Final generated answer (logic chains)
     synthesis: str  # Consensus chains + variables to monitor
-    contradictions: str  # Contradicting evidence analysis (Issue 5)
+    contradictions: str  # Contradicting evidence analysis
 
-    # Confidence Metadata (Issue 3)
-    confidence_metadata: Dict[str, Any]  # {overall_score, path_count, source_diversity, confidence_level}
+    # Confidence Metadata
+    confidence_metadata: ConfidenceMetadata  # {score, chain_count, source_diversity, confidence_level}
 
     # Topic Coverage (detects when query topic not found in retrieved chunks)
     topic_coverage: Dict[str, Any]  # {query_entities, found_entities, direct_match, extrapolation_note}
@@ -48,10 +52,9 @@ class RetrieverState(TypedDict, total=False):
     filled_gaps: List[Dict[str, Any]]  # Gaps successfully filled
     partially_filled_gaps: List[Dict[str, Any]]  # Gaps with partial information
     unfillable_gaps: List[Dict[str, Any]]  # Gaps that could not be filled
-    extracted_web_chains: List[Dict[str, Any]]  # Logic chains from web extraction
-    logic_chains: List[Dict[str, Any]]  # Merged DB + web chains
+    extracted_web_chains: List[LogicChain]  # Logic chains from web extraction
+    logic_chains: List[LogicChain]  # Merged DB + web chains
 
     # Agentic Control
     iteration_count: int  # Number of retrieval iterations
     needs_refinement: bool  # Whether to iterate again
-    confidence_score: float  # Self-assessed answer confidence (legacy, use confidence_metadata instead)

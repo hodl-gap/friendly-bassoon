@@ -268,6 +268,13 @@ Use the submit_rerank_scores tool to submit your scores for ALL chunks."""
             messages=[{"role": "user", "content": user_prompt}]
         )
 
+        # Log token usage
+        try:
+            from shared.run_logger import log_llm_call
+            log_llm_call("claude-haiku-4-5-20251001", response.usage.input_tokens, response.usage.output_tokens)
+        except Exception:
+            pass
+
         # Extract tool use result
         scores = {}
         for content_block in response.content:

@@ -22,6 +22,7 @@ subproject_database_manager/telegram_messages/
 *.db
 
 # Cache and logs (ephemeral)
+logs/
 subproject_data_collection/data/cache/*.json
 subproject_data_collection/logs/*.log
 subproject_variable_mapper/logs/*.log

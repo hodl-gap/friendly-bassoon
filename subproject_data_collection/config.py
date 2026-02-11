@@ -7,6 +7,7 @@ Loads environment variables and defines configuration constants.
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from shared.model_config import EXTRACTION_MODEL as _EXTRACTION_MODEL, ANALYSIS_MODEL as _ANALYSIS_MODEL, FALLBACK_MODEL as _FALLBACK_MODEL
 
 # =============================================================================
 # PATH CONFIGURATION
@@ -41,12 +42,12 @@ NEWS_API_KEY = os.getenv("NEWS_API_KEY")  # Optional: for NewsAPI.org
 # =============================================================================
 
 # Models for different tasks
-CLAIM_PARSING_MODEL = "claude_haiku"  # Fast, good for extraction
-NEWS_ANALYSIS_MODEL = "claude_sonnet"  # Better reasoning for actionability
-VALIDATION_INTERPRETATION_MODEL = "claude_haiku"  # Summarize stats
+CLAIM_PARSING_MODEL = _EXTRACTION_MODEL
+NEWS_ANALYSIS_MODEL = _ANALYSIS_MODEL
+VALIDATION_INTERPRETATION_MODEL = _EXTRACTION_MODEL
 
 # Fallback model
-FALLBACK_MODEL = "claude_sonnet"
+FALLBACK_MODEL = _FALLBACK_MODEL
 
 # =============================================================================
 # NEWS COLLECTION SETTINGS
@@ -116,7 +117,7 @@ AUTO_DISCOVER_MISSING_DATA_IDS = True  # Auto-trigger discovery for unknown vari
 WEB_SEARCH_BACKEND = os.getenv("WEB_SEARCH_BACKEND", "tavily")  # "tavily" or "duckduckgo"
 WEB_SEARCH_MAX_RESULTS = 8  # Number of search results to fetch
 WEB_SEARCH_DELAY_SECONDS = 1.0  # Delay between searches to avoid rate limiting
-WEB_SEARCH_EXTRACTION_MODEL = "claude_haiku"  # Model for extraction (cheap)
+WEB_SEARCH_EXTRACTION_MODEL = _EXTRACTION_MODEL
 
 # =============================================================================
 # WEB CHAIN EXTRACTION SETTINGS
