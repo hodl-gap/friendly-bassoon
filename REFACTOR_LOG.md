@@ -11,7 +11,7 @@
 
 | File | Change | Status |
 |------|--------|--------|
-| `states.py` | Add `scenarios` and `belief_space` fields to BTCImpactState | ✅ Done |
+| `states.py` | Add `scenarios` and `belief_space` fields to RiskImpactState | ✅ Done |
 | `impact_analysis.py` | Add `parse_scenarios()` and `parse_contradictions()` functions | ✅ Done |
 | `impact_analysis.py` | Modify parser to extract and store all scenarios | ✅ Done |
 | `impact_analysis_prompts.py` | Reframe SYSTEM_PROMPT for belief-space mapping | ✅ Done |

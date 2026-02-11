@@ -13,7 +13,7 @@ import math
 # Add parent directory for shared imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from .states import BTCImpactState
+from .states import RiskImpactState
 
 
 def fetch_historical_event_data(

@@ -7,7 +7,7 @@ Extracts normalized variables from retrieved logic chains and synthesis.
 import re
 from typing import List, Dict, Any, Set
 
-from .states import BTCImpactState
+from .states import RiskImpactState
 from .asset_configs import get_asset_config
 
 
@@ -45,7 +45,7 @@ VARIABLE_PATTERNS = {
 }
 
 
-def extract_variables(state: BTCImpactState) -> BTCImpactState:
+def extract_variables(state: RiskImpactState) -> RiskImpactState:
     """
     Extract normalized variables from retrieved context.
 

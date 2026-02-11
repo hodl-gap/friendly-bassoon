@@ -12,7 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
-from .states import BTCImpactState
+from .states import RiskImpactState
 from .asset_configs import get_asset_config
 from . import config
 
@@ -90,7 +90,7 @@ def save_relationships(data: Dict[str, Any], asset_class: str = "btc") -> bool:
         return False
 
 
-def load_chains(state: BTCImpactState, asset_class: str = "btc") -> BTCImpactState:
+def load_chains(state: RiskImpactState, asset_class: str = "btc") -> RiskImpactState:
     """
     Load historical chains from the relationship store.
 
@@ -232,7 +232,7 @@ def is_duplicate_chain(new_chain: Dict, existing_chains: List[Dict]) -> bool:
     return False
 
 
-def store_chains(state: BTCImpactState, asset_class: str = "btc") -> BTCImpactState:
+def store_chains(state: RiskImpactState, asset_class: str = "btc") -> RiskImpactState:
     """
     Extract and store new logic chains discovered in this run.
 

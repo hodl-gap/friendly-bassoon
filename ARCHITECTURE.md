@@ -311,7 +311,7 @@ Build an **agentic research workflow** that:
 "What is the impact of TGA drawdown on BTC?"
 ```
 
-**Output** (`BTCImpactState`):
+**Output** (`RiskImpactState`):
 ```json
 {
   "direction": "BULLISH",
@@ -440,4 +440,4 @@ The `shared/` directory provides cross-subproject utilities:
 | Database Retriever | `retrieval_orchestrator.py` | `states.py` → `RetrieverState` |
 | Variable Mapper | `variable_mapper_orchestrator.py` | `states.py` → `VariableMapperState` |
 | Data Collection | `data_collection_orchestrator.py` | `states.py` → `DataCollectionState` |
-| BTC Intelligence | `btc_impact_orchestrator.py` | `states.py` → `BTCImpactState` |
+| BTC Intelligence | `btc_impact_orchestrator.py` | `states.py` → `RiskImpactState` |

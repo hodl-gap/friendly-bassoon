@@ -1,6 +1,9 @@
 """Prompts for historical event detection and data enrichment."""
 
-GAP_DETECTION_PROMPT = """You are analyzing a user query about macro/BTC impact to detect if they're asking about a HISTORICAL EVENT that needs actual market data to answer properly.
+from .asset_configs import get_asset_config
+
+
+GAP_DETECTION_PROMPT = """You are analyzing a user query about macro/market impact to detect if they're asking about a HISTORICAL EVENT that needs actual market data to answer properly.
 
 USER QUERY:
 {query}
@@ -38,19 +41,23 @@ Respond with a JSON object:
 Return ONLY the JSON object, no other text."""
 
 
-INSTRUMENT_MAPPING_PROMPT = """You are identifying which financial instruments would show the market impact of a historical event.
+def get_instrument_mapping_prompt(asset_class: str = "btc") -> str:
+    """Get the instrument mapping prompt, parameterized by asset class."""
+    cfg = get_asset_config(asset_class)
+    primary = cfg["default_instruments"][0]
+    return """You are identifying which financial instruments would show the market impact of a historical event.
 
 The user asked about this HISTORICAL EVENT:
-{event_description}
+{{event_description}}
 
 USER QUERY:
-{query}
+{{query}}
 
 RESEARCH CONTEXT (current analysis that mentions instruments):
-{synthesis}
+{{synthesis}}
 
 LOGIC CHAINS (variables mentioned in causal relationships):
-{logic_chains}
+{{logic_chains}}
 
 Your task: Extract instruments from the research context that would also be relevant for the historical event.
 
@@ -68,21 +75,30 @@ Common instrument mappings:
 - TGA, Treasury General Account → WTREGEN (FRED)
 
 Return a JSON object with instruments found in the research:
-{{
+{{{{
     "instruments": [
-        {{"ticker": "USDJPY=X", "source": "Yahoo", "role": "Yen exchange rate"}},
-        {{"ticker": "^VIX", "source": "Yahoo", "role": "Volatility index"}},
-        {{"ticker": "BTC-USD", "source": "Yahoo", "role": "Bitcoin price"}}
+        {{{{"ticker": "USDJPY=X", "source": "Yahoo", "role": "Yen exchange rate"}}}},
+        {{{{"ticker": "^VIX", "source": "Yahoo", "role": "Volatility index"}}}},
+        {{{{"ticker": "{primary_ticker}", "source": "{primary_source}", "role": "{primary_role}"}}}}
     ]
-}}
+}}}}
 
 IMPORTANT:
 - Only include instruments that are MENTIONED in the research context or logic chains
 - Map them to correct Yahoo/FRED tickers
 - Maximum 6 instruments
-- Always include BTC-USD if the query is about BTC impact
+- Always include {primary_ticker} for {asset_name} impact analysis
 
-Return ONLY the JSON object, no other text."""
+Return ONLY the JSON object, no other text.""".format(
+        primary_ticker=primary["ticker"],
+        primary_source=primary["source"],
+        primary_role=primary["role"],
+        asset_name=cfg["name"]
+    )
+
+
+# Keep static reference for backwards compat (used by callers that don't pass asset_class)
+INSTRUMENT_MAPPING_PROMPT = get_instrument_mapping_prompt("btc")
 
 
 DATE_EXTRACTION_PROMPT = """Extract the date range for a historical market event from these web search results.

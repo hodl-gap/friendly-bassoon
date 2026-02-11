@@ -18,7 +18,7 @@ from .relationship_store import get_relevant_historical_chains, format_historica
 from .pattern_validator import format_validated_patterns_for_prompt
 from .historical_data_fetcher import format_historical_data_for_prompt
 from .asset_configs import get_asset_config
-from .states import BTCImpactState
+from .states import RiskImpactState
 from . import config
 
 # Anthropic client for tool_use calls
@@ -157,7 +157,7 @@ def _parse_tool_use_result(tool_input: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
-def analyze_impact(state: BTCImpactState, asset_class: str = "btc") -> BTCImpactState:
+def analyze_impact(state: RiskImpactState, asset_class: str = "btc") -> RiskImpactState:
     """
     Analyze the impact of a macro event using retrieved context.
 

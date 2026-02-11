@@ -17,16 +17,69 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 
+import anthropic
+
 # Add parent for models
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from models import call_claude_haiku
 
-from .states import BTCImpactState
+from .states import RiskImpactState
 from .current_data_fetcher import (
     fetch_fred_with_history,
     fetch_yahoo_with_history,
     resolve_variable,
 )
+
+# Tool schema for structured pattern extraction via tool_use
+PATTERN_EXTRACTION_TOOL = {
+    "name": "output_patterns",
+    "description": "Output extracted quantitative patterns from research text that can be validated against current market data.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "patterns": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "variable": {
+                            "type": "string",
+                            "description": "Trigger variable normalized: tga, btc, sofr, fed_balance_sheet, dxy, vix, etc."
+                        },
+                        "condition_type": {
+                            "type": "string",
+                            "enum": ["percentage_change", "absolute_threshold", "new_high", "new_low", "range_breakout"],
+                            "description": "Type of condition to evaluate"
+                        },
+                        "condition_value": {
+                            "type": ["number", "null"],
+                            "description": "Threshold value (e.g., 200 for 200%, 900000 for $900B). Null for new_high/new_low."
+                        },
+                        "condition_direction": {
+                            "type": "string",
+                            "enum": ["increase", "decrease", "above", "below", "equals"],
+                            "description": "Direction of the condition"
+                        },
+                        "timeframe_days": {
+                            "type": ["integer", "null"],
+                            "description": "Number of days for the condition (e.g., 90 for 3 months, 30 for 1 month). Null if not time-bound."
+                        },
+                        "expected_effect": {
+                            "type": "string",
+                            "description": "Brief description of what happens when triggered"
+                        },
+                        "original_text": {
+                            "type": "string",
+                            "description": "Original text snippet this pattern was extracted from"
+                        }
+                    },
+                    "required": ["variable", "condition_type", "condition_direction"]
+                }
+            }
+        },
+        "required": ["patterns"]
+    }
+}
 
 
 PATTERN_EXTRACTION_PROMPT = """Extract quantitative patterns/conditions from this research text that can be validated against current market data.
@@ -74,16 +127,73 @@ Example output:
 ]"""
 
 
-def extract_patterns(state: BTCImpactState) -> List[Dict[str, Any]]:
+def _extract_patterns_tool_use(messages: List[Dict[str, str]]) -> List[Dict[str, Any]]:
+    """
+    Extract patterns using Anthropic tool_use for structured output.
+
+    Returns list of pattern dicts, or raises on failure.
+    """
+    client = anthropic.Anthropic()
+
+    response = client.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=2000,
+        temperature=0.0,
+        messages=messages,
+        tools=[PATTERN_EXTRACTION_TOOL],
+        tool_choice={"type": "tool", "name": "output_patterns"}
+    )
+
+    # Log token usage
+    try:
+        from shared.run_logger import log_llm_call
+        log_llm_call("claude-haiku-4-5-20251001", response.usage.input_tokens, response.usage.output_tokens)
+    except Exception:
+        pass
+
+    for block in response.content:
+        if block.type == "tool_use":
+            patterns = block.input.get("patterns", [])
+            print(f"[Pattern Validator] Extracted {len(patterns)} patterns via tool_use")
+            return patterns
+
+    raise ValueError("No tool_use block found in response")
+
+
+def _extract_patterns_regex_fallback(messages: List[Dict[str, str]]) -> List[Dict[str, Any]]:
+    """
+    Fallback: extract patterns using call_claude_haiku + regex JSON parsing.
+
+    Returns list of pattern dicts, or empty list.
+    """
+    print("[Pattern Validator] Falling back to regex-based extraction")
+    response = call_claude_haiku(
+        messages,
+        temperature=0.1,
+        max_tokens=2000
+    )
+
+    json_match = re.search(r'\[[\s\S]*\]', response)
+    if json_match:
+        patterns = json.loads(json_match.group())
+        print(f"[Pattern Validator] Extracted {len(patterns)} patterns via regex fallback")
+        return patterns
+    else:
+        print("[Pattern Validator] No patterns found in regex fallback response")
+        return []
+
+
+def extract_patterns(state: RiskImpactState) -> List[Dict[str, Any]]:
     """
     Extract quantitative patterns from retrieved research.
 
-    Uses LLM to parse patterns from the synthesis and answer text.
+    Uses Anthropic tool_use for structured output. Falls back to
+    regex-based JSON parsing if tool_use fails.
     """
     # Combine relevant text
     text_parts = []
 
-    synthesis = state.get("retrieval_synthesis", "")
+    synthesis = state.get("synthesis", "")
     if synthesis:
         # Focus on the KEY VARIABLES section which has historical context
         text_parts.append(synthesis)
@@ -98,29 +208,20 @@ def extract_patterns(state: BTCImpactState) -> List[Dict[str, Any]]:
 
     combined_text = "\n\n".join(text_parts)
 
-    # Call LLM to extract patterns
+    # Build prompt and messages
     prompt = PATTERN_EXTRACTION_PROMPT.format(text=combined_text)
+    messages = [{"role": "user", "content": prompt}]
+
+    # Try tool_use first, fall back to regex parsing
+    try:
+        return _extract_patterns_tool_use(messages)
+    except Exception as e:
+        print(f"[Pattern Validator] tool_use extraction failed: {e}")
 
     try:
-        response = call_claude_haiku(
-            [{"role": "user", "content": prompt}],
-            temperature=0.1,
-            max_tokens=2000
-        )
-
-        # Parse JSON from response
-        # Find JSON array in response
-        json_match = re.search(r'\[[\s\S]*\]', response)
-        if json_match:
-            patterns = json.loads(json_match.group())
-            print(f"[Pattern Validator] Extracted {len(patterns)} patterns from research")
-            return patterns
-        else:
-            print("[Pattern Validator] No patterns found in response")
-            return []
-
+        return _extract_patterns_regex_fallback(messages)
     except Exception as e:
-        print(f"[Pattern Validator] Error extracting patterns: {e}")
+        print(f"[Pattern Validator] Regex fallback also failed: {e}")
         return []
 
 
@@ -311,7 +412,7 @@ def evaluate_pattern(pattern: Dict[str, Any], data: Dict[str, Any]) -> Dict[str,
     }
 
 
-def validate_patterns(state: BTCImpactState) -> BTCImpactState:
+def validate_patterns(state: RiskImpactState) -> RiskImpactState:
     """
     Main function to extract and validate patterns from research.
 

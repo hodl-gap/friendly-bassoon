@@ -52,7 +52,7 @@ subproject_risk_intelligence/
 ├── __init__.py                      # Package exports
 ├── __main__.py                      # CLI entry point
 ├── btc_impact_orchestrator.py       # Main workflow
-├── states.py                        # BTCImpactState definition
+├── states.py                        # RiskImpactState definition
 ├── config.py                        # Configuration
 ├── impact_analysis.py               # LLM-based impact analysis
 ├── impact_analysis_prompts.py       # Analysis prompts

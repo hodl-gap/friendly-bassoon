@@ -23,7 +23,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from shared.variable_resolver import resolve_variable as _resolve_variable
 
-# BTCImpactState imported lazily inside fetch_current_data() to allow
+# RiskImpactState imported lazily inside fetch_current_data() to allow
 # standalone imports of utility functions (resolve_variable, fetch_*_with_history)
 # from outside the package context
 
@@ -265,7 +265,7 @@ def calculate_changes(history: List[Tuple[str, float]]) -> Dict[str, Any]:
     return changes
 
 
-def fetch_current_data(state: "BTCImpactState") -> "BTCImpactState":
+def fetch_current_data(state: "RiskImpactState") -> "RiskImpactState":
     """
     Fetch current values for extracted variables with period-over-period changes.
 
@@ -275,7 +275,7 @@ def fetch_current_data(state: "BTCImpactState") -> "BTCImpactState":
     - fetch_errors: List of failed variables
     """
     # Lazy import to allow standalone imports from outside package context
-    from .states import BTCImpactState  # noqa: F401
+    from .states import RiskImpactState  # noqa: F401
 
     variables = state.get("extracted_variables", [])
 

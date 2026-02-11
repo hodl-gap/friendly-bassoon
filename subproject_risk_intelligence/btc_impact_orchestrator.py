@@ -22,7 +22,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "subproject_database_retriever"))
 # data_collection path is added by current_data_fetcher when needed
 
-from .states import BTCImpactState
+from .states import RiskImpactState
 from .impact_analysis import analyze_impact
 from .variable_extraction import extract_variables
 from .current_data_fetcher import fetch_current_data, format_current_values_for_prompt
@@ -147,7 +147,7 @@ def parse_logic_chains_from_answer(answer_text: str) -> List[Dict]:
     return chains
 
 
-def retrieve_context(query: str, image_path: str = None) -> BTCImpactState:
+def retrieve_context(query: str, image_path: str = None) -> RiskImpactState:
     """
     Step 1: Call database_retriever to get enriched context.
 
@@ -174,7 +174,7 @@ def retrieve_context(query: str, image_path: str = None) -> BTCImpactState:
     result = run_retrieval(query, image_path=image_path)
 
     # Extract relevant fields - retriever now provides enriched context
-    state = BTCImpactState(
+    state = RiskImpactState(
         query=query,
         retrieved_chunks=result.get("retrieved_chunks", []),
         retrieval_answer=result.get("answer", ""),
@@ -239,7 +239,7 @@ def retrieve_context(query: str, image_path: str = None) -> BTCImpactState:
     return state
 
 
-def format_output(state: BTCImpactState, as_json: bool = False, asset_class: str = "btc") -> str:
+def format_output(state: RiskImpactState, as_json: bool = False, asset_class: str = "btc") -> str:
     """Format the final output for display - Belief Space format."""
 
     current_values = state.get("current_values", {})
@@ -423,7 +423,7 @@ def format_output(state: BTCImpactState, as_json: bool = False, asset_class: str
     return "\n".join(lines)
 
 
-def request_additional_context(state: BTCImpactState, topic: str) -> BTCImpactState:
+def request_additional_context(state: RiskImpactState, topic: str) -> RiskImpactState:
     """
     Request additional context on a specific topic.
 
@@ -460,7 +460,7 @@ def prepare_shared_context(
     use_integrated_pipeline: bool = False,
     image_path: str = None,
     asset_class: str = "btc"
-) -> BTCImpactState:
+) -> RiskImpactState:
     """
     Shared preparation: retrieval + variable extraction + data fetch +
     pattern validation + historical enrichment.
@@ -503,7 +503,7 @@ def prepare_shared_context(
 
 
 def run_asset_impact(
-    shared_state: BTCImpactState,
+    shared_state: RiskImpactState,
     asset_class: str,
     skip_chain_store: bool = False
 ) -> Dict[str, Any]:
@@ -661,7 +661,7 @@ def run_btc_impact_analysis(
     return results["btc"]
 
 
-def enrich_with_historical_event(state: BTCImpactState) -> BTCImpactState:
+def enrich_with_historical_event(state: RiskImpactState) -> RiskImpactState:
     """
     Step 5.5: Detect and fetch historical event data if needed.
 
@@ -761,7 +761,7 @@ def enrich_with_historical_event(state: BTCImpactState) -> BTCImpactState:
     return state
 
 
-def _run_integrated_pipeline(state: BTCImpactState) -> BTCImpactState:
+def _run_integrated_pipeline(state: RiskImpactState) -> RiskImpactState:
     """
     Run the integrated Variable Mapper → Data Collection pipeline.
 

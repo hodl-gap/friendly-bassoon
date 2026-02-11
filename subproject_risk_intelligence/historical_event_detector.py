@@ -16,7 +16,7 @@ import anthropic
 
 from .historical_event_prompts import (
     GAP_DETECTION_PROMPT,
-    INSTRUMENT_MAPPING_PROMPT,
+    get_instrument_mapping_prompt,
     DATE_EXTRACTION_PROMPT,
     format_logic_chains_for_prompt
 )
@@ -238,7 +238,7 @@ def identify_instruments(
     print(formatted_chains)
     print(f"[Historical Event] === END LOGIC CHAINS ===")
 
-    prompt = INSTRUMENT_MAPPING_PROMPT.format(
+    prompt = get_instrument_mapping_prompt(asset_class).format(
         event_description=event_description,
         query=query,
         synthesis=synthesis[:3000],

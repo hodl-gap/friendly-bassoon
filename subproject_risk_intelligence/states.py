@@ -8,7 +8,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from shared.schemas import LogicChain, ConfidenceMetadata
 
 
-class BTCImpactState(TypedDict, total=False):
+class RiskImpactState(TypedDict, total=False):
     # Input
     query: str  # User's original query
 
