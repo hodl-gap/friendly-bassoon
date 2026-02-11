@@ -7,8 +7,11 @@ This is part of the retrieval layer - topic-agnostic gap detection that works fo
 
 import sys
 import json
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Dict, Any, List, Optional
+
+import anthropic
 
 # Add parent directory for shared imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -20,6 +23,8 @@ from knowledge_gap_prompts import (
     INTERPRET_EVENT_STUDY_PROMPT
 )
 from query_processing import expand_for_web_chain_extraction
+
+_client = anthropic.Anthropic()
 
 
 def format_chains_for_prompt(logic_chains: list) -> str:
@@ -109,19 +114,136 @@ Topic Coverage Analysis:
 
     print("[Knowledge Gap] Detecting gaps in retrieved information...")
 
+    # Tool schema for structured output
+    gap_tool = {
+        "name": "output_gaps",
+        "description": "Output detected knowledge gaps",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "coverage_rating": {
+                    "type": "string",
+                    "enum": ["COMPLETE", "PARTIAL", "INSUFFICIENT"],
+                    "description": "COMPLETE (0 gaps), PARTIAL (1-3 gaps), INSUFFICIENT (4+ gaps)"
+                },
+                "gaps": {
+                    "type": "array",
+                    "description": "List of evaluated knowledge categories",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "category": {
+                                "type": "string",
+                                "enum": [
+                                    "topic_not_covered",
+                                    "historical_precedent_depth",
+                                    "quantified_relationships",
+                                    "monitoring_thresholds",
+                                    "event_calendar",
+                                    "mechanism_conditions",
+                                    "exit_criteria"
+                                ],
+                                "description": "Knowledge category being evaluated"
+                            },
+                            "status": {
+                                "type": "string",
+                                "enum": ["COVERED", "GAP"],
+                                "description": "Whether this category is covered or has a gap"
+                            },
+                            "fill_method": {
+                                "type": "string",
+                                "enum": ["web_chain_extraction", "web_search", "data_fetch", "historical_analog"],
+                                "description": "Method to fill the gap"
+                            },
+                            "found": {
+                                "type": "string",
+                                "description": "What was found (be specific, 1-2 sentences max)"
+                            },
+                            "missing": {
+                                "type": ["string", "null"],
+                                "description": "What specific information would fill this gap (null if COVERED)"
+                            },
+                            "search_query": {
+                                "type": ["string", "null"],
+                                "description": "Web search query (null if COVERED or if fill_method is data_fetch/historical_analog)"
+                            },
+                            "instruments": {
+                                "type": ["array", "null"],
+                                "items": {"type": "string"},
+                                "description": "Normalized variable names for data_fetch (null otherwise)"
+                            },
+                            "indicator_name": {
+                                "type": ["string", "null"],
+                                "description": "Specific indicator name for historical_analog (null otherwise)"
+                            }
+                        },
+                        "required": ["category", "status", "found"]
+                    }
+                },
+                "gap_count": {
+                    "type": "integer",
+                    "description": "Number of items with status=GAP"
+                }
+            },
+            "required": ["coverage_rating", "gaps", "gap_count"]
+        }
+    }
+
     try:
-        response = call_claude_haiku(messages, temperature=0.0, max_tokens=1500)
-        print(f"[Knowledge Gap] Raw response:\n{response}")
+        # Primary approach: Anthropic tool_use for structured output
+        response = _client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=2000,
+            temperature=0.0,
+            messages=messages,
+            tools=[gap_tool],
+            tool_choice={"type": "tool", "name": "output_gaps"}
+        )
 
-        # Parse JSON response
-        json_str = response.strip()
-        if "```json" in json_str:
-            json_str = json_str.split("```json")[1].split("```")[0].strip()
-        elif "```" in json_str:
-            json_str = json_str.split("```")[1].split("```")[0].strip()
+        # Log token usage
+        try:
+            from shared.run_logger import log_llm_call
+            log_llm_call("claude-haiku-4-5-20251001", response.usage.input_tokens, response.usage.output_tokens)
+        except Exception:
+            pass
 
-        result = json.loads(json_str)
+        # Extract tool_use result
+        result = None
+        for block in response.content:
+            if block.type == "tool_use" and block.name == "output_gaps":
+                result = block.input
+                break
 
+        if result is None:
+            raise ValueError("No tool_use block found in response")
+
+        print(f"[Knowledge Gap] Raw tool_use response:\n{json.dumps(result, indent=2)}")
+
+    except Exception as e:
+        # Fallback: use call_claude_haiku with text parsing
+        print(f"[Knowledge Gap] tool_use failed ({e}), falling back to text parsing...")
+        try:
+            response_text = call_claude_haiku(messages, temperature=0.0, max_tokens=1500)
+            print(f"[Knowledge Gap] Raw fallback response:\n{response_text}")
+
+            json_str = response_text.strip()
+            if "```json" in json_str:
+                json_str = json_str.split("```json")[1].split("```")[0].strip()
+            elif "```" in json_str:
+                json_str = json_str.split("```")[1].split("```")[0].strip()
+
+            result = json.loads(json_str)
+        except Exception as fallback_err:
+            print(f"[Knowledge Gap] Fallback also failed: {fallback_err}")
+            return {
+                "coverage_rating": "UNKNOWN",
+                "gaps": [],
+                "gap_count": 0,
+                "search_queries": [],
+                "error": f"Both tool_use and fallback failed: {e}; {fallback_err}"
+            }
+
+    try:
         # Extract search queries for convenience
         search_queries = [
             gap["search_query"]
@@ -142,15 +264,6 @@ Topic Coverage Analysis:
 
         return result
 
-    except json.JSONDecodeError as e:
-        print(f"[Knowledge Gap] JSON parse error: {e}")
-        return {
-            "coverage_rating": "UNKNOWN",
-            "gaps": [],
-            "gap_count": 0,
-            "search_queries": [],
-            "error": f"Parse error: {e}"
-        }
     except Exception as e:
         print(f"[Knowledge Gap] Detection error: {e}")
         return {
@@ -521,9 +634,9 @@ def fill_gaps_with_data(
     """
     import numpy as np
 
-    # Import data fetcher from btc_intelligence (has the fetch logic)
+    # Import data fetcher from risk_intelligence (has the fetch logic)
     try:
-        btc_intel_path = str(Path(__file__).parent.parent / "subproject_btc_intelligence")
+        btc_intel_path = str(Path(__file__).parent.parent / "subproject_risk_intelligence")
         # Save and clear modules that might conflict
         saved_modules = {}
         for mod_name in ['states', 'config']:
@@ -1569,65 +1682,87 @@ def detect_and_fill_gaps(
     all_enrichment = []
     extracted_web_chains = []
 
-    # Step 3a: Fill web_chain_extraction gaps (multi-angle)
-    if web_chain_gaps:
-        chain_result = fill_gaps_with_web_chains(
-            gaps=web_chain_gaps,
-            query=query
-        )
-        all_filled.extend(chain_result.get("filled_gaps", []))
-        all_partial.extend(chain_result.get("partially_filled_gaps", []))
-        all_unfillable.extend(chain_result.get("unfillable_gaps", []))
-        extracted_web_chains = chain_result.get("extracted_chains", [])
-        if chain_result.get("enrichment_text"):
-            all_enrichment.append(chain_result["enrichment_text"])
+    # Parallel gap filling: run independent fill methods concurrently
+    def _fill_web_chains():
+        return fill_gaps_with_web_chains(gaps=web_chain_gaps, query=query)
 
-    # Step 3b: Fill data_fetch gaps
-    if data_fetch_gaps:
-        data_result = fill_gaps_with_data(gaps=data_fetch_gaps)
-        all_filled.extend(data_result.get("filled_gaps", []))
-        all_unfillable.extend(data_result.get("unfillable_gaps", []))
-        if data_result.get("enrichment_text"):
-            all_enrichment.append(data_result["enrichment_text"])
+    def _fill_data():
+        return fill_gaps_with_data(gaps=data_fetch_gaps)
 
-    # Step 3b2: Fill historical_analog gaps (indicator-specific historical precedent)
-    if historical_analog_gaps:
-        print(f"\n[Knowledge Gap] Filling {len(historical_analog_gaps)} historical analog gaps...")
+    def _fill_historical_analogs():
+        results = {"filled": [], "unfillable": [], "enrichment": []}
         for gap in historical_analog_gaps:
             indicator = gap.get("indicator_name", "Unknown indicator")
-            print(f"  Indicator: {indicator}")
-
-            # Call the historical analog analysis
+            print(f"[retriever.gap_detector] Historical analog: {indicator}")
             analog_result = fill_historical_analog_gap(gap, image_path=image_path)
-
             if analog_result.get("filled"):
-                all_filled.append({
+                results["filled"].append({
                     **gap,
                     "status": "FILLED",
                     "historical_analysis": analog_result.get("historical_analysis", {}),
                     "pattern_summary": analog_result.get("pattern_summary", "")
                 })
                 if analog_result.get("enrichment_text"):
-                    all_enrichment.append(analog_result["enrichment_text"])
+                    results["enrichment"].append(analog_result["enrichment_text"])
             else:
-                all_unfillable.append({
+                results["unfillable"].append({
                     **gap,
                     "status": "UNFILLABLE",
                     "reason": analog_result.get("reason", "unknown")
                 })
+        return results
 
-    # Step 3c: Fill web_search gaps
-    if web_search_gaps:
-        search_result = fill_gaps_with_search(
+    def _fill_web_search():
+        return fill_gaps_with_search(
             gaps=web_search_gaps,
             max_searches=max_searches,
             max_attempts_per_gap=max_attempts_per_gap
         )
-        all_filled.extend(search_result.get("filled_gaps", []))
-        all_partial.extend(search_result.get("partially_filled_gaps", []))
-        all_unfillable.extend(search_result.get("unfillable_gaps", []))
-        if search_result.get("enrichment_text"):
-            all_enrichment.append(search_result["enrichment_text"])
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        futures = {}
+        if web_chain_gaps:
+            futures[executor.submit(_fill_web_chains)] = "web_chains"
+        if data_fetch_gaps:
+            futures[executor.submit(_fill_data)] = "data_fetch"
+        if historical_analog_gaps:
+            futures[executor.submit(_fill_historical_analogs)] = "historical_analog"
+        if web_search_gaps:
+            futures[executor.submit(_fill_web_search)] = "web_search"
+
+        for future in as_completed(futures):
+            fill_type = futures[future]
+            try:
+                result_data = future.result()
+
+                if fill_type == "web_chains":
+                    all_filled.extend(result_data.get("filled_gaps", []))
+                    all_partial.extend(result_data.get("partially_filled_gaps", []))
+                    all_unfillable.extend(result_data.get("unfillable_gaps", []))
+                    extracted_web_chains = result_data.get("extracted_chains", [])
+                    if result_data.get("enrichment_text"):
+                        all_enrichment.append(result_data["enrichment_text"])
+
+                elif fill_type == "data_fetch":
+                    all_filled.extend(result_data.get("filled_gaps", []))
+                    all_unfillable.extend(result_data.get("unfillable_gaps", []))
+                    if result_data.get("enrichment_text"):
+                        all_enrichment.append(result_data["enrichment_text"])
+
+                elif fill_type == "historical_analog":
+                    all_filled.extend(result_data.get("filled", []))
+                    all_unfillable.extend(result_data.get("unfillable", []))
+                    all_enrichment.extend(result_data.get("enrichment", []))
+
+                elif fill_type == "web_search":
+                    all_filled.extend(result_data.get("filled_gaps", []))
+                    all_partial.extend(result_data.get("partially_filled_gaps", []))
+                    all_unfillable.extend(result_data.get("unfillable_gaps", []))
+                    if result_data.get("enrichment_text"):
+                        all_enrichment.append(result_data["enrichment_text"])
+
+            except Exception as e:
+                print(f"[retriever.gap_detector] Error in {fill_type} fill: {e}")
 
     # Step 4: Merge web chains with DB chains
     merged_chains = logic_chains

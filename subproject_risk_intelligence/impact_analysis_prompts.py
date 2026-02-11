@@ -1,4 +1,6 @@
-"""Prompts for BTC impact analysis."""
+"""Prompts for impact analysis."""
+
+from .asset_configs import get_asset_config
 
 SYSTEM_PROMPT = """You are a quantitative macro analyst mapping the BELIEF SPACE around market events.
 
@@ -45,7 +47,7 @@ Be specific, quantitative, and preserve complexity. Reference actual data points
 def get_impact_analysis_prompt(
     query: str,
     retrieval_answer: str,
-    retrieval_synthesis: str,
+    synthesis: str,
     logic_chains: list,
     confidence_metadata: dict,
     current_values_text: str = "",
@@ -53,7 +55,8 @@ def get_impact_analysis_prompt(
     validated_patterns_text: str = "",
     historical_event_text: str = "",
     knowledge_gaps: dict = None,
-    gap_enrichment_text: str = ""
+    gap_enrichment_text: str = "",
+    asset_class: str = "btc"
 ) -> str:
     """Build the impact analysis prompt."""
 
@@ -79,7 +82,7 @@ def get_impact_analysis_prompt(
     conf_text = ""
     if confidence_metadata:
         score = confidence_metadata.get("overall_score", "N/A")
-        paths = confidence_metadata.get("path_count", "N/A")
+        paths = confidence_metadata.get("chain_count", "N/A")
         sources = confidence_metadata.get("source_diversity", "N/A")
         conf_text = f"Score: {score}, Paths: {paths}, Sources: {sources}"
     else:
@@ -156,7 +159,7 @@ def get_impact_analysis_prompt(
 {retrieval_answer}
 
 ## SYNTHESIS
-{retrieval_synthesis}
+{synthesis}
 
 ## LOGIC CHAINS
 {chains_text}
@@ -166,7 +169,7 @@ def get_impact_analysis_prompt(
 {current_values_section}{historical_chains_section}{validated_patterns_section}{historical_event_section}
 {knowledge_gaps_section}{gap_enrichment_section}---
 
-Based on the above context, current market data, pattern validation, and any historical event comparisons, analyze the impact on Bitcoin.
+Based on the above context, current market data, pattern validation, and any historical event comparisons, {get_asset_config(asset_class)["prompt_asset_line"]}
 Pay special attention to TRIGGERED patterns - these indicate that conditions from research are currently active.
 
 **IMPORTANT**: Knowledge gaps have been pre-assessed above. Where gaps exist:

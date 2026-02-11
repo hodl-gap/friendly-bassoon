@@ -90,24 +90,24 @@ This is already possible with the existing `search_and_extract(query, extract_ty
 
 ## Files Modified
 
-### subproject_btc_intelligence/states.py
+### subproject_risk_intelligence/states.py
 - Added `scenarios: List[Dict[str, Any]]` field with schema documentation
 - Added `belief_space: Dict[str, Any]` field for contradictions and metadata
 
-### subproject_btc_intelligence/impact_analysis.py
+### subproject_risk_intelligence/impact_analysis.py
 - Added `parse_scenarios()` function to extract all scenarios from LLM response
 - Added `parse_contradictions()` function to extract explicit contradictions
 - Modified `parse_impact_response()` to populate scenarios and belief_space
 - Updated state assignments to include new fields
 
-### subproject_btc_intelligence/impact_analysis_prompts.py
+### subproject_risk_intelligence/impact_analysis_prompts.py
 - Rewrote SYSTEM_PROMPT for belief-space mapping paradigm
 - Added explicit examples of contradiction preservation
 - Added CONTRADICTIONS section to required output format
 - Added per-scenario fields: Key Data, Actors, Rationale
 - Modified confidence section to include uncertainty_drivers
 
-### subproject_btc_intelligence/btc_impact_orchestrator.py
+### subproject_risk_intelligence/btc_impact_orchestrator.py
 - Updated JSON output to include `scenarios` and `belief_space`
 - Updated human-readable output with "BELIEF SPACE ANALYSIS" header
 - Added scenario listing with direction, likelihood, chain
@@ -125,7 +125,7 @@ This is already possible with the existing `search_and_extract(query, extract_ty
 - Added FX pairs: EURUSD
 - Added volatility: VVIX
 
-### subproject_btc_intelligence/current_data_fetcher.py
+### subproject_risk_intelligence/current_data_fetcher.py
 - Updated categories to include Indices, Sectors, Big Tech, FX & Commodities, Volatility
 
 ### subproject_data_collection/adapters/yahoo_adapter.py

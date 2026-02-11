@@ -7,7 +7,7 @@ On 2026-01-24, JPY/USD rallied to 155.90 rising 1.6% daily, and Japan finance mi
 
 ## Run Command
 ```bash
-python -m subproject_btc_intelligence "On 2026-01-24, JPY/USD rallied to 155.90 rising 1.6% daily, and Japan finance minister warned speculators. What is the BTC impact?"
+python -m subproject_risk_intelligence "On 2026-01-24, JPY/USD rallied to 155.90 rising 1.6% daily, and Japan finance minister warned speculators. What is the BTC impact?"
 ```
 
 ## Gap Detection Results (5 gaps detected)

@@ -2,6 +2,11 @@
 
 from typing import TypedDict, List, Optional, Dict, Any
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from shared.schemas import LogicChain, ConfidenceMetadata
+
 
 class BTCImpactState(TypedDict, total=False):
     # Input
@@ -9,16 +14,20 @@ class BTCImpactState(TypedDict, total=False):
 
     # Retrieval Results (from database_retriever)
     retrieved_chunks: List[Dict[str, Any]]  # Raw chunks from retriever
-    logic_chains: List[Dict[str, Any]]  # Parsed logic chains
-    confidence_metadata: Dict[str, Any]  # {overall_score, path_count, source_diversity}
+    logic_chains: List[LogicChain]  # Parsed logic chains
+    confidence_metadata: ConfidenceMetadata  # {score, chain_count, source_diversity}
 
     # Variable Extraction (Phase 2)
     extracted_variables: List[Dict[str, Any]]
     # Each: {normalized: str, role: "cause"|"effect", chain_path: str, source: str}
 
+    # Asset class (multi-asset support)
+    asset_class: str  # "btc", "equity"
+    asset_price: float  # Current price of target asset
+
     # Data Fetching (Phase 2)
     current_values: Dict[str, Any]  # {variable_name: {value, timestamp, source}}
-    btc_price: float  # Current BTC price
+    btc_price: float  # Current BTC price (kept for backwards compat)
     fetch_errors: List[str]  # Variables that failed to fetch
 
     # Pattern Validation (Phase 2)
@@ -45,7 +54,7 @@ class BTCImpactState(TypedDict, total=False):
 
     # Primary direction (highest likelihood scenario) - for backward compatibility
     direction: str  # BULLISH / BEARISH / NEUTRAL
-    confidence: Dict[str, Any]
+    confidence: ConfidenceMetadata
     # {
     #     "score": 0.72,
     #     "chain_count": 3,
@@ -76,7 +85,7 @@ class BTCImpactState(TypedDict, total=False):
 
     # Debug
     retrieval_answer: str  # Raw answer from retriever
-    retrieval_synthesis: str  # Raw synthesis from retriever
+    synthesis: str  # Raw synthesis from retriever (renamed from retrieval_synthesis)
 
     # Topic Coverage (extrapolation warning)
     topic_coverage: Dict[str, Any]  # {query_entities, found_entities, direct_match, extrapolation_note}

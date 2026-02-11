@@ -48,7 +48,7 @@ This subproject analyzes the impact of **specific macro events or data updates**
 
 ### Code Organization
 ```
-subproject_btc_intelligence/
+subproject_risk_intelligence/
 ├── __init__.py                      # Package exports
 ├── __main__.py                      # CLI entry point
 ├── btc_impact_orchestrator.py       # Main workflow
@@ -156,19 +156,19 @@ query (CLI input)
 
 ```bash
 # Current data update → BTC impact
-python -m subproject_btc_intelligence "TGA increased +10% this week, what's the BTC impact?"
-python -m subproject_btc_intelligence "Fed just cut rates 50bps, what's the BTC impact?"
-python -m subproject_btc_intelligence "DXY strengthened 5% this month, what's the BTC impact?"
+python -m subproject_risk_intelligence "TGA increased +10% this week, what's the BTC impact?"
+python -m subproject_risk_intelligence "Fed just cut rates 50bps, what's the BTC impact?"
+python -m subproject_risk_intelligence "DXY strengthened 5% this month, what's the BTC impact?"
 
 # Current event with historical analog (triggers Phase 4)
-python -m subproject_btc_intelligence "A new global contagion is spreading, what's the BTC impact?"
-python -m subproject_btc_intelligence "JPY is strengthening rapidly like in August 2024, what's the BTC impact?"
+python -m subproject_risk_intelligence "A new global contagion is spreading, what's the BTC impact?"
+python -m subproject_risk_intelligence "JPY is strengthening rapidly like in August 2024, what's the BTC impact?"
 
 # JSON output
-python -m subproject_btc_intelligence --json "Bank reserves dropped 5%, what's the BTC impact?"
+python -m subproject_risk_intelligence --json "Bank reserves dropped 5%, what's the BTC impact?"
 
 # Verbose mode
-python -m subproject_btc_intelligence -v "VIX spiked to 40, what's the BTC impact?"
+python -m subproject_risk_intelligence -v "VIX spiked to 40, what's the BTC impact?"
 ```
 
 ## Output Format

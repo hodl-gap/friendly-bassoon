@@ -13,17 +13,34 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 
 from .states import BTCImpactState
+from .asset_configs import get_asset_config
 from . import config
 
 
-def load_relationships() -> Dict[str, Any]:
+def _get_relationships_file(asset_class: str = "btc") -> Path:
+    """Get the relationships file path for a given asset class."""
+    cfg = get_asset_config(asset_class)
+    return config.DATA_DIR / cfg["relationships_file"]
+
+
+def _get_regime_file(asset_class: str = "btc") -> Path:
+    """Get the regime state file path for a given asset class."""
+    cfg = get_asset_config(asset_class)
+    return config.DATA_DIR / cfg["regime_file"]
+
+
+def load_relationships(asset_class: str = "btc") -> Dict[str, Any]:
     """
     Load the relationships database from disk.
+
+    Args:
+        asset_class: Asset class to load relationships for
 
     Returns:
         Dict with 'metadata' and 'relationships' keys
     """
-    if not config.RELATIONSHIPS_FILE.exists():
+    filepath = _get_relationships_file(asset_class)
+    if not filepath.exists():
         return {
             "metadata": {
                 "last_updated": None,
@@ -33,7 +50,7 @@ def load_relationships() -> Dict[str, Any]:
         }
 
     try:
-        with open(config.RELATIONSHIPS_FILE, 'r') as f:
+        with open(filepath, 'r') as f:
             return json.load(f)
     except Exception as e:
         print(f"[Relationship Store] Error loading: {e}")
@@ -43,12 +60,13 @@ def load_relationships() -> Dict[str, Any]:
         }
 
 
-def save_relationships(data: Dict[str, Any]) -> bool:
+def save_relationships(data: Dict[str, Any], asset_class: str = "btc") -> bool:
     """
     Save the relationships database to disk.
 
     Args:
         data: Dict with 'metadata' and 'relationships' keys
+        asset_class: Asset class to save relationships for
 
     Returns:
         True if successful
@@ -61,7 +79,8 @@ def save_relationships(data: Dict[str, Any]) -> bool:
         # Ensure directory exists
         config.DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-        with open(config.RELATIONSHIPS_FILE, 'w') as f:
+        filepath = _get_relationships_file(asset_class)
+        with open(filepath, 'w') as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
 
         print(f"[Relationship Store] Saved {data['metadata']['total_relationships']} relationships")
@@ -71,14 +90,18 @@ def save_relationships(data: Dict[str, Any]) -> bool:
         return False
 
 
-def load_chains(state: BTCImpactState) -> BTCImpactState:
+def load_chains(state: BTCImpactState, asset_class: str = "btc") -> BTCImpactState:
     """
     Load historical chains from the relationship store.
+
+    Args:
+        state: Current state
+        asset_class: Asset class to load chains for
 
     Updates state with:
     - historical_chains: List of previously discovered chains
     """
-    db = load_relationships()
+    db = load_relationships(asset_class=asset_class)
     chains = db.get("relationships", [])
 
     state["historical_chains"] = chains
@@ -91,7 +114,7 @@ def load_chains(state: BTCImpactState) -> BTCImpactState:
     return state
 
 
-def extract_chains_from_answer(answer_text: str) -> List[Dict[str, Any]]:
+def extract_chains_from_answer(answer_text: str, asset_class: str = "btc") -> List[Dict[str, Any]]:
     """
     Extract logic chains from the retrieval answer text.
 
@@ -130,12 +153,12 @@ def extract_chains_from_answer(answer_text: str) -> List[Dict[str, Any]]:
 
             chain_summary = " -> ".join(normalized_vars)
 
-            # Determine if it ends in BTC
+            # Determine if it ends in the target asset
             terminal_effect = steps[-1].get("effect_normalized", "") if steps else ""
-            is_btc_chain = any(btc_term in terminal_effect.lower()
-                              for btc_term in ["btc", "bitcoin", "crypto"])
+            keywords = get_asset_config(asset_class)["chain_keywords"]
+            is_target_chain = any(term in terminal_effect.lower() for term in keywords)
 
-            if is_btc_chain or "btc" in chain_summary.lower():
+            if is_target_chain or any(term in chain_summary.lower() for term in keywords):
                 chains.append({
                     "logic_chain": {
                         "steps": steps,
@@ -209,22 +232,27 @@ def is_duplicate_chain(new_chain: Dict, existing_chains: List[Dict]) -> bool:
     return False
 
 
-def store_chains(state: BTCImpactState) -> BTCImpactState:
+def store_chains(state: BTCImpactState, asset_class: str = "btc") -> BTCImpactState:
     """
     Extract and store new logic chains discovered in this run.
 
-    Parses chains from retrieval_answer and saves to btc_relationships.json.
+    Parses chains from retrieval_answer and saves to the asset-specific
+    relationships file.
+
+    Args:
+        state: Current state
+        asset_class: Asset class to store chains for
 
     Updates state with:
     - discovered_chains: List of newly discovered chains
     """
     # Load existing database
-    db = load_relationships()
+    db = load_relationships(asset_class=asset_class)
     existing_chains = db.get("relationships", [])
 
     # Extract chains from answer
     answer = state.get("retrieval_answer", "")
-    extracted = extract_chains_from_answer(answer)
+    extracted = extract_chains_from_answer(answer, asset_class=asset_class)
 
     # Filter for new chains only
     new_chains = []
@@ -244,7 +272,7 @@ def store_chains(state: BTCImpactState) -> BTCImpactState:
 
         # Append to database
         db["relationships"].extend(new_chains)
-        save_relationships(db)
+        save_relationships(db, asset_class=asset_class)
     else:
         print("[Relationship Store] No new chains discovered")
 
@@ -328,19 +356,23 @@ def format_historical_chains_for_prompt(chains: List[Dict]) -> str:
 # Regime State Persistence
 # ============================================================================
 
-def load_regime_state() -> Dict[str, Any]:
+def load_regime_state(asset_class: str = "btc") -> Dict[str, Any]:
     """
     Load the regime state from disk.
+
+    Args:
+        asset_class: Asset class to load regime state for
 
     Returns:
         Dict with regime state:
         - liquidity_regime: "reserve_scarce" | "reserve_abundant" | "transitional"
-        - dominant_driver: Primary driver affecting BTC (e.g., "tga", "fed_policy")
+        - dominant_driver: Primary driver affecting the asset
         - last_updated: ISO timestamp
         - confidence: 0.0-1.0 confidence in the assessment
         - assessment_source: Where this was determined (e.g., "impact_analysis")
     """
-    if not config.REGIME_STATE_FILE.exists():
+    filepath = _get_regime_file(asset_class)
+    if not filepath.exists():
         return {
             "liquidity_regime": None,
             "dominant_driver": None,
@@ -350,7 +382,7 @@ def load_regime_state() -> Dict[str, Any]:
         }
 
     try:
-        with open(config.REGIME_STATE_FILE, 'r') as f:
+        with open(filepath, 'r') as f:
             return json.load(f)
     except Exception as e:
         print(f"[Regime State] Error loading: {e}")
@@ -363,12 +395,13 @@ def load_regime_state() -> Dict[str, Any]:
         }
 
 
-def save_regime_state(state: Dict[str, Any]) -> bool:
+def save_regime_state(state: Dict[str, Any], asset_class: str = "btc") -> bool:
     """
     Save the regime state to disk.
 
     Args:
         state: Dict with liquidity_regime, dominant_driver, confidence, etc.
+        asset_class: Asset class to save regime state for
 
     Returns:
         True if successful
@@ -380,7 +413,8 @@ def save_regime_state(state: Dict[str, Any]) -> bool:
         # Ensure directory exists
         config.DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-        with open(config.REGIME_STATE_FILE, 'w') as f:
+        filepath = _get_regime_file(asset_class)
+        with open(filepath, 'w') as f:
             json.dump(state, f, indent=2, ensure_ascii=False)
 
         print(f"[Regime State] Saved: {state.get('liquidity_regime')} (conf: {state.get('confidence', 0):.2f})")
@@ -392,7 +426,8 @@ def save_regime_state(state: Dict[str, Any]) -> bool:
 
 def update_regime_from_analysis(
     analysis_result: Dict[str, Any],
-    threshold: float = 0.7
+    threshold: float = 0.7,
+    asset_class: str = "btc"
 ) -> Optional[Dict[str, Any]]:
     """
     Update regime state based on impact analysis results.
@@ -403,6 +438,7 @@ def update_regime_from_analysis(
     Args:
         analysis_result: Result from impact analysis containing direction, confidence, etc.
         threshold: Minimum confidence required to update regime (default: 0.7)
+        asset_class: Asset class to update regime for
 
     Returns:
         New regime state if updated, None otherwise
@@ -414,7 +450,7 @@ def update_regime_from_analysis(
         return None
 
     # Load current state
-    current = load_regime_state()
+    current = load_regime_state(asset_class=asset_class)
 
     # Determine new regime from analysis
     direction = analysis_result.get("direction", "").upper()
@@ -459,19 +495,22 @@ def update_regime_from_analysis(
     }
 
     # Save if changed or higher confidence
-    save_regime_state(new_state)
+    save_regime_state(new_state, asset_class=asset_class)
 
     return new_state
 
 
-def get_regime_context_for_prompt() -> str:
+def get_regime_context_for_prompt(asset_class: str = "btc") -> str:
     """
     Format regime state for inclusion in LLM prompt.
+
+    Args:
+        asset_class: Asset class to get regime context for
 
     Returns:
         String describing current regime state, or empty if no state.
     """
-    state = load_regime_state()
+    state = load_regime_state(asset_class=asset_class)
 
     if not state.get("liquidity_regime"):
         return ""

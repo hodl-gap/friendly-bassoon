@@ -12,6 +12,7 @@ BTC Intelligence focuses only on BTC impact analysis.
 
 import sys
 import json
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Dict, Any, List
 
@@ -37,6 +38,7 @@ from .relationship_store import (
 )
 from .historical_event_detector import detect_historical_gap, identify_instruments, get_date_range
 from .historical_data_fetcher import fetch_historical_event_data, compare_to_current
+from .asset_configs import get_asset_config
 from . import config
 
 
@@ -176,7 +178,7 @@ def retrieve_context(query: str, image_path: str = None) -> BTCImpactState:
         query=query,
         retrieved_chunks=result.get("retrieved_chunks", []),
         retrieval_answer=result.get("answer", ""),
-        retrieval_synthesis=result.get("synthesis", ""),
+        synthesis=result.get("synthesis", ""),
         confidence_metadata=result.get("confidence_metadata", {}),
         topic_coverage=result.get("topic_coverage", {})
     )
@@ -232,12 +234,12 @@ def retrieve_context(query: str, image_path: str = None) -> BTCImpactState:
 
     if config.VERBOSE:
         print(f"\n[Retrieve] Answer:\n{state['retrieval_answer'][:500]}...")
-        print(f"\n[Retrieve] Synthesis:\n{state['retrieval_synthesis'][:500]}...")
+        print(f"\n[Retrieve] Synthesis:\n{state['synthesis'][:500]}...")
 
     return state
 
 
-def format_output(state: BTCImpactState, as_json: bool = False) -> str:
+def format_output(state: BTCImpactState, as_json: bool = False, asset_class: str = "btc") -> str:
     """Format the final output for display - Belief Space format."""
 
     current_values = state.get("current_values", {})
@@ -245,9 +247,12 @@ def format_output(state: BTCImpactState, as_json: bool = False) -> str:
     historical_event_data = state.get("historical_event_data", {})
     scenarios = state.get("scenarios", [])
     belief_space = state.get("belief_space", {})
+    asset_name = get_asset_config(asset_class)["name"]
 
     if as_json:
         output = {
+            # Asset class
+            "asset_class": asset_class,
             # Belief Space Output (Primary)
             "scenarios": scenarios,
             "belief_space": belief_space,
@@ -260,6 +265,7 @@ def format_output(state: BTCImpactState, as_json: bool = False) -> str:
             "rationale": state.get("rationale", ""),
             "risk_factors": state.get("risk_factors", []),
             "current_values": current_values,
+            "asset_price": state.get("asset_price"),
             "btc_price": state.get("btc_price"),
             "topic_coverage": topic_coverage,
             "historical_event_data": historical_event_data
@@ -281,7 +287,7 @@ def format_output(state: BTCImpactState, as_json: bool = False) -> str:
 
     lines = [
         "=" * 60,
-        "BELIEF SPACE ANALYSIS",
+        f"BELIEF SPACE ANALYSIS — {asset_name.upper()}",
         "=" * 60,
     ]
 
@@ -448,6 +454,178 @@ def request_additional_context(state: BTCImpactState, topic: str) -> BTCImpactSt
     return state
 
 
+def prepare_shared_context(
+    query: str,
+    skip_data_fetch: bool = False,
+    use_integrated_pipeline: bool = False,
+    image_path: str = None,
+    asset_class: str = "btc"
+) -> BTCImpactState:
+    """
+    Shared preparation: retrieval + variable extraction + data fetch +
+    pattern validation + historical enrichment.
+
+    This is the expensive part (~$0.30, ~250s) that runs ONCE
+    regardless of how many asset classes we analyze.
+
+    Args:
+        query: User's question
+        skip_data_fetch: If True, skip fetching current data
+        use_integrated_pipeline: If True, use shared/integration.py
+        image_path: Optional path to indicator chart image
+        asset_class: Primary asset for variable prioritization
+
+    Returns:
+        State with shared context populated
+    """
+    # Step 1: Retrieve enriched context
+    state = retrieve_context(query, image_path=image_path)
+    state["asset_class"] = asset_class
+
+    # Step 2: Variable extraction and data fetching
+    if not skip_data_fetch:
+        if use_integrated_pipeline:
+            state = _run_integrated_pipeline(state)
+        else:
+            state = extract_variables(state)
+            if state.get("extracted_variables"):
+                state = fetch_current_data(state)
+
+    # Step 3: Validate research patterns against current data
+    if not skip_data_fetch:
+        state = validate_patterns(state)
+
+    # Step 4: Historical event data enrichment
+    if not skip_data_fetch:
+        state = enrich_with_historical_event(state)
+
+    return state
+
+
+def run_asset_impact(
+    shared_state: BTCImpactState,
+    asset_class: str,
+    skip_chain_store: bool = False
+) -> Dict[str, Any]:
+    """
+    Asset-specific impact analysis. Runs the LLM call with asset-specific
+    prompts and manages asset-specific chain storage.
+
+    Args:
+        shared_state: State from prepare_shared_context (read-only)
+        asset_class: Asset class to analyze
+        skip_chain_store: If True, skip chain loading/storage
+
+    Returns:
+        Result state dict for this asset
+    """
+    # Copy state to avoid mutation across parallel runs
+    state = dict(shared_state)
+    state["asset_class"] = asset_class
+
+    asset_name = get_asset_config(asset_class)["name"]
+
+    # Load asset-specific chains
+    if not skip_chain_store:
+        state = load_chains(state, asset_class=asset_class)
+
+    # Load asset-specific regime
+    regime_state = load_regime_state(asset_class=asset_class)
+    state["regime_state"] = regime_state
+    if regime_state.get("liquidity_regime"):
+        print(f"[Regime/{asset_name}] Current: {regime_state.get('liquidity_regime')} (driver: {regime_state.get('dominant_driver')})")
+
+    # Run impact analysis with asset-specific prompt
+    state = analyze_impact(state, asset_class=asset_class)
+
+    # Store asset-specific chains
+    if not skip_chain_store:
+        state = store_chains(state, asset_class=asset_class)
+        new_regime = update_regime_from_analysis(dict(state), asset_class=asset_class)
+        if new_regime:
+            state["regime_state"] = new_regime
+            print(f"[Regime/{asset_name}] Updated to: {new_regime.get('liquidity_regime')}")
+
+    return dict(state)
+
+
+def run_multi_asset_analysis(
+    query: str,
+    assets: List[str] = None,
+    output_json: bool = False,
+    skip_data_fetch: bool = False,
+    skip_chain_store: bool = False,
+    use_integrated_pipeline: bool = False,
+    image_path: str = None
+) -> Dict[str, Dict[str, Any]]:
+    """
+    Main entry point for multi-asset impact analysis.
+
+    Runs shared preparation once, then fans out to per-asset
+    impact analysis in parallel.
+
+    Args:
+        query: User's question about macro event impact
+        assets: List of asset classes (default: ["btc"])
+        output_json: If True, format output as JSON
+        skip_data_fetch: If True, skip fetching current data
+        skip_chain_store: If True, skip chain loading/storage
+        use_integrated_pipeline: If True, use integrated pipeline
+        image_path: Optional path to indicator chart image
+
+    Returns:
+        Dict mapping asset_class -> result state
+    """
+    if assets is None:
+        assets = ["btc"]
+
+    print("\n" + "=" * 60)
+    asset_names = [get_asset_config(a)["name"] for a in assets]
+    print(f"IMPACT ANALYSIS — {', '.join(asset_names)}")
+    print("=" * 60)
+
+    # Phase A: Shared preparation (runs once)
+    shared_state = prepare_shared_context(
+        query,
+        skip_data_fetch=skip_data_fetch,
+        use_integrated_pipeline=use_integrated_pipeline,
+        image_path=image_path,
+        asset_class=assets[0]
+    )
+
+    # Phase B: Per-asset impact analysis (parallel if multiple)
+    results = {}
+    if len(assets) == 1:
+        results[assets[0]] = run_asset_impact(shared_state, assets[0], skip_chain_store)
+    else:
+        with ThreadPoolExecutor(max_workers=len(assets)) as executor:
+            futures = {
+                executor.submit(run_asset_impact, shared_state, asset, skip_chain_store): asset
+                for asset in assets
+            }
+            for future in as_completed(futures):
+                asset = futures[future]
+                try:
+                    results[asset] = future.result()
+                except Exception as e:
+                    print(f"\n[Error] {get_asset_config(asset)['name']} analysis failed: {e}")
+                    results[asset] = {"direction": "ERROR", "error": str(e)}
+
+    # Format and print output per asset
+    for asset in assets:
+        result = results.get(asset, {})
+        if result.get("direction") == "ERROR":
+            print(f"\n{'=' * 60}")
+            print(f"{get_asset_config(asset)['name'].upper()} IMPACT ANALYSIS — ERROR")
+            print(f"{'=' * 60}")
+            print(f"Error: {result.get('error', 'Unknown')}")
+            continue
+        output = format_output(result, as_json=output_json, asset_class=asset)
+        print("\n" + output)
+
+    return results
+
+
 def run_btc_impact_analysis(
     query: str,
     output_json: bool = False,
@@ -457,11 +635,7 @@ def run_btc_impact_analysis(
     image_path: str = None
 ) -> Dict[str, Any]:
     """
-    Main entry point for BTC impact analysis.
-
-    Architecture: BTC Intelligence receives ENRICHED context from retrieval layer.
-    Gap detection and web chain extraction are now handled by retrieval.
-    BTC Intelligence focuses on analyzing BTC impact.
+    Backwards-compatible BTC-only entry point.
 
     Args:
         query: User's question about BTC impact
@@ -475,66 +649,16 @@ def run_btc_impact_analysis(
     Returns:
         Final state dict with analysis results
     """
-    print("\n" + "=" * 60)
-    print("BTC IMPACT ANALYSIS")
-    print("=" * 60)
-
-    # Step 0: Load regime state (provides context for analysis)
-    regime_state = load_regime_state()
-    if regime_state.get("liquidity_regime"):
-        print(f"[Regime] Current: {regime_state.get('liquidity_regime')} (driver: {regime_state.get('dominant_driver')})")
-
-    # Step 1: Retrieve enriched context (now includes gap detection & web chain extraction)
-    state = retrieve_context(query, image_path=image_path)
-
-    # Add regime context to state for use in analysis
-    state["regime_state"] = regime_state
-
-    # Step 2: Load historical chains (Phase 3)
-    if not skip_chain_store:
-        state = load_chains(state)
-
-    # Step 3 & 4: Variable extraction and data fetching
-    if not skip_data_fetch:
-        if use_integrated_pipeline:
-            # Use integrated Mapper → Collection pipeline
-            state = _run_integrated_pipeline(state)
-        else:
-            # Original standalone approach
-            state = extract_variables(state)
-            if state.get("extracted_variables"):
-                state = fetch_current_data(state)
-
-    # Step 5: Validate research patterns against current data
-    if not skip_data_fetch:
-        state = validate_patterns(state)
-
-    # Step 5.5: Historical event data enrichment
-    if not skip_data_fetch:
-        state = enrich_with_historical_event(state)
-
-    # Note: Gap detection is now handled by retrieval layer (Step 1)
-    # The state already contains gap_enrichment_text, filled_gaps, etc.
-
-    # Step 6: Analyze impact (LLM call with current data + validated patterns + gap enrichment)
-    state = analyze_impact(state)
-
-    # Step 7: Store newly discovered chains (Phase 3)
-    if not skip_chain_store:
-        state = store_chains(state)
-
-    # Step 8: Update regime state based on analysis results
-    if not skip_chain_store:
-        new_regime = update_regime_from_analysis(dict(state))
-        if new_regime:
-            state["regime_state"] = new_regime
-            print(f"[Regime] Updated to: {new_regime.get('liquidity_regime')}")
-
-    # Format and print output
-    output = format_output(state, as_json=output_json)
-    print("\n" + output)
-
-    return dict(state)
+    results = run_multi_asset_analysis(
+        query,
+        assets=["btc"],
+        output_json=output_json,
+        skip_data_fetch=skip_data_fetch,
+        skip_chain_store=skip_chain_store,
+        use_integrated_pipeline=use_integrated_pipeline,
+        image_path=image_path
+    )
+    return results["btc"]
 
 
 def enrich_with_historical_event(state: BTCImpactState) -> BTCImpactState:
@@ -553,7 +677,7 @@ def enrich_with_historical_event(state: BTCImpactState) -> BTCImpactState:
         return state
 
     query = state.get("query", "")
-    synthesis = state.get("retrieval_synthesis", "")
+    synthesis = state.get("synthesis", "")
     topic_coverage = state.get("topic_coverage", {})
     logic_chains = state.get("logic_chains", [])
 
@@ -571,24 +695,33 @@ def enrich_with_historical_event(state: BTCImpactState) -> BTCImpactState:
 
     print(f"[Historical Event] Gap detected: {event_description}")
 
-    # Step 2: Identify instruments from research context
-    print("[Historical Event] Identifying instruments...")
-    instruments = identify_instruments(
-        event_description=event_description,
-        query=query,
-        synthesis=synthesis,
-        logic_chains=logic_chains
-    )
-    print(f"[Historical Event] Instruments: {[i.get('ticker') for i in instruments]}")
+    # Steps 2 & 3: Identify instruments and get date range in parallel
+    # These are independent LLM/web calls, so we run them concurrently
+    print("[Historical Event] Identifying instruments and determining date range (parallel)...")
 
-    # Step 3: Get date range via web search
-    print("[Historical Event] Determining date range...")
-    if date_search_query:
-        date_range = get_date_range(event_description, date_search_query)
-    else:
-        # Fallback if no search query provided
-        from .historical_event_detector import _fallback_date_range
-        date_range = _fallback_date_range(event_description)
+    def _get_date_range_wrapper():
+        if date_search_query:
+            return get_date_range(event_description, date_search_query)
+        else:
+            from .historical_event_detector import _fallback_date_range
+            return _fallback_date_range(event_description)
+
+    asset_class = state.get("asset_class", "btc")
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        instruments_future = executor.submit(
+            identify_instruments,
+            event_description=event_description,
+            query=query,
+            synthesis=synthesis,
+            logic_chains=logic_chains,
+            asset_class=asset_class
+        )
+        dates_future = executor.submit(_get_date_range_wrapper)
+        instruments = instruments_future.result()
+        date_range = dates_future.result()
+
+    print(f"[Historical Event] Instruments: {[i.get('ticker') for i in instruments]}")
 
     print(f"[Historical Event] Period: {date_range.get('start_date')} to {date_range.get('end_date')} (confidence: {date_range.get('confidence')})")
 
@@ -647,7 +780,7 @@ def _run_integrated_pipeline(state: BTCImpactState) -> BTCImpactState:
     try:
         from shared.integration import map_and_fetch_variables
 
-        synthesis = state.get("retrieval_synthesis", "")
+        synthesis = state.get("synthesis", "")
         logic_chains = state.get("logic_chains", [])
 
         # Run integrated pipeline
@@ -694,7 +827,13 @@ def _run_integrated_pipeline(state: BTCImpactState) -> BTCImpactState:
         state["current_values"] = current_values
         state["fetch_errors"] = unmapped + [e for e in errors]
 
-        # Set BTC price if available
+        # Set asset_price for the target asset class
+        from .asset_configs import get_asset_config as _get_cfg
+        _cfg = _get_cfg(state.get("asset_class", "btc"))
+        _primary = _cfg["always_include_variable"]
+        if _primary in current_values:
+            state["asset_price"] = current_values[_primary]["value"]
+        # Backwards compat
         if "btc" in current_values:
             state["btc_price"] = current_values["btc"]["value"]
 

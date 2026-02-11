@@ -12,6 +12,7 @@ import os
 import sys
 import requests
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional, Tuple
@@ -290,13 +291,11 @@ def fetch_current_data(state: "BTCImpactState") -> "BTCImpactState":
     current_values = {}
     fetch_errors = []
 
-    for var_name in var_names:
+    def fetch_single(var_name):
+        """Fetch a single variable's data. Thread-safe."""
         mapping = resolve_variable(var_name)
-
         if not mapping:
-            print(f"[Current Data] Could not resolve: {var_name}")
-            fetch_errors.append(var_name)
-            continue
+            return (var_name, None, f"Could not resolve: {var_name}")
 
         source = mapping["source"]
         series_id = mapping["series_id"]
@@ -311,29 +310,40 @@ def fetch_current_data(state: "BTCImpactState") -> "BTCImpactState":
             result = fetch_yahoo_with_history(series_id, lookback)
 
         if result:
-            # Calculate changes
             history = result.pop("history", [])
             changes = calculate_changes(history)
             result["changes"] = changes
-
-            current_values[var_name] = result
-
-            # Log with change info
-            change_str = ""
-            if changes.get("change_1w"):
-                c = changes["change_1w"]
-                change_str = f" ({c['direction']}{abs(c['percentage']):.1f}% 1w)"
-            print(f"[Current Data] {var_name}: {result['value']}{change_str} from {source}")
+            return (var_name, result, None)
         else:
-            print(f"[Current Data] No data for {var_name}")
-            fetch_errors.append(var_name)
+            return (var_name, None, f"No data for {var_name}")
 
-        # Small delay between requests
-        time.sleep(0.2)
+    # Parallel fetch with ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = {executor.submit(fetch_single, v): v for v in var_names}
+        for future in as_completed(futures):
+            var_name, result, error = future.result()
+            if result:
+                current_values[var_name] = result
+                change_str = ""
+                changes = result.get("changes", {})
+                if changes.get("change_1w"):
+                    c = changes["change_1w"]
+                    change_str = f" ({c['direction']}{abs(c['percentage']):.1f}% 1w)"
+                print(f"[current_data] {var_name}: {result['value']}{change_str}")
+            else:
+                print(f"[current_data] {error}")
+                fetch_errors.append(var_name)
 
     state["current_values"] = current_values
     state["fetch_errors"] = fetch_errors
 
+    # Set asset_price for the target asset class
+    from .asset_configs import get_asset_config
+    asset_cfg = get_asset_config(state.get("asset_class", "btc"))
+    primary_var = asset_cfg["always_include_variable"]
+    if primary_var in current_values:
+        state["asset_price"] = current_values[primary_var]["value"]
+    # Backwards compat: also set btc_price if BTC data available
     if "btc" in current_values:
         state["btc_price"] = current_values["btc"]["value"]
 

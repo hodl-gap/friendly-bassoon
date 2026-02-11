@@ -8,6 +8,7 @@ import re
 from typing import List, Dict, Any, Set
 
 from .states import BTCImpactState
+from .asset_configs import get_asset_config
 
 
 # Common variable patterns to extract from text
@@ -65,7 +66,7 @@ def extract_variables(state: BTCImpactState) -> BTCImpactState:
         extracted.update(chain_vars)
 
     # 2. Extract from synthesis text
-    synthesis = state.get("retrieval_synthesis", "")
+    synthesis = state.get("synthesis", "")
     if synthesis:
         synthesis_vars = extract_from_text(synthesis)
         extracted.update(synthesis_vars)
@@ -76,8 +77,9 @@ def extract_variables(state: BTCImpactState) -> BTCImpactState:
         answer_vars = extract_from_text(answer)
         extracted.update(answer_vars)
 
-    # Always include BTC since we're analyzing BTC impact
-    extracted.add("btc")
+    # Always include the target asset's primary variable
+    asset_cfg = get_asset_config(state.get("asset_class", "btc"))
+    extracted.add(asset_cfg["always_include_variable"])
 
     # Convert to list of dicts with metadata
     variables_list = []
@@ -179,14 +181,6 @@ def match_to_known_variable(text: str) -> str:
     return ""
 
 
-def get_priority_variables() -> List[str]:
-    """Get high-priority variables that should always be fetched for BTC analysis."""
-    return [
-        "btc",          # Always need BTC price
-        "tga",          # Key liquidity indicator
-        "dxy",          # Dollar strength
-        "vix",          # Risk sentiment
-        "us10y",        # Rate environment
-        "fed_balance_sheet",  # Monetary policy
-        "bank_reserves",      # Liquidity conditions
-    ]
+def get_priority_variables(asset_class: str = "btc") -> List[str]:
+    """Get high-priority variables that should always be fetched for the given asset class."""
+    return get_asset_config(asset_class)["priority_variables"]

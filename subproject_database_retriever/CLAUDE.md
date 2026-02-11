@@ -355,7 +355,7 @@ FOLLOWUP_THRESHOLD = 0.40           # Similarity threshold for follow-ups
 
 The retrieval layer now handles gap detection and filling, providing enriched context to consumers (e.g., BTC Intelligence).
 
-**Architecture Change**: Gap detection was moved FROM `subproject_btc_intelligence` TO here to make it topic-agnostic. The retrieval layer returns enriched results with merged DB + web chains.
+**Architecture Change**: Gap detection was moved FROM `subproject_risk_intelligence` TO here to make it topic-agnostic. The retrieval layer returns enriched results with merged DB + web chains.
 
 **Workflow Step Added**:
 ```

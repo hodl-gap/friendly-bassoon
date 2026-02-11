@@ -2,8 +2,11 @@
 
 import sys
 import re
+import json
 from pathlib import Path
 from typing import Dict, Any, List
+
+import anthropic
 
 # Add parent to path for models import
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -14,17 +17,161 @@ from .current_data_fetcher import format_current_values_for_prompt
 from .relationship_store import get_relevant_historical_chains, format_historical_chains_for_prompt
 from .pattern_validator import format_validated_patterns_for_prompt
 from .historical_data_fetcher import format_historical_data_for_prompt
+from .asset_configs import get_asset_config
 from .states import BTCImpactState
+from . import config
+
+# Anthropic client for tool_use calls
+_client = anthropic.Anthropic()
+
+# Map config model names to Anthropic model IDs
+_MODEL_ID_MAP = {
+    "claude_opus": "claude-opus-4-5-20251101",
+    "claude_sonnet": "claude-sonnet-4-5-20250929",
+    "claude_haiku": "claude-haiku-4-5-20251001",
+}
+
+def _get_impact_tool(asset_class: str = "btc") -> dict:
+    """Get the tool definition for structured impact analysis output."""
+    cfg = get_asset_config(asset_class)
+    return {
+        "name": "output_impact_analysis",
+        "description": f"Output structured {cfg['name']} impact analysis with scenarios and belief space",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "scenarios": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {"type": "string"},
+                            "direction": {"type": "string", "enum": ["BULLISH", "BEARISH", "NEUTRAL"]},
+                            "likelihood": {"type": "number"},
+                            "chain": {"type": "string"},
+                            "rationale": {"type": "string"}
+                        },
+                        "required": ["name", "direction", "likelihood", "chain"]
+                    }
+                },
+                "contradictions": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "thesis_a": {"type": "string"},
+                            "thesis_b": {"type": "string"},
+                            "implication": {"type": "string"}
+                        }
+                    }
+                },
+                "confidence": {
+                    "type": "object",
+                    "properties": {
+                        "score": {"type": "number"},
+                        "chain_count": {"type": "integer"},
+                        "source_diversity": {"type": "integer"},
+                        "strongest_chain": {"type": "string"}
+                    },
+                    "required": ["score"]
+                },
+                "time_horizon": {"type": "string"},
+                "decay_profile": {"type": "string"},
+                "rationale": {"type": "string"},
+                "risk_factors": {"type": "array", "items": {"type": "string"}}
+            },
+            "required": ["scenarios", "confidence", "time_horizon", "rationale", "risk_factors"]
+        }
+    }
 
 
-def analyze_impact(state: BTCImpactState) -> BTCImpactState:
+def _parse_tool_use_result(tool_input: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Analyze the impact of a macro event on BTC using retrieved context.
+    Convert tool_use input into the same structure that parse_impact_response produces.
+
+    This ensures backward compatibility with the rest of the pipeline.
+    """
+    result = {
+        "direction": "NEUTRAL",
+        "scenarios": [],
+        "belief_space": {},
+        "confidence": {},
+        "time_horizon": "unknown",
+        "decay_profile": "unknown",
+        "rationale": "",
+        "risk_factors": []
+    }
+
+    # Scenarios
+    scenarios = tool_input.get("scenarios", [])
+    parsed_scenarios = []
+    for s in scenarios:
+        scenario = {
+            "name": s.get("name", ""),
+            "direction": s.get("direction", "NEUTRAL"),
+            "polarity": s.get("direction", "NEUTRAL"),
+            "likelihood": s.get("likelihood", 0) / 100.0,
+            "chain": s.get("chain", ""),
+        }
+        if s.get("rationale"):
+            scenario["rationale"] = s["rationale"]
+        parsed_scenarios.append(scenario)
+    result["scenarios"] = parsed_scenarios
+
+    # Contradictions -> belief_space
+    contradictions = tool_input.get("contradictions", [])
+    result["belief_space"] = {
+        "contradictions": contradictions,
+        "narrative_count": len(parsed_scenarios),
+        "regime_uncertainty": (
+            "high" if len(parsed_scenarios) > 2
+            else "medium" if len(parsed_scenarios) == 2
+            else "low"
+        )
+    }
+
+    # Primary direction from highest likelihood scenario
+    if parsed_scenarios:
+        sorted_scenarios = sorted(parsed_scenarios, key=lambda s: s.get("likelihood", 0), reverse=True)
+        result["direction"] = sorted_scenarios[0].get("direction", "NEUTRAL")
+        result["belief_space"]["dominant_narrative"] = sorted_scenarios[0].get("name", "Unknown")
+
+    # Confidence
+    confidence_raw = tool_input.get("confidence", {})
+    result["confidence"] = {
+        k: v for k, v in confidence_raw.items() if v is not None
+    }
+
+    # Time horizon
+    result["time_horizon"] = tool_input.get("time_horizon", "unknown")
+
+    # Decay profile
+    result["decay_profile"] = tool_input.get("decay_profile", "unknown")
+
+    # Rationale
+    result["rationale"] = tool_input.get("rationale", "")
+
+    # Risk factors
+    result["risk_factors"] = tool_input.get("risk_factors", [])
+
+    return result
+
+
+def analyze_impact(state: BTCImpactState, asset_class: str = "btc") -> BTCImpactState:
+    """
+    Analyze the impact of a macro event using retrieved context.
+
+    Uses Anthropic tool_use for structured output. Falls back to regex parsing
+    via call_claude_sonnet + parse_impact_response if tool_use fails.
+
+    Args:
+        state: Current state with retrieval results
+        asset_class: Asset class to analyze impact for
 
     Input state requires:
         - query
         - retrieval_answer
-        - retrieval_synthesis
+        - synthesis
         - logic_chains
         - confidence_metadata
         - current_values (optional, from Phase 2)
@@ -64,7 +211,7 @@ def analyze_impact(state: BTCImpactState) -> BTCImpactState:
     prompt = get_impact_analysis_prompt(
         query=query,
         retrieval_answer=state.get("retrieval_answer", ""),
-        retrieval_synthesis=state.get("retrieval_synthesis", ""),
+        synthesis=state.get("synthesis", ""),
         logic_chains=state.get("logic_chains", []),
         confidence_metadata=state.get("confidence_metadata", {}),
         current_values_text=current_values_text,
@@ -72,24 +219,71 @@ def analyze_impact(state: BTCImpactState) -> BTCImpactState:
         validated_patterns_text=validated_patterns_text,
         historical_event_text=historical_event_text,
         knowledge_gaps=knowledge_gaps,
-        gap_enrichment_text=gap_enrichment_text
+        gap_enrichment_text=gap_enrichment_text,
+        asset_class=asset_class
     )
 
-    # Call LLM
-    messages = [
-        {"role": "user", "content": prompt}
-    ]
+    # Resolve model ID from config
+    model_id = _MODEL_ID_MAP.get(config.ANALYSIS_MODEL, "claude-sonnet-4-5-20250929")
 
-    print("\n[Impact Analysis] Calling Claude Sonnet...")
-    response = call_claude_sonnet(messages, temperature=0.3, max_tokens=2000)
+    asset_name = get_asset_config(asset_class)["name"]
+    print(f"\n[Impact Analysis] Calling {config.ANALYSIS_MODEL} ({model_id}) for {asset_name} with tool_use...")
 
-    print("\n[Impact Analysis] Raw LLM Response:")
-    print("-" * 40)
-    print(response)
-    print("-" * 40)
+    impact_tool = _get_impact_tool(asset_class)
 
-    # Parse response
-    parsed = parse_impact_response(response)
+    try:
+        response = _client.messages.create(
+            model=model_id,
+            max_tokens=4000,
+            temperature=0.3,
+            system=SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": prompt}],
+            tools=[impact_tool],
+            tool_choice={"type": "tool", "name": "output_impact_analysis"}
+        )
+
+        # Log token usage
+        try:
+            from shared.run_logger import log_llm_call
+            log_llm_call(model_id, response.usage.input_tokens, response.usage.output_tokens)
+        except Exception:
+            pass
+
+        print("\n[Impact Analysis] Raw LLM Response:")
+        print("-" * 40)
+        print(response)
+        print("-" * 40)
+
+        # Extract tool_use result from response
+        tool_input = None
+        for block in response.content:
+            if block.type == "tool_use" and block.name == "output_impact_analysis":
+                tool_input = block.input
+                break
+
+        if tool_input is None:
+            raise ValueError("No tool_use block found in response")
+
+        print("\n[Impact Analysis] Tool use input (structured):")
+        print("-" * 40)
+        print(json.dumps(tool_input, indent=2))
+        print("-" * 40)
+
+        parsed = _parse_tool_use_result(tool_input)
+
+    except Exception as e:
+        print(f"\n[Impact Analysis] tool_use failed ({e}), falling back to regex parsing...")
+
+        # Fallback: use call_claude_sonnet from models.py + regex parsing
+        messages = [{"role": "user", "content": prompt}]
+        fallback_response = call_claude_sonnet(messages, temperature=0.3, max_tokens=2000)
+
+        print("\n[Impact Analysis] Fallback Raw LLM Response:")
+        print("-" * 40)
+        print(fallback_response)
+        print("-" * 40)
+
+        parsed = parse_impact_response(fallback_response)
 
     # Update state - Belief Space (Multi-Scenario)
     state["scenarios"] = parsed.get("scenarios", [])
