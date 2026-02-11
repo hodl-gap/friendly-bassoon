@@ -507,15 +507,20 @@ index = pc.Index("research-papers")
 
 ## TODO
 
-### Gap Detection Prompt Fix (BLOCKING)
-- [ ] **Prompt asks "topic mentioned?" instead of "question answered?"**
-  - **File**: `knowledge_gap_prompts.py` lines 40-46
-  - **Current prompt**: `"ONLY mark as GAP if the topic is completely absent from synthesis (not just partially covered)"`
-  - **Problem**: This tells the LLM to mark tangentially related content as "covered", even when it doesn't answer the question
-  - **Example**: Query asks "What caused the SaaS meltdown?" → DB has Fed policy content mentioning "Feb 2026 crash" → LLM marks topic as "covered" → No web chain extraction triggered
-  - **Fix needed**: Change prompt to check "Does synthesis ANSWER the specific question?" not "Does synthesis MENTION the topic?"
-  - **Impact**: Foundational - blocks the core diagnostic use case
-  - **See**: `DIAGNOSTIC_TASK.md` for full test results
+### Gap Detection Prompt Fix (DONE)
+- [x] **Prompt now checks "question answered?" instead of "topic mentioned?"**
+  - **Fixed in**: commit `1071c53`
+  - **Verified**: commit `49d3800` (successful pipeline run after fix)
+  - **Prompt now says**: "COVERED = Synthesis directly ANSWERS the specific question asked" / "GAP = Synthesis does NOT answer the question, even if it mentions related topics"
+  - **Result**: Web chain extraction now triggers correctly for tangentially-related but non-answering content
+
+### Gap-Filling Result Cache (Level 2)
+- [ ] **Cache full gap-filling output keyed by query hash**
+  - Store: enrichment text, web chains, historical analog results (episodes, pattern probabilities), image extraction dates
+  - On similar query: retrieve cached gap-fill results, skip image extraction + event study + web search
+  - Only re-run `analyze_impact()` with fresh market data
+  - Storage: JSON file alongside `btc_relationships.json` (e.g., `gap_fill_cache.json`)
+  - Key: hash of (query + indicator_name), TTL-based expiry for staleness
 
 ### Original TODOs (mostly done)
 - [x] Set up initial project structure

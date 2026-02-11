@@ -48,6 +48,10 @@ def main():
         action="store_true",
         help="Use integrated Variable Mapper → Data Collection pipeline"
     )
+    parser.add_argument(
+        "--image",
+        help="Path to indicator chart image (JPEG/PNG) for vision-based date extraction"
+    )
 
     args = parser.parse_args()
 
@@ -72,7 +76,8 @@ def main():
         output_json=args.json,
         skip_data_fetch=args.skip_data,
         skip_chain_store=args.skip_chains,
-        use_integrated_pipeline=args.use_integrated
+        use_integrated_pipeline=args.use_integrated,
+        image_path=args.image
     )
 
     # Exit with appropriate code

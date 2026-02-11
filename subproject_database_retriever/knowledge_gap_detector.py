@@ -13,8 +13,12 @@ from typing import Dict, Any, List, Optional
 # Add parent directory for shared imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from models import call_claude_haiku
-from knowledge_gap_prompts import SYSTEM_PROMPT, GAP_DETECTION_PROMPT
+from models import call_claude_haiku, call_claude_sonnet
+from knowledge_gap_prompts import (
+    SYSTEM_PROMPT, GAP_DETECTION_PROMPT,
+    EXTRACT_EXTREME_DATES_PROMPT, EXTRACT_READINGS_FROM_IMAGE_PROMPT,
+    INTERPRET_EVENT_STUDY_PROMPT
+)
 from query_processing import expand_for_web_chain_extraction
 
 
@@ -907,19 +911,459 @@ def fill_gaps_with_web_chains(
     }
 
 
+def extract_readings_from_image(
+    image_path: str,
+    indicator_name: str
+) -> List[Dict[str, Any]]:
+    """
+    Extract extreme indicator readings from a chart image using Claude Sonnet vision.
+
+    Args:
+        image_path: Path to chart image (JPEG/PNG)
+        indicator_name: Name of the indicator shown in the chart
+
+    Returns:
+        List of {date, value, label} dicts, or empty list on failure.
+    """
+    import base64
+
+    print(f"[Historical Analog] Extracting readings from image: {image_path}")
+
+    # Read and encode the image
+    try:
+        with open(image_path, 'rb') as f:
+            image_data = base64.b64encode(f.read()).decode('utf-8')
+    except FileNotFoundError:
+        print(f"[Historical Analog] Image file not found: {image_path}")
+        return []
+    except Exception as e:
+        print(f"[Historical Analog] Error reading image: {e}")
+        return []
+
+    # Determine media type
+    ext = Path(image_path).suffix.lower()
+    media_type = {
+        '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+        '.png': 'image/png', '.gif': 'image/gif', '.webp': 'image/webp'
+    }.get(ext, 'image/jpeg')
+
+    # Build multimodal message
+    prompt_text = EXTRACT_READINGS_FROM_IMAGE_PROMPT.format(indicator_name=indicator_name)
+    messages = [
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": media_type,
+                        "data": image_data
+                    }
+                },
+                {
+                    "type": "text",
+                    "text": prompt_text
+                }
+            ]
+        }
+    ]
+
+    try:
+        response = call_claude_sonnet(messages, temperature=0.0, max_tokens=1500)
+        print(f"[Historical Analog] Vision response:\n{response}")
+
+        json_str = response.strip()
+        if "```json" in json_str:
+            json_str = json_str.split("```json")[1].split("```")[0].strip()
+        elif "```" in json_str:
+            json_str = json_str.split("```")[1].split("```")[0].strip()
+
+        parsed = json.loads(json_str)
+        dates = parsed.get("dates", [])
+        notes = parsed.get("notes", "")
+
+        if notes:
+            print(f"[Historical Analog] Image extraction notes: {notes}")
+        print(f"[Historical Analog] Extracted {len(dates)} extreme dates from image")
+
+        return dates
+
+    except (json.JSONDecodeError, Exception) as e:
+        print(f"[Historical Analog] Image extraction failed: {e}")
+        return []
+
+
+def discover_prior_extreme_dates(
+    indicator_name: str,
+    query_context: str = ""
+) -> List[Dict[str, Any]]:
+    """
+    Discover prior dates when an indicator reached extreme levels via web search + LLM extraction.
+
+    Args:
+        indicator_name: Name of the indicator (e.g., "VIX", "put/call ratio")
+        query_context: Optional context from the gap's missing field
+
+    Returns:
+        List of {date, value, label} dicts, or empty list if discovery fails.
+    """
+    adapter = _get_web_search_adapter()
+    if not adapter:
+        print(f"[Historical Analog] WebSearchAdapter unavailable for date discovery")
+        return []
+
+    search_query = f'"{indicator_name}" extreme historical dates episodes'
+    print(f"[Historical Analog] Searching for prior extreme dates: {search_query}")
+
+    try:
+        results = adapter._search(search_query, include_raw_content=False)
+    except Exception as e:
+        print(f"[Historical Analog] Search failed: {e}")
+        return []
+
+    # Format snippets from search results
+    snippets_parts = []
+    search_results = results if isinstance(results, list) else results.get("results", [])
+    for i, r in enumerate(search_results[:8], 1):
+        title = r.get("title", "")
+        snippet = r.get("content", "") or r.get("snippet", "")
+        if snippet:
+            snippets_parts.append(f"{i}. [{title}] {snippet[:300]}")
+
+    if not snippets_parts:
+        print(f"[Historical Analog] No search snippets found")
+        return []
+
+    snippets_text = "\n".join(snippets_parts)
+    print(f"[Historical Analog] Got {len(snippets_parts)} snippets, extracting dates via LLM...")
+
+    # Call LLM to extract dates
+    prompt = EXTRACT_EXTREME_DATES_PROMPT.format(
+        indicator_name=indicator_name,
+        snippets=snippets_text
+    )
+    messages = [{"role": "user", "content": prompt}]
+
+    try:
+        response = call_claude_haiku(messages, temperature=0.0, max_tokens=1000)
+        print(f"[Historical Analog] LLM date extraction response:\n{response}")
+
+        json_str = response.strip()
+        if "```json" in json_str:
+            json_str = json_str.split("```json")[1].split("```")[0].strip()
+        elif "```" in json_str:
+            json_str = json_str.split("```")[1].split("```")[0].strip()
+
+        parsed = json.loads(json_str)
+        dates = parsed.get("dates", [])
+        notes = parsed.get("notes", "")
+
+        if notes:
+            print(f"[Historical Analog] Date extraction notes: {notes}")
+        print(f"[Historical Analog] Extracted {len(dates)} extreme dates")
+
+        return dates
+
+    except (json.JSONDecodeError, Exception) as e:
+        print(f"[Historical Analog] Date extraction failed: {e}")
+        return []
+
+
+def run_event_study(
+    event_dates: List[Dict[str, Any]],
+    instruments: List[str] = None,
+    horizons: List[tuple] = None
+) -> List[Dict[str, Any]]:
+    """
+    Run a generic event study: fetch price data around event dates and compute returns.
+
+    Args:
+        event_dates: List of {date, value, label} dicts
+        instruments: Ticker symbols to fetch (default: ["SPY", "^VIX"])
+        horizons: List of (trading_days, label) tuples (default: 1wk/2wk/1mo)
+
+    Returns:
+        List of episode dicts with returns per instrument per horizon.
+        Each: {label, date, indicator_value, returns: {instrument: {horizon: pct}}}
+    """
+    from datetime import datetime
+
+    try:
+        import yfinance as yf
+    except ImportError:
+        print("[Historical Analog] yfinance not installed")
+        return []
+
+    if instruments is None:
+        instruments = ["SPY", "^VIX"]
+    if horizons is None:
+        horizons = [(5, "1wk"), (10, "2wk"), (22, "1mo")]
+
+    # Determine date range from event_dates
+    all_dates = []
+    for reading in event_dates:
+        try:
+            all_dates.append(datetime.strptime(reading["date"], "%Y-%m-%d"))
+        except (ValueError, KeyError):
+            continue
+
+    if not all_dates:
+        print("[Historical Analog] No valid dates in event_dates")
+        return []
+
+    earliest = min(all_dates)
+    # Start 30 days before earliest event
+    start_date = (earliest - __import__('datetime').timedelta(days=30)).strftime("%Y-%m-%d")
+
+    print(f"[Historical Analog] Fetching {instruments} from {start_date}...")
+
+    # Fetch all instrument histories
+    histories = {}
+    for ticker_symbol in instruments:
+        try:
+            ticker = yf.Ticker(ticker_symbol)
+            hist = ticker.history(start=start_date)
+            if hist is not None and len(hist) > 0:
+                histories[ticker_symbol] = hist
+                print(f"  Fetched {ticker_symbol}: {len(hist)} bars")
+            else:
+                print(f"  {ticker_symbol}: no data returned")
+        except Exception as e:
+            print(f"  {ticker_symbol}: fetch error: {e}")
+
+    if not histories:
+        print("[Historical Analog] Failed to fetch any instrument data")
+        return []
+
+    # Use the first instrument as the reference for snapping dates
+    ref_instrument = instruments[0]
+    ref_hist = histories.get(ref_instrument)
+    if ref_hist is None:
+        print(f"[Historical Analog] Reference instrument {ref_instrument} has no data")
+        return []
+
+    max_horizon = max(days for days, _ in horizons)
+    episodes = []
+
+    for reading in event_dates:
+        date_str = reading.get("date", "")
+        value = reading.get("value", "")
+        label = reading.get("label", "")
+
+        try:
+            date = datetime.strptime(date_str, "%Y-%m-%d")
+        except (ValueError, KeyError):
+            continue
+
+        # Snap to nearest trading day in reference instrument
+        closest_idx = None
+        for i, idx in enumerate(ref_hist.index):
+            if idx.tz_localize(None) >= date:
+                closest_idx = i
+                break
+
+        if closest_idx is None or closest_idx + max_horizon >= len(ref_hist):
+            print(f"  {label}: Insufficient data after {date_str}")
+            continue
+
+        snapped_date = ref_hist.index[closest_idx].strftime("%Y-%m-%d")
+
+        # Compute returns for each instrument at each horizon
+        episode_returns = {}
+        for ticker_symbol in instruments:
+            hist = histories.get(ticker_symbol)
+            if hist is None:
+                continue
+
+            # Find this date in this instrument's history
+            inst_idx = None
+            for i, idx in enumerate(hist.index):
+                if idx.tz_localize(None) >= date:
+                    inst_idx = i
+                    break
+
+            if inst_idx is None:
+                continue
+
+            base_price = hist.iloc[inst_idx]['Close']
+            inst_returns = {}
+            for days, horizon_label in horizons:
+                if inst_idx + days < len(hist):
+                    future_price = hist.iloc[inst_idx + days]['Close']
+                    ret = (future_price - base_price) / base_price * 100
+                    inst_returns[horizon_label] = round(ret, 1)
+
+            episode_returns[ticker_symbol] = inst_returns
+
+        episode = {
+            "label": label,
+            "date": snapped_date,
+            "indicator_value": value,
+            "returns": episode_returns
+        }
+        episodes.append(episode)
+
+        # Log summary
+        ref_returns = episode_returns.get(ref_instrument, {})
+        last_horizon = horizons[-1][1] if horizons else "?"
+        print(f"  {label} ({snapped_date}): {ref_instrument} {last_horizon}={ref_returns.get(last_horizon, 'N/A')}%")
+
+    print(f"[Historical Analog] Event study: {len(episodes)}/{len(event_dates)} episodes computed")
+    return episodes
+
+
+def interpret_event_study(
+    indicator_name: str,
+    episodes: List[Dict[str, Any]],
+    gap_context: str = ""
+) -> Dict[str, Any]:
+    """
+    Use LLM to interpret event study results — classify outcomes and identify patterns.
+
+    Args:
+        indicator_name: Name of the indicator
+        episodes: Output from run_event_study()
+        gap_context: Context from the gap's missing field
+
+    Returns:
+        {pattern_summary, episode_outcomes, dominant_pattern, pattern_probability, interpretation}
+        or empty dict on failure.
+    """
+    if not episodes:
+        return {}
+
+    # Build a readable table for the LLM
+    table_lines = ["| Episode | Date | Indicator | Returns |",
+                   "|---------|------|-----------|---------|"]
+    for ep in episodes:
+        returns_parts = []
+        for instrument, horizons in ep.get("returns", {}).items():
+            for horizon, pct in horizons.items():
+                returns_parts.append(f"{instrument} {horizon}: {pct:+.1f}%")
+        returns_str = ", ".join(returns_parts) if returns_parts else "N/A"
+        table_lines.append(f"| {ep['label']} | {ep['date']} | {ep['indicator_value']} | {returns_str} |")
+
+    episodes_table = "\n".join(table_lines)
+
+    prompt = INTERPRET_EVENT_STUDY_PROMPT.format(
+        indicator_name=indicator_name,
+        gap_context=gap_context or f"Analyzing prior extreme readings of {indicator_name}",
+        episodes_table=episodes_table
+    )
+    messages = [{"role": "user", "content": prompt}]
+
+    print(f"[Historical Analog] Interpreting {len(episodes)} episodes via LLM...")
+
+    try:
+        response = call_claude_haiku(messages, temperature=0.0, max_tokens=1500)
+        print(f"[Historical Analog] Interpretation response:\n{response}")
+
+        json_str = response.strip()
+        if "```json" in json_str:
+            json_str = json_str.split("```json")[1].split("```")[0].strip()
+        elif "```" in json_str:
+            json_str = json_str.split("```")[1].split("```")[0].strip()
+
+        parsed = json.loads(json_str)
+        return parsed
+
+    except (json.JSONDecodeError, Exception) as e:
+        print(f"[Historical Analog] Interpretation failed: {e}")
+        return {}
+
+
+def _build_analog_enrichment(
+    indicator_name: str,
+    episodes: List[Dict[str, Any]],
+    interpretation: Dict[str, Any]
+) -> str:
+    """
+    Build generic markdown enrichment text from event study episodes and LLM interpretation.
+
+    Args:
+        indicator_name: Name of the indicator
+        episodes: Output from run_event_study()
+        interpretation: Output from interpret_event_study()
+
+    Returns:
+        Formatted markdown string.
+    """
+    if not episodes:
+        return ""
+
+    # Collect all instruments and horizons from episodes
+    all_instruments = []
+    all_horizons = []
+    for ep in episodes:
+        for instrument, horizons in ep.get("returns", {}).items():
+            if instrument not in all_instruments:
+                all_instruments.append(instrument)
+            for h in horizons:
+                if h not in all_horizons:
+                    all_horizons.append(h)
+
+    # Build dynamic table header
+    header_parts = ["Period", "Date", "Indicator"]
+    for inst in all_instruments:
+        for h in all_horizons:
+            header_parts.append(f"{inst} {h}")
+
+    # Add outcome column if interpretation provided outcomes
+    episode_outcomes = {
+        eo["date"]: eo.get("outcome", "")
+        for eo in interpretation.get("episode_outcomes", [])
+        if "date" in eo
+    }
+    if episode_outcomes:
+        header_parts.append("Outcome")
+
+    header = " | ".join(header_parts)
+    separator = " | ".join(["---"] * len(header_parts))
+
+    lines = [
+        f"## Historical Analog Analysis: Prior Extreme {indicator_name} Episodes",
+        f"(Source: Computed from Yahoo Finance data)",
+        "",
+        f"| {header} |",
+        f"| {separator} |"
+    ]
+
+    for ep in episodes:
+        row = [ep["label"], ep["date"], str(ep["indicator_value"])]
+        for inst in all_instruments:
+            inst_returns = ep.get("returns", {}).get(inst, {})
+            for h in all_horizons:
+                val = inst_returns.get(h)
+                row.append(f"{val:+.1f}%" if isinstance(val, (int, float)) else "N/A")
+        if episode_outcomes:
+            row.append(episode_outcomes.get(ep["date"], ""))
+        lines.append("| " + " | ".join(row) + " |")
+
+    # Add interpretation
+    pattern_summary = interpretation.get("pattern_summary", "")
+    interp_text = interpretation.get("interpretation", "")
+
+    if pattern_summary:
+        lines.extend(["", f"**Pattern Summary**: {pattern_summary}"])
+    if interp_text:
+        lines.extend(["", f"**Interpretation**: {interp_text}"])
+
+    return "\n".join(lines)
+
+
 def fill_historical_analog_gap(
     gap: Dict[str, Any],
-    indicator_readings: List[Dict[str, Any]] = None
+    indicator_readings: List[Dict[str, Any]] = None,
+    image_path: str = None
 ) -> Dict[str, Any]:
     """
     Fill historical_precedent_depth gap by analyzing what happened after prior
     extreme readings of the SAME indicator.
 
-    Instead of generic "short squeeze history" searches, this:
-    1. Takes prior extreme readings of the specific indicator (dates + values)
-    2. Fetches price data (SPY, VIX) around each date
-    3. Calculates what happened in the 1wk, 2wk, 1mo after each reading
-    4. Summarizes the pattern (e.g., "3 of 4 prior extremes led to squeezes")
+    Orchestrates: date discovery → event study → LLM interpretation → enrichment.
+
+    Priority: explicit indicator_readings > image extraction > web search discovery.
 
     Args:
         gap: Gap dict with category="historical_precedent_depth"
@@ -927,7 +1371,8 @@ def fill_historical_analog_gap(
             - date: "YYYY-MM-DD" when extreme reading occurred
             - value: The indicator value (e.g., Z-score +2.5)
             - label: Description (e.g., "Early 2022")
-            If None, attempts to search for prior readings.
+            If None, attempts image extraction or web search discovery.
+        image_path: Optional path to indicator chart image for vision-based extraction.
 
     Returns:
         {
@@ -937,155 +1382,52 @@ def fill_historical_analog_gap(
             "pattern_summary": "..."
         }
     """
-    import numpy as np
-    from datetime import datetime, timedelta
+    indicator_name = gap.get("indicator_name", "Unknown indicator")
+    gap_context = gap.get("missing", "")
 
-    # Import Yahoo fetcher
-    try:
-        import yfinance as yf
-    except ImportError:
-        print("[Historical Analog] yfinance not installed")
-        return {"filled": False, "reason": "yfinance_unavailable"}
+    # Step 1: Get event dates (priority: explicit > image > web search)
+    if indicator_readings is None and image_path:
+        print(f"[Historical Analog] Extracting readings from image for '{indicator_name}'...")
+        indicator_readings = extract_readings_from_image(image_path, indicator_name)
 
-    # Default indicator readings from GS Prime Book chart (extracted from image)
-    # These are the dates when Z-score was approximately +2 or higher
     if indicator_readings is None:
-        indicator_readings = [
-            {"date": "2022-01-24", "value": "+2.5", "label": "Early 2022"},
-            {"date": "2022-06-17", "value": "+2", "label": "Mid 2022 (bear market low)"},
-            {"date": "2023-01-03", "value": "+2", "label": "Early 2023"},
-            {"date": "2024-08-05", "value": "+1.5", "label": "Late 2024 (carry unwind)"},
-        ]
+        print(f"[Historical Analog] No readings provided, discovering dates for '{indicator_name}'...")
+        indicator_readings = discover_prior_extreme_dates(indicator_name, gap_context)
 
-    print(f"[Historical Analog] Analyzing {len(indicator_readings)} prior extreme readings...")
+    if not indicator_readings:
+        print(f"[Historical Analog] No extreme dates found for '{indicator_name}'")
+        return {"filled": False, "reason": "no_dates_found"}
 
-    # Fetch SPY and VIX data
-    try:
-        spy = yf.Ticker("SPY")
-        vix = yf.Ticker("^VIX")
-        spy_hist = spy.history(start="2022-01-01", end="2026-02-10")
-        vix_hist = vix.history(start="2022-01-01", end="2026-02-10")
-    except Exception as e:
-        print(f"[Historical Analog] Failed to fetch data: {e}")
-        return {"filled": False, "reason": f"fetch_failed: {e}"}
+    print(f"[Historical Analog] Analyzing {len(indicator_readings)} prior extreme readings of {indicator_name}...")
 
-    results = []
-    squeeze_count = 0
-    total_valid = 0
+    # Step 2: Run event study
+    episodes = run_event_study(indicator_readings)
 
-    for reading in indicator_readings:
-        date_str = reading["date"]
-        value = reading["value"]
-        label = reading["label"]
+    if not episodes:
+        return {"filled": False, "reason": "no_valid_episodes"}
 
-        try:
-            date = datetime.strptime(date_str, "%Y-%m-%d")
-        except:
-            continue
+    # Step 3: LLM interpretation
+    interpretation = interpret_event_study(indicator_name, episodes, gap_context)
 
-        # Find closest trading day in SPY data
-        closest_idx = None
-        for i, idx in enumerate(spy_hist.index):
-            if idx.tz_localize(None) >= date:
-                closest_idx = i
-                break
+    # Step 4: Build enrichment
+    enrichment_text = _build_analog_enrichment(indicator_name, episodes, interpretation)
 
-        if closest_idx is None or closest_idx + 22 >= len(spy_hist):
-            print(f"  {label}: Insufficient data")
-            continue
+    pattern_summary = interpretation.get("pattern_summary", "")
+    dominant_pattern = interpretation.get("dominant_pattern", "")
+    pattern_probability = interpretation.get("pattern_probability", 0.0)
 
-        base_price = spy_hist.iloc[closest_idx]['Close']
-        base_date = spy_hist.index[closest_idx].strftime("%Y-%m-%d")
-
-        # Calculate SPY returns at different horizons
-        returns = {}
-        for days, period_label in [(5, "1wk"), (10, "2wk"), (22, "1mo")]:
-            if closest_idx + days < len(spy_hist):
-                future_price = spy_hist.iloc[closest_idx + days]['Close']
-                ret = (future_price - base_price) / base_price * 100
-                returns[period_label] = round(ret, 1)
-
-        # Get VIX change over 1 month
-        vix_change = None
-        vix_closest_idx = None
-        for i, idx in enumerate(vix_hist.index):
-            if idx.tz_localize(None) >= date:
-                vix_closest_idx = i
-                break
-
-        if vix_closest_idx and vix_closest_idx + 22 < len(vix_hist):
-            base_vix = vix_hist.iloc[vix_closest_idx]['Close']
-            future_vix = vix_hist.iloc[vix_closest_idx + 22]['Close']
-            vix_change = round((future_vix - base_vix) / base_vix * 100, 1)
-
-        # Determine if this was a squeeze (SPY +5% in 1mo AND VIX down 15%+)
-        is_squeeze = returns.get("1mo", 0) > 5 and (vix_change is not None and vix_change < -15)
-
-        total_valid += 1
-        if is_squeeze:
-            squeeze_count += 1
-
-        result_entry = {
-            "label": label,
-            "date": base_date,
-            "indicator_value": value,
-            "spy_returns": returns,
-            "vix_change_1mo": vix_change,
-            "outcome": "SQUEEZE" if is_squeeze else "NO_SQUEEZE"
-        }
-        results.append(result_entry)
-
-        outcome_str = "✅ SQUEEZE" if is_squeeze else "❌ NO SQUEEZE"
-        print(f"  {label} ({base_date}): SPY 1mo={returns.get('1mo', 'N/A')}%, VIX 1mo={vix_change}% → {outcome_str}")
-
-    if total_valid == 0:
-        return {"filled": False, "reason": "no_valid_readings"}
-
-    # Build pattern summary
-    squeeze_rate = squeeze_count / total_valid
-    pattern_summary = (
-        f"{squeeze_count} of {total_valid} prior extreme readings led to short squeezes "
-        f"(SPY +5%+ in 1mo, VIX crushed 15%+). "
-        f"Squeeze probability based on historical pattern: {squeeze_rate*100:.0f}%"
-    )
-
-    # Build enrichment text
-    enrichment_lines = [
-        "## Historical Analog Analysis: Prior Extreme Short Positioning Episodes",
-        f"(Source: Computed from Yahoo Finance data for GS Prime Book extreme readings)",
-        "",
-        "| Period | Date | Indicator | SPY 1mo | VIX 1mo | Outcome |",
-        "|--------|------|-----------|---------|---------|---------|"
-    ]
-
-    for r in results:
-        spy_1mo = f"{r['spy_returns'].get('1mo', 'N/A'):+.1f}%" if isinstance(r['spy_returns'].get('1mo'), (int, float)) else "N/A"
-        vix_1mo = f"{r['vix_change_1mo']:+.1f}%" if r['vix_change_1mo'] is not None else "N/A"
-        outcome = "✅ SQUEEZE" if r['outcome'] == "SQUEEZE" else "❌ No squeeze"
-        enrichment_lines.append(
-            f"| {r['label']} | {r['date']} | {r['indicator_value']} | {spy_1mo} | {vix_1mo} | {outcome} |"
-        )
-
-    enrichment_lines.extend([
-        "",
-        f"**Pattern Summary**: {pattern_summary}",
-        "",
-        f"**Current Reading**: Z-score +3 (highest on record since 2021)",
-        f"**Historical Implication**: Based on {squeeze_count}/{total_valid} prior episodes, "
-        f"probability of short squeeze is {'elevated' if squeeze_rate >= 0.5 else 'uncertain'}."
-    ])
-
-    print(f"\n[Historical Analog] Pattern: {squeeze_count}/{total_valid} squeezes ({squeeze_rate*100:.0f}%)")
+    print(f"\n[Historical Analog] Done: {len(episodes)} episodes, dominant pattern='{dominant_pattern}' ({pattern_probability*100:.0f}%)")
 
     return {
         "filled": True,
         "historical_analysis": {
-            "episodes": results,
-            "squeeze_count": squeeze_count,
-            "total_episodes": total_valid,
-            "squeeze_rate": squeeze_rate
+            "episodes": episodes,
+            "interpretation": interpretation,
+            "total_episodes": len(episodes),
+            "dominant_pattern": dominant_pattern,
+            "pattern_probability": pattern_probability
         },
-        "enrichment_text": "\n".join(enrichment_lines),
+        "enrichment_text": enrichment_text,
         "pattern_summary": pattern_summary
     }
 
@@ -1154,7 +1496,8 @@ def detect_and_fill_gaps(
     topic_coverage: Dict[str, Any] = None,
     enable_gap_filling: bool = True,
     max_searches: int = 6,
-    max_attempts_per_gap: int = 2
+    max_attempts_per_gap: int = 2,
+    image_path: str = None
 ) -> Dict[str, Any]:
     """
     Main entry point: detect gaps and fill them.
@@ -1173,6 +1516,7 @@ def detect_and_fill_gaps(
         enable_gap_filling: Whether to attempt filling gaps
         max_searches: Maximum web searches
         max_attempts_per_gap: Max refinement attempts per gap
+        image_path: Optional path to indicator chart image for vision-based extraction
 
     Returns:
         {
@@ -1254,7 +1598,7 @@ def detect_and_fill_gaps(
             print(f"  Indicator: {indicator}")
 
             # Call the historical analog analysis
-            analog_result = fill_historical_analog_gap(gap)
+            analog_result = fill_historical_analog_gap(gap, image_path=image_path)
 
             if analog_result.get("filled"):
                 all_filled.append({

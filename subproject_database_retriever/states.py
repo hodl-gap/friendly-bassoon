@@ -13,6 +13,7 @@ class RetrieverState(TypedDict, total=False):
 
     # Input
     query: str  # User's original query
+    image_path: str  # Optional path to indicator chart image
 
     # Query Processing
     processed_query: str  # Cleaned/expanded query

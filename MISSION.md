@@ -70,7 +70,7 @@ Oracle exemplified the valuation uncertainty, with shares fluctuating between $1
 - Software sector valuation compression (85x → 60x, IGV -27%)
 - Oracle valuation swing example ($155 vs $175)
 
-**Status:** NOT ACHIEVED - Gap detection not triggering web chain extraction
+**Status:** ACHIEVED (9/13 elements) - Gap detection fix applied, web chain extraction working
 
 ---
 
@@ -83,5 +83,8 @@ Oracle exemplified the valuation uncertainty, with shares fluctuating between $1
 - Current prompt: `"ONLY mark as GAP if the topic is completely absent from synthesis"`
 - This prevents `topic_not_covered` gap from triggering when content is tangentially related
 
-### Next Step
-Fix the gap detection prompt to trigger `topic_not_covered` when synthesis doesn't answer the specific question, then re-run pipeline.
+### 2026-02-09: Fix Applied
+- Fixed gap detection prompt to check "question answered?" instead of "topic mentioned?"
+- Commit: `1071c53` - Fix gap detection to check question-answered not topic-mentioned
+- Pipeline re-run confirmed web chain extraction now triggers correctly
+- Commit: `49d3800` - Document successful pipeline run after gap detection fix

@@ -45,17 +45,17 @@ Evaluate the retrieved information against these knowledge categories. For each 
    - IMPORTANT: Tangentially related content is NOT "covered". If query asks "What caused X?" and synthesis discusses Y (even if Y happened around the same time), that's a GAP.
    - Example: Query asks "What caused the SaaS meltdown?" → Synthesis discusses Fed policy in same timeframe → GAP (Fed policy ≠ SaaS meltdown cause)
    - When gap detected, provide a SPECIFIC search query targeting the actual question (e.g., "SaaS software stock meltdown causes triggers 2026")
-   - **INPUT CLAIM VALIDATION**: If the query contains specific data claims (e.g., "Z-score +3", "record shorting"), search for corroborating evidence. Example: Query claims "GS Prime Book shows record shorting Feb 2026" → search "Goldman Sachs Prime Book record shorting February 2026" to validate and enrich
+   - **INPUT CLAIM VALIDATION**: If the query contains specific data claims (e.g., "Z-score +3", "record reading"), search for corroborating evidence. Example: Query claims "indicator X shows record reading" → search for corroborating evidence to validate and enrich
 
 1. **Historical precedent depth**
    - COVERED: Multiple (≥2) similar historical episodes with specific dates AND outcomes
    - GAP: Only 1 example, or no specific dates for similar episodes
-   - **CRITICAL FOR INDICATOR QUERIES**: If the query mentions a SPECIFIC INDICATOR with an extreme reading (e.g., "GS Prime Book Z-score +3", "VIX at 40", "put/call ratio at 1.5"), the gap should ask: "What happened in PRIOR instances when THIS SAME INDICATOR reached similar extremes?"
+   - **CRITICAL FOR INDICATOR QUERIES**: If the query mentions a SPECIFIC INDICATOR with an extreme reading (e.g., "VIX at 40", "put/call ratio at 1.5", "AAII bearish at 60%"), the gap should ask: "What happened in PRIOR instances when THIS SAME INDICATOR reached similar extremes?"
    - fill_method: `"historical_analog"` — when query references a specific indicator at extreme level
    - fill_method: `"web_search"` — for generic historical precedent (no specific indicator)
    - For historical_analog: We will fetch price data (SPY, VIX) for prior extreme dates and compute what happened after
-   - indicator_name: Name of the indicator (e.g., "GS Prime Book short positioning Z-score")
-   - Example: Query says "GS Prime Book Z-score +3" → GAP should be "What happened after prior GS Prime Book extreme readings (+2 or higher)?" with fill_method="historical_analog"
+   - indicator_name: Name of the indicator (e.g., "VIX", "put/call ratio")
+   - Example: Query says "VIX at 40" → GAP should be "What happened after prior VIX spikes to 40+?" with fill_method="historical_analog"
 
 2. **Quantified relationships**
    - COVERED: Specific correlation coefficients or measured relationships
@@ -67,7 +67,7 @@ Evaluate the retrieved information against these knowledge categories. For each 
      * FX/Crypto: btc, eth, dxy, usdjpy, eurusd
      * Volatility: vix, vvix
      * Rates: tlt, gld, gold
-   - IMPORTANT: Only use data_fetch for PUBLIC data (Yahoo/FRED). Proprietary data (GS Prime Book, hedge fund positioning) must use web_search instead.
+   - IMPORTANT: Only use data_fetch for PUBLIC data (Yahoo/FRED). Proprietary data (hedge fund positioning, prime broker data) must use web_search instead.
 
 3. **Monitoring thresholds**
    - COVERED: Specific levels from analyst research (e.g., "analysts target X range")
@@ -121,6 +121,120 @@ Rules:
 - fill_method: Use "web_search" for all others
 - search_query: only for web_search/web_chain_extraction gaps. Must be a single-topic query (5-12 words) asking for RAW FACTS
 - instruments: only for data_fetch gaps. List of normalized variable names to fetch
-- indicator_name: only for historical_analog gaps. The specific indicator mentioned in query (e.g., "GS Prime Book Z-score")
+- indicator_name: only for historical_analog gaps. The specific indicator mentioned in query (e.g., "VIX", "put/call ratio")
 - IMPORTANT: Keep "found" and "missing" fields BRIEF (1-2 sentences max, under 50 words each)
+"""
+
+
+EXTRACT_EXTREME_DATES_PROMPT = """You are given web search snippets about a financial indicator. Extract prior dates when this indicator reached extreme levels.
+
+## INDICATOR
+{indicator_name}
+
+## SEARCH SNIPPETS
+{snippets}
+
+---
+
+Extract dates when "{indicator_name}" reached extreme or notable levels. For each episode, provide:
+- **date**: Best estimate in YYYY-MM-DD format (use first of month if only month known)
+- **value**: The indicator reading if mentioned (e.g., "+2.5", "40", "1.5"), or "extreme" if value not specified
+- **label**: Short description of the episode (e.g., "COVID crash", "2022 bear market")
+
+Respond in this EXACT JSON format:
+```json
+{{
+  "dates": [
+    {{"date": "YYYY-MM-DD", "value": "...", "label": "..."}},
+    ...
+  ],
+  "notes": "Any caveats about date accuracy"
+}}
+```
+
+Rules:
+- Only include episodes where the indicator actually reached an extreme (not normal readings)
+- Maximum 8 episodes
+- Order chronologically (oldest first)
+- If no extreme dates can be identified from the snippets, return {{"dates": [], "notes": "..."}}
+- Prefer specific dates over vague references
+"""
+
+
+EXTRACT_READINGS_FROM_IMAGE_PROMPT = """You are given a chart image of a financial indicator. Extract dates when this indicator reached extreme levels.
+
+## INDICATOR
+{indicator_name}
+
+---
+
+Analyze the chart image carefully. Identify dates when "{indicator_name}" reached extreme HIGH readings (spikes, record highs). Only extract peaks/spikes — do NOT include troughs or extreme lows. For each episode, provide:
+- **date**: Best estimate in YYYY-MM-DD format (use first of month if only month known)
+- **value**: The indicator reading if visible (e.g., "+2.5", "40", "1.5"), or "extreme" if value not clear
+- **label**: Short description of the episode (e.g., "COVID crash", "2022 bear market")
+
+Respond in this EXACT JSON format:
+```json
+{{
+  "dates": [
+    {{"date": "YYYY-MM-DD", "value": "...", "label": "..."}},
+    ...
+  ],
+  "notes": "Any caveats about date accuracy"
+}}
+```
+
+Rules:
+- Only include episodes where the indicator reached an extreme HIGH (not normal readings, not lows/troughs)
+- Do NOT include negative extremes or troughs — we only want the same-direction extremes as the current reading
+- Maximum 8 episodes
+- Order chronologically (oldest first)
+- If no extreme dates can be identified from the chart, return {{"dates": [], "notes": "..."}}
+- Prefer specific dates over vague references
+- Read axis labels, annotations, and any text on the chart carefully
+"""
+
+
+INTERPRET_EVENT_STUDY_PROMPT = """You are given return data around dates when a financial indicator reached extreme levels. Classify each episode's outcome and identify the dominant pattern.
+
+## INDICATOR
+{indicator_name}
+
+## CONTEXT
+{gap_context}
+
+## EPISODE DATA
+{episodes_table}
+
+---
+
+For each episode, classify the market outcome based on the return data. Use descriptive labels like:
+- "rally" (strong positive returns)
+- "selloff" (significant negative returns)
+- "squeeze" (sharp reversal higher, especially with VIX crush)
+- "sideways" (minimal movement)
+- "volatile" (large moves in both directions)
+- Or any other appropriate label based on the data
+
+Then identify the dominant pattern across all episodes.
+
+Respond in this EXACT JSON format:
+```json
+{{
+  "episode_outcomes": [
+    {{"label": "...", "date": "YYYY-MM-DD", "outcome": "rally|selloff|squeeze|sideways|volatile|...","reasoning": "brief explanation"}},
+    ...
+  ],
+  "dominant_pattern": "most common outcome label",
+  "pattern_probability": 0.0-1.0,
+  "pattern_summary": "1-2 sentence summary of the historical pattern",
+  "interpretation": "2-3 sentence interpretation of what this means for the current reading"
+}}
+```
+
+Rules:
+- Base classifications ONLY on the return data provided, not assumptions
+- pattern_probability = count of dominant_pattern / total episodes
+- Keep reasoning brief (under 20 words per episode)
+- interpretation should reference the specific indicator name
 """

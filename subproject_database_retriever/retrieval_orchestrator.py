@@ -67,6 +67,7 @@ def detect_and_fill_gaps(state: RetrieverState) -> RetrieverState:
     print(f"[retrieval] Running gap detection with {len(all_chains)} chains...")
 
     # Run gap detection and filling
+    image_path = state.get("image_path")
     gap_result = run_gap_detection(
         query=query,
         synthesis=synthesis,
@@ -74,7 +75,8 @@ def detect_and_fill_gaps(state: RetrieverState) -> RetrieverState:
         topic_coverage=topic_coverage,
         enable_gap_filling=ENABLE_GAP_FILLING,
         max_searches=MAX_GAP_SEARCHES,
-        max_attempts_per_gap=MAX_ATTEMPTS_PER_GAP
+        max_attempts_per_gap=MAX_ATTEMPTS_PER_GAP,
+        image_path=image_path
     )
 
     # Update state with gap results
@@ -190,12 +192,13 @@ def build_graph() -> StateGraph:
     return graph.compile()
 
 
-def run_retrieval(query: str) -> dict:
+def run_retrieval(query: str, image_path: str = None) -> dict:
     """
     Main entry point for retrieval workflow.
 
     Args:
         query: User's question or search query
+        image_path: Optional path to indicator chart image for vision-based extraction
 
     Returns:
         Final state containing answer and retrieved context
@@ -207,6 +210,9 @@ def run_retrieval(query: str) -> dict:
         iteration_count=0,
         needs_refinement=False
     )
+
+    if image_path:
+        initial_state["image_path"] = image_path
 
     final_state = graph.invoke(initial_state)
     return final_state

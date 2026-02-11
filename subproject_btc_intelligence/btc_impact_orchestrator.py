@@ -145,7 +145,7 @@ def parse_logic_chains_from_answer(answer_text: str) -> List[Dict]:
     return chains
 
 
-def retrieve_context(query: str) -> BTCImpactState:
+def retrieve_context(query: str, image_path: str = None) -> BTCImpactState:
     """
     Step 1: Call database_retriever to get enriched context.
 
@@ -156,6 +156,10 @@ def retrieve_context(query: str) -> BTCImpactState:
     - Gap detection & filling (moved from BTC Intelligence)
     - Web chain extraction
 
+    Args:
+        query: User's question or search query
+        image_path: Optional path to indicator chart image for vision-based extraction
+
     Returns state populated with retrieval results including merged logic chains.
     """
     print(f"\n[Retrieve] Querying: {query}")
@@ -165,7 +169,7 @@ def retrieve_context(query: str) -> BTCImpactState:
     from retrieval_orchestrator import run_retrieval
 
     # Run retrieval (now includes gap detection and filling)
-    result = run_retrieval(query)
+    result = run_retrieval(query, image_path=image_path)
 
     # Extract relevant fields - retriever now provides enriched context
     state = BTCImpactState(
@@ -449,7 +453,8 @@ def run_btc_impact_analysis(
     output_json: bool = False,
     skip_data_fetch: bool = False,
     skip_chain_store: bool = False,
-    use_integrated_pipeline: bool = False
+    use_integrated_pipeline: bool = False,
+    image_path: str = None
 ) -> Dict[str, Any]:
     """
     Main entry point for BTC impact analysis.
@@ -465,6 +470,7 @@ def run_btc_impact_analysis(
         skip_chain_store: If True, skip loading/storing logic chains (Phase 3)
         use_integrated_pipeline: If True, use shared/integration.py for
             Variable Mapper → Data Collection wiring instead of standalone fetching
+        image_path: Optional path to indicator chart image for vision-based extraction
 
     Returns:
         Final state dict with analysis results
@@ -479,7 +485,7 @@ def run_btc_impact_analysis(
         print(f"[Regime] Current: {regime_state.get('liquidity_regime')} (driver: {regime_state.get('dominant_driver')})")
 
     # Step 1: Retrieve enriched context (now includes gap detection & web chain extraction)
-    state = retrieve_context(query)
+    state = retrieve_context(query, image_path=image_path)
 
     # Add regime context to state for use in analysis
     state["regime_state"] = regime_state
