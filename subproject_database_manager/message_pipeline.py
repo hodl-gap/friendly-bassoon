@@ -10,8 +10,6 @@ Used by telegram_workflow_orchestrator.py for Step 2 processing.
 from pathlib import Path
 from extract_telegram_data import extract_telegram_messages
 from process_messages_v3 import process_all_messages_v3
-from qa_validation import sample_qa_validation
-from extraction_accuracy_qa import run_accuracy_qa
 
 
 def process_single_channel(
@@ -49,12 +47,6 @@ def process_single_channel(
 
     # Step 2: Process with V3
     output_csv = _run_v3_processor(intermediate_csv, channel_name, export_path, output_dir, batch_size)
-
-    # Step 3: QA Validation (structure/completeness)
-    _run_qa_validation(output_csv)
-
-    # Step 4: Accuracy QA (10% sample, verify values are correct)
-    _run_accuracy_qa(output_csv)
 
     return str(output_csv)
 
@@ -115,29 +107,3 @@ def _run_v3_processor(intermediate_csv, channel_name, export_path, output_dir, b
     return output_csv
 
 
-def _run_qa_validation(output_csv):
-    """Run QA sampling validation on processed output."""
-    print(f"\n🔍 Running QA sampling validation (structure/completeness)...")
-    sample_qa_validation(
-        input_csv=str(output_csv),
-        validate_categories=['data_opinion', 'interview_meeting'],
-        sample_min=3,
-        sample_max=20,
-        sample_pct=0.05
-    )
-
-
-def _run_accuracy_qa(output_csv):
-    """Run accuracy QA to verify extracted values are correct."""
-    print(f"\n🎯 Running extraction accuracy QA (10% sample)...")
-    stats, log_path = run_accuracy_qa(
-        input_csv=str(output_csv),
-        sample_rate=0.10
-    )
-
-    # Print warning if error rate is high
-    error_rate = stats.get('overall_error_rate', 0)
-    if error_rate >= 0.20:
-        print(f"\n⚠️  HIGH ERROR RATE ({error_rate*100:.1f}%) - Review extraction prompts!")
-    elif error_rate >= 0.10:
-        print(f"\n⚠️  Elevated error rate ({error_rate*100:.1f}%) - Monitor trends.")

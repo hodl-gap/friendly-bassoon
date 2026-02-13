@@ -100,6 +100,30 @@ FALLBACK_MODEL = "claude_sonnet"  # Used if primary model fails
 # - Tier 3+: 20-30
 MAX_CONCURRENT_REQUESTS = 10
 
+def should_extract_image(image_path: str) -> bool:
+    """Pre-filter images before expensive vision API call.
+
+    Skips tiny images (icons/avatars), very small files (stickers/emoji),
+    and non-image files that somehow ended up in the photo field.
+    """
+    # Skip if file doesn't exist
+    if not os.path.exists(image_path):
+        return False
+
+    # Skip tiny files (<5KB = likely stickers, emoji, icons)
+    file_size = os.path.getsize(image_path)
+    if file_size < 5_000:
+        return False
+
+    # Skip non-image extensions
+    valid_extensions = {'.jpg', '.jpeg', '.png', '.webp', '.gif'}
+    ext = os.path.splitext(image_path)[1].lower()
+    if ext not in valid_extensions:
+        return False
+
+    return True
+
+
 def encode_image(image_path):
     """Encode image to base64"""
     try:
@@ -625,30 +649,47 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
 
         # Step 1: Extract BOTH summary and structured data in one call
         # This saves one API call per image for data_opinion/interview_meeting categories
-        for i, msg in enumerate(messages, 1):
+        # Uses thread pool for parallel image extraction
+
+        # Set defaults for all messages first
+        for msg in messages:
+            msg['image_summary'] = ""
+            msg['combined_text'] = msg['text']
+            msg['image_structured_data_cached'] = {}
+
+        # Collect messages that have photos and pass the pre-filter
+        image_tasks = []  # (msg_index, msg, photo_path)
+        for i, msg in enumerate(messages):
             if msg.get('photo'):
-                print(f"\nMessage {i}/{len(messages)}: Extracting image (combined)...")
-                print(f"  Photo: {msg['photo']}")
-
                 photo_path = base_photo_path + msg['photo']
-                combined_result = extract_image_combined(photo_path, msg['text'], msg['date'])
-                api_costs['image_summaries'] += 1  # Still track as 1 call (was 2 before)
-
-                if combined_result:
-                    image_summary = combined_result.get('summary', '')
-                    print(f"  Summary: {image_summary[:150]}...")
-                    msg['image_summary'] = image_summary
-                    msg['combined_text'] = f"{msg['text']}\n\n[Image contains: {image_summary}]"
-                    # Store structured data for later use in Step 3 (no second API call needed)
-                    msg['image_structured_data_cached'] = combined_result.get('structured_data', {})
+                if should_extract_image(photo_path):
+                    image_tasks.append((i, msg, photo_path))
                 else:
-                    msg['image_summary'] = ""
-                    msg['combined_text'] = msg['text']
-                    msg['image_structured_data_cached'] = {}
-            else:
-                msg['image_summary'] = ""
-                msg['combined_text'] = msg['text']
-                msg['image_structured_data_cached'] = {}
+                    print(f"  Skipping image for message {i+1}: failed pre-filter ({msg['photo']})")
+
+        if image_tasks:
+            print(f"\n  Extracting {len(image_tasks)} images in parallel (max {MAX_CONCURRENT_REQUESTS} concurrent)...")
+            from concurrent.futures import ThreadPoolExecutor, as_completed
+
+            def _extract_single_image(task):
+                msg_idx, msg, photo_path = task
+                print(f"  Extracting image for message {msg_idx+1}/{len(messages)}: {msg['photo']}")
+                result = extract_image_combined(photo_path, msg['text'], msg['date'])
+                return (msg_idx, result)
+
+            with ThreadPoolExecutor(max_workers=MAX_CONCURRENT_REQUESTS) as executor:
+                futures = {executor.submit(_extract_single_image, task): task for task in image_tasks}
+                for future in as_completed(futures):
+                    msg_idx, combined_result = future.result()
+                    msg = messages[msg_idx]
+                    api_costs['image_summaries'] += 1
+
+                    if combined_result:
+                        image_summary = combined_result.get('summary', '')
+                        print(f"  Message {msg_idx+1} summary: {image_summary[:150]}...")
+                        msg['image_summary'] = image_summary
+                        msg['combined_text'] = f"{msg['text']}\n\n[Image contains: {image_summary}]"
+                        msg['image_structured_data_cached'] = combined_result.get('structured_data', {})
 
         step_times['step1_image_summaries'] = time.time() - step1_start
         print(f"\n⏱️  Step 1 completed in {step_times['step1_image_summaries']:.1f}s")
