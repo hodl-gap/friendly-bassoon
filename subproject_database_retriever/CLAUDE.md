@@ -25,6 +25,7 @@ subproject_database_retriever/
 ├── answer_generation.py         # Function: generate final answers
 ├── knowledge_gap_detector.py    # Function: detect and fill knowledge gaps
 ├── knowledge_gap_prompts.py     # Prompts for gap detection
+├── web_chain_persistence.py     # Function: persist verified web chains to Pinecone (L1 learning)
 ├── query_routing.py             # Function: route queries to appropriate handlers
 ├── {other}_prompts.py           # Prompts for each workflow
 ├── states.py                    # LangGraph state definitions
@@ -359,7 +360,7 @@ The retrieval layer now handles gap detection and filling, providing enriched co
 
 **Workflow Step Added**:
 ```
-process_query → search → generate → fill_gaps → END
+process_query → search → generate → fill_gaps → conditional_resynthesis → persist_learning → END
 ```
 
 **Gap Categories**:
@@ -424,6 +425,36 @@ MAX_ATTEMPTS_PER_GAP = 2          # Max refinement attempts per gap
 ```
 
 **Cost**: ~$0.035 per query with Tavily (6 searches + 6 Haiku extractions + 1 gap detection)
+
+### Web Chain Persistence — L1 Learning (NEW)
+
+After gap filling and resynthesis, verified web chains are persisted to Pinecone so subsequent queries benefit from previously discovered knowledge.
+
+**File**: `web_chain_persistence.py`
+
+**How it works**:
+1. Filters web chains: only `quote_verified=True` AND `confidence in ("high", "medium")`
+2. Normalizes flat web chain schema to canonical `LogicChain` format
+3. Generates embeddings via `call_openai_embedding()`
+4. Upserts to Pinecone with metadata: `category: "web_chain"`, cause/effect normalized, source, mechanism
+5. Chain ID format: `web_{md5(cause+effect+source)[:16]}`
+6. Also updates `variable_frequency.json` with newly seen variables
+
+**Key Functions**:
+| Function | File | Purpose |
+|----------|------|---------|
+| `persist_web_chains()` | `web_chain_persistence.py` | Filter, embed, upsert web chains to Pinecone |
+| `persist_learning()` | `retrieval_orchestrator.py` | Graph node wrapping persistence + frequency tracking |
+
+### skip_gap_filling Parameter (NEW)
+
+`run_retrieval()` accepts `skip_gap_filling: bool = False`. When true:
+- Gap detection and filling are skipped
+- Web chain persistence is skipped
+- Used by `theme_refresh.py` for lightweight retrieval during daily monitoring
+
+**State Field Added**:
+- `skip_gap_filling`: bool (in `RetrieverState`)
 
 ## Flexible Design Decisions (TBD)
 The following are intentionally left flexible for future decisions:

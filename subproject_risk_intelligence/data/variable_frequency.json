@@ -2,8 +2,8 @@
   "variables": {
     "bitcoin_price": {
       "first_seen": "2026-02-14T06:54:16.208696",
-      "last_seen": "2026-02-14T06:54:16.209075",
-      "chain_count": 13,
+      "last_seen": "2026-02-14T07:24:48.819019",
+      "chain_count": 15,
       "sources": [
         "2d482ab65308767d_41",
         "3bfe46e026b54bb5_500",
@@ -15,7 +15,8 @@
         "(id: 55f2736fd6a72c85_126)",
         "Source 8 (771b9b416d46347b_67)",
         "Source 8 (771b9b416d46347b_67)\n\n## Medium-Term Reversal Chains",
-        "Source 10 (771b9b416d46347b_67)"
+        "Source 10 (771b9b416d46347b_67)",
+        "Source 7"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -110,8 +111,8 @@
     },
     "sofr": {
       "first_seen": "2026-02-14T06:54:16.208718",
-      "last_seen": "2026-02-14T06:54:16.209099",
-      "chain_count": 11,
+      "last_seen": "2026-02-14T07:24:48.819006",
+      "chain_count": 12,
       "sources": [
         "2d482ab65308767d_41 (steps 1-3), contextual interpretation for BTC impact",
         "Source 2 (interpretation context)",
@@ -123,7 +124,8 @@
         "NY Fed (f302d29e63075107_204)",
         "CoinDesk (cfbe53872aafa7ad_157) → Plan G Research (1ff0edc5cd7a3aeb_201) → NY Fed (f302d29e63075107_204)",
         "CoinDesk → Plan G Research → NY Fed",
-        "Source 6 (inverse of stated mechanism), Sources 16-17 (SOFR volume/rate stress indicators), Source 15 (news-driven BTC weakness pattern)"
+        "Source 6 (inverse of stated mechanism), Sources 16-17 (SOFR volume/rate stress indicators), Source 15 (news-driven BTC weakness pattern)",
+        "Source 7 (catalyst), Source 10 (steps 2-3), Source 16 (steps 4-6)"
       ],
       "is_anchor": true,
       "anchor_theme": "rates"
@@ -208,8 +210,8 @@
     },
     "carry_trade_unwind": {
       "first_seen": "2026-02-14T06:54:16.208729",
-      "last_seen": "2026-02-14T06:54:16.209082",
-      "chain_count": 18,
+      "last_seen": "2026-02-14T07:24:48.819022",
+      "chain_count": 19,
       "sources": [
         "CoinDesk (cfbe53872aafa7ad_157) for full chain",
         "Source 7 (steps 1-2, steps 3-4)",
@@ -226,7 +228,8 @@
         "7b77309cfd6630df_70",
         "Source 2 (7b77309cfd6630df_70)",
         "Source 2 (steps 1-2), Source 7 (step 4 for BTC impact)",
-        "Source 1 (df0468450c5fb327_71) event description + Source 2, 3, 4 logic chains"
+        "Source 1 (df0468450c5fb327_71) event description + Source 2, 3, 4 logic chains",
+        "Source 7 (catalyst), Source 9 (transmission mechanism)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -339,51 +342,56 @@
     },
     "btc_volatility": {
       "first_seen": "2026-02-14T06:54:16.208741",
-      "last_seen": "2026-02-14T06:54:16.209084",
-      "chain_count": 6,
+      "last_seen": "2026-02-14T07:24:48.819010",
+      "chain_count": 7,
       "sources": [
         "Source 78c9945a42691062_43",
         "Source 10 (QRA → reserves), Source 15 (reserves → bailout need), Source 11/12 (SOFR volume as stress indicator)",
         "@bitcoindata21 (id: 3bfe46e026b54bb5_500)",
         "Generic source (id: 78c9945a42691062_43)",
         "Source 2 (7b77309cfd6630df_70), Source 4 (78c9945a42691062_43)",
-        "5eb637a4c093a7b6_15 → 78c9945a42691062_43/407f42bd9bfc3d8a_453"
+        "5eb637a4c093a7b6_15 → 78c9945a42691062_43/407f42bd9bfc3d8a_453",
+        "Source 7 (catalyst), Source 10 (steps 2-3)"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "fx_intervention_risk": {
       "first_seen": "2026-02-14T06:54:16.208741",
-      "last_seen": "2026-02-14T06:54:16.209008",
-      "chain_count": 2,
+      "last_seen": "2026-02-14T07:24:48.819006",
+      "chain_count": 3,
       "sources": [
         "Source 78c9945a42691062_43",
-        "Generic source (id: 78c9945a42691062_43)"
+        "Generic source (id: 78c9945a42691062_43)",
+        "Source 7 (catalyst), Source 10 (steps 2-3), Source 16 (steps 4-6)"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "jpy_surge": {
       "first_seen": "2026-02-14T06:54:16.208741",
-      "last_seen": "2026-02-14T06:54:16.209008",
-      "chain_count": 2,
+      "last_seen": "2026-02-14T07:24:48.819006",
+      "chain_count": 3,
       "sources": [
         "Source 78c9945a42691062_43",
-        "Generic source (id: 78c9945a42691062_43)"
+        "Generic source (id: 78c9945a42691062_43)",
+        "Source 7 (catalyst), Source 10 (steps 2-3), Source 16 (steps 4-6)"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "carry_unwind": {
       "first_seen": "2026-02-14T06:54:16.208741",
-      "last_seen": "2026-02-14T06:54:16.209130",
-      "chain_count": 5,
+      "last_seen": "2026-02-14T07:24:48.819006",
+      "chain_count": 7,
       "sources": [
         "Source 78c9945a42691062_43",
         "Generic source (id: 78c9945a42691062_43)",
         "Plan G Research",
         "5eb637a4c093a7b6_15 → 78c9945a42691062_43/407f42bd9bfc3d8a_453",
-        "BOJ rate hike analysis (id: 90f98eee5ecd8f33_464)"
+        "BOJ rate hike analysis (id: 90f98eee5ecd8f33_464)",
+        "Source 7 (step 1), Source 8 (steps 2-3)",
+        "Source 7 (catalyst), Source 10 (steps 2-3), Source 16 (steps 4-6)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -506,11 +514,12 @@
     },
     "fx_intervention": {
       "first_seen": "2026-02-14T06:54:16.208756",
-      "last_seen": "2026-02-14T06:54:16.209090",
-      "chain_count": 2,
+      "last_seen": "2026-02-14T07:24:48.819013",
+      "chain_count": 3,
       "sources": [
         "Source 78c9945a42691062_43",
-        "78c9945a42691062_43"
+        "78c9945a42691062_43",
+        "Source 7 (catalyst), Source 10 (steps 4-5)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -530,12 +539,13 @@
     },
     "policy_easing_expectations": {
       "first_seen": "2026-02-14T06:54:16.208756",
-      "last_seen": "2026-02-14T06:54:16.209090",
-      "chain_count": 3,
+      "last_seen": "2026-02-14T07:24:48.819013",
+      "chain_count": 4,
       "sources": [
         "Source 78c9945a42691062_43",
         "78c9945a42691062_43, 7b77309cfd6630df_70, cfbe53872aafa7ad_157",
-        "78c9945a42691062_43"
+        "78c9945a42691062_43",
+        "Source 7 (catalyst), Source 10 (steps 4-5)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -588,11 +598,12 @@
     },
     "risk_off": {
       "first_seen": "2026-02-14T06:54:16.208765",
-      "last_seen": "2026-02-14T06:54:16.208883",
-      "chain_count": 2,
+      "last_seen": "2026-02-14T07:24:48.819002",
+      "chain_count": 3,
       "sources": [
         "Bloomberg Intelligence (8b9c25f376fe3c2e_210)",
-        "Source 6, Source 16"
+        "Source 6, Source 16",
+        "Source 7 (context), Source 6 (full chain)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -1608,13 +1619,14 @@
     },
     "crypto_downside": {
       "first_seen": "2026-02-14T06:54:16.208922",
-      "last_seen": "2026-02-14T06:54:16.208997",
-      "chain_count": 4,
+      "last_seen": "2026-02-14T07:24:48.819022",
+      "chain_count": 5,
       "sources": [
         "Source 7 (steps 1-2, steps 3-4)",
         "Source 7 (steps 1-3), Sources 16, 18 (empirical correlation)",
         "NY Fed (f302d29e63075107_204)",
-        "CoinDesk/NY Fed (carry unwind) → BOJ (9a7dfa8be11634e4_493) for liquidity→margin call chain"
+        "CoinDesk/NY Fed (carry unwind) → BOJ (9a7dfa8be11634e4_493) for liquidity→margin call chain",
+        "Source 7 (catalyst), Source 9 (transmission mechanism)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -1934,21 +1946,23 @@
     },
     "usd_shortage": {
       "first_seen": "2026-02-14T06:54:16.208993",
-      "last_seen": "2026-02-14T06:54:16.208993",
-      "chain_count": 1,
+      "last_seen": "2026-02-14T07:24:48.819006",
+      "chain_count": 2,
       "sources": [
-        "CoinDesk (cfbe53872aafa7ad_157) → Plan G Research (1ff0edc5cd7a3aeb_201) → NY Fed (f302d29e63075107_204)"
+        "CoinDesk (cfbe53872aafa7ad_157) → Plan G Research (1ff0edc5cd7a3aeb_201) → NY Fed (f302d29e63075107_204)",
+        "Source 7 (catalyst), Source 10 (steps 2-3), Source 16 (steps 4-6)"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "usd_repurchase": {
       "first_seen": "2026-02-14T06:54:16.208993",
-      "last_seen": "2026-02-14T06:54:16.209020",
-      "chain_count": 2,
+      "last_seen": "2026-02-14T07:24:48.819006",
+      "chain_count": 3,
       "sources": [
         "CoinDesk (cfbe53872aafa7ad_157) → Plan G Research (1ff0edc5cd7a3aeb_201) → NY Fed (f302d29e63075107_204)",
-        "CoinDesk → Plan G Research → NY Fed"
+        "CoinDesk → Plan G Research → NY Fed",
+        "Source 7 (catalyst), Source 10 (steps 2-3), Source 16 (steps 4-6)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -1965,20 +1979,22 @@
     },
     "market_liquidity": {
       "first_seen": "2026-02-14T06:54:16.208997",
-      "last_seen": "2026-02-14T06:54:16.208997",
-      "chain_count": 1,
+      "last_seen": "2026-02-14T07:24:48.819016",
+      "chain_count": 2,
       "sources": [
-        "CoinDesk/NY Fed (carry unwind) → BOJ (9a7dfa8be11634e4_493) for liquidity→margin call chain"
+        "CoinDesk/NY Fed (carry unwind) → BOJ (9a7dfa8be11634e4_493) for liquidity→margin call chain",
+        "Source 7 (political context), Source 1 (BOJ policy chain)"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "margin_calls": {
       "first_seen": "2026-02-14T06:54:16.208997",
-      "last_seen": "2026-02-14T06:54:16.208997",
-      "chain_count": 1,
+      "last_seen": "2026-02-14T07:24:48.819016",
+      "chain_count": 2,
       "sources": [
-        "CoinDesk/NY Fed (carry unwind) → BOJ (9a7dfa8be11634e4_493) for liquidity→margin call chain"
+        "CoinDesk/NY Fed (carry unwind) → BOJ (9a7dfa8be11634e4_493) for liquidity→margin call chain",
+        "Source 7 (political context), Source 1 (BOJ policy chain)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -2026,21 +2042,24 @@
     },
     "global_liquidity": {
       "first_seen": "2026-02-14T06:54:16.209008",
-      "last_seen": "2026-02-14T06:54:16.209008",
-      "chain_count": 1,
+      "last_seen": "2026-02-14T07:24:48.819010",
+      "chain_count": 2,
       "sources": [
-        "Generic source (id: 78c9945a42691062_43)"
+        "Generic source (id: 78c9945a42691062_43)",
+        "Source 7 (catalyst), Source 10 (steps 2-3)"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "usd_jpy": {
       "first_seen": "2026-02-14T06:54:16.209011",
-      "last_seen": "2026-02-14T06:54:16.209075",
-      "chain_count": 2,
+      "last_seen": "2026-02-14T07:24:48.819019",
+      "chain_count": 6,
       "sources": [
         "Plan G Research",
-        "Source 10 (771b9b416d46347b_67)"
+        "Source 10 (771b9b416d46347b_67)",
+        "Source 7",
+        "Source 7 (step 1), Source 2 (steps 2-3)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -2057,20 +2076,22 @@
     },
     "correlated_selloff": {
       "first_seen": "2026-02-14T06:54:16.209014",
-      "last_seen": "2026-02-14T06:54:16.209014",
-      "chain_count": 1,
+      "last_seen": "2026-02-14T07:24:48.819025",
+      "chain_count": 2,
       "sources": [
-        "Generic source (id: a16f8cf8c7fd06e1_181)"
+        "Generic source (id: a16f8cf8c7fd06e1_181)",
+        "Source 17"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "position_unwinding": {
       "first_seen": "2026-02-14T06:54:16.209014",
-      "last_seen": "2026-02-14T06:54:16.209014",
-      "chain_count": 1,
+      "last_seen": "2026-02-14T07:24:48.819025",
+      "chain_count": 2,
       "sources": [
-        "Generic source (id: a16f8cf8c7fd06e1_181)"
+        "Generic source (id: a16f8cf8c7fd06e1_181)",
+        "Source 17"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -2188,30 +2209,33 @@
     },
     "policy_action_yen_support": {
       "first_seen": "2026-02-14T06:54:16.209033",
-      "last_seen": "2026-02-14T06:54:16.209033",
-      "chain_count": 1,
+      "last_seen": "2026-02-14T07:24:48.818987",
+      "chain_count": 2,
       "sources": [
-        "Source 8 (771b9b416d46347b_67)"
+        "Source 8 (771b9b416d46347b_67)",
+        "Source 7"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "jpy_rebound_risk": {
       "first_seen": "2026-02-14T06:54:16.209033",
-      "last_seen": "2026-02-14T06:54:16.209033",
-      "chain_count": 1,
+      "last_seen": "2026-02-14T07:24:48.818987",
+      "chain_count": 2,
       "sources": [
-        "Source 8 (771b9b416d46347b_67)"
+        "Source 8 (771b9b416d46347b_67)",
+        "Source 7"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "hibo_rate": {
       "first_seen": "2026-02-14T06:54:16.209035",
-      "last_seen": "2026-02-14T06:54:16.209035",
-      "chain_count": 1,
+      "last_seen": "2026-02-14T07:24:48.819019",
+      "chain_count": 2,
       "sources": [
-        "Source 8 (771b9b416d46347b_67)\n\n## Medium-Term Reversal Chains"
+        "Source 8 (771b9b416d46347b_67)\n\n## Medium-Term Reversal Chains",
+        "Source 7"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -2359,20 +2383,22 @@
     },
     "risk_asset_rebound": {
       "first_seen": "2026-02-14T06:54:16.209075",
-      "last_seen": "2026-02-14T06:54:16.209075",
-      "chain_count": 1,
+      "last_seen": "2026-02-14T07:24:48.818973",
+      "chain_count": 2,
       "sources": [
-        "Source 10 (771b9b416d46347b_67)"
+        "Source 10 (771b9b416d46347b_67)",
+        "Source 7"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "takaiichi_dissolution_report": {
       "first_seen": "2026-02-14T06:54:16.209075",
-      "last_seen": "2026-02-14T06:54:16.209075",
-      "chain_count": 1,
+      "last_seen": "2026-02-14T07:24:48.818987",
+      "chain_count": 3,
       "sources": [
-        "Source 10 (771b9b416d46347b_67)"
+        "Source 10 (771b9b416d46347b_67)",
+        "Source 7"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -2399,20 +2425,22 @@
     },
     "fx_vol_spill": {
       "first_seen": "2026-02-14T06:54:16.209084",
-      "last_seen": "2026-02-14T06:54:16.209084",
-      "chain_count": 1,
+      "last_seen": "2026-02-14T07:24:48.818993",
+      "chain_count": 2,
       "sources": [
-        "5eb637a4c093a7b6_15 → 78c9945a42691062_43/407f42bd9bfc3d8a_453"
+        "5eb637a4c093a7b6_15 → 78c9945a42691062_43/407f42bd9bfc3d8a_453",
+        "Source 7 (step 1), Source 2 (steps 2-3)"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "operational_signalling": {
       "first_seen": "2026-02-14T06:54:16.209084",
-      "last_seen": "2026-02-14T06:54:16.209084",
-      "chain_count": 1,
+      "last_seen": "2026-02-14T07:24:48.818993",
+      "chain_count": 2,
       "sources": [
-        "5eb637a4c093a7b6_15 → 78c9945a42691062_43/407f42bd9bfc3d8a_453"
+        "5eb637a4c093a7b6_15 → 78c9945a42691062_43/407f42bd9bfc3d8a_453",
+        "Source 7 (step 1), Source 2 (steps 2-3)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -2701,7 +2729,114 @@
       ],
       "is_anchor": false,
       "anchor_theme": null
+    },
+    "takaichi_snap_election": {
+      "first_seen": "2026-02-14T07:24:48.818993",
+      "last_seen": "2026-02-14T07:24:48.818993",
+      "chain_count": 1,
+      "sources": [
+        "Source 7 (step 1), Source 2 (steps 2-3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_impact": {
+      "first_seen": "2026-02-14T07:24:48.818998",
+      "last_seen": "2026-02-14T07:24:48.818998",
+      "chain_count": 1,
+      "sources": [
+        "Source 7 (step 1), Source 8 (steps 2-3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "jpy_weakness": {
+      "first_seen": "2026-02-14T07:24:48.818998",
+      "last_seen": "2026-02-14T07:24:48.818998",
+      "chain_count": 1,
+      "sources": [
+        "Source 7 (step 1), Source 8 (steps 2-3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "takaichi_election": {
+      "first_seen": "2026-02-14T07:24:48.818998",
+      "last_seen": "2026-02-14T07:24:48.819022",
+      "chain_count": 8,
+      "sources": [
+        "Source 7 (step 1), Source 8 (steps 2-3)",
+        "Source 7 (context), Source 6 (full chain)",
+        "Source 7 (catalyst), Source 10 (steps 2-3), Source 16 (steps 4-6)",
+        "Source 7 (catalyst), Source 10 (steps 2-3)",
+        "Source 7 (catalyst), Source 10 (steps 4-5)",
+        "Source 7 (political context), Source 1 (BOJ policy chain)",
+        "Source 7",
+        "Source 7 (catalyst), Source 9 (transmission mechanism)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "fast_unwind": {
+      "first_seen": "2026-02-14T07:24:48.819002",
+      "last_seen": "2026-02-14T07:24:48.819002",
+      "chain_count": 1,
+      "sources": [
+        "Source 7 (context), Source 6 (full chain)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "usd_jpy_net_long": {
+      "first_seen": "2026-02-14T07:24:48.819002",
+      "last_seen": "2026-02-14T07:24:48.819002",
+      "chain_count": 1,
+      "sources": [
+        "Source 7 (context), Source 6 (full chain)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "medium-term_support_for_risk_assets": {
+      "first_seen": "2026-02-14T07:24:48.819013",
+      "last_seen": "2026-02-14T07:24:48.819013",
+      "chain_count": 1,
+      "sources": [
+        "Source 7 (catalyst), Source 10 (steps 4-5)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_rate": {
+      "first_seen": "2026-02-14T07:24:48.819016",
+      "last_seen": "2026-02-14T07:24:48.819016",
+      "chain_count": 1,
+      "sources": [
+        "Source 7 (political context), Source 1 (BOJ policy chain)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "dxy": {
+      "first_seen": "2026-02-14T07:24:48.819025",
+      "last_seen": "2026-02-14T07:24:48.819025",
+      "chain_count": 1,
+      "sources": [
+        "Source 17"
+      ],
+      "is_anchor": true,
+      "anchor_theme": "risk_appetite"
+    },
+    "political_uncertainty": {
+      "first_seen": "2026-02-14T07:24:48.819025",
+      "last_seen": "2026-02-14T07:24:48.819025",
+      "chain_count": 1,
+      "sources": [
+        "Source 17"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
     }
   },
-  "last_updated": "2026-02-14T06:54:16.209162"
+  "last_updated": "2026-02-14T07:24:48.819047"
 }

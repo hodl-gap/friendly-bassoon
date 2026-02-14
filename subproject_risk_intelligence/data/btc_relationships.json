@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "last_updated": "2026-02-10T07:39:13.436837",
-    "total_relationships": 141
+    "last_updated": "2026-02-14T07:24:48.815500",
+    "total_relationships": 153
   },
   "relationships": [
     {
@@ -4596,6 +4596,445 @@
       "validation_count": 1,
       "relationship_type": "positive",
       "confidence": 0.45
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Takaichi dissolution report",
+            "cause_normalized": "takaiichi_dissolution_report",
+            "effect": "USDJPY surge / JPY weakness",
+            "effect_normalized": "usd_jpy",
+            "mechanism": "Political event (snap election announcement) triggers FX moves → JPY weakness supports exporters/equities and carry dynamics affect crypto positively"
+          },
+          {
+            "cause": "USDJPY surge / JPY weakness",
+            "cause_normalized": "usd_jpy",
+            "effect": "Nikkei strength, Bitcoin rebound",
+            "effect_normalized": "risk_asset_rebound",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "takaiichi_dissolution_report -> usd_jpy -> risk_asset_rebound"
+      },
+      "terminal_effect": "risk_asset_rebound",
+      "mechanism": "Political event (snap election announcement) triggers FX moves → JPY weakness supports exporters/equities and carry dynamics affect crypto positively",
+      "source_attribution": "Source 7",
+      "id": "rel_4b831db3",
+      "discovered_at": "2026-02-14T07:24:48.814637",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Takaichi dissolution report",
+            "cause_normalized": "takaiichi_dissolution_report",
+            "effect": "USDJPY surge / JPY weakness",
+            "effect_normalized": "usd_jpy",
+            "mechanism": "Political event triggers JPY weakness → authorities respond with policy measures to stem weakness → policy action reverses FX move and affects risk assets"
+          },
+          {
+            "cause": "USDJPY surge / JPY weakness",
+            "cause_normalized": "usd_jpy",
+            "effect": "BOJ or government likely to act to support JPY",
+            "effect_normalized": "policy_action_yen_support",
+            "mechanism": ""
+          },
+          {
+            "cause": "BOJ or government likely to act to support JPY",
+            "cause_normalized": "policy_action_yen_support",
+            "effect": "JPY rebound risk",
+            "effect_normalized": "jpy_rebound_risk",
+            "mechanism": ""
+          },
+          {
+            "cause": "JPY rebound risk",
+            "cause_normalized": "jpy_rebound_risk",
+            "effect": "short-term Bitcoin moves",
+            "effect_normalized": "bitcoin_price",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "takaiichi_dissolution_report -> usd_jpy -> policy_action_yen_support -> jpy_rebound_risk -> bitcoin_price"
+      },
+      "terminal_effect": "bitcoin_price",
+      "mechanism": "Political event triggers JPY weakness → authorities respond with policy measures to stem weakness → policy action reverses FX move and affects risk assets",
+      "source_attribution": "Source 7",
+      "id": "rel_ec7cc58f",
+      "discovered_at": "2026-02-14T07:24:48.814727",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Takaichi snap election",
+            "cause_normalized": "takaichi_snap_election",
+            "effect": "JPY weakness",
+            "effect_normalized": "usd_jpy",
+            "mechanism": "Political uncertainty drives FX moves → government escalates response beyond jawboning → FX-driven volatility transmits to high-beta assets due to carry and leverage exposures"
+          },
+          {
+            "cause": "JPY weakness",
+            "cause_normalized": "usd_jpy",
+            "effect": "operational signalling, intervention possibility",
+            "effect_normalized": "operational_signalling",
+            "mechanism": ""
+          },
+          {
+            "cause": "operational signalling, intervention possibility",
+            "cause_normalized": "operational_signalling",
+            "effect": "FX volatility spill to equities and crypto",
+            "effect_normalized": "fx_vol_spill",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "takaichi_snap_election -> usd_jpy -> operational_signalling -> fx_vol_spill"
+      },
+      "terminal_effect": "fx_vol_spill",
+      "mechanism": "Political uncertainty drives FX moves → government escalates response beyond jawboning → FX-driven volatility transmits to high-beta assets due to carry and leverage exposures",
+      "source_attribution": "Source 7 (step 1), Source 2 (steps 2-3)",
+      "id": "rel_9582945a",
+      "discovered_at": "2026-02-14T07:24:48.814806",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Takaichi election",
+            "cause_normalized": "takaichi_election",
+            "effect": "JPY weakness",
+            "effect_normalized": "jpy_weakness",
+            "mechanism": "Political event drives currency move → triggers carry position liquidations and margin-driven reductions → transmits to equities and crypto through leverage channels"
+          },
+          {
+            "cause": "JPY weakness",
+            "cause_normalized": "jpy_weakness",
+            "effect": "yen carry unwind, forced deleveraging",
+            "effect_normalized": "carry_unwind",
+            "mechanism": ""
+          },
+          {
+            "cause": "yen carry unwind, forced deleveraging",
+            "cause_normalized": "carry_unwind",
+            "effect": "Nasdaq drop impacts BTC",
+            "effect_normalized": "btc_impact",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "takaichi_election -> jpy_weakness -> carry_unwind -> btc_impact"
+      },
+      "terminal_effect": "btc_impact",
+      "mechanism": "Political event drives currency move → triggers carry position liquidations and margin-driven reductions → transmits to equities and crypto through leverage channels",
+      "source_attribution": "Source 7 (step 1), Source 8 (steps 2-3)",
+      "id": "rel_167cdf29",
+      "discovered_at": "2026-02-14T07:24:48.814882",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Takaichi election",
+            "cause_normalized": "takaichi_election",
+            "effect": "market net USDJPY long positions remain large",
+            "effect_normalized": "usd_jpy_net_long",
+            "mechanism": "Political event occurs while market holds large leveraged long positions → forced selling accelerates moves when reversed → JPY perceived as risk-off triggers cross-asset deleveraging"
+          },
+          {
+            "cause": "market net USDJPY long positions remain large",
+            "cause_normalized": "usd_jpy_net_long",
+            "effect": "potential for rapid leveraged unwinding",
+            "effect_normalized": "fast_unwind",
+            "mechanism": ""
+          },
+          {
+            "cause": "potential for rapid leveraged unwinding",
+            "cause_normalized": "fast_unwind",
+            "effect": "risk_off, short-term position reductions across risky assets",
+            "effect_normalized": "risk_off",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "takaichi_election -> usd_jpy_net_long -> fast_unwind -> risk_off"
+      },
+      "terminal_effect": "risk_off",
+      "mechanism": "Political event occurs while market holds large leveraged long positions → forced selling accelerates moves when reversed → JPY perceived as risk-off triggers cross-asset deleveraging",
+      "source_attribution": "Source 7 (context), Source 6 (full chain)",
+      "id": "rel_25ebd4c6",
+      "discovered_at": "2026-02-14T07:24:48.814959",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Takaichi election",
+            "cause_normalized": "takaichi_election",
+            "effect": "JPY surge",
+            "effect_normalized": "jpy_surge",
+            "mechanism": "Political event triggers JPY move → intervention risk destabilizes carry trades → closing dollar-short positions requires buying dollars → large-scale dollar buying reduces USD liquidity → reduced liquidity pushes short-term money-market rates higher"
+          },
+          {
+            "cause": "JPY surge",
+            "cause_normalized": "jpy_surge",
+            "effect": "intervention risk up",
+            "effect_normalized": "fx_intervention_risk",
+            "mechanism": ""
+          },
+          {
+            "cause": "intervention risk up",
+            "cause_normalized": "fx_intervention_risk",
+            "effect": "yen carry unwind",
+            "effect_normalized": "carry_unwind",
+            "mechanism": ""
+          },
+          {
+            "cause": "yen carry unwind",
+            "cause_normalized": "carry_unwind",
+            "effect": "carry position unwind requires USD repurchase",
+            "effect_normalized": "usd_repurchase",
+            "mechanism": ""
+          },
+          {
+            "cause": "carry position unwind requires USD repurchase",
+            "cause_normalized": "usd_repurchase",
+            "effect": "temporary global dollar shortage",
+            "effect_normalized": "usd_shortage",
+            "mechanism": ""
+          },
+          {
+            "cause": "temporary global dollar shortage",
+            "cause_normalized": "usd_shortage",
+            "effect": "SOFR spike",
+            "effect_normalized": "sofr",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "takaichi_election -> jpy_surge -> fx_intervention_risk -> carry_unwind -> usd_repurchase -> usd_shortage -> sofr"
+      },
+      "terminal_effect": "sofr",
+      "mechanism": "Political event triggers JPY move → intervention risk destabilizes carry trades → closing dollar-short positions requires buying dollars → large-scale dollar buying reduces USD liquidity → reduced liquidity pushes short-term money-market rates higher",
+      "source_attribution": "Source 7 (catalyst), Source 10 (steps 2-3), Source 16 (steps 4-6)",
+      "id": "rel_8f25bbd5",
+      "discovered_at": "2026-02-14T07:24:48.815044",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Takaichi election",
+            "cause_normalized": "takaichi_election",
+            "effect": "carry trade unwind and global liquidity contraction",
+            "effect_normalized": "global_liquidity",
+            "mechanism": "Political event triggers carry unwind → reduced liquidity and forced unwinds increase risk-asset volatility and trigger corrections"
+          },
+          {
+            "cause": "carry trade unwind and global liquidity contraction",
+            "cause_normalized": "global_liquidity",
+            "effect": "BTC short-term adjustment and higher volatility",
+            "effect_normalized": "btc_volatility",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "takaichi_election -> global_liquidity -> btc_volatility"
+      },
+      "terminal_effect": "btc_volatility",
+      "mechanism": "Political event triggers carry unwind → reduced liquidity and forced unwinds increase risk-asset volatility and trigger corrections",
+      "source_attribution": "Source 7 (catalyst), Source 10 (steps 2-3)",
+      "id": "rel_f14e8483",
+      "discovered_at": "2026-02-14T07:24:48.815118",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Takaichi election",
+            "cause_normalized": "takaichi_election",
+            "effect": "actual FX intervention",
+            "effect_normalized": "fx_intervention",
+            "mechanism": "Political event prompts intervention → intervention may be followed by looser policy outlook → supports risk assets medium-term despite short-term volatility"
+          },
+          {
+            "cause": "actual FX intervention",
+            "cause_normalized": "fx_intervention",
+            "effect": "easing monetary policy expectations",
+            "effect_normalized": "policy_easing_expectations",
+            "mechanism": ""
+          },
+          {
+            "cause": "easing monetary policy expectations",
+            "cause_normalized": "policy_easing_expectations",
+            "effect": "medium-term support for risk assets",
+            "effect_normalized": "medium-term_support_for_risk_assets",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "takaichi_election -> fx_intervention -> policy_easing_expectations -> medium-term_support_for_risk_assets"
+      },
+      "terminal_effect": "medium-term_support_for_risk_assets",
+      "mechanism": "Political event prompts intervention → intervention may be followed by looser policy outlook → supports risk assets medium-term despite short-term volatility",
+      "source_attribution": "Source 7 (catalyst), Source 10 (steps 4-5)",
+      "id": "rel_33774442",
+      "discovered_at": "2026-02-14T07:24:48.815194",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Takaichi election",
+            "cause_normalized": "takaichi_election",
+            "effect": "BOJ likely rate hike",
+            "effect_normalized": "boj_rate",
+            "mechanism": "Political event occurs alongside BOJ policy → higher local rates reduce carry profitability, trigger position unwind → reduced liquidity increases funding stress, forcing deleveraging"
+          },
+          {
+            "cause": "BOJ likely rate hike",
+            "cause_normalized": "boj_rate",
+            "effect": "market liquidity drain",
+            "effect_normalized": "market_liquidity",
+            "mechanism": ""
+          },
+          {
+            "cause": "market liquidity drain",
+            "cause_normalized": "market_liquidity",
+            "effect": "margin calls and forced deleveraging",
+            "effect_normalized": "margin_calls",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "takaichi_election -> boj_rate -> market_liquidity -> margin_calls"
+      },
+      "terminal_effect": "margin_calls",
+      "mechanism": "Political event occurs alongside BOJ policy → higher local rates reduce carry profitability, trigger position unwind → reduced liquidity increases funding stress, forcing deleveraging",
+      "source_attribution": "Source 7 (political context), Source 1 (BOJ policy chain)",
+      "id": "rel_f78e4995",
+      "discovered_at": "2026-02-14T07:24:48.815269",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Takaichi election",
+            "cause_normalized": "takaichi_election",
+            "effect": "JPY weakness",
+            "effect_normalized": "usd_jpy",
+            "mechanism": "Political event drives FX move → lower interbank rates support risk asset moves → direct impact on crypto pricing"
+          },
+          {
+            "cause": "JPY weakness",
+            "cause_normalized": "usd_jpy",
+            "effect": "Hibo rate plunge",
+            "effect_normalized": "hibo_rate",
+            "mechanism": ""
+          },
+          {
+            "cause": "Hibo rate plunge",
+            "cause_normalized": "hibo_rate",
+            "effect": "Bitcoin rebound",
+            "effect_normalized": "bitcoin_price",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "takaichi_election -> usd_jpy -> hibo_rate -> bitcoin_price"
+      },
+      "terminal_effect": "bitcoin_price",
+      "mechanism": "Political event drives FX move → lower interbank rates support risk asset moves → direct impact on crypto pricing",
+      "source_attribution": "Source 7",
+      "id": "rel_dbc9c3d6",
+      "discovered_at": "2026-02-14T07:24:48.815349",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Takaichi election",
+            "cause_normalized": "takaichi_election",
+            "effect": "carry-trade unwind risk",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": "Political event triggers carry unwind → carry unwinds reduce USD funding and trigger risk-off sentiment affecting crypto"
+          },
+          {
+            "cause": "carry-trade unwind risk",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "crypto market headwind",
+            "effect_normalized": "crypto_downside",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "takaichi_election -> carry_trade_unwind -> crypto_downside"
+      },
+      "terminal_effect": "crypto_downside",
+      "mechanism": "Political event triggers carry unwind → carry unwinds reduce USD funding and trigger risk-off sentiment affecting crypto",
+      "source_attribution": "Source 7 (catalyst), Source 9 (transmission mechanism)",
+      "id": "rel_ea358096",
+      "discovered_at": "2026-02-14T07:24:48.815419",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "political uncertainty",
+            "cause_normalized": "political_uncertainty",
+            "effect": "position unwinding",
+            "effect_normalized": "position_unwinding",
+            "mechanism": "In 2025 context: policy event uncertainty prompted pre-event position liquidation → holders sold assets irrespective of safe/risk labels → short-covering of USD shorts pushed USD higher. Structural pattern applicable to 2026 Takaichi election scenario"
+          },
+          {
+            "cause": "position unwinding",
+            "cause_normalized": "position_unwinding",
+            "effect": "simultaneous falls across previously rising assets",
+            "effect_normalized": "correlated_selloff",
+            "mechanism": ""
+          },
+          {
+            "cause": "simultaneous falls across previously rising assets",
+            "cause_normalized": "correlated_selloff",
+            "effect": "dollar squeeze / USD strength",
+            "effect_normalized": "dxy",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "political_uncertainty -> position_unwinding -> correlated_selloff -> dxy"
+      },
+      "terminal_effect": "dxy",
+      "mechanism": "In 2025 context: policy event uncertainty prompted pre-event position liquidation → holders sold assets irrespective of safe/risk labels → short-covering of USD shorts pushed USD higher. Structural pattern applicable to 2026 Takaichi election scenario",
+      "source_attribution": "Source 17",
+      "id": "rel_6777900b",
+      "discovered_at": "2026-02-14T07:24:48.815492",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.55
     }
   ]
 }

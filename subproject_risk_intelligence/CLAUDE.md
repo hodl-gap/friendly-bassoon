@@ -55,17 +55,20 @@ subproject_risk_intelligence/
 ├── states.py                        # RiskImpactState definition
 ├── config.py                        # Configuration
 ├── impact_analysis.py               # LLM-based impact analysis
-├── impact_analysis_prompts.py       # Analysis prompts
+├── impact_analysis_prompts.py       # Analysis prompts (includes MACRO REGIME section)
 ├── variable_extraction.py           # Extract variables from chains (Phase 2)
 ├── current_data_fetcher.py          # Fetch live data with period changes (Phase 2)
 ├── pattern_validator.py             # Validate research patterns vs current data (Phase 2)
-├── relationship_store.py            # Logic chain persistence (Phase 3)
+├── relationship_store.py            # Logic chain persistence with theme index + validation reinforcement
 ├── historical_event_detector.py     # Historical event detection + instrument mapping (Phase 4)
 ├── historical_event_prompts.py      # LLM prompts for historical detection (Phase 4)
 ├── historical_data_fetcher.py       # Fetch historical data + metrics (Phase 4)
+├── theme_refresh.py                 # Daily theme monitoring + regime assessment
 │
 ├── data/
-│   └── btc_relationships.json       # Persistent chain storage (Phase 3)
+│   ├── btc_relationships.json       # Persistent chain storage
+│   ├── theme_index.json             # Theme-organized chain index (auto-maintained)
+│   └── variable_frequency.json      # Variable appearance frequency tracking (auto-maintained)
 │
 └── CLAUDE.md                        # This file
 ```
@@ -90,7 +93,8 @@ query (CLI input)
             │
             ▼
 ┌─────────────────────────┐
-│ 2. load_chains          │  Load historical chains from btc_relationships.json
+│ 2. load_chains          │  Load chains by theme (via ThemeIndex + asset's relevant_themes)
+│                         │  Load per-theme assessments into state (macro regime context)
 │                         │  Find relevant chains for current query
 └───────────┬─────────────┘
             │
@@ -136,14 +140,17 @@ query (CLI input)
 │                         │    - Validated patterns (triggered status)
 │                         │    - Historical event comparison (if detected)
 │                         │    - Gap enrichment text (from retriever)
+│                         │    - MACRO REGIME context (per-theme assessments)
 │                         │  Output: direction, confidence, rationale, risks
 └───────────┬─────────────┘
             │
             ▼
 ┌─────────────────────────┐
 │ 7. store_chains         │  Extract new chains from answer
-│                         │  Deduplicate against existing
-│                         │  Save to btc_relationships.json
+│                         │  Semantic dedup (Jaccard similarity on variable pairs)
+│                         │  Similar chains: increment validation_count + blend confidence
+│                         │  New chains: save to btc_relationships.json
+│                         │  Update theme index + variable frequency tracker
 └───────────┬─────────────┘
             │
             ▼
@@ -232,7 +239,9 @@ RISK FACTORS:
 | Phase 3: Chain Store | ✅ Done | Persist discovered logic chains |
 | Phase 4: Historical Event Detection | ✅ Done | Detect historical event gaps, fetch actual market data |
 | Phase 5: Knowledge Gap Filling | ➡️ Moved | **Moved to `subproject_database_retriever`** - now topic-agnostic |
-| Phase 6: Web Chain Extraction | ➡️ Moved | **Moved to `subproject_database_retriever`** - now topic-agnostic |
+| Phase 6: Theme-Organized Chains | ✅ Done | Theme index, theme-based loading, macro regime context in prompts |
+| Phase 7: Validation Reinforcement | ✅ Done | Semantic dedup with Jaccard similarity, validation_count, confidence blending |
+| Phase 8: Daily Monitoring | ✅ Done | Theme refresh with active chain detection, morning briefing |
 
 ## Historical Event Detection (Phase 4)
 
@@ -396,6 +405,45 @@ Web chain extraction is now part of the retrieval layer's gap filling workflow. 
 4. Merges web chains with DB chains (web=0.7 weight, db=1.0 weight)
 
 See `subproject_database_retriever/CLAUDE.md` for full documentation.
+
+## Theme-Organized Chains (Phase 6)
+
+### Theme-Based Chain Loading
+
+Chains are organized by 6 macro themes: `liquidity`, `positioning`, `rates`, `risk_appetite`, `crypto_specific`, `event_calendar`. Each asset has `relevant_themes` in its config.
+
+When loading chains, the system:
+1. Looks up asset's `relevant_themes` (e.g., BTC → `["liquidity", "risk_appetite", "crypto_specific", "rates"]`)
+2. Loads chain IDs from `theme_index.json` for those themes
+3. Deduplicates and filters by query relevance
+4. Loads per-theme assessments into `state["theme_states"]`
+
+### Macro Regime Context
+
+The impact analysis prompt now includes a `## MACRO REGIME` section with per-theme assessments:
+```
+## MACRO REGIME (per-theme assessments)
+LIQUIDITY: Tightening — TGA draining reserves, SOFR elevated [3 active chains]
+RATES: Hawkish hold — no cuts expected through Q2 [2 active chains]
+```
+
+This section is populated by running `scripts/daily_regime_scan.py --all --briefing`.
+
+### Validation Reinforcement (Phase 7)
+
+When storing chains, semantic deduplication uses Jaccard similarity on normalized `(cause, effect)` variable pairs:
+- Threshold: 0.7 (70% variable pair overlap)
+- Similar chains: `validation_count += 1`, `last_validated` updated, confidence blended (0.7 old + 0.3 new)
+- New chains: stored as normal
+
+### Daily Monitoring (Phase 8)
+
+`theme_refresh.py` provides:
+- `refresh_theme(theme_name)`: checks anchor variable movements (5% threshold over 7 days), marks active chains
+- `refresh_all_themes()`: iterates all 6 themes
+- `generate_briefing(theme_states)`: template-based morning briefing
+
+CLI: `python scripts/daily_regime_scan.py --all --briefing`
 
 ## Dependencies
 
