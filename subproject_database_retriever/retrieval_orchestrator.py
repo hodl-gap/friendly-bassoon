@@ -60,6 +60,10 @@ def detect_and_fill_gaps(state: RetrieverState) -> RetrieverState:
 
     Moved from BTC Intelligence to make retrieval layer topic-agnostic.
     """
+    if state.get("skip_gap_filling", False):
+        print("[retrieval] Gap filling skipped (skip_gap_filling=True)")
+        return state
+
     if not ENABLE_GAP_DETECTION:
         print("[retrieval] Gap detection disabled")
         return state
@@ -103,6 +107,47 @@ def detect_and_fill_gaps(state: RetrieverState) -> RetrieverState:
         "extracted_web_chains": gap_result.get("extracted_web_chains", []),
         "logic_chains": gap_result.get("merged_logic_chains", all_chains)
     }
+
+
+def persist_learning(state: RetrieverState) -> RetrieverState:
+    """
+    Step 6: Persist verified web chains to Pinecone for future retrieval.
+
+    Also records variables in the frequency tracker.
+    """
+    web_chains = state.get("extracted_web_chains", [])
+    if not web_chains:
+        return state
+
+    try:
+        from web_chain_persistence import persist_web_chains
+        count = persist_web_chains(web_chains, state.get("query", ""))
+        print(f"[retrieval] Persisted {count} web chains to Pinecone")
+    except Exception as e:
+        print(f"[retrieval] Web chain persistence failed: {e}")
+
+    # Update variable frequency tracker with web chains
+    try:
+        from pathlib import Path
+        from shared.variable_frequency import VariableFrequencyTracker
+        freq_path = Path(__file__).parent.parent / "subproject_risk_intelligence" / "data" / "variable_frequency.json"
+        tracker = VariableFrequencyTracker.load(freq_path)
+        for chain in web_chains:
+            # Convert flat web chain to structure expected by record_variables
+            tracker.record_variables({
+                "logic_chain": {
+                    "steps": [{
+                        "cause_normalized": chain.get("cause", "").lower().replace(" ", "_")[:50],
+                        "effect_normalized": chain.get("effect", "").lower().replace(" ", "_")[:50],
+                    }]
+                },
+                "source_attribution": chain.get("source_name", "web"),
+            })
+        tracker.save(freq_path)
+    except Exception as e:
+        print(f"[retrieval] Variable frequency update failed: {e}")
+
+    return state
 
 
 def conditional_resynthesis(state: RetrieverState) -> RetrieverState:
@@ -222,6 +267,7 @@ def build_graph() -> StateGraph:
     graph.add_node("generate", _wrap("generate", generate_answer))
     graph.add_node("fill_gaps", _wrap("fill_gaps", detect_and_fill_gaps))
     graph.add_node("conditional_resynthesis", _wrap("conditional_resynthesis", conditional_resynthesis))
+    graph.add_node("persist_learning", _wrap("persist_learning", persist_learning))
 
     # Define edges
     graph.set_entry_point("process_query")
@@ -234,21 +280,23 @@ def build_graph() -> StateGraph:
             "generate": "generate"
         }
     )
-    # After generation, detect and fill gaps, then conditionally re-synthesize
+    # After generation: fill gaps → re-synthesize → persist learning → END
     graph.add_edge("generate", "fill_gaps")
     graph.add_edge("fill_gaps", "conditional_resynthesis")
-    graph.add_edge("conditional_resynthesis", END)
+    graph.add_edge("conditional_resynthesis", "persist_learning")
+    graph.add_edge("persist_learning", END)
 
     return graph.compile()
 
 
-def run_retrieval(query: str, image_path: str = None) -> dict:
+def run_retrieval(query: str, image_path: str = None, skip_gap_filling: bool = False) -> dict:
     """
     Main entry point for retrieval workflow.
 
     Args:
         query: User's question or search query
         image_path: Optional path to indicator chart image for vision-based extraction
+        skip_gap_filling: If True, skip gap detection and filling (used by theme refresh)
 
     Returns:
         Final state containing answer and retrieved context
@@ -267,6 +315,9 @@ def run_retrieval(query: str, image_path: str = None) -> dict:
 
     if image_path:
         initial_state["image_path"] = image_path
+
+    if skip_gap_filling:
+        initial_state["skip_gap_filling"] = True
 
     final_state = graph.invoke(initial_state)
     return final_state

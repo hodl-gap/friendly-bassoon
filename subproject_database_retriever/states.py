@@ -58,3 +58,4 @@ class RetrieverState(TypedDict, total=False):
     # Agentic Control
     iteration_count: int  # Number of retrieval iterations
     needs_refinement: bool  # Whether to iterate again
+    skip_gap_filling: bool  # If True, skip gap detection and filling

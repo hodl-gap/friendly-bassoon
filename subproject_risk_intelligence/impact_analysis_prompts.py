@@ -44,6 +44,20 @@ You will receive current market data. Acknowledge ALL variables:
 Be specific, quantitative, and preserve complexity. Reference actual data points."""
 
 
+def format_theme_states_for_prompt(theme_states: dict) -> str:
+    """Format per-theme assessments as a MACRO REGIME section for the prompt."""
+    if not theme_states:
+        return ""
+
+    lines = ["## MACRO REGIME (per-theme assessments)"]
+    for theme_name, state in theme_states.items():
+        assessment = state.get("assessment", "No assessment")
+        active_count = len(state.get("active_chain_ids", []))
+        lines.append(f"{theme_name.upper()}: {assessment} [{active_count} active chains]")
+
+    return "\n".join(lines) + "\n"
+
+
 def get_impact_analysis_prompt(
     query: str,
     retrieval_answer: str,
@@ -56,7 +70,8 @@ def get_impact_analysis_prompt(
     historical_event_text: str = "",
     knowledge_gaps: dict = None,
     gap_enrichment_text: str = "",
-    asset_class: str = "btc"
+    asset_class: str = "btc",
+    theme_states: dict = None
 ) -> str:
     """Build the impact analysis prompt."""
 
@@ -152,6 +167,11 @@ def get_impact_analysis_prompt(
 {gap_enrichment_text}
 """
 
+    # Format macro regime section (from theme states)
+    regime_section = ""
+    if theme_states:
+        regime_section = format_theme_states_for_prompt(theme_states) + "\n"
+
     return f"""## USER QUERY
 {query}
 
@@ -167,7 +187,7 @@ def get_impact_analysis_prompt(
 ## RETRIEVAL CONFIDENCE
 {conf_text}
 {current_values_section}{historical_chains_section}{validated_patterns_section}{historical_event_section}
-{knowledge_gaps_section}{gap_enrichment_section}---
+{knowledge_gaps_section}{gap_enrichment_section}{regime_section}---
 
 Based on the above context, current market data, pattern validation, and any historical event comparisons, {get_asset_config(asset_class)["prompt_asset_line"]}
 Pay special attention to TRIGGERED patterns - these indicate that conditions from research are currently active.

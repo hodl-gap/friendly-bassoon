@@ -94,13 +94,43 @@ def load_chains(state: RiskImpactState, asset_class: str = "btc") -> RiskImpactS
     """
     Load historical chains from the relationship store.
 
+    Attempts to load chains via theme index (organized by theme).
+    Falls back to loading all chains from the flat list.
+
     Args:
         state: Current state
         asset_class: Asset class to load chains for
 
     Updates state with:
     - historical_chains: List of previously discovered chains
+    - theme_states: Dict of per-theme assessments (if theme index exists)
     """
+    # Try theme-based loading first
+    try:
+        asset_cfg = get_asset_config(asset_class)
+        relevant_themes = asset_cfg.get("relevant_themes", [])
+
+        if relevant_themes:
+            chains = load_chains_by_theme(relevant_themes, asset_class=asset_class)
+            if chains:
+                state["historical_chains"] = chains
+                print(f"[Relationship Store] Loaded {len(chains)} chains from themes: {relevant_themes}")
+
+                # Also load theme states for the prompt
+                from shared.theme_index import ThemeIndex
+                theme_index_path = config.DATA_DIR / "theme_index.json"
+                index = ThemeIndex.load(theme_index_path)
+                theme_states = {}
+                for theme_name in relevant_themes:
+                    ts = index.get_theme_state(theme_name)
+                    if ts:
+                        theme_states[theme_name] = ts
+                state["theme_states"] = theme_states
+                return state
+    except Exception as e:
+        print(f"[Relationship Store] Theme-based loading failed, falling back: {e}")
+
+    # Fallback: load all chains from flat list
     db = load_relationships(asset_class=asset_class)
     chains = db.get("relationships", [])
 
@@ -112,6 +142,37 @@ def load_chains(state: RiskImpactState, asset_class: str = "btc") -> RiskImpactS
         print("[Relationship Store] No historical chains found")
 
     return state
+
+
+def load_chains_by_theme(theme_names: List[str], asset_class: str = "btc") -> List[Dict]:
+    """
+    Load chains belonging to specified themes via the theme index.
+
+    Args:
+        theme_names: List of theme names to load chains for
+        asset_class: Asset class (for relationships file path)
+
+    Returns:
+        List of chain dicts from the specified themes (deduplicated)
+    """
+    from shared.theme_index import ThemeIndex
+    theme_index_path = config.DATA_DIR / "theme_index.json"
+    index = ThemeIndex.load(theme_index_path)
+
+    db = load_relationships(asset_class=asset_class)
+    all_chains = db.get("relationships", [])
+
+    seen_ids = set()
+    result = []
+    for theme_name in theme_names:
+        theme_chains = index.get_theme_chains(theme_name, all_chains)
+        for chain in theme_chains:
+            chain_id = chain.get("id")
+            if chain_id and chain_id not in seen_ids:
+                seen_ids.add(chain_id)
+                result.append(chain)
+
+    return result
 
 
 def extract_chains_from_answer(answer_text: str, asset_class: str = "btc") -> List[Dict[str, Any]]:
@@ -152,22 +213,18 @@ def extract_chains_from_answer(answer_text: str, asset_class: str = "btc") -> Li
                 normalized_vars.append(last_effect)
 
             chain_summary = " -> ".join(normalized_vars)
-
-            # Determine if it ends in the target asset
             terminal_effect = steps[-1].get("effect_normalized", "") if steps else ""
-            keywords = get_asset_config(asset_class)["chain_keywords"]
-            is_target_chain = any(term in terminal_effect.lower() for term in keywords)
 
-            if is_target_chain or any(term in chain_summary.lower() for term in keywords):
-                chains.append({
-                    "logic_chain": {
-                        "steps": steps,
-                        "chain_summary": chain_summary
-                    },
-                    "terminal_effect": terminal_effect,
-                    "mechanism": mechanism,
-                    "source_attribution": source
-                })
+            # Store all chains — theme index handles organization
+            chains.append({
+                "logic_chain": {
+                    "steps": steps,
+                    "chain_summary": chain_summary
+                },
+                "terminal_effect": terminal_effect,
+                "mechanism": mechanism,
+                "source_attribution": source
+            })
 
     return chains
 
@@ -220,16 +277,63 @@ def generate_chain_id(chain: Dict[str, Any]) -> str:
     return f"rel_{hashlib.md5(hash_input).hexdigest()[:8]}"
 
 
+def _extract_variable_pairs(chain: Dict) -> set:
+    """Extract ordered (cause, effect) normalized variable pairs from a chain."""
+    pairs = set()
+    steps = chain.get("logic_chain", {}).get("steps", [])
+    for step in steps:
+        cause = step.get("cause_normalized", "")
+        effect = step.get("effect_normalized", "")
+        if cause and effect:
+            pairs.add((cause, effect))
+    return pairs
+
+
+def find_similar_chain(
+    new_chain: Dict,
+    existing_chains: List[Dict],
+    threshold: float = 0.7
+) -> Optional[int]:
+    """
+    Find an existing chain similar to new_chain based on normalized variable overlap.
+
+    Two chains are "similar" if they share >= threshold of their normalized
+    cause/effect variable pairs (Jaccard similarity).
+
+    Args:
+        new_chain: New chain to check
+        existing_chains: List of existing chains
+        threshold: Minimum Jaccard similarity to consider similar
+
+    Returns:
+        Index of the similar chain, or None if no similar chain found
+    """
+    new_vars = _extract_variable_pairs(new_chain)
+    if not new_vars:
+        # Fallback to exact string match for chains without normalized vars
+        new_summary = new_chain.get("logic_chain", {}).get("chain_summary", "").lower()
+        for i, existing in enumerate(existing_chains):
+            existing_summary = existing.get("logic_chain", {}).get("chain_summary", "").lower()
+            if new_summary and new_summary == existing_summary:
+                return i
+        return None
+
+    for i, existing in enumerate(existing_chains):
+        existing_vars = _extract_variable_pairs(existing)
+        if not existing_vars:
+            continue
+
+        overlap = len(new_vars & existing_vars)
+        union = len(new_vars | existing_vars)
+        if union > 0 and overlap / union >= threshold:
+            return i
+
+    return None
+
+
 def is_duplicate_chain(new_chain: Dict, existing_chains: List[Dict]) -> bool:
-    """Check if a chain already exists in the database."""
-    new_summary = new_chain.get("logic_chain", {}).get("chain_summary", "").lower()
-
-    for existing in existing_chains:
-        existing_summary = existing.get("logic_chain", {}).get("chain_summary", "").lower()
-        if new_summary == existing_summary:
-            return True
-
-    return False
+    """Check if a chain already exists in the database (legacy wrapper)."""
+    return find_similar_chain(new_chain, existing_chains) is not None
 
 
 def store_chains(state: RiskImpactState, asset_class: str = "btc") -> RiskImpactState:
@@ -254,18 +358,34 @@ def store_chains(state: RiskImpactState, asset_class: str = "btc") -> RiskImpact
     answer = state.get("retrieval_answer", "")
     extracted = extract_chains_from_answer(answer, asset_class=asset_class)
 
-    # Filter for new chains only
+    # Filter for new chains, or reinforce existing similar chains
     new_chains = []
+    reinforced_count = 0
     for chain in extracted:
-        if not is_duplicate_chain(chain, existing_chains):
-            # Add metadata
+        similar_idx = find_similar_chain(chain, existing_chains)
+
+        if similar_idx is not None:
+            # Reinforce existing chain: increment validation_count, blend confidence
+            existing = existing_chains[similar_idx]
+            existing["validation_count"] = existing.get("validation_count", 1) + 1
+            existing["last_validated"] = datetime.now().isoformat()
+            # Blend confidence: existing 0.7 + new 0.3
+            new_conf = state.get("confidence", {}).get("score", 0.5)
+            old_conf = existing.get("confidence", 0.5)
+            existing["confidence"] = old_conf * 0.7 + new_conf * 0.3
+            reinforced_count += 1
+        else:
+            # Store as new chain
             chain["id"] = generate_chain_id(chain)
             chain["discovered_at"] = datetime.now().isoformat()
             chain["validation_count"] = 1
             chain["relationship_type"] = determine_relationship_type(chain)
             chain["confidence"] = state.get("confidence", {}).get("score", 0.5)
-
             new_chains.append(chain)
+
+    if reinforced_count > 0:
+        print(f"[Relationship Store] Reinforced {reinforced_count} existing chains")
+        save_relationships(db, asset_class=asset_class)
 
     if new_chains:
         print(f"[Relationship Store] Discovered {len(new_chains)} new chains")
@@ -273,6 +393,30 @@ def store_chains(state: RiskImpactState, asset_class: str = "btc") -> RiskImpact
         # Append to database
         db["relationships"].extend(new_chains)
         save_relationships(db, asset_class=asset_class)
+
+        # Update theme index with new chains
+        try:
+            from shared.theme_index import ThemeIndex
+            theme_index_path = config.DATA_DIR / "theme_index.json"
+            index = ThemeIndex.load(theme_index_path)
+            for chain in new_chains:
+                themes = index.assign_chain_to_themes(chain)
+                if themes:
+                    print(f"[Relationship Store] Chain {chain.get('id', '?')} -> themes: {themes}")
+            index.save(theme_index_path)
+        except Exception as e:
+            print(f"[Relationship Store] Theme index update failed: {e}")
+
+        # Update variable frequency tracker
+        try:
+            from shared.variable_frequency import VariableFrequencyTracker
+            freq_path = config.DATA_DIR / "variable_frequency.json"
+            tracker = VariableFrequencyTracker.load(freq_path)
+            for chain in new_chains:
+                tracker.record_variables(chain)
+            tracker.save(freq_path)
+        except Exception as e:
+            print(f"[Relationship Store] Variable frequency update failed: {e}")
     else:
         print("[Relationship Store] No new chains discovered")
 

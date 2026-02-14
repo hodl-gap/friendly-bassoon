@@ -25,6 +25,7 @@ ASSET_CONFIGS: Dict[str, Dict[str, Any]] = {
         "relationships_file": "btc_relationships.json",
         "regime_file": "regime_state.json",
         "prompt_asset_line": "analyze the impact on Bitcoin.",
+        "relevant_themes": ["liquidity", "risk_appetite", "crypto_specific", "rates"],
     },
     "equity": {
         "name": "US Equities",
@@ -41,6 +42,7 @@ ASSET_CONFIGS: Dict[str, Dict[str, Any]] = {
         "relationships_file": "equity_relationships.json",
         "regime_file": "equity_regime_state.json",
         "prompt_asset_line": "analyze the impact on US equities (S&P 500 / broad equity market).",
+        "relevant_themes": ["liquidity", "positioning", "rates", "risk_appetite"],
     },
 }
 

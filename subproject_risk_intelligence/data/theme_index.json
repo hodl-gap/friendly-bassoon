@@ -1,0 +1,140 @@
+{
+  "themes": {
+    "liquidity": {
+      "anchor_variables": [
+        "tga",
+        "rrp",
+        "bank_reserves",
+        "sofr",
+        "fed_balance_sheet"
+      ],
+      "query_template": "Current US liquidity conditions TGA reserves RRP Fed balance sheet",
+      "chain_ids": [
+        "rel_b9846c96",
+        "rel_d13a03bf",
+        "rel_ad32faf3",
+        "rel_592b1b71",
+        "rel_e2703b57",
+        "rel_ee9fc162",
+        "rel_b6408407",
+        "rel_d45301ef",
+        "rel_9ce68dec",
+        "rel_fda07aeb",
+        "rel_67b5bab2",
+        "rel_b459e902",
+        "rel_ad6e5e5a",
+        "rel_41027d14",
+        "rel_dbbba45f",
+        "rel_58250964",
+        "rel_5f82ffba",
+        "rel_13ccbc57",
+        "rel_21529229",
+        "rel_cb2ce48b",
+        "rel_4ecfe15c",
+        "rel_4c782dd9",
+        "rel_87617689",
+        "rel_95edb2b0",
+        "rel_4f66ec2f",
+        "rel_1298a8d2",
+        "rel_4d942b13",
+        "rel_6cfe00ce",
+        "rel_32c297be",
+        "rel_bc795ecd",
+        "rel_d4f09842",
+        "rel_bb8f0680",
+        "rel_e9f120b6",
+        "rel_c8066446",
+        "rel_de8a5244",
+        "rel_607fd2a7",
+        "rel_c7661b5a",
+        "rel_6ee3048c",
+        "rel_aee3f4f6"
+      ],
+      "active_chain_ids": [],
+      "last_refreshed": null,
+      "assessment": null
+    },
+    "positioning": {
+      "anchor_variables": [
+        "gs_prime_book",
+        "cta_positioning",
+        "etf_flows",
+        "futures_oi"
+      ],
+      "query_template": "Current market positioning data prime book leverage CTA",
+      "chain_ids": [],
+      "active_chain_ids": [],
+      "last_refreshed": null,
+      "assessment": null
+    },
+    "rates": {
+      "anchor_variables": [
+        "fed_funds",
+        "sofr",
+        "treasury_yields",
+        "rate_expectations",
+        "us10y"
+      ],
+      "query_template": "Current interest rate environment Fed policy SOFR treasury yields",
+      "chain_ids": [
+        "rel_b9846c96",
+        "rel_592b1b71",
+        "rel_d45301ef",
+        "rel_9ce68dec",
+        "rel_95edb2b0",
+        "rel_4f66ec2f",
+        "rel_4d942b13",
+        "rel_e9f120b6",
+        "rel_c8066446",
+        "rel_de8a5244",
+        "rel_6ee3048c"
+      ],
+      "active_chain_ids": [],
+      "last_refreshed": null,
+      "assessment": null
+    },
+    "risk_appetite": {
+      "anchor_variables": [
+        "vix",
+        "dxy",
+        "credit_spreads",
+        "high_yield"
+      ],
+      "query_template": "Current risk appetite VIX DXY credit spreads",
+      "chain_ids": [],
+      "active_chain_ids": [],
+      "last_refreshed": null,
+      "assessment": null
+    },
+    "crypto_specific": {
+      "anchor_variables": [
+        "btc_etf_flows",
+        "stablecoin_supply",
+        "exchange_reserves",
+        "btc"
+      ],
+      "query_template": "Bitcoin ETF flows stablecoin supply crypto-specific indicators",
+      "chain_ids": [],
+      "active_chain_ids": [],
+      "last_refreshed": null,
+      "assessment": null
+    },
+    "event_calendar": {
+      "anchor_variables": [
+        "fomc",
+        "cpi",
+        "nfp",
+        "opex"
+      ],
+      "query_template": "Upcoming macro events FOMC CPI NFP options expiration",
+      "chain_ids": [],
+      "active_chain_ids": [],
+      "last_refreshed": null,
+      "assessment": null
+    }
+  },
+  "metadata": {
+    "last_full_refresh": "2026-02-14T06:53:55.554464",
+    "theme_count": 6
+  }
+}

@@ -207,6 +207,9 @@ def analyze_impact(state: RiskImpactState, asset_class: str = "btc") -> RiskImpa
     knowledge_gaps = state.get("knowledge_gaps", {})
     gap_enrichment_text = state.get("gap_enrichment_text", "")
 
+    # Get theme states for macro regime context
+    theme_states = state.get("theme_states", None)
+
     # Build prompt
     prompt = get_impact_analysis_prompt(
         query=query,
@@ -220,7 +223,8 @@ def analyze_impact(state: RiskImpactState, asset_class: str = "btc") -> RiskImpa
         historical_event_text=historical_event_text,
         knowledge_gaps=knowledge_gaps,
         gap_enrichment_text=gap_enrichment_text,
-        asset_class=asset_class
+        asset_class=asset_class,
+        theme_states=theme_states
     )
 
     # Resolve model ID from config

@@ -1,0 +1,2707 @@
+{
+  "variables": {
+    "bitcoin_price": {
+      "first_seen": "2026-02-14T06:54:16.208696",
+      "last_seen": "2026-02-14T06:54:16.209075",
+      "chain_count": 13,
+      "sources": [
+        "2d482ab65308767d_41",
+        "3bfe46e026b54bb5_500",
+        "Source 3 (id: 7db9b3874c25b886_593)",
+        "Source 2 (id: 2d482ab65308767d_41)",
+        "Source 2",
+        "Source 9 (afb976361a1e97a1_534), Source 13 (3bfe46e026b54bb5_500)",
+        "Source 1 (both chains)",
+        "(id: 55f2736fd6a72c85_126)",
+        "Source 8 (771b9b416d46347b_67)",
+        "Source 8 (771b9b416d46347b_67)\n\n## Medium-Term Reversal Chains",
+        "Source 10 (771b9b416d46347b_67)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "greenland_tariff_war": {
+      "first_seen": "2026-02-14T06:54:16.208696",
+      "last_seen": "2026-02-14T06:54:16.208916",
+      "chain_count": 5,
+      "sources": [
+        "2d482ab65308767d_41",
+        "Source 2 (id: 2d482ab65308767d_41)",
+        "Source 2",
+        "Source 1 (both chains)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "risk-off_sentiment": {
+      "first_seen": "2026-02-14T06:54:16.208711",
+      "last_seen": "2026-02-14T06:54:16.208833",
+      "chain_count": 2,
+      "sources": [
+        "3bfe46e026b54bb5_500",
+        "Sources 13, 18"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_rate_hike": {
+      "first_seen": "2026-02-14T06:54:16.208711",
+      "last_seen": "2026-02-14T06:54:16.209130",
+      "chain_count": 8,
+      "sources": [
+        "3bfe46e026b54bb5_500",
+        "Source 5, Source 13, Source 18",
+        "@TedPillows (id: afb976361a1e97a1_534), BOJ (id: 8d68af75fff9b557_533)",
+        "CoinDesk (id: cfbe53872aafa7ad_157)",
+        "@TedPillows (id: afb976361a1e97a1_534)",
+        "CoinDesk (all steps), @TedPillows (historical precedent: Jul 2024 hike → BTC crash 65,000→50,000)",
+        "CoinDesk → Plan G Research → NY Fed",
+        "BOJ rate hike analysis (id: 90f98eee5ecd8f33_464)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "tga": {
+      "first_seen": "2026-02-14T06:54:16.208718",
+      "last_seen": "2026-02-14T06:54:16.209101",
+      "chain_count": 29,
+      "sources": [
+        "2d482ab65308767d_41 (steps 1-3), contextual interpretation for BTC impact",
+        "f541c3f68a4432e2_221 (TGA refill drains reserves), 71f2a1d744a3a2c6_60 (SOFR spike → bailout need), contextual BTC risk-off",
+        "Source 2 (step 1-2), Source 8 (step 3)",
+        "Source 2 (interpretation context)",
+        "Source 1 (TGA accumulation context), Source 8 (repo → BTC mechanism)",
+        "Source 2 (id: 2d482ab65308767d_41)",
+        "Source 2 (TGA → reserves → rates), Source 1 (TGA volatility context)",
+        "Source 1 (TGA peaks at $940B+ in Oct-Nov 2025), Source 10 (smaller TGA buffer → reserve plunge risk), Source 2 (reverse mechanism)",
+        "Source 7",
+        "Source 2",
+        "Source 1",
+        "Source 18 (BOJ rate hike searches correlate with BTC drops), Source 13 (SOFR spikes during carry unwinds), Source 8 (Aug 2025: BTC -29% during yen intervention)",
+        "Source 19 (institutional buying post-correction), Source 2 (liquidity improvement context)",
+        "Source 1 (TGA seasonal volatility), Source 3 (BTC lacks consistent seasonal pattern but shows cyclical extremes)",
+        "Source 3 (step 1-2), Source 13 (step 2-3), Source 13 (step 3-4)",
+        "385bb80b0b65c934_231, 683a03e261d432c3_230",
+        "2d482ab65308767d_41",
+        "Source 2 (steps 1-3), Source 1 (TGA mechanics)",
+        "Source 2 (steps 1-3), Source 7 (steps 4-6)",
+        "Source 7 (step 1), Source 1 (step 2), implied from funding-crypto correlation framework",
+        "Source 7 (steps 1-3), Source 10 (step 4)",
+        "Source 1 (steps 1-2), Source 8 (steps 3-5)",
+        "Source 7 (step 1), Source 2 (step 2)",
+        "Source 1 (both chains)",
+        "Source 7 (step 1), Source 9 (step 2 inverse)",
+        "Source 7 (steps 1-2, steps 3-4)",
+        "Source 6 (inverse of stated mechanism), Sources 16-17 (SOFR volume/rate stress indicators), Source 15 (news-driven BTC weakness pattern)",
+        "Source 6 (TGA-reserves mechanism), Source 5 (Fed balance sheet-BTC relationship), Source 1 (Fed balance sheet correlation with BTC)"
+      ],
+      "is_anchor": true,
+      "anchor_theme": "liquidity"
+    },
+    "risk_asset_support_(implied_for_btc)": {
+      "first_seen": "2026-02-14T06:54:16.208718",
+      "last_seen": "2026-02-14T06:54:16.208718",
+      "chain_count": 1,
+      "sources": [
+        "2d482ab65308767d_41 (steps 1-3), contextual interpretation for BTC impact"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "sofr": {
+      "first_seen": "2026-02-14T06:54:16.208718",
+      "last_seen": "2026-02-14T06:54:16.209099",
+      "chain_count": 11,
+      "sources": [
+        "2d482ab65308767d_41 (steps 1-3), contextual interpretation for BTC impact",
+        "Source 2 (interpretation context)",
+        "Source 2 (TGA → reserves → rates), Source 1 (TGA volatility context)",
+        "Source 1 (TGA peaks at $940B+ in Oct-Nov 2025), Source 10 (smaller TGA buffer → reserve plunge risk), Source 2 (reverse mechanism)",
+        "Source 2 (steps 1-3), Source 1 (TGA mechanics)",
+        "Source 2 (steps 1-3), Source 7 (steps 4-6)",
+        "Source 7 (steps 1-3), Source 10 (step 4)",
+        "NY Fed (f302d29e63075107_204)",
+        "CoinDesk (cfbe53872aafa7ad_157) → Plan G Research (1ff0edc5cd7a3aeb_201) → NY Fed (f302d29e63075107_204)",
+        "CoinDesk → Plan G Research → NY Fed",
+        "Source 6 (inverse of stated mechanism), Sources 16-17 (SOFR volume/rate stress indicators), Source 15 (news-driven BTC weakness pattern)"
+      ],
+      "is_anchor": true,
+      "anchor_theme": "rates"
+    },
+    "bank_reserves": {
+      "first_seen": "2026-02-14T06:54:16.208718",
+      "last_seen": "2026-02-14T06:54:16.209099",
+      "chain_count": 23,
+      "sources": [
+        "2d482ab65308767d_41 (steps 1-3), contextual interpretation for BTC impact",
+        "f541c3f68a4432e2_221 (TGA refill drains reserves), 71f2a1d744a3a2c6_60 (SOFR spike → bailout need), contextual BTC risk-off",
+        "Source 2 (step 1-2), Source 8 (step 3)",
+        "Source 2 (interpretation context)",
+        "Source 1 (TGA accumulation context), Source 8 (repo → BTC mechanism)",
+        "Source 2 (TGA → reserves → rates), Source 1 (TGA volatility context)",
+        "Source 1 (TGA peaks at $940B+ in Oct-Nov 2025), Source 10 (smaller TGA buffer → reserve plunge risk), Source 2 (reverse mechanism)",
+        "Source 10 (QRA → reserves), Source 15 (reserves → bailout need), Source 11/12 (SOFR volume as stress indicator)",
+        "Source 3 (step 1-2), Source 13 (step 2-3), Source 13 (step 3-4)",
+        "Source 2",
+        "f541c3f68a4432e2_221 (steps 1-2), 962c5f96d98e13e4_104 (step 3)",
+        "2d482ab65308767d_41",
+        "f541c3f68a4432e2_221",
+        "Source 2 (steps 1-3), Source 1 (TGA mechanics)",
+        "Source 2 (steps 1-3), Source 7 (steps 4-6)",
+        "Source 7 (step 1), Source 1 (step 2), implied from funding-crypto correlation framework",
+        "Source 7 (steps 1-3), Source 10 (step 4)",
+        "Source 1 (steps 1-2), Source 8 (steps 3-5)",
+        "Source 7 (step 1), Source 2 (step 2)",
+        "Source 1 (both chains)",
+        "Source 7 (step 1), Source 9 (step 2 inverse)",
+        "Source 7 (steps 1-2, steps 3-4)",
+        "Source 6 (inverse of stated mechanism), Sources 16-17 (SOFR volume/rate stress indicators), Source 15 (news-driven BTC weakness pattern)"
+      ],
+      "is_anchor": true,
+      "anchor_theme": "liquidity"
+    },
+    "improved_systemic_liquidity": {
+      "first_seen": "2026-02-14T06:54:16.208718",
+      "last_seen": "2026-02-14T06:54:16.208787",
+      "chain_count": 2,
+      "sources": [
+        "2d482ab65308767d_41 (steps 1-3), contextual interpretation for BTC impact",
+        "Source 2 (TGA → reserves → rates), Source 1 (TGA volatility context)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "systemic_bailout_need": {
+      "first_seen": "2026-02-14T06:54:16.208723",
+      "last_seen": "2026-02-14T06:54:16.208874",
+      "chain_count": 4,
+      "sources": [
+        "f541c3f68a4432e2_221 (TGA refill drains reserves), 71f2a1d744a3a2c6_60 (SOFR spike → bailout need), contextual BTC risk-off",
+        "Source 10 (QRA → reserves), Source 15 (reserves → bailout need), Source 11/12 (SOFR volume as stress indicator)",
+        "Source 11, 12, 15 (SOFR as stress barometer), Source 1 (TGA as reserve driver)",
+        "Source 15, Source 11, Source 12"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "risk-off_pressure_on_btc": {
+      "first_seen": "2026-02-14T06:54:16.208723",
+      "last_seen": "2026-02-14T06:54:16.208723",
+      "chain_count": 1,
+      "sources": [
+        "f541c3f68a4432e2_221 (TGA refill drains reserves), 71f2a1d744a3a2c6_60 (SOFR spike → bailout need), contextual BTC risk-off"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "sofr_volume": {
+      "first_seen": "2026-02-14T06:54:16.208723",
+      "last_seen": "2026-02-14T06:54:16.208874",
+      "chain_count": 3,
+      "sources": [
+        "f541c3f68a4432e2_221 (TGA refill drains reserves), 71f2a1d744a3a2c6_60 (SOFR spike → bailout need), contextual BTC risk-off",
+        "Source 11, 12, 15 (SOFR as stress barometer), Source 1 (TGA as reserve driver)",
+        "Source 15, Source 11, Source 12"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "carry_trade_unwind": {
+      "first_seen": "2026-02-14T06:54:16.208729",
+      "last_seen": "2026-02-14T06:54:16.209082",
+      "chain_count": 18,
+      "sources": [
+        "CoinDesk (cfbe53872aafa7ad_157) for full chain",
+        "Source 7 (steps 1-2, steps 3-4)",
+        "Source 7 (steps 1-3), Sources 16, 18 (empirical correlation)",
+        "CoinDesk (id: cfbe53872aafa7ad_157)",
+        "CoinDesk (id: cfbe53872aafa7ad_157)\n\n## Risk-Off Sentiment Transmission",
+        "NY Fed (f302d29e63075107_204)",
+        "CoinDesk (cfbe53872aafa7ad_157) → Plan G Research (1ff0edc5cd7a3aeb_201) → NY Fed (f302d29e63075107_204)",
+        "CoinDesk/NY Fed (carry unwind) → BOJ (9a7dfa8be11634e4_493) for liquidity→margin call chain",
+        "CoinDesk (all steps), @TedPillows (historical precedent: Jul 2024 hike → BTC crash 65,000→50,000)",
+        "CoinDesk → Plan G Research → NY Fed",
+        "Source 2 (7b77309cfd6630df_70), Source 4 (78c9945a42691062_43)",
+        "Source 3 (steps 1-2), Source 4 (step 3)",
+        "7b77309cfd6630df_70",
+        "Source 2 (7b77309cfd6630df_70)",
+        "Source 2 (steps 1-2), Source 7 (step 4 for BTC impact)",
+        "Source 1 (df0468450c5fb327_71) event description + Source 2, 3, 4 logic chains"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "global_liquidity_tightening": {
+      "first_seen": "2026-02-14T06:54:16.208729",
+      "last_seen": "2026-02-14T06:54:16.208942",
+      "chain_count": 2,
+      "sources": [
+        "CoinDesk (cfbe53872aafa7ad_157) for full chain",
+        "CoinDesk (id: cfbe53872aafa7ad_157)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_price_down": {
+      "first_seen": "2026-02-14T06:54:16.208729",
+      "last_seen": "2026-02-14T06:54:16.209046",
+      "chain_count": 7,
+      "sources": [
+        "CoinDesk (cfbe53872aafa7ad_157) for full chain",
+        "CryptoQuant (bf46ffaeb4432b5e_408)",
+        "Query context (RBA), extrapolated from BOJ pattern (Sources 3, 4, 6)",
+        "CoinDesk (id: cfbe53872aafa7ad_157)",
+        "CoinDesk (id: cfbe53872aafa7ad_157)\n\n## Risk-Off Sentiment Transmission",
+        "CoinDesk (all steps), @TedPillows (historical precedent: Jul 2024 hike → BTC crash 65,000→50,000)",
+        "Source 3 (steps 1-2), Source 4 (step 3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "jpy_strength": {
+      "first_seen": "2026-02-14T06:54:16.208729",
+      "last_seen": "2026-02-14T06:54:16.209006",
+      "chain_count": 3,
+      "sources": [
+        "CoinDesk (cfbe53872aafa7ad_157) for full chain",
+        "CoinDesk (id: cfbe53872aafa7ad_157)",
+        "CoinDesk (all steps), @TedPillows (historical precedent: Jul 2024 hike → BTC crash 65,000→50,000)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_rate_expectation": {
+      "first_seen": "2026-02-14T06:54:16.208729",
+      "last_seen": "2026-02-14T06:54:16.208993",
+      "chain_count": 2,
+      "sources": [
+        "CoinDesk (cfbe53872aafa7ad_157) for full chain",
+        "CoinDesk (cfbe53872aafa7ad_157) → Plan G Research (1ff0edc5cd7a3aeb_201) → NY Fed (f302d29e63075107_204)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_drawdown": {
+      "first_seen": "2026-02-14T06:54:16.208734",
+      "last_seen": "2026-02-14T06:54:16.209133",
+      "chain_count": 4,
+      "sources": [
+        "@TedPillows (afb976361a1e97a1_534), BOJ (8d68af75fff9b557_533)",
+        "@TedPillows (id: afb976361a1e97a1_534), BOJ (id: 8d68af75fff9b557_533)",
+        "Source 8 (8d68af75fff9b557_533), Source 5 (afb976361a1e97a1_534)",
+        "Bloomberg (id: 9d6b8d4a197ef962_9)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_recent_hikes": {
+      "first_seen": "2026-02-14T06:54:16.208734",
+      "last_seen": "2026-02-14T06:54:16.209070",
+      "chain_count": 2,
+      "sources": [
+        "@TedPillows (afb976361a1e97a1_534), BOJ (8d68af75fff9b557_533)",
+        "Source 8 (8d68af75fff9b557_533), Source 5 (afb976361a1e97a1_534)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "past_boj_hike": {
+      "first_seen": "2026-02-14T06:54:16.208737",
+      "last_seen": "2026-02-14T06:54:16.208991",
+      "chain_count": 2,
+      "sources": [
+        "CoinDesk (cfbe53872aafa7ad_157)",
+        "CoinDesk (cfbe53872aafa7ad_157), @TedPillows (afb976361a1e97a1_534)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_price_move": {
+      "first_seen": "2026-02-14T06:54:16.208737",
+      "last_seen": "2026-02-14T06:54:16.208991",
+      "chain_count": 2,
+      "sources": [
+        "CoinDesk (cfbe53872aafa7ad_157)",
+        "CoinDesk (cfbe53872aafa7ad_157), @TedPillows (afb976361a1e97a1_534)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_crash_65,000": {
+      "first_seen": "2026-02-14T06:54:16.208737",
+      "last_seen": "2026-02-14T06:54:16.208737",
+      "chain_count": 1,
+      "sources": [
+        "CoinDesk (cfbe53872aafa7ad_157)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_volatility": {
+      "first_seen": "2026-02-14T06:54:16.208741",
+      "last_seen": "2026-02-14T06:54:16.209084",
+      "chain_count": 6,
+      "sources": [
+        "Source 78c9945a42691062_43",
+        "Source 10 (QRA → reserves), Source 15 (reserves → bailout need), Source 11/12 (SOFR volume as stress indicator)",
+        "@bitcoindata21 (id: 3bfe46e026b54bb5_500)",
+        "Generic source (id: 78c9945a42691062_43)",
+        "Source 2 (7b77309cfd6630df_70), Source 4 (78c9945a42691062_43)",
+        "5eb637a4c093a7b6_15 → 78c9945a42691062_43/407f42bd9bfc3d8a_453"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "fx_intervention_risk": {
+      "first_seen": "2026-02-14T06:54:16.208741",
+      "last_seen": "2026-02-14T06:54:16.209008",
+      "chain_count": 2,
+      "sources": [
+        "Source 78c9945a42691062_43",
+        "Generic source (id: 78c9945a42691062_43)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "jpy_surge": {
+      "first_seen": "2026-02-14T06:54:16.208741",
+      "last_seen": "2026-02-14T06:54:16.209008",
+      "chain_count": 2,
+      "sources": [
+        "Source 78c9945a42691062_43",
+        "Generic source (id: 78c9945a42691062_43)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "carry_unwind": {
+      "first_seen": "2026-02-14T06:54:16.208741",
+      "last_seen": "2026-02-14T06:54:16.209130",
+      "chain_count": 5,
+      "sources": [
+        "Source 78c9945a42691062_43",
+        "Generic source (id: 78c9945a42691062_43)",
+        "Plan G Research",
+        "5eb637a4c093a7b6_15 → 78c9945a42691062_43/407f42bd9bfc3d8a_453",
+        "BOJ rate hike analysis (id: 90f98eee5ecd8f33_464)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "jpy_repatriation_and_carry_unwind": {
+      "first_seen": "2026-02-14T06:54:16.208744",
+      "last_seen": "2026-02-14T06:54:16.209017",
+      "chain_count": 2,
+      "sources": [
+        "Source d4fd4f3e4670fb2b_110",
+        "Generic source (id: d4fd4f3e4670fb2b_110)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_as_hedge": {
+      "first_seen": "2026-02-14T06:54:16.208744",
+      "last_seen": "2026-02-14T06:54:16.209072",
+      "chain_count": 3,
+      "sources": [
+        "Source d4fd4f3e4670fb2b_110",
+        "Generic source (id: d4fd4f3e4670fb2b_110)",
+        "Source 9 (d4fd4f3e4670fb2b_110)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "short_term_volatility_up": {
+      "first_seen": "2026-02-14T06:54:16.208744",
+      "last_seen": "2026-02-14T06:54:16.209072",
+      "chain_count": 3,
+      "sources": [
+        "Source d4fd4f3e4670fb2b_110",
+        "Generic source (id: d4fd4f3e4670fb2b_110)",
+        "Source 9 (d4fd4f3e4670fb2b_110)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_search_interest": {
+      "first_seen": "2026-02-14T06:54:16.208747",
+      "last_seen": "2026-02-14T06:54:16.208747",
+      "chain_count": 1,
+      "sources": [
+        "@bitcoindata21 (3bfe46e026b54bb5_500)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_price_correction": {
+      "first_seen": "2026-02-14T06:54:16.208747",
+      "last_seen": "2026-02-14T06:54:16.208899",
+      "chain_count": 3,
+      "sources": [
+        "@bitcoindata21 (3bfe46e026b54bb5_500)",
+        "Source 19"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "us_jobs_growth_weakness": {
+      "first_seen": "2026-02-14T06:54:16.208750",
+      "last_seen": "2026-02-14T06:54:16.208750",
+      "chain_count": 1,
+      "sources": [
+        "Cointelegraph (a511b63baa3a9d59_115)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "safe_haven_flows": {
+      "first_seen": "2026-02-14T06:54:16.208750",
+      "last_seen": "2026-02-14T06:54:16.208750",
+      "chain_count": 1,
+      "sources": [
+        "Cointelegraph (a511b63baa3a9d59_115)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_demand_down": {
+      "first_seen": "2026-02-14T06:54:16.208750",
+      "last_seen": "2026-02-14T06:54:16.208750",
+      "chain_count": 1,
+      "sources": [
+        "Cointelegraph (a511b63baa3a9d59_115)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_recovery": {
+      "first_seen": "2026-02-14T06:54:16.208753",
+      "last_seen": "2026-02-14T06:54:16.208753",
+      "chain_count": 1,
+      "sources": [
+        "Unknown technical analyst (90f98eee5ecd8f33_464)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_selloff": {
+      "first_seen": "2026-02-14T06:54:16.208753",
+      "last_seen": "2026-02-14T06:54:16.208753",
+      "chain_count": 1,
+      "sources": [
+        "Unknown technical analyst (90f98eee5ecd8f33_464)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_hike_events": {
+      "first_seen": "2026-02-14T06:54:16.208753",
+      "last_seen": "2026-02-14T06:54:16.208753",
+      "chain_count": 1,
+      "sources": [
+        "Unknown technical analyst (90f98eee5ecd8f33_464)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "fx_intervention": {
+      "first_seen": "2026-02-14T06:54:16.208756",
+      "last_seen": "2026-02-14T06:54:16.209090",
+      "chain_count": 2,
+      "sources": [
+        "Source 78c9945a42691062_43",
+        "78c9945a42691062_43"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_midterm_positive": {
+      "first_seen": "2026-02-14T06:54:16.208756",
+      "last_seen": "2026-02-14T06:54:16.209087",
+      "chain_count": 4,
+      "sources": [
+        "Source 78c9945a42691062_43",
+        "Source 2 (7b77309cfd6630df_70)\n\n## Funding Market Stress Chains",
+        "7b77309cfd6630df_70",
+        "78c9945a42691062_43, 7b77309cfd6630df_70, cfbe53872aafa7ad_157"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "policy_easing_expectations": {
+      "first_seen": "2026-02-14T06:54:16.208756",
+      "last_seen": "2026-02-14T06:54:16.209090",
+      "chain_count": 3,
+      "sources": [
+        "Source 78c9945a42691062_43",
+        "78c9945a42691062_43, 7b77309cfd6630df_70, cfbe53872aafa7ad_157",
+        "78c9945a42691062_43"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_hike_expectation": {
+      "first_seen": "2026-02-14T06:54:16.208759",
+      "last_seen": "2026-02-14T06:54:16.209070",
+      "chain_count": 3,
+      "sources": [
+        "BOJ (8d68af75fff9b557_533), CoinDesk (cfbe53872aafa7ad_157)",
+        "@bitcoindata21 (id: 3bfe46e026b54bb5_500)",
+        "Source 8 (8d68af75fff9b557_533), Source 5 (afb976361a1e97a1_534)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_downside_risk": {
+      "first_seen": "2026-02-14T06:54:16.208759",
+      "last_seen": "2026-02-14T06:54:16.209070",
+      "chain_count": 4,
+      "sources": [
+        "BOJ (8d68af75fff9b557_533), CoinDesk (cfbe53872aafa7ad_157)",
+        "Source 1 (TGA peaks at $940B+ in Oct-Nov 2025), Source 10 (smaller TGA buffer → reserve plunge risk), Source 2 (reverse mechanism)",
+        "@bitcoindata21 (id: 3bfe46e026b54bb5_500)",
+        "Source 8 (8d68af75fff9b557_533), Source 5 (afb976361a1e97a1_534)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_bear_risk": {
+      "first_seen": "2026-02-14T06:54:16.208761",
+      "last_seen": "2026-02-14T06:54:16.208761",
+      "chain_count": 1,
+      "sources": [
+        "CryptoQuant (bf46ffaeb4432b5e_408)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_price_drop": {
+      "first_seen": "2026-02-14T06:54:16.208765",
+      "last_seen": "2026-02-14T06:54:16.208883",
+      "chain_count": 2,
+      "sources": [
+        "Bloomberg Intelligence (8b9c25f376fe3c2e_210)",
+        "Source 6, Source 16"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "risk_off": {
+      "first_seen": "2026-02-14T06:54:16.208765",
+      "last_seen": "2026-02-14T06:54:16.208883",
+      "chain_count": 2,
+      "sources": [
+        "Bloomberg Intelligence (8b9c25f376fe3c2e_210)",
+        "Source 6, Source 16"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "repo_rate": {
+      "first_seen": "2026-02-14T06:54:16.208767",
+      "last_seen": "2026-02-14T06:54:16.208926",
+      "chain_count": 5,
+      "sources": [
+        "Source 2 (step 1-2), Source 8 (step 3)",
+        "Source 1 (TGA accumulation context), Source 8 (repo → BTC mechanism)",
+        "f541c3f68a4432e2_221 (steps 1-2), 962c5f96d98e13e4_104 (step 3)",
+        "962c5f96d98e13e4_104",
+        "Source 10 (steps 1-2), Source 20 (step 3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_price_trend": {
+      "first_seen": "2026-02-14T06:54:16.208767",
+      "last_seen": "2026-02-14T06:54:16.208770",
+      "chain_count": 2,
+      "sources": [
+        "Source 2 (step 1-2), Source 8 (step 3)",
+        "Source 2 (interpretation context)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_box_range": {
+      "first_seen": "2026-02-14T06:54:16.208773",
+      "last_seen": "2026-02-14T06:54:16.208926",
+      "chain_count": 4,
+      "sources": [
+        "Source 1 (TGA accumulation context), Source 8 (repo → BTC mechanism)",
+        "f541c3f68a4432e2_221 (steps 1-2), 962c5f96d98e13e4_104 (step 3)",
+        "Source 7 (steps 1-3), Source 10 (step 4)",
+        "Source 10 (steps 1-2), Source 20 (step 3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "fed_balance_sheet": {
+      "first_seen": "2026-02-14T06:54:16.208776",
+      "last_seen": "2026-02-14T06:54:16.209101",
+      "chain_count": 5,
+      "sources": [
+        "Source 6 (id: b0e12bd811e45398_263)",
+        "Source 10",
+        "Source 5 (explicit chain), Source 1 (historical validation showing 2019 golden cross → major BTC rally)",
+        "Source 9 (showing correlation between Fed asset expansion and BTC bull runs), Source 7 (QE1 2009 example)",
+        "Source 6 (TGA-reserves mechanism), Source 5 (Fed balance sheet-BTC relationship), Source 1 (Fed balance sheet correlation with BTC)"
+      ],
+      "is_anchor": true,
+      "anchor_theme": "liquidity"
+    },
+    "fed_bs_macd": {
+      "first_seen": "2026-02-14T06:54:16.208776",
+      "last_seen": "2026-02-14T06:54:16.208776",
+      "chain_count": 1,
+      "sources": [
+        "Source 6 (id: b0e12bd811e45398_263)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_price": {
+      "first_seen": "2026-02-14T06:54:16.208776",
+      "last_seen": "2026-02-14T06:54:16.209136",
+      "chain_count": 8,
+      "sources": [
+        "Source 6 (id: b0e12bd811e45398_263)",
+        "Source 13",
+        "Retail sentiment (id: ce6f98a4b12b54d2_513), VanEck (id: 7921ccad2c9906d4_258), Consumer sentiment (id: 621fe86161dfc3f1_440)",
+        "Bitfinex (id: b238c13e432d4935_521), TradingView Bitfinex analysis (id: a888b02a156615d3_522)",
+        "Query input, Bitfinex (id: b238c13e432d4935_521), TradingView (id: a888b02a156615d3_522)",
+        "LSEG Datastream (id: 306161b33060a65b_496), BOJ rate hike analysis (id: 90f98eee5ecd8f33_464)",
+        "BOJ rate hike analysis (id: 90f98eee5ecd8f33_464)",
+        "VanEck (id: 7921ccad2c9906d4_258)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "qt": {
+      "first_seen": "2026-02-14T06:54:16.208779",
+      "last_seen": "2026-02-14T06:54:16.208779",
+      "chain_count": 1,
+      "sources": [
+        "Source 3 (id: 7db9b3874c25b886_593)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "fed_waller_comment": {
+      "first_seen": "2026-02-14T06:54:16.208785",
+      "last_seen": "2026-02-14T06:54:16.208785",
+      "chain_count": 1,
+      "sources": [
+        "Source 4 (id: ed1b7c7ffc8cdac6_139)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_uptick": {
+      "first_seen": "2026-02-14T06:54:16.208785",
+      "last_seen": "2026-02-14T06:54:16.208785",
+      "chain_count": 1,
+      "sources": [
+        "Source 4 (id: ed1b7c7ffc8cdac6_139)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_benefits_from_liquidity_conditions": {
+      "first_seen": "2026-02-14T06:54:16.208787",
+      "last_seen": "2026-02-14T06:54:16.208787",
+      "chain_count": 1,
+      "sources": [
+        "Source 2 (TGA → reserves → rates), Source 1 (TGA volatility context)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "liquidity_stress": {
+      "first_seen": "2026-02-14T06:54:16.208790",
+      "last_seen": "2026-02-14T06:54:16.208790",
+      "chain_count": 1,
+      "sources": [
+        "Source 1 (TGA peaks at $940B+ in Oct-Nov 2025), Source 10 (smaller TGA buffer → reserve plunge risk), Source 2 (reverse mechanism)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "qra_borrowing": {
+      "first_seen": "2026-02-14T06:54:16.208793",
+      "last_seen": "2026-02-14T06:54:16.208843",
+      "chain_count": 2,
+      "sources": [
+        "Source 10 (QRA → reserves), Source 15 (reserves → bailout need), Source 11/12 (SOFR volume as stress indicator)",
+        "f541c3f68a4432e2_221 (steps 1-2), 962c5f96d98e13e4_104 (step 3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "extreme_liquidity_intervention": {
+      "first_seen": "2026-02-14T06:54:16.208793",
+      "last_seen": "2026-02-14T06:54:16.208793",
+      "chain_count": 1,
+      "sources": [
+        "Source 10 (QRA → reserves), Source 15 (reserves → bailout need), Source 11/12 (SOFR volume as stress indicator)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "required_buffer": {
+      "first_seen": "2026-02-14T06:54:16.208797",
+      "last_seen": "2026-02-14T06:54:16.208797",
+      "chain_count": 1,
+      "sources": [
+        "Source 7"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_pressure": {
+      "first_seen": "2026-02-14T06:54:16.208797",
+      "last_seen": "2026-02-14T06:54:16.208797",
+      "chain_count": 1,
+      "sources": [
+        "Source 7"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "reserve_adequacy_concern": {
+      "first_seen": "2026-02-14T06:54:16.208797",
+      "last_seen": "2026-02-14T06:54:16.208797",
+      "chain_count": 1,
+      "sources": [
+        "Source 7"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "potential_liquidity_tightening": {
+      "first_seen": "2026-02-14T06:54:16.208797",
+      "last_seen": "2026-02-14T06:54:16.208797",
+      "chain_count": 1,
+      "sources": [
+        "Source 7"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_downside_protection": {
+      "first_seen": "2026-02-14T06:54:16.208800",
+      "last_seen": "2026-02-14T06:54:16.208800",
+      "chain_count": 1,
+      "sources": [
+        "Source 10"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "mitigated_reserve_pressure": {
+      "first_seen": "2026-02-14T06:54:16.208800",
+      "last_seen": "2026-02-14T06:54:16.208800",
+      "chain_count": 1,
+      "sources": [
+        "Source 10"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "liquidity_backstops": {
+      "first_seen": "2026-02-14T06:54:16.208800",
+      "last_seen": "2026-02-14T06:54:16.208855",
+      "chain_count": 2,
+      "sources": [
+        "Source 10",
+        "f541c3f68a4432e2_221"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_vulnerability_overrides_liquidity": {
+      "first_seen": "2026-02-14T06:54:16.208803",
+      "last_seen": "2026-02-14T06:54:16.208803",
+      "chain_count": 1,
+      "sources": [
+        "Source 2"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "banking_system_reserve_volatility": {
+      "first_seen": "2026-02-14T06:54:16.208806",
+      "last_seen": "2026-02-14T06:54:16.208806",
+      "chain_count": 1,
+      "sources": [
+        "Source 1"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "persistent_funding_uncertainty": {
+      "first_seen": "2026-02-14T06:54:16.208806",
+      "last_seen": "2026-02-14T06:54:16.208806",
+      "chain_count": 1,
+      "sources": [
+        "Source 1"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_trading_environment_instability": {
+      "first_seen": "2026-02-14T06:54:16.208806",
+      "last_seen": "2026-02-14T06:54:16.208806",
+      "chain_count": 1,
+      "sources": [
+        "Source 1"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "tga_accumulation": {
+      "first_seen": "2026-02-14T06:54:16.208809",
+      "last_seen": "2026-02-14T06:54:16.208809",
+      "chain_count": 1,
+      "sources": [
+        "Source 11, 12, 15 (SOFR as stress barometer), Source 1 (TGA as reserve driver)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_crash_risk": {
+      "first_seen": "2026-02-14T06:54:16.208809",
+      "last_seen": "2026-02-14T06:54:16.208809",
+      "chain_count": 1,
+      "sources": [
+        "Source 11, 12, 15 (SOFR as stress barometer), Source 1 (TGA as reserve driver)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "reserve_drain": {
+      "first_seen": "2026-02-14T06:54:16.208809",
+      "last_seen": "2026-02-14T06:54:16.208809",
+      "chain_count": 1,
+      "sources": [
+        "Source 11, 12, 15 (SOFR as stress barometer), Source 1 (TGA as reserve driver)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_rate_hike_concerns": {
+      "first_seen": "2026-02-14T06:54:16.208813",
+      "last_seen": "2026-02-14T06:54:16.208813",
+      "chain_count": 1,
+      "sources": [
+        "Source 18 (BOJ rate hike searches correlate with BTC drops), Source 13 (SOFR spikes during carry unwinds), Source 8 (Aug 2025: BTC -29% during yen intervention)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_selling_pressure": {
+      "first_seen": "2026-02-14T06:54:16.208813",
+      "last_seen": "2026-02-14T06:54:16.208813",
+      "chain_count": 1,
+      "sources": [
+        "Source 18 (BOJ rate hike searches correlate with BTC drops), Source 13 (SOFR spikes during carry unwinds), Source 8 (Aug 2025: BTC -29% during yen intervention)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "yen_carry_trade_dynamics": {
+      "first_seen": "2026-02-14T06:54:16.208813",
+      "last_seen": "2026-02-14T06:54:16.208813",
+      "chain_count": 1,
+      "sources": [
+        "Source 18 (BOJ rate hike searches correlate with BTC drops), Source 13 (SOFR spikes during carry unwinds), Source 8 (Aug 2025: BTC -29% during yen intervention)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "buying_pressure_at_120%_of_mining_production": {
+      "first_seen": "2026-02-14T06:54:16.208817",
+      "last_seen": "2026-02-14T06:54:16.208817",
+      "chain_count": 1,
+      "sources": [
+        "Source 19 (institutional buying post-correction), Source 2 (liquidity improvement context)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "institutional_btc_accumulation": {
+      "first_seen": "2026-02-14T06:54:16.208817",
+      "last_seen": "2026-02-14T06:54:16.208817",
+      "chain_count": 1,
+      "sources": [
+        "Source 19 (institutional buying post-correction), Source 2 (liquidity improvement context)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "tga_drawdown": {
+      "first_seen": "2026-02-14T06:54:16.208817",
+      "last_seen": "2026-02-14T06:54:16.208817",
+      "chain_count": 1,
+      "sources": [
+        "Source 19 (institutional buying post-correction), Source 2 (liquidity improvement context)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_seasonal_volatility": {
+      "first_seen": "2026-02-14T06:54:16.208820",
+      "last_seen": "2026-02-14T06:54:16.208820",
+      "chain_count": 1,
+      "sources": [
+        "Source 1 (TGA seasonal volatility), Source 3 (BTC lacks consistent seasonal pattern but shows cyclical extremes)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "predictable_reserve_cycles": {
+      "first_seen": "2026-02-14T06:54:16.208820",
+      "last_seen": "2026-02-14T06:54:16.208820",
+      "chain_count": 1,
+      "sources": [
+        "Source 1 (TGA seasonal volatility), Source 3 (BTC lacks consistent seasonal pattern but shows cyclical extremes)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "risk_asset_support_(btc_positive)": {
+      "first_seen": "2026-02-14T06:54:16.208823",
+      "last_seen": "2026-02-14T06:54:16.208823",
+      "chain_count": 1,
+      "sources": [
+        "Source 3 (step 1-2), Source 13 (step 2-3), Source 13 (step 3-4)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "funding_liquidity": {
+      "first_seen": "2026-02-14T06:54:16.208823",
+      "last_seen": "2026-02-14T06:54:16.208823",
+      "chain_count": 1,
+      "sources": [
+        "Source 3 (step 1-2), Source 13 (step 2-3), Source 13 (step 3-4)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "futures_bias": {
+      "first_seen": "2026-02-14T06:54:16.208823",
+      "last_seen": "2026-02-14T06:54:16.208823",
+      "chain_count": 1,
+      "sources": [
+        "Source 3 (step 1-2), Source 13 (step 2-3), Source 13 (step 3-4)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "systemic_liquidity_improves": {
+      "first_seen": "2026-02-14T06:54:16.208826",
+      "last_seen": "2026-02-14T06:54:16.208826",
+      "chain_count": 1,
+      "sources": [
+        "Source 2"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "macd_golden_cross": {
+      "first_seen": "2026-02-14T06:54:16.208829",
+      "last_seen": "2026-02-14T06:54:16.208829",
+      "chain_count": 1,
+      "sources": [
+        "Source 10"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_rally_potential": {
+      "first_seen": "2026-02-14T06:54:16.208829",
+      "last_seen": "2026-02-14T06:54:16.208829",
+      "chain_count": 1,
+      "sources": [
+        "Source 10"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_price_pressure": {
+      "first_seen": "2026-02-14T06:54:16.208833",
+      "last_seen": "2026-02-14T06:54:16.208880",
+      "chain_count": 2,
+      "sources": [
+        "Sources 13, 18",
+        "Source 2"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "yen_carry_trade_unwind": {
+      "first_seen": "2026-02-14T06:54:16.208833",
+      "last_seen": "2026-02-14T06:54:16.208885",
+      "chain_count": 2,
+      "sources": [
+        "Sources 13, 18",
+        "Source 5, Source 13, Source 18"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "sofr_spike": {
+      "first_seen": "2026-02-14T06:54:16.208833",
+      "last_seen": "2026-02-14T06:54:16.208833",
+      "chain_count": 1,
+      "sources": [
+        "Sources 13, 18"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "dollar_shortage": {
+      "first_seen": "2026-02-14T06:54:16.208833",
+      "last_seen": "2026-02-14T06:54:16.208833",
+      "chain_count": 1,
+      "sources": [
+        "Sources 13, 18"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "institutional_buying_reversal": {
+      "first_seen": "2026-02-14T06:54:16.208836",
+      "last_seen": "2026-02-14T06:54:16.208836",
+      "chain_count": 1,
+      "sources": [
+        "Source 19"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "accumulation_at_120%_of_mining_production": {
+      "first_seen": "2026-02-14T06:54:16.208836",
+      "last_seen": "2026-02-14T06:54:16.208836",
+      "chain_count": 1,
+      "sources": [
+        "Source 19"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_erases_2026_gains": {
+      "first_seen": "2026-02-14T06:54:16.208840",
+      "last_seen": "2026-02-14T06:54:16.208840",
+      "chain_count": 1,
+      "sources": [
+        "Source 16"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "us-listed_btc_etf_outflows_$490m": {
+      "first_seen": "2026-02-14T06:54:16.208840",
+      "last_seen": "2026-02-14T06:54:16.208840",
+      "chain_count": 1,
+      "sources": [
+        "Source 16"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "increased_treasury_issuance_drains_liquidity": {
+      "first_seen": "2026-02-14T06:54:16.208846",
+      "last_seen": "2026-02-14T06:54:16.208846",
+      "chain_count": 1,
+      "sources": [
+        "385bb80b0b65c934_231, 683a03e261d432c3_230"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "potential_btc_downside_pressure": {
+      "first_seen": "2026-02-14T06:54:16.208846",
+      "last_seen": "2026-02-14T06:54:16.208846",
+      "chain_count": 1,
+      "sources": [
+        "385bb80b0b65c934_231, 683a03e261d432c3_230"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "treasury_needs_to_rebuild_by_~$250b": {
+      "first_seen": "2026-02-14T06:54:16.208846",
+      "last_seen": "2026-02-14T06:54:16.208846",
+      "chain_count": 1,
+      "sources": [
+        "385bb80b0b65c934_231, 683a03e261d432c3_230"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "month_end_liquidity": {
+      "first_seen": "2026-02-14T06:54:16.208852",
+      "last_seen": "2026-02-14T06:54:16.208852",
+      "chain_count": 1,
+      "sources": [
+        "962c5f96d98e13e4_104"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "bitcoin_falls_temporarily_then_recovers": {
+      "first_seen": "2026-02-14T06:54:16.208852",
+      "last_seen": "2026-02-14T06:54:16.208852",
+      "chain_count": 1,
+      "sources": [
+        "962c5f96d98e13e4_104"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "temporary_liquidity_effect": {
+      "first_seen": "2026-02-14T06:54:16.208852",
+      "last_seen": "2026-02-14T06:54:16.208852",
+      "chain_count": 1,
+      "sources": [
+        "962c5f96d98e13e4_104"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "mitigates_btc_downside": {
+      "first_seen": "2026-02-14T06:54:16.208855",
+      "last_seen": "2026-02-14T06:54:16.208855",
+      "chain_count": 1,
+      "sources": [
+        "f541c3f68a4432e2_221"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "srf_availability,_qt_end_guidance,_genius_act_bond-buying": {
+      "first_seen": "2026-02-14T06:54:16.208855",
+      "last_seen": "2026-02-14T06:54:16.208855",
+      "chain_count": 1,
+      "sources": [
+        "f541c3f68a4432e2_221"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "japan_rate_hike": {
+      "first_seen": "2026-02-14T06:54:16.208858",
+      "last_seen": "2026-02-14T06:54:16.208858",
+      "chain_count": 1,
+      "sources": [
+        "Source 9 (afb976361a1e97a1_534), Source 13 (3bfe46e026b54bb5_500)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "funding_stress_eases": {
+      "first_seen": "2026-02-14T06:54:16.208860",
+      "last_seen": "2026-02-14T06:54:16.208860",
+      "chain_count": 1,
+      "sources": [
+        "Source 2 (steps 1-3), Source 1 (TGA mechanics)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_liquidity_improves": {
+      "first_seen": "2026-02-14T06:54:16.208860",
+      "last_seen": "2026-02-14T06:54:16.208860",
+      "chain_count": 1,
+      "sources": [
+        "Source 2 (steps 1-3), Source 1 (TGA mechanics)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "tga_rebuild_requirement_(~$250b_shortfall_per_2025_context)": {
+      "first_seen": "2026-02-14T06:54:16.208864",
+      "last_seen": "2026-02-14T06:54:16.208864",
+      "chain_count": 1,
+      "sources": [
+        "Source 3"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "potential_btc_headwind": {
+      "first_seen": "2026-02-14T06:54:16.208864",
+      "last_seen": "2026-02-14T06:54:16.208864",
+      "chain_count": 1,
+      "sources": [
+        "Source 3"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "increased_treasury_issuance": {
+      "first_seen": "2026-02-14T06:54:16.208864",
+      "last_seen": "2026-02-14T06:54:16.208864",
+      "chain_count": 1,
+      "sources": [
+        "Source 3"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "liquidity_drain_from_financial_markets": {
+      "first_seen": "2026-02-14T06:54:16.208864",
+      "last_seen": "2026-02-14T06:54:16.208864",
+      "chain_count": 1,
+      "sources": [
+        "Source 3"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "repo_hibor_stress": {
+      "first_seen": "2026-02-14T06:54:16.208868",
+      "last_seen": "2026-02-14T06:54:16.208964",
+      "chain_count": 3,
+      "sources": [
+        "Source 7, Source 10",
+        "Source 7 (step 1), Source 2 (step 2)",
+        "(id: bedfe108267fca9b_77), (id: b05427264c07dc2d_36)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "crypto_liquidation": {
+      "first_seen": "2026-02-14T06:54:16.208868",
+      "last_seen": "2026-02-14T06:54:16.208966",
+      "chain_count": 5,
+      "sources": [
+        "Source 7, Source 10",
+        "Source 2 (steps 1-3), Source 7 (steps 4-6)",
+        "Source 3 (TGA rebuild need), Source 7/10 (funding-to-crypto transmission)",
+        "Source 7 (step 1), Source 2 (step 2)",
+        "(id: b05427264c07dc2d_36), (id: bedfe108267fca9b_77)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "borrow_rates": {
+      "first_seen": "2026-02-14T06:54:16.208868",
+      "last_seen": "2026-02-14T06:54:16.208986",
+      "chain_count": 6,
+      "sources": [
+        "Source 7, Source 10",
+        "Source 2 (steps 1-3), Source 7 (steps 4-6)",
+        "Source 3 (TGA rebuild need), Source 7/10 (funding-to-crypto transmission)",
+        "Source 1 (steps 1-2), Source 8 (steps 3-5)",
+        "(id: bedfe108267fca9b_77), (id: b05427264c07dc2d_36)",
+        "(bedfe108267fca9b_77)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "maintenance_cost": {
+      "first_seen": "2026-02-14T06:54:16.208868",
+      "last_seen": "2026-02-14T06:54:16.208986",
+      "chain_count": 6,
+      "sources": [
+        "Source 7, Source 10",
+        "Source 2 (steps 1-3), Source 7 (steps 4-6)",
+        "Source 3 (TGA rebuild need), Source 7/10 (funding-to-crypto transmission)",
+        "Source 1 (steps 1-2), Source 8 (steps 3-5)",
+        "(id: bedfe108267fca9b_77), (id: b05427264c07dc2d_36)",
+        "(bedfe108267fca9b_77)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "asia_dollar_liquidity": {
+      "first_seen": "2026-02-14T06:54:16.208871",
+      "last_seen": "2026-02-14T06:54:16.208966",
+      "chain_count": 2,
+      "sources": [
+        "Source 7, Source 10",
+        "(id: b05427264c07dc2d_36), (id: bedfe108267fca9b_77)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "crypto_funding_sensitivity": {
+      "first_seen": "2026-02-14T06:54:16.208871",
+      "last_seen": "2026-02-14T06:54:16.208966",
+      "chain_count": 2,
+      "sources": [
+        "Source 7, Source 10",
+        "(id: b05427264c07dc2d_36), (id: bedfe108267fca9b_77)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "amplified_btc_volatility": {
+      "first_seen": "2026-02-14T06:54:16.208871",
+      "last_seen": "2026-02-14T06:54:16.208871",
+      "chain_count": 1,
+      "sources": [
+        "Source 7, Source 10"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "potential_liquidity_injection_benefiting_btc": {
+      "first_seen": "2026-02-14T06:54:16.208874",
+      "last_seen": "2026-02-14T06:54:16.208874",
+      "chain_count": 1,
+      "sources": [
+        "Source 15, Source 11, Source 12"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "qe_needed": {
+      "first_seen": "2026-02-14T06:54:16.208874",
+      "last_seen": "2026-02-14T06:54:16.208874",
+      "chain_count": 1,
+      "sources": [
+        "Source 15, Source 11, Source 12"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "easing_funding_stress": {
+      "first_seen": "2026-02-14T06:54:16.208877",
+      "last_seen": "2026-02-14T06:54:16.208877",
+      "chain_count": 1,
+      "sources": [
+        "Source 11, Source 12, Source 14"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "sofr_volume_decline_to_2020_levels": {
+      "first_seen": "2026-02-14T06:54:16.208877",
+      "last_seen": "2026-02-14T06:54:16.208877",
+      "chain_count": 1,
+      "sources": [
+        "Source 11, Source 12, Source 14"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "current_neutral-to-positive_for_btc": {
+      "first_seen": "2026-02-14T06:54:16.208877",
+      "last_seen": "2026-02-14T06:54:16.208877",
+      "chain_count": 1,
+      "sources": [
+        "Source 11, Source 12, Source 14"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "etf_net_flows": {
+      "first_seen": "2026-02-14T06:54:16.208883",
+      "last_seen": "2026-02-14T06:54:16.209041",
+      "chain_count": 2,
+      "sources": [
+        "Source 6, Source 16",
+        "Source 19 (829989205ff3a27a_565)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "dollar_funding_stress_(sofr_spike)": {
+      "first_seen": "2026-02-14T06:54:16.208885",
+      "last_seen": "2026-02-14T06:54:16.208885",
+      "chain_count": 1,
+      "sources": [
+        "Source 5, Source 13, Source 18"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_correction_(-22%_to_-30%_historical_pattern)": {
+      "first_seen": "2026-02-14T06:54:16.208885",
+      "last_seen": "2026-02-14T06:54:16.208885",
+      "chain_count": 1,
+      "sources": [
+        "Source 5, Source 13, Source 18"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "bitfinex_longs_increase_during_btc_decline": {
+      "first_seen": "2026-02-14T06:54:16.208888",
+      "last_seen": "2026-02-14T06:54:16.208888",
+      "chain_count": 1,
+      "sources": [
+        "Source 8"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "potential_liquidation_risk_on_next_rally": {
+      "first_seen": "2026-02-14T06:54:16.208888",
+      "last_seen": "2026-02-14T06:54:16.208888",
+      "chain_count": 1,
+      "sources": [
+        "Source 8"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "contrarian_accumulation": {
+      "first_seen": "2026-02-14T06:54:16.208888",
+      "last_seen": "2026-02-14T06:54:16.208888",
+      "chain_count": 1,
+      "sources": [
+        "Source 8"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_price_support": {
+      "first_seen": "2026-02-14T06:54:16.208891",
+      "last_seen": "2026-02-14T06:54:16.208891",
+      "chain_count": 1,
+      "sources": [
+        "Source 2 (steps 1-3), Source 7 (steps 4-6)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "tga_rebuild_(inverse)": {
+      "first_seen": "2026-02-14T06:54:16.208894",
+      "last_seen": "2026-02-14T06:54:16.208894",
+      "chain_count": 1,
+      "sources": [
+        "Source 3 (TGA rebuild need), Source 7/10 (funding-to-crypto transmission)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_downside": {
+      "first_seen": "2026-02-14T06:54:16.208894",
+      "last_seen": "2026-02-14T06:54:16.208958",
+      "chain_count": 2,
+      "sources": [
+        "Source 3 (TGA rebuild need), Source 7/10 (funding-to-crypto transmission)",
+        "Synthesized from BOJ mechanisms (Sources 3, 4, 6) and global liquidity context (Source 1)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "sofr/hibor_stress": {
+      "first_seen": "2026-02-14T06:54:16.208894",
+      "last_seen": "2026-02-14T06:54:16.208894",
+      "chain_count": 1,
+      "sources": [
+        "Source 3 (TGA rebuild need), Source 7/10 (funding-to-crypto transmission)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "bank_reserves_decrease": {
+      "first_seen": "2026-02-14T06:54:16.208894",
+      "last_seen": "2026-02-14T06:54:16.208894",
+      "chain_count": 1,
+      "sources": [
+        "Source 3 (TGA rebuild need), Source 7/10 (funding-to-crypto transmission)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "institutional_buying_(120%_of_mining_production_in_2025-2026_context)": {
+      "first_seen": "2026-02-14T06:54:16.208899",
+      "last_seen": "2026-02-14T06:54:16.208899",
+      "chain_count": 1,
+      "sources": [
+        "Source 19"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "price_support/reversal_potential": {
+      "first_seen": "2026-02-14T06:54:16.208899",
+      "last_seen": "2026-02-14T06:54:16.208899",
+      "chain_count": 1,
+      "sources": [
+        "Source 19"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "funding_stress": {
+      "first_seen": "2026-02-14T06:54:16.208903",
+      "last_seen": "2026-02-14T06:54:16.208993",
+      "chain_count": 4,
+      "sources": [
+        "Source 7 (step 1), Source 1 (step 2), implied from funding-crypto correlation framework",
+        "Source 7 (steps 1-3), Source 10 (step 4)",
+        "NY Fed (f302d29e63075107_204)",
+        "CoinDesk (cfbe53872aafa7ad_157) → Plan G Research (1ff0edc5cd7a3aeb_201) → NY Fed (f302d29e63075107_204)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "crypto_support": {
+      "first_seen": "2026-02-14T06:54:16.208903",
+      "last_seen": "2026-02-14T06:54:16.208903",
+      "chain_count": 1,
+      "sources": [
+        "Source 7 (step 1), Source 1 (step 2), implied from funding-crypto correlation framework"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "repo_hibor": {
+      "first_seen": "2026-02-14T06:54:16.208909",
+      "last_seen": "2026-02-14T06:54:16.208986",
+      "chain_count": 2,
+      "sources": [
+        "Source 1 (steps 1-2), Source 8 (steps 3-5)",
+        "(bedfe108267fca9b_77)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "crypto_liquidation_pressure": {
+      "first_seen": "2026-02-14T06:54:16.208909",
+      "last_seen": "2026-02-14T06:54:16.208986",
+      "chain_count": 3,
+      "sources": [
+        "Source 1 (steps 1-2), Source 8 (steps 3-5)",
+        "(id: bedfe108267fca9b_77), (id: b05427264c07dc2d_36)",
+        "(bedfe108267fca9b_77)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "money_markets": {
+      "first_seen": "2026-02-14T06:54:16.208919",
+      "last_seen": "2026-02-14T06:54:16.208919",
+      "chain_count": 1,
+      "sources": [
+        "Source 7 (step 1), Source 9 (step 2 inverse)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "crypto_weakness": {
+      "first_seen": "2026-02-14T06:54:16.208919",
+      "last_seen": "2026-02-14T06:54:16.208919",
+      "chain_count": 1,
+      "sources": [
+        "Source 7 (step 1), Source 9 (step 2 inverse)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "usd_funding_improves": {
+      "first_seen": "2026-02-14T06:54:16.208922",
+      "last_seen": "2026-02-14T06:54:16.208922",
+      "chain_count": 1,
+      "sources": [
+        "Source 7 (steps 1-2, steps 3-4)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "crypto_downside": {
+      "first_seen": "2026-02-14T06:54:16.208922",
+      "last_seen": "2026-02-14T06:54:16.208997",
+      "chain_count": 4,
+      "sources": [
+        "Source 7 (steps 1-2, steps 3-4)",
+        "Source 7 (steps 1-3), Sources 16, 18 (empirical correlation)",
+        "NY Fed (f302d29e63075107_204)",
+        "CoinDesk/NY Fed (carry unwind) → BOJ (9a7dfa8be11634e4_493) for liquidity→margin call chain"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "long_liquidations_dominate_($999.52m_vs_$81.22m_shorts)": {
+      "first_seen": "2026-02-14T06:54:16.208926",
+      "last_seen": "2026-02-14T06:54:16.208926",
+      "chain_count": 1,
+      "sources": [
+        "Source 10 (steps 1-2), Source 20 (step 3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_weakness": {
+      "first_seen": "2026-02-14T06:54:16.208929",
+      "last_seen": "2026-02-14T06:54:16.209099",
+      "chain_count": 4,
+      "sources": [
+        "Source 7 (steps 1-3), Sources 16, 18 (empirical correlation)",
+        "Sources 11-12",
+        "Source 13",
+        "Source 6 (inverse of stated mechanism), Sources 16-17 (SOFR volume/rate stress indicators), Source 15 (news-driven BTC weakness pattern)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_hawkish_comments": {
+      "first_seen": "2026-02-14T06:54:16.208929",
+      "last_seen": "2026-02-14T06:54:16.208983",
+      "chain_count": 2,
+      "sources": [
+        "Source 7 (steps 1-3), Sources 16, 18 (empirical correlation)",
+        "NY Fed (f302d29e63075107_204)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "msci_news": {
+      "first_seen": "2026-02-14T06:54:16.208931",
+      "last_seen": "2026-02-14T06:54:16.208931",
+      "chain_count": 1,
+      "sources": [
+        "Sources 11-12"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "custody_risk": {
+      "first_seen": "2026-02-14T06:54:16.208934",
+      "last_seen": "2026-02-14T06:54:16.208934",
+      "chain_count": 1,
+      "sources": [
+        "Source 13"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "exchange_hack_loss": {
+      "first_seen": "2026-02-14T06:54:16.208934",
+      "last_seen": "2026-02-14T06:54:16.208934",
+      "chain_count": 1,
+      "sources": [
+        "Source 13"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "crypto_theft_total": {
+      "first_seen": "2026-02-14T06:54:16.208934",
+      "last_seen": "2026-02-14T06:54:16.208934",
+      "chain_count": 1,
+      "sources": [
+        "Source 13"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "cb_tightening": {
+      "first_seen": "2026-02-14T06:54:16.208939",
+      "last_seen": "2026-02-14T06:54:16.208939",
+      "chain_count": 1,
+      "sources": [
+        "Query context (RBA), extrapolated from BOJ pattern (Sources 3, 4, 6)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "rba_rate_hike": {
+      "first_seen": "2026-02-14T06:54:16.208939",
+      "last_seen": "2026-02-14T06:54:16.208958",
+      "chain_count": 2,
+      "sources": [
+        "Query context (RBA), extrapolated from BOJ pattern (Sources 3, 4, 6)",
+        "Synthesized from BOJ mechanisms (Sources 3, 4, 6) and global liquidity context (Source 1)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_hike_fed_cut_mix": {
+      "first_seen": "2026-02-14T06:54:16.208945",
+      "last_seen": "2026-02-14T06:54:16.208945",
+      "chain_count": 1,
+      "sources": [
+        "CoinDesk (id: cfbe53872aafa7ad_157)\n\n## Risk-Off Sentiment Transmission"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ust_demand_and_fed_cut_odds": {
+      "first_seen": "2026-02-14T06:54:16.208948",
+      "last_seen": "2026-02-14T06:54:16.208948",
+      "chain_count": 1,
+      "sources": [
+        "Cointelegraph (id: dfce1d5fece6dea0_120)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "us_weak_employment": {
+      "first_seen": "2026-02-14T06:54:16.208948",
+      "last_seen": "2026-02-14T06:54:16.208948",
+      "chain_count": 1,
+      "sources": [
+        "Cointelegraph (id: dfce1d5fece6dea0_120)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_interest_down": {
+      "first_seen": "2026-02-14T06:54:16.208948",
+      "last_seen": "2026-02-14T06:54:16.208948",
+      "chain_count": 1,
+      "sources": [
+        "Cointelegraph (id: dfce1d5fece6dea0_120)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "safe_haven_preference": {
+      "first_seen": "2026-02-14T06:54:16.208948",
+      "last_seen": "2026-02-14T06:54:16.208948",
+      "chain_count": 1,
+      "sources": [
+        "Cointelegraph (id: dfce1d5fece6dea0_120)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "global_rate_decline": {
+      "first_seen": "2026-02-14T06:54:16.208951",
+      "last_seen": "2026-02-14T06:54:16.208974",
+      "chain_count": 2,
+      "sources": [
+        "BofA Global Research (id: 081ba7008b6542be_204)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "crypto_inflows": {
+      "first_seen": "2026-02-14T06:54:16.208951",
+      "last_seen": "2026-02-14T06:54:16.208974",
+      "chain_count": 2,
+      "sources": [
+        "BofA Global Research (id: 081ba7008b6542be_204)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "liquidity_increase": {
+      "first_seen": "2026-02-14T06:54:16.208951",
+      "last_seen": "2026-02-14T06:54:16.209096",
+      "chain_count": 2,
+      "sources": [
+        "BofA Global Research (id: 081ba7008b6542be_204)",
+        "Source 9 (showing correlation between Fed asset expansion and BTC bull runs), Source 7 (QE1 2009 example)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_announcement_delay": {
+      "first_seen": "2026-02-14T06:54:16.208953",
+      "last_seen": "2026-02-14T06:54:16.208953",
+      "chain_count": 1,
+      "sources": [
+        "(id: 55f2736fd6a72c85_126)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_search_spike": {
+      "first_seen": "2026-02-14T06:54:16.208956",
+      "last_seen": "2026-02-14T06:54:16.208981",
+      "chain_count": 2,
+      "sources": [
+        "@bitcoindata21 (id: 3bfe46e026b54bb5_500)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "regional_tightening": {
+      "first_seen": "2026-02-14T06:54:16.208958",
+      "last_seen": "2026-02-14T06:54:16.208958",
+      "chain_count": 1,
+      "sources": [
+        "Synthesized from BOJ mechanisms (Sources 3, 4, 6) and global liquidity context (Source 1)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "global_liquidity_concern": {
+      "first_seen": "2026-02-14T06:54:16.208958",
+      "last_seen": "2026-02-14T06:54:16.208958",
+      "chain_count": 1,
+      "sources": [
+        "Synthesized from BOJ mechanisms (Sources 3, 4, 6) and global liquidity context (Source 1)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "institutional_accumulation": {
+      "first_seen": "2026-02-14T06:54:16.208961",
+      "last_seen": "2026-02-14T06:54:16.208961",
+      "chain_count": 1,
+      "sources": [
+        "TradingView/CoinGlass (id: 198a882bd447537a_245)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_support": {
+      "first_seen": "2026-02-14T06:54:16.208961",
+      "last_seen": "2026-02-14T06:54:16.208961",
+      "chain_count": 1,
+      "sources": [
+        "TradingView/CoinGlass (id: 198a882bd447537a_245)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "crypto_long_liquidations": {
+      "first_seen": "2026-02-14T06:54:16.208969",
+      "last_seen": "2026-02-14T06:54:16.209116",
+      "chain_count": 3,
+      "sources": [
+        "CME (id: 37d8c1eb04cd4d51_651)",
+        "CME (id: 37d8c1eb04cd4d51_651), Liquidation data (id: 83239156e271e491_103, id: 0f7bcc32a97a775e_102)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_selling": {
+      "first_seen": "2026-02-14T06:54:16.208969",
+      "last_seen": "2026-02-14T06:54:16.209133",
+      "chain_count": 5,
+      "sources": [
+        "CME (id: 37d8c1eb04cd4d51_651)",
+        "Query input (GS Prime data), CME (id: 37d8c1eb04cd4d51_651 - selling pressure context)",
+        "CME (id: 37d8c1eb04cd4d51_651), Liquidation data (id: 83239156e271e491_103, id: 0f7bcc32a97a775e_102)",
+        "Bloomberg (id: 9d6b8d4a197ef962_9)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "us_futures_open": {
+      "first_seen": "2026-02-14T06:54:16.208972",
+      "last_seen": "2026-02-14T06:54:16.208972",
+      "chain_count": 1,
+      "sources": [
+        "CME (id: 37d8c1eb04cd4d51_651)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "liquidity_expansion": {
+      "first_seen": "2026-02-14T06:54:16.208974",
+      "last_seen": "2026-02-14T06:54:16.209111",
+      "chain_count": 2,
+      "sources": [
+        "BofA Global Research (id: 081ba7008b6542be_204)",
+        "Source 9"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "fed_balance_sheet_expansion": {
+      "first_seen": "2026-02-14T06:54:16.208977",
+      "last_seen": "2026-02-14T06:54:16.208977",
+      "chain_count": 1,
+      "sources": [
+        "(id: b0e12bd811e45398_263)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_price_appreciation": {
+      "first_seen": "2026-02-14T06:54:16.208977",
+      "last_seen": "2026-02-14T06:54:16.208977",
+      "chain_count": 1,
+      "sources": [
+        "(id: b0e12bd811e45398_263)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "crypto_shock": {
+      "first_seen": "2026-02-14T06:54:16.208988",
+      "last_seen": "2026-02-14T06:54:16.209020",
+      "chain_count": 3,
+      "sources": [
+        "NY Fed (f302d29e63075107_204)",
+        "CoinDesk (cfbe53872aafa7ad_157) → Plan G Research (1ff0edc5cd7a3aeb_201) → NY Fed (f302d29e63075107_204)",
+        "CoinDesk → Plan G Research → NY Fed"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "usd_shortage": {
+      "first_seen": "2026-02-14T06:54:16.208993",
+      "last_seen": "2026-02-14T06:54:16.208993",
+      "chain_count": 1,
+      "sources": [
+        "CoinDesk (cfbe53872aafa7ad_157) → Plan G Research (1ff0edc5cd7a3aeb_201) → NY Fed (f302d29e63075107_204)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "usd_repurchase": {
+      "first_seen": "2026-02-14T06:54:16.208993",
+      "last_seen": "2026-02-14T06:54:16.209020",
+      "chain_count": 2,
+      "sources": [
+        "CoinDesk (cfbe53872aafa7ad_157) → Plan G Research (1ff0edc5cd7a3aeb_201) → NY Fed (f302d29e63075107_204)",
+        "CoinDesk → Plan G Research → NY Fed"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_hawkish": {
+      "first_seen": "2026-02-14T06:54:16.208997",
+      "last_seen": "2026-02-14T06:54:16.208997",
+      "chain_count": 1,
+      "sources": [
+        "CoinDesk/NY Fed (carry unwind) → BOJ (9a7dfa8be11634e4_493) for liquidity→margin call chain"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_liquidity": {
+      "first_seen": "2026-02-14T06:54:16.208997",
+      "last_seen": "2026-02-14T06:54:16.208997",
+      "chain_count": 1,
+      "sources": [
+        "CoinDesk/NY Fed (carry unwind) → BOJ (9a7dfa8be11634e4_493) for liquidity→margin call chain"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "margin_calls": {
+      "first_seen": "2026-02-14T06:54:16.208997",
+      "last_seen": "2026-02-14T06:54:16.208997",
+      "chain_count": 1,
+      "sources": [
+        "CoinDesk/NY Fed (carry unwind) → BOJ (9a7dfa8be11634e4_493) for liquidity→margin call chain"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "forced_deleveraging": {
+      "first_seen": "2026-02-14T06:54:16.208997",
+      "last_seen": "2026-02-14T06:54:16.208997",
+      "chain_count": 1,
+      "sources": [
+        "CoinDesk/NY Fed (carry unwind) → BOJ (9a7dfa8be11634e4_493) for liquidity→margin call chain"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_correction": {
+      "first_seen": "2026-02-14T06:54:16.209001",
+      "last_seen": "2026-02-14T06:54:16.209001",
+      "chain_count": 1,
+      "sources": [
+        "@TedPillows (id: afb976361a1e97a1_534)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_rate_hikes_(march_18,_2024;_july_31,_2024;_january_24,_2025)": {
+      "first_seen": "2026-02-14T06:54:16.209003",
+      "last_seen": "2026-02-14T06:54:16.209003",
+      "chain_count": 1,
+      "sources": [
+        "Source 8 (@TedPillows)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "bitcoin_price_corrections_(-22.28%,_-26.63%,_-30.34%)": {
+      "first_seen": "2026-02-14T06:54:16.209003",
+      "last_seen": "2026-02-14T06:54:16.209054",
+      "chain_count": 2,
+      "sources": [
+        "Source 8 (@TedPillows)",
+        "afb976361a1e97a1_534, 90f98eee5ecd8f33_464"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "global_liquidity": {
+      "first_seen": "2026-02-14T06:54:16.209008",
+      "last_seen": "2026-02-14T06:54:16.209008",
+      "chain_count": 1,
+      "sources": [
+        "Generic source (id: 78c9945a42691062_43)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "usd_jpy": {
+      "first_seen": "2026-02-14T06:54:16.209011",
+      "last_seen": "2026-02-14T06:54:16.209075",
+      "chain_count": 2,
+      "sources": [
+        "Plan G Research",
+        "Source 10 (771b9b416d46347b_67)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "risk_assets_lower_(nasdaq_~-1%,_btc_new_lows)": {
+      "first_seen": "2026-02-14T06:54:16.209011",
+      "last_seen": "2026-02-14T06:54:16.209011",
+      "chain_count": 1,
+      "sources": [
+        "Plan G Research"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "correlated_selloff": {
+      "first_seen": "2026-02-14T06:54:16.209014",
+      "last_seen": "2026-02-14T06:54:16.209014",
+      "chain_count": 1,
+      "sources": [
+        "Generic source (id: a16f8cf8c7fd06e1_181)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "position_unwinding": {
+      "first_seen": "2026-02-14T06:54:16.209014",
+      "last_seen": "2026-02-14T06:54:16.209014",
+      "chain_count": 1,
+      "sources": [
+        "Generic source (id: a16f8cf8c7fd06e1_181)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "disproportionate_hit_to_bitcoin": {
+      "first_seen": "2026-02-14T06:54:16.209014",
+      "last_seen": "2026-02-14T06:54:16.209014",
+      "chain_count": 1,
+      "sources": [
+        "Generic source (id: a16f8cf8c7fd06e1_181)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "30y_jgb_yield_spike": {
+      "first_seen": "2026-02-14T06:54:16.209017",
+      "last_seen": "2026-02-14T06:54:16.209072",
+      "chain_count": 2,
+      "sources": [
+        "Generic source (id: d4fd4f3e4670fb2b_110)",
+        "Source 9 (d4fd4f3e4670fb2b_110)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "covid_crash": {
+      "first_seen": "2026-02-14T06:54:16.209023",
+      "last_seen": "2026-02-14T06:54:16.209023",
+      "chain_count": 1,
+      "sources": [
+        "The Cryptoverse (Source 9)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "crypto_crash_magnitude": {
+      "first_seen": "2026-02-14T06:54:16.209023",
+      "last_seen": "2026-02-14T06:54:16.209023",
+      "chain_count": 1,
+      "sources": [
+        "The Cryptoverse (Source 9)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "external_shock_pattern": {
+      "first_seen": "2026-02-14T06:54:16.209023",
+      "last_seen": "2026-02-14T06:54:16.209023",
+      "chain_count": 1,
+      "sources": [
+        "The Cryptoverse (Source 9)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "usd_strength_shaken": {
+      "first_seen": "2026-02-14T06:54:16.209027",
+      "last_seen": "2026-02-14T06:54:16.209082",
+      "chain_count": 8,
+      "sources": [
+        "Source 2 (7b77309cfd6630df_70), Source 4 (78c9945a42691062_43)",
+        "Source 3 (steps 1-2), Source 4 (step 3)",
+        "7b77309cfd6630df_70",
+        "Source 2 (7b77309cfd6630df_70)",
+        "Source 2 (steps 1-2), Source 7 (step 4 for BTC impact)",
+        "Source 1 (df0468450c5fb327_71) event description + Source 2, 3, 4 logic chains"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "jpy_intervention_risk": {
+      "first_seen": "2026-02-14T06:54:16.209027",
+      "last_seen": "2026-02-14T06:54:16.209082",
+      "chain_count": 8,
+      "sources": [
+        "Source 2 (7b77309cfd6630df_70), Source 4 (78c9945a42691062_43)",
+        "Source 3 (steps 1-2), Source 4 (step 3)",
+        "7b77309cfd6630df_70",
+        "Source 2 (7b77309cfd6630df_70)",
+        "Source 2 (steps 1-2), Source 7 (step 4 for BTC impact)",
+        "Source 1 (df0468450c5fb327_71) event description + Source 2, 3, 4 logic chains"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_rebound": {
+      "first_seen": "2026-02-14T06:54:16.209030",
+      "last_seen": "2026-02-14T06:54:16.209030",
+      "chain_count": 1,
+      "sources": [
+        "Source 6 (8e8ac257a543dbab_51)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "jpy_intervention": {
+      "first_seen": "2026-02-14T06:54:16.209030",
+      "last_seen": "2026-02-14T06:54:16.209030",
+      "chain_count": 1,
+      "sources": [
+        "Source 6 (8e8ac257a543dbab_51)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_drop": {
+      "first_seen": "2026-02-14T06:54:16.209030",
+      "last_seen": "2026-02-14T06:54:16.209030",
+      "chain_count": 1,
+      "sources": [
+        "Source 6 (8e8ac257a543dbab_51)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "policy_action_yen_support": {
+      "first_seen": "2026-02-14T06:54:16.209033",
+      "last_seen": "2026-02-14T06:54:16.209033",
+      "chain_count": 1,
+      "sources": [
+        "Source 8 (771b9b416d46347b_67)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "jpy_rebound_risk": {
+      "first_seen": "2026-02-14T06:54:16.209033",
+      "last_seen": "2026-02-14T06:54:16.209033",
+      "chain_count": 1,
+      "sources": [
+        "Source 8 (771b9b416d46347b_67)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "hibo_rate": {
+      "first_seen": "2026-02-14T06:54:16.209035",
+      "last_seen": "2026-02-14T06:54:16.209035",
+      "chain_count": 1,
+      "sources": [
+        "Source 8 (771b9b416d46347b_67)\n\n## Medium-Term Reversal Chains"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "post_intervention_easing_expectations": {
+      "first_seen": "2026-02-14T06:54:16.209038",
+      "last_seen": "2026-02-14T06:54:16.209038",
+      "chain_count": 1,
+      "sources": [
+        "Source 2 (7b77309cfd6630df_70)\n\n## Funding Market Stress Chains"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_demand": {
+      "first_seen": "2026-02-14T06:54:16.209041",
+      "last_seen": "2026-02-14T06:54:16.209041",
+      "chain_count": 1,
+      "sources": [
+        "Source 19 (829989205ff3a27a_565)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_reversal_attempt": {
+      "first_seen": "2026-02-14T06:54:16.209043",
+      "last_seen": "2026-02-14T06:54:16.209107",
+      "chain_count": 2,
+      "sources": [
+        "Source 20 (666219321abf2886_158)",
+        "Source 13"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "us_equities_down": {
+      "first_seen": "2026-02-14T06:54:16.209043",
+      "last_seen": "2026-02-14T06:54:16.209043",
+      "chain_count": 1,
+      "sources": [
+        "Source 20 (666219321abf2886_158)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "service_pmi": {
+      "first_seen": "2026-02-14T06:54:16.209049",
+      "last_seen": "2026-02-14T06:54:16.209049",
+      "chain_count": 1,
+      "sources": [
+        "Source 13"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "fed_cut_probability": {
+      "first_seen": "2026-02-14T06:54:16.209049",
+      "last_seen": "2026-02-14T06:54:16.209049",
+      "chain_count": 1,
+      "sources": [
+        "Source 13"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_short-term_correction_&_higher_volatility": {
+      "first_seen": "2026-02-14T06:54:16.209051",
+      "last_seen": "2026-02-14T06:54:16.209051",
+      "chain_count": 1,
+      "sources": [
+        "7b77309cfd6630df_70"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_rate_hikes_(march_2024,_july_2024,_january_2025)": {
+      "first_seen": "2026-02-14T06:54:16.209054",
+      "last_seen": "2026-02-14T06:54:16.209054",
+      "chain_count": 1,
+      "sources": [
+        "afb976361a1e97a1_534, 90f98eee5ecd8f33_464"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "long-term_btc_hedge_demand_up": {
+      "first_seen": "2026-02-14T06:54:16.209058",
+      "last_seen": "2026-02-14T06:54:16.209058",
+      "chain_count": 1,
+      "sources": [
+        "407f42bd9bfc3d8a_453, 5674b488617dcd4e_80 (data context)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "30y_jgb_yield_record": {
+      "first_seen": "2026-02-14T06:54:16.209058",
+      "last_seen": "2026-02-14T06:54:16.209058",
+      "chain_count": 1,
+      "sources": [
+        "407f42bd9bfc3d8a_453, 5674b488617dcd4e_80 (data context)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_short-term_correction": {
+      "first_seen": "2026-02-14T06:54:16.209061",
+      "last_seen": "2026-02-14T06:54:16.209061",
+      "chain_count": 1,
+      "sources": [
+        "Source 2 (7b77309cfd6630df_70)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_downward_pressure": {
+      "first_seen": "2026-02-14T06:54:16.209064",
+      "last_seen": "2026-02-14T06:54:16.209064",
+      "chain_count": 1,
+      "sources": [
+        "Source 2 (steps 1-2), Source 7 (step 4 for BTC impact)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_short-term_negative_pressure": {
+      "first_seen": "2026-02-14T06:54:16.209067",
+      "last_seen": "2026-02-14T06:54:16.209067",
+      "chain_count": 1,
+      "sources": [
+        "Source 2 (7b77309cfd6630df_70)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_large_easing_or_bond_collapse": {
+      "first_seen": "2026-02-14T06:54:16.209072",
+      "last_seen": "2026-02-14T06:54:16.209072",
+      "chain_count": 1,
+      "sources": [
+        "Source 9 (d4fd4f3e4670fb2b_110)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "risk_asset_rebound": {
+      "first_seen": "2026-02-14T06:54:16.209075",
+      "last_seen": "2026-02-14T06:54:16.209075",
+      "chain_count": 1,
+      "sources": [
+        "Source 10 (771b9b416d46347b_67)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "takaiichi_dissolution_report": {
+      "first_seen": "2026-02-14T06:54:16.209075",
+      "last_seen": "2026-02-14T06:54:16.209075",
+      "chain_count": 1,
+      "sources": [
+        "Source 10 (771b9b416d46347b_67)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "global_liquidity_contraction": {
+      "first_seen": "2026-02-14T06:54:16.209078",
+      "last_seen": "2026-02-14T06:54:16.209078",
+      "chain_count": 1,
+      "sources": [
+        "Source 1 (df0468450c5fb327_71) event description + Source 2, 3, 4 logic chains"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_short-term_correction_&_volatility_spike": {
+      "first_seen": "2026-02-14T06:54:16.209078",
+      "last_seen": "2026-02-14T06:54:16.209078",
+      "chain_count": 1,
+      "sources": [
+        "Source 1 (df0468450c5fb327_71) event description + Source 2, 3, 4 logic chains"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "fx_vol_spill": {
+      "first_seen": "2026-02-14T06:54:16.209084",
+      "last_seen": "2026-02-14T06:54:16.209084",
+      "chain_count": 1,
+      "sources": [
+        "5eb637a4c093a7b6_15 → 78c9945a42691062_43/407f42bd9bfc3d8a_453"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "operational_signalling": {
+      "first_seen": "2026-02-14T06:54:16.209084",
+      "last_seen": "2026-02-14T06:54:16.209084",
+      "chain_count": 1,
+      "sources": [
+        "5eb637a4c093a7b6_15 → 78c9945a42691062_43/407f42bd9bfc3d8a_453"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "short-term:_carry_unwind": {
+      "first_seen": "2026-02-14T06:54:16.209087",
+      "last_seen": "2026-02-14T06:54:16.209087",
+      "chain_count": 1,
+      "sources": [
+        "78c9945a42691062_43, 7b77309cfd6630df_70, cfbe53872aafa7ad_157"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_volatility_+_btc_price_down_|_medium-term:_fx_intervention": {
+      "first_seen": "2026-02-14T06:54:16.209087",
+      "last_seen": "2026-02-14T06:54:16.209087",
+      "chain_count": 1,
+      "sources": [
+        "78c9945a42691062_43, 7b77309cfd6630df_70, cfbe53872aafa7ad_157"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_medium-term_positive": {
+      "first_seen": "2026-02-14T06:54:16.209090",
+      "last_seen": "2026-02-14T06:54:16.209090",
+      "chain_count": 1,
+      "sources": [
+        "78c9945a42691062_43"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "fed_bs_macd_golden_cross": {
+      "first_seen": "2026-02-14T06:54:16.209093",
+      "last_seen": "2026-02-14T06:54:16.209093",
+      "chain_count": 1,
+      "sources": [
+        "Source 5 (explicit chain), Source 1 (historical validation showing 2019 golden cross → major BTC rally)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_up_signal": {
+      "first_seen": "2026-02-14T06:54:16.209093",
+      "last_seen": "2026-02-14T06:54:16.209101",
+      "chain_count": 2,
+      "sources": [
+        "Source 5 (explicit chain), Source 1 (historical validation showing 2019 golden cross → major BTC rally)",
+        "Source 6 (TGA-reserves mechanism), Source 5 (Fed balance sheet-BTC relationship), Source 1 (Fed balance sheet correlation with BTC)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "bitcoin_price_appreciation": {
+      "first_seen": "2026-02-14T06:54:16.209096",
+      "last_seen": "2026-02-14T06:54:16.209096",
+      "chain_count": 1,
+      "sources": [
+        "Source 9 (showing correlation between Fed asset expansion and BTC bull runs), Source 7 (QE1 2009 example)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "qe": {
+      "first_seen": "2026-02-14T06:54:16.209096",
+      "last_seen": "2026-02-14T06:54:16.209096",
+      "chain_count": 1,
+      "sources": [
+        "Source 9 (showing correlation between Fed asset expansion and BTC bull runs), Source 7 (QE1 2009 example)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "liquidity_withdrawal": {
+      "first_seen": "2026-02-14T06:54:16.209101",
+      "last_seen": "2026-02-14T06:54:16.209101",
+      "chain_count": 1,
+      "sources": [
+        "Source 6 (TGA-reserves mechanism), Source 5 (Fed balance sheet-BTC relationship), Source 1 (Fed balance sheet correlation with BTC)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_breadth_signal": {
+      "first_seen": "2026-02-14T06:54:16.209104",
+      "last_seen": "2026-02-14T06:54:16.209136",
+      "chain_count": 2,
+      "sources": [
+        "Sources 11-12 (identical chains from different extractions)",
+        "VanEck (id: 7921ccad2c9906d4_258)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_uptrend": {
+      "first_seen": "2026-02-14T06:54:16.209104",
+      "last_seen": "2026-02-14T06:54:16.209104",
+      "chain_count": 1,
+      "sources": [
+        "Sources 11-12 (identical chains from different extractions)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "coinbase_premium": {
+      "first_seen": "2026-02-14T06:54:16.209107",
+      "last_seen": "2026-02-14T06:54:16.209107",
+      "chain_count": 1,
+      "sources": [
+        "Source 13"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "pmi_recovery": {
+      "first_seen": "2026-02-14T06:54:16.209111",
+      "last_seen": "2026-02-14T06:54:16.209111",
+      "chain_count": 1,
+      "sources": [
+        "Source 9"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "btc_rally": {
+      "first_seen": "2026-02-14T06:54:16.209111",
+      "last_seen": "2026-02-14T06:54:16.209111",
+      "chain_count": 1,
+      "sources": [
+        "Source 9"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "institutional_short_pressure": {
+      "first_seen": "2026-02-14T06:54:16.209114",
+      "last_seen": "2026-02-14T06:54:16.209124",
+      "chain_count": 2,
+      "sources": [
+        "Query input (GS Prime data), CME (id: 37d8c1eb04cd4d51_651 - selling pressure context)",
+        "Query input, Bitfinex (id: b238c13e432d4935_521), TradingView (id: a888b02a156615d3_522)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "gs_prime_short_zscore": {
+      "first_seen": "2026-02-14T06:54:16.209114",
+      "last_seen": "2026-02-14T06:54:16.209124",
+      "chain_count": 2,
+      "sources": [
+        "Query input (GS Prime data), CME (id: 37d8c1eb04cd4d51_651 - selling pressure context)",
+        "Query input, Bitfinex (id: b238c13e432d4935_521), TradingView (id: a888b02a156615d3_522)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "mass_liquidations": {
+      "first_seen": "2026-02-14T06:54:16.209116",
+      "last_seen": "2026-02-14T06:54:16.209116",
+      "chain_count": 1,
+      "sources": [
+        "CME (id: 37d8c1eb04cd4d51_651), Liquidation data (id: 83239156e271e491_103, id: 0f7bcc32a97a775e_102)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "retail_sentiment": {
+      "first_seen": "2026-02-14T06:54:16.209118",
+      "last_seen": "2026-02-14T06:54:16.209118",
+      "chain_count": 1,
+      "sources": [
+        "Retail sentiment (id: ce6f98a4b12b54d2_513), VanEck (id: 7921ccad2c9906d4_258), Consumer sentiment (id: 621fe86161dfc3f1_440)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "contrarian_signal": {
+      "first_seen": "2026-02-14T06:54:16.209118",
+      "last_seen": "2026-02-14T06:54:16.209118",
+      "chain_count": 1,
+      "sources": [
+        "Retail sentiment (id: ce6f98a4b12b54d2_513), VanEck (id: 7921ccad2c9906d4_258), Consumer sentiment (id: 621fe86161dfc3f1_440)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "bitfinex_long_positions": {
+      "first_seen": "2026-02-14T06:54:16.209121",
+      "last_seen": "2026-02-14T06:54:16.209124",
+      "chain_count": 2,
+      "sources": [
+        "Bitfinex (id: b238c13e432d4935_521), TradingView Bitfinex analysis (id: a888b02a156615d3_522)",
+        "Query input, Bitfinex (id: b238c13e432d4935_521), TradingView (id: a888b02a156615d3_522)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "liquidation_risk": {
+      "first_seen": "2026-02-14T06:54:16.209121",
+      "last_seen": "2026-02-14T06:54:16.209121",
+      "chain_count": 1,
+      "sources": [
+        "Bitfinex (id: b238c13e432d4935_521), TradingView Bitfinex analysis (id: a888b02a156615d3_522)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "positioning_divergence": {
+      "first_seen": "2026-02-14T06:54:16.209124",
+      "last_seen": "2026-02-14T06:54:16.209124",
+      "chain_count": 1,
+      "sources": [
+        "Query input, Bitfinex (id: b238c13e432d4935_521), TradingView (id: a888b02a156615d3_522)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "historical_pattern": {
+      "first_seen": "2026-02-14T06:54:16.209127",
+      "last_seen": "2026-02-14T06:54:16.209127",
+      "chain_count": 1,
+      "sources": [
+        "LSEG Datastream (id: 306161b33060a65b_496), BOJ rate hike analysis (id: 90f98eee5ecd8f33_464)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "price_target": {
+      "first_seen": "2026-02-14T06:54:16.209127",
+      "last_seen": "2026-02-14T06:54:16.209127",
+      "chain_count": 1,
+      "sources": [
+        "LSEG Datastream (id: 306161b33060a65b_496), BOJ rate hike analysis (id: 90f98eee5ecd8f33_464)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "oversold_condition": {
+      "first_seen": "2026-02-14T06:54:16.209127",
+      "last_seen": "2026-02-14T06:54:16.209127",
+      "chain_count": 1,
+      "sources": [
+        "LSEG Datastream (id: 306161b33060a65b_496), BOJ rate hike analysis (id: 90f98eee5ecd8f33_464)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "price_recovery": {
+      "first_seen": "2026-02-14T06:54:16.209130",
+      "last_seen": "2026-02-14T06:54:16.209130",
+      "chain_count": 1,
+      "sources": [
+        "BOJ rate hike analysis (id: 90f98eee5ecd8f33_464)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "asset_rotation": {
+      "first_seen": "2026-02-14T06:54:16.209133",
+      "last_seen": "2026-02-14T06:54:16.209133",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg (id: 9d6b8d4a197ef962_9)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "crypto_demand": {
+      "first_seen": "2026-02-14T06:54:16.209133",
+      "last_seen": "2026-02-14T06:54:16.209133",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg (id: 9d6b8d4a197ef962_9)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "squeeze_potential": {
+      "first_seen": "2026-02-14T06:54:16.209136",
+      "last_seen": "2026-02-14T06:54:16.209136",
+      "chain_count": 1,
+      "sources": [
+        "VanEck (id: 7921ccad2c9906d4_258)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    }
+  },
+  "last_updated": "2026-02-14T06:54:16.209162"
+}

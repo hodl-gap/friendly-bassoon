@@ -1,0 +1,202 @@
+{
+  "tga": {
+    "normalized_name": "tga",
+    "source": "FRED",
+    "series_id": "WTREGEN",
+    "frequency": "weekly",
+    "description": "Treasury General Account balance",
+    "verified": true
+  },
+  "rrp": {
+    "normalized_name": "rrp",
+    "source": "FRED",
+    "series_id": "RRPONTSYD",
+    "frequency": "daily",
+    "description": "Overnight Reverse Repurchase Agreements",
+    "verified": true
+  },
+  "bank_reserves": {
+    "normalized_name": "bank_reserves",
+    "source": "FRED",
+    "series_id": "TOTRESNS",
+    "frequency": "monthly",
+    "description": "Total reserves of depository institutions",
+    "verified": true
+  },
+  "sofr": {
+    "normalized_name": "sofr",
+    "source": "FRED",
+    "series_id": "SOFR",
+    "frequency": "daily",
+    "description": "Secured Overnight Financing Rate",
+    "verified": true
+  },
+  "fed_balance_sheet": {
+    "normalized_name": "fed_balance_sheet",
+    "source": "FRED",
+    "series_id": "WALCL",
+    "frequency": "weekly",
+    "description": "Federal Reserve total assets",
+    "verified": true
+  },
+  "fed_funds": {
+    "normalized_name": "fed_funds",
+    "source": "FRED",
+    "series_id": "FEDFUNDS",
+    "frequency": "monthly",
+    "description": "Effective Federal Funds Rate",
+    "verified": true
+  },
+  "vix": {
+    "normalized_name": "vix",
+    "source": "Yahoo",
+    "series_id": "^VIX",
+    "frequency": "daily",
+    "description": "CBOE Volatility Index",
+    "verified": true
+  },
+  "dxy": {
+    "normalized_name": "dxy",
+    "source": "Yahoo",
+    "series_id": "DX-Y.NYB",
+    "frequency": "daily",
+    "description": "US Dollar Index",
+    "verified": true
+  },
+  "btc": {
+    "normalized_name": "btc",
+    "source": "Yahoo",
+    "series_id": "BTC-USD",
+    "frequency": "daily",
+    "description": "Bitcoin price in USD",
+    "verified": true
+  },
+  "us10y": {
+    "normalized_name": "us10y",
+    "source": "FRED",
+    "series_id": "DGS10",
+    "frequency": "daily",
+    "description": "10-Year Treasury Constant Maturity Rate",
+    "verified": true
+  },
+  "credit_spreads": {
+    "normalized_name": "credit_spreads",
+    "source": "FRED",
+    "series_id": "BAMLH0A0HYM2",
+    "frequency": "daily",
+    "description": "ICE BofA US High Yield Index Option-Adjusted Spread",
+    "verified": true
+  },
+  "high_yield": {
+    "normalized_name": "high_yield",
+    "source": "FRED",
+    "series_id": "BAMLH0A0HYM2",
+    "frequency": "daily",
+    "description": "ICE BofA US High Yield Index Option-Adjusted Spread",
+    "verified": true
+  },
+  "treasury_yields": {
+    "normalized_name": "treasury_yields",
+    "source": "FRED",
+    "series_id": "DGS10",
+    "frequency": "daily",
+    "description": "10-Year Treasury Yield (proxy for broad yield environment)",
+    "verified": true
+  },
+  "gs_prime_book": {
+    "normalized_name": "gs_prime_book",
+    "source": null,
+    "series_id": null,
+    "frequency": null,
+    "description": "Goldman Sachs Prime Brokerage positioning data (proprietary)",
+    "verified": false
+  },
+  "cta_positioning": {
+    "normalized_name": "cta_positioning",
+    "source": null,
+    "series_id": null,
+    "frequency": null,
+    "description": "CTA/trend-following positioning estimates (proprietary)",
+    "verified": false
+  },
+  "etf_flows": {
+    "normalized_name": "etf_flows",
+    "source": null,
+    "series_id": null,
+    "frequency": null,
+    "description": "ETF net fund flows aggregate",
+    "verified": false
+  },
+  "futures_oi": {
+    "normalized_name": "futures_oi",
+    "source": null,
+    "series_id": null,
+    "frequency": null,
+    "description": "Futures open interest aggregate",
+    "verified": false
+  },
+  "rate_expectations": {
+    "normalized_name": "rate_expectations",
+    "source": null,
+    "series_id": null,
+    "frequency": null,
+    "description": "Fed funds futures implied rate expectations",
+    "verified": false
+  },
+  "btc_etf_flows": {
+    "normalized_name": "btc_etf_flows",
+    "source": null,
+    "series_id": null,
+    "frequency": null,
+    "description": "Bitcoin ETF daily net inflows/outflows",
+    "verified": false
+  },
+  "stablecoin_supply": {
+    "normalized_name": "stablecoin_supply",
+    "source": null,
+    "series_id": null,
+    "frequency": null,
+    "description": "Total stablecoin market cap (USDT + USDC + others)",
+    "verified": false
+  },
+  "exchange_reserves": {
+    "normalized_name": "exchange_reserves",
+    "source": null,
+    "series_id": null,
+    "frequency": null,
+    "description": "BTC held on centralized exchanges",
+    "verified": false
+  },
+  "fomc": {
+    "normalized_name": "fomc",
+    "source": "calendar",
+    "series_id": null,
+    "frequency": null,
+    "description": "Federal Open Market Committee meeting dates",
+    "verified": true
+  },
+  "cpi": {
+    "normalized_name": "cpi",
+    "source": "calendar",
+    "series_id": null,
+    "frequency": null,
+    "description": "Consumer Price Index release dates",
+    "verified": true
+  },
+  "nfp": {
+    "normalized_name": "nfp",
+    "source": "calendar",
+    "series_id": null,
+    "frequency": null,
+    "description": "Non-Farm Payrolls release dates",
+    "verified": true
+  },
+  "opex": {
+    "normalized_name": "opex",
+    "source": "calendar",
+    "series_id": null,
+    "frequency": null,
+    "description": "Monthly/quarterly options expiration dates",
+    "verified": true
+  }
+}

@@ -15,6 +15,13 @@ from .data_id_utils import parse_data_id, format_data_id
 # Path to discovered mappings (source of truth)
 MAPPINGS_PATH = Path(__file__).parent.parent / "subproject_variable_mapper" / "mappings" / "discovered_data_ids.json"
 
+# Path to anchor variables (curated list of monitored variables)
+ANCHOR_VARIABLES_PATH = Path(__file__).parent / "data" / "anchor_variables.json"
+
+# Thread-safe cache for anchor variables
+_anchor_cache: Optional[Dict[str, Any]] = None
+_anchor_lock = threading.Lock()
+
 # Fallback mappings for Yahoo tickers (not in discovered_data_ids.json)
 # These are market tickers that don't go through the discovery process
 YAHOO_FALLBACK = {
@@ -100,11 +107,44 @@ def load_mappings() -> Dict[str, Any]:
             return _mappings_cache
 
 
+def load_anchor_variables() -> Dict[str, Any]:
+    """
+    Load anchor variables from JSON file.
+    Thread-safe with double-check locking.
+
+    Returns:
+        Dict mapping variable names to their anchor variable entries
+    """
+    global _anchor_cache
+
+    if _anchor_cache is not None:
+        return _anchor_cache
+
+    with _anchor_lock:
+        if _anchor_cache is not None:
+            return _anchor_cache
+
+        if not ANCHOR_VARIABLES_PATH.exists():
+            _anchor_cache = {}
+            return _anchor_cache
+
+        try:
+            with open(ANCHOR_VARIABLES_PATH, "r") as f:
+                _anchor_cache = json.load(f)
+            return _anchor_cache
+        except Exception as e:
+            print(f"[variable_resolver] Error loading anchor variables: {e}")
+            _anchor_cache = {}
+            return _anchor_cache
+
+
 def clear_cache():
     """Clear the mappings cache (useful for testing)."""
-    global _mappings_cache
+    global _mappings_cache, _anchor_cache
     with _mappings_lock:
         _mappings_cache = None
+    with _anchor_lock:
+        _anchor_cache = None
 
 
 def resolve_variable(variable: str) -> Optional[Dict[str, Any]]:
@@ -140,6 +180,27 @@ def resolve_variable(variable: str) -> Optional[Dict[str, Any]]:
         'BTC-USD'
     """
     var_lower = variable.lower().strip()
+
+    # Step 0: Check anchor_variables.json (curated list)
+    anchor_vars = load_anchor_variables()
+    if var_lower in anchor_vars:
+        anchor = anchor_vars[var_lower]
+        source = anchor.get("source")
+        series_id = anchor.get("series_id")
+        # Only return if it has an actual fetchable data source (not calendar, not null)
+        if source and series_id and source != "calendar":
+            return {
+                "source": source,
+                "series_id": series_id,
+                "data_id": format_data_id(source, series_id),
+                "metadata": {
+                    "description": anchor.get("description", ""),
+                    "frequency": anchor.get("frequency", ""),
+                    "type": "anchor_variable",
+                    "api_url": None,
+                    "notes": f"Anchor variable: {anchor.get('description', '')}",
+                }
+            }
 
     # Step 1: Check discovered_data_ids.json (source of truth)
     mappings = load_mappings()

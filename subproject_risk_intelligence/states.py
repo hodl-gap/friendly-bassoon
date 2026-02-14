@@ -93,6 +93,9 @@ class RiskImpactState(TypedDict, total=False):
     # Regime State (Phase 3)
     regime_state: Dict[str, Any]  # Current liquidity regime from relationship_store
 
+    # Theme States (Phase 6 - proactive research)
+    theme_states: Dict[str, Any]  # Per-theme assessments from theme_index.json
+
     # Historical Event Data (Phase 4)
     historical_event_data: Dict[str, Any]
     # {
