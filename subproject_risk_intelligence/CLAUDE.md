@@ -51,7 +51,7 @@ This subproject analyzes the impact of **specific macro events or data updates**
 subproject_risk_intelligence/
 ├── __init__.py                      # Package exports
 ├── __main__.py                      # CLI entry point
-├── btc_impact_orchestrator.py       # Main workflow
+├── insight_orchestrator.py           # Main workflow
 ├── states.py                        # RiskImpactState definition
 ├── config.py                        # Configuration
 ├── impact_analysis.py               # LLM-based impact analysis
@@ -66,7 +66,7 @@ subproject_risk_intelligence/
 ├── theme_refresh.py                 # Daily theme monitoring + regime assessment
 │
 ├── data/
-│   ├── btc_relationships.json       # Persistent chain storage
+│   ├── relationships.json            # Persistent chain storage
 │   ├── theme_index.json             # Theme-organized chain index (auto-maintained)
 │   └── variable_frequency.json      # Variable appearance frequency tracking (auto-maintained)
 │
@@ -149,7 +149,7 @@ query (CLI input)
 │ 7. store_chains         │  Extract new chains from answer
 │                         │  Semantic dedup (Jaccard similarity on variable pairs)
 │                         │  Similar chains: increment validation_count + blend confidence
-│                         │  New chains: save to btc_relationships.json
+│                         │  New chains: save to relationships.json
 │                         │  Update theme index + variable frequency tracker
 └───────────┬─────────────┘
             │
@@ -352,8 +352,8 @@ Current stress indicators far below COVID levels. If VIX approaches 80+
 | `fetch_historical_event_data()` | `historical_data_fetcher.py` | Fetch from Yahoo/FRED, calculate metrics |
 | `compare_to_current()` | `historical_data_fetcher.py` | Compare historical vs current values |
 | `format_historical_data_for_prompt()` | `historical_data_fetcher.py` | Format for LLM prompt |
-| `parse_logic_chains_from_answer()` | `btc_impact_orchestrator.py` | Extract chains from Stage 1 answer text |
-| `enrich_with_historical_event()` | `btc_impact_orchestrator.py` | Step 5.5 orchestration |
+| `parse_logic_chains_from_answer()` | `insight_orchestrator.py` | Extract chains from Stage 1 answer text |
+| `enrich_with_historical_event()` | `insight_orchestrator.py` | Step 5.5 orchestration |
 
 ### Gap Detection Triggers
 The system detects historical analog gaps when:
@@ -386,7 +386,7 @@ See `subproject_database_retriever/CLAUDE.md` for full documentation.
 If the initial retrieval doesn't cover something needed for analysis, BTC Intelligence can request additional context:
 
 ```python
-from btc_impact_orchestrator import request_additional_context
+from insight_orchestrator import request_additional_context
 
 # Request more info on a specific topic
 state = request_additional_context(state, topic="analyst price targets BTC 2026")

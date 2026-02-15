@@ -18,7 +18,7 @@ from subproject_risk_intelligence import config
 
 
 def main():
-    relationships_path = config.DATA_DIR / "btc_relationships.json"
+    relationships_path = config.DATA_DIR / "relationships.json"
     freq_path = config.DATA_DIR / "variable_frequency.json"
 
     # Load existing chains

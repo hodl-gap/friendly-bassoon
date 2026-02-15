@@ -12,7 +12,7 @@ Usage:
 import argparse
 import sys
 
-from .btc_impact_orchestrator import run_btc_impact_analysis, run_multi_asset_analysis
+from .insight_orchestrator import run_impact_analysis, run_multi_asset_analysis
 from . import config
 from shared.run_logger import RunLogger
 
@@ -60,6 +60,12 @@ def main():
         default="btc",
         help="Asset classes to analyze, comma-separated (e.g., 'btc', 'equity', 'btc,equity')"
     )
+    parser.add_argument(
+        "--mode",
+        choices=["insight", "belief_space"],
+        default="insight",
+        help="Output mode: 'insight' (multi-track reasoning, default) or 'belief_space' (legacy scenarios)"
+    )
 
     args = parser.parse_args()
 
@@ -85,13 +91,14 @@ def main():
     with RunLogger(query=args.query):
         if len(assets) == 1 and assets[0] == "btc":
             # Backwards-compatible single-asset path
-            result = run_btc_impact_analysis(
+            result = run_impact_analysis(
                 args.query,
                 output_json=args.json,
                 skip_data_fetch=args.skip_data,
                 skip_chain_store=args.skip_chains,
                 use_integrated_pipeline=args.use_integrated,
-                image_path=args.image
+                image_path=args.image,
+                output_mode=args.mode
             )
         else:
             result = run_multi_asset_analysis(
@@ -101,7 +108,8 @@ def main():
                 skip_data_fetch=args.skip_data,
                 skip_chain_store=args.skip_chains,
                 use_integrated_pipeline=args.use_integrated,
-                image_path=args.image
+                image_path=args.image,
+                output_mode=args.mode
             )
 
     # Exit with appropriate code

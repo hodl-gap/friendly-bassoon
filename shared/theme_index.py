@@ -2,7 +2,7 @@
 Theme Index
 
 Index layer on top of the flat chain list that organizes chains by theme
-and tracks per-theme state. Chains stay in btc_relationships.json —
+and tracks per-theme state. Chains stay in relationships.json —
 this is a reference index only.
 """
 

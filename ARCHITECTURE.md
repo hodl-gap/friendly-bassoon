@@ -573,7 +573,7 @@ The highest-leverage LLM call. Receives all accumulated context and produces dir
 
 ### Step 7: `store_chains`
 
-Extracts new logic chains from the analysis. Uses semantic deduplication (Jaccard similarity on normalized variable pairs, threshold 0.7) — similar chains increment `validation_count` and blend confidence (0.7 old + 0.3 new) instead of storing duplicates (L2/L3 learning). New chains are persisted to `data/btc_relationships.json`, then the theme index and variable frequency tracker are updated.
+Extracts new logic chains from the analysis. Uses semantic deduplication (Jaccard similarity on normalized variable pairs, threshold 0.7) — similar chains increment `validation_count` and blend confidence (0.7 old + 0.3 new) instead of storing duplicates (L2/L3 learning). New chains are persisted to `data/relationships.json`, then the theme index and variable frequency tracker are updated.
 
 **File**: `relationship_store.py`
 **LLM calls**: None

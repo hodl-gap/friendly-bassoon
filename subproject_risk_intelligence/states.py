@@ -8,6 +8,19 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from shared.schemas import LogicChain, ConfidenceMetadata
 
 
+class InsightTrack(TypedDict, total=False):
+    """A single reasoning track in an insight report."""
+    track_id: str
+    title: str                          # "Historical Pattern Track"
+    causal_mechanism: str               # Arrow notation
+    causal_steps: List[Dict[str, Any]]
+    historical_evidence: Dict[str, Any] # {precedent_count, success_rate, precedent_summary, precedents: [...]}
+    asset_implications: List[Dict]      # [{asset, direction, magnitude_range, timing}]
+    monitoring_variables: List[Dict]    # [{variable, condition, meaning}]
+    confidence: float
+    time_horizon: str
+
+
 class RiskImpactState(TypedDict, total=False):
     # Input
     query: str  # User's original query
@@ -35,7 +48,7 @@ class RiskImpactState(TypedDict, total=False):
     # Each: {pattern: {...}, triggered: bool, current_metric: float, threshold: float, explanation: str}
 
     # Relationship Store (Phase 3)
-    historical_chains: List[Dict]  # Loaded from btc_relationships.json
+    historical_chains: List[Dict]  # Loaded from relationships.json
     discovered_chains: List[Dict]  # New logic chains found this run
 
     # Output - Belief Space (Multi-Scenario)
@@ -116,3 +129,15 @@ class RiskImpactState(TypedDict, total=False):
     filled_gaps: List[Dict[str, Any]]  # Gaps successfully filled
     partially_filled_gaps: List[Dict[str, Any]]  # Gaps with partial info
     unfillable_gaps: List[Dict[str, Any]]  # Gaps that could not be filled
+
+    # Multi-hop chain graph (Phase 2 - chain traversal)
+    chain_tracks: List[Dict[str, Any]]  # Multi-hop tracks from chain graph
+    chain_graph_text: str  # Formatted graph for prompt
+
+    # Historical N-analog aggregation (Phase 3)
+    historical_analogs: Dict[str, Any]  # {"enriched": [...], "aggregated": {...}}
+    historical_analogs_text: str  # Formatted for prompt
+
+    # Insight output (Phase 1 - output format)
+    output_mode: str  # "insight" or "belief_space"
+    insight_output: Dict[str, Any]  # InsightOutput when mode="insight"

@@ -1,7 +1,7 @@
 """
 Backfill Theme Index
 
-One-time script: loads all chains from btc_relationships.json,
+One-time script: loads all chains from relationships.json,
 calls ThemeIndex.rebuild_from_chains(), saves theme_index.json.
 """
 
@@ -18,7 +18,7 @@ from subproject_risk_intelligence import config
 
 
 def main():
-    relationships_path = config.DATA_DIR / "btc_relationships.json"
+    relationships_path = config.DATA_DIR / "relationships.json"
     theme_index_path = config.DATA_DIR / "theme_index.json"
 
     # Load existing chains

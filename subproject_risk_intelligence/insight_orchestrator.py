@@ -1,13 +1,13 @@
 """
-BTC Impact Orchestrator - Main Entry Point
+Insight Orchestrator - Main Entry Point
 
 Phase 1 (MVP): query → retrieve → analyze → output
 Phase 2: query → retrieve → extract_variables → fetch_data → analyze → output
 No LangGraph yet - simple sequential workflow.
 
-Architecture: BTC Intelligence now receives ENRICHED context from retrieval layer.
+Architecture: Risk Intelligence now receives ENRICHED context from retrieval layer.
 Gap detection and web chain extraction are handled by the retrieval layer.
-BTC Intelligence focuses only on BTC impact analysis.
+Risk Intelligence focuses on multi-asset impact analysis.
 """
 
 import sys
@@ -37,9 +37,11 @@ from .relationship_store import (
     update_regime_from_analysis,
     get_regime_context_for_prompt
 )
-from .historical_event_detector import detect_historical_gap, identify_instruments, get_date_range
+from .historical_event_detector import detect_historical_gap, identify_instruments, get_date_range, detect_historical_analogs
 from .historical_data_fetcher import fetch_historical_event_data, compare_to_current
+from .historical_aggregator import fetch_multiple_analogs, aggregate_analogs, format_analogs_for_prompt
 from .asset_configs import get_asset_config
+from shared.chain_graph import ChainGraph
 from . import config
 
 
@@ -238,6 +240,128 @@ def retrieve_context(query: str, image_path: str = None) -> RiskImpactState:
         print(f"\n[Retrieve] Synthesis:\n{state['synthesis'][:500]}...")
 
     return state
+
+
+def format_insight(state: RiskImpactState, as_json: bool = False, asset_class: str = "btc") -> str:
+    """Format the final output for display - Insight Report format."""
+
+    insight = state.get("insight_output", {})
+    tracks = insight.get("tracks", [])
+    synthesis = insight.get("synthesis", "")
+    uncertainties = insight.get("key_uncertainties", [])
+    current_values = state.get("current_values", {})
+    asset_name = get_asset_config(asset_class)["name"]
+
+    if as_json:
+        output = {
+            "asset_class": asset_class,
+            "output_mode": "insight",
+            "tracks": tracks,
+            "synthesis": synthesis,
+            "key_uncertainties": uncertainties,
+            "direction": state.get("direction", "NEUTRAL"),
+            "confidence": state.get("confidence", {}),
+            "current_values": current_values,
+        }
+        return json.dumps(output, indent=2, default=str)
+
+    lines = [
+        "=" * 60,
+        f"INSIGHT REPORT -- {asset_name.upper()}",
+        "=" * 60,
+    ]
+
+    for i, track in enumerate(tracks, 1):
+        title = track.get("title", f"Track {i}")
+        confidence = track.get("confidence", 0)
+        mechanism = track.get("causal_mechanism", "N/A")
+        time_horizon = track.get("time_horizon", "unknown")
+
+        lines.append("")
+        lines.append(f"TRACK {i}: {title}")
+        lines.append(f"  Confidence: {confidence*100:.0f}%")
+        lines.append(f"  Mechanism: {mechanism}")
+        lines.append(f"  Time Horizon: {time_horizon}")
+
+        # Historical evidence
+        evidence = track.get("historical_evidence", {})
+        if evidence:
+            precedent_count = evidence.get("precedent_count")
+            success_rate = evidence.get("success_rate")
+            summary = evidence.get("precedent_summary", "")
+            if precedent_count is not None and success_rate is not None:
+                lines.append(f"  Evidence: {precedent_count} precedents, {success_rate*100:.0f}% success rate")
+            if summary:
+                lines.append(f"    {summary}")
+
+            precedents = evidence.get("precedents", [])
+            for p in precedents[:3]:
+                event = p.get("event", "")
+                outcome = p.get("outcome", "")
+                magnitude = p.get("magnitude", "")
+                line = f"    - {event}"
+                if outcome:
+                    line += f": {outcome}"
+                if magnitude:
+                    line += f" ({magnitude})"
+                lines.append(line)
+
+        # Asset implications
+        implications = track.get("asset_implications", [])
+        if implications:
+            lines.append("  Asset Implications:")
+            for imp in implications:
+                asset = imp.get("asset", "?")
+                direction = imp.get("direction", "?")
+                mag_range = imp.get("magnitude_range", "")
+                timing = imp.get("timing", "")
+                line = f"    - {asset}: {direction}"
+                if mag_range:
+                    line += f" ({mag_range}"
+                    if timing:
+                        line += f", {timing}"
+                    line += ")"
+                elif timing:
+                    line += f" ({timing})"
+                lines.append(line)
+
+        # Monitoring variables
+        monitors = track.get("monitoring_variables", [])
+        if monitors:
+            lines.append("  Monitor:")
+            for m in monitors:
+                variable = m.get("variable", "?")
+                condition = m.get("condition", "?")
+                meaning = m.get("meaning", "")
+                line = f"    - {variable} {condition}"
+                if meaning:
+                    line += f": {meaning}"
+                lines.append(line)
+
+        lines.append("-" * 40)
+
+    if synthesis:
+        lines.append("")
+        lines.append("SYNTHESIS:")
+        lines.append(synthesis)
+
+    if uncertainties:
+        lines.append("")
+        lines.append("KEY UNCERTAINTIES:")
+        for u in uncertainties:
+            lines.append(f"  - {u}")
+
+    # Current values section
+    if current_values:
+        lines.append("")
+        lines.append("CURRENT DATA:")
+        current_text = format_current_values_for_prompt(current_values)
+        for line in current_text.split("\n"):
+            lines.append(f"  {line}")
+
+    lines.append("=" * 60)
+
+    return "\n".join(lines)
 
 
 def format_output(state: RiskImpactState, as_json: bool = False, asset_class: str = "btc") -> str:
@@ -439,7 +563,7 @@ def request_additional_context(state: RiskImpactState, topic: str) -> RiskImpact
     Returns:
         Updated state with additional chains merged
     """
-    print(f"\n[BTC Intelligence] Requesting additional context on: {topic}")
+    print(f"\n[Risk Intelligence] Requesting additional context on: {topic}")
 
     from retrieval_orchestrator import run_retrieval
 
@@ -450,7 +574,7 @@ def request_additional_context(state: RiskImpactState, topic: str) -> RiskImpact
         existing_chains = state.get("logic_chains", [])
         # Simple merge - could deduplicate in future
         state["logic_chains"] = existing_chains + additional_chains
-        print(f"[BTC Intelligence] Added {len(additional_chains)} chains, total: {len(state['logic_chains'])}")
+        print(f"[Risk Intelligence] Added {len(additional_chains)} chains, total: {len(state['logic_chains'])}")
 
     return state
 
@@ -513,6 +637,24 @@ def prepare_shared_context(
     return state
 
 
+def build_chain_graph(
+    logic_chains: List[Dict],
+    historical_chains: List[Dict],
+    query: str
+) -> ChainGraph:
+    """Build a ChainGraph from retrieved + historical chains.
+
+    Returns the graph with all chains added.
+    """
+    graph = ChainGraph()
+    graph.add_chains_from_list(logic_chains, source="retrieved")
+    graph.add_chains_from_list(historical_chains, source="historical")
+
+    stats = graph.stats()
+    print(f"[Chain Graph] Built: {stats['variables']} variables, {stats['edges']} edges")
+    return graph
+
+
 def run_asset_impact(
     shared_state: RiskImpactState,
     asset_class: str,
@@ -546,6 +688,19 @@ def run_asset_impact(
     if regime_state.get("liquidity_regime"):
         print(f"[Regime/{asset_name}] Current: {regime_state.get('liquidity_regime')} (driver: {regime_state.get('dominant_driver')})")
 
+    # Build chain graph for multi-hop causal paths
+    chain_graph = build_chain_graph(
+        logic_chains=state.get("logic_chains", []),
+        historical_chains=state.get("historical_chains", []),
+        query=state.get("query", "")
+    )
+    triggers = chain_graph.get_trigger_variables(state.get("query", ""))
+    all_tracks = []
+    for trigger in triggers[:3]:
+        all_tracks.extend(chain_graph.get_tracks(trigger))
+    state["chain_tracks"] = all_tracks
+    state["chain_graph_text"] = chain_graph.format_for_prompt(all_tracks)
+
     # Run impact analysis with asset-specific prompt
     state = analyze_impact(state, asset_class=asset_class)
     if ENABLE_SNAPSHOTS:
@@ -569,7 +724,8 @@ def run_multi_asset_analysis(
     skip_data_fetch: bool = False,
     skip_chain_store: bool = False,
     use_integrated_pipeline: bool = False,
-    image_path: str = None
+    image_path: str = None,
+    output_mode: str = "insight"
 ) -> Dict[str, Dict[str, Any]]:
     """
     Main entry point for multi-asset impact analysis.
@@ -585,6 +741,7 @@ def run_multi_asset_analysis(
         skip_chain_store: If True, skip chain loading/storage
         use_integrated_pipeline: If True, use integrated pipeline
         image_path: Optional path to indicator chart image
+        output_mode: "insight" (default) or "belief_space"
 
     Returns:
         Dict mapping asset_class -> result state
@@ -608,6 +765,7 @@ def run_multi_asset_analysis(
         image_path=image_path,
         asset_class=assets[0]
     )
+    shared_state["output_mode"] = output_mode
 
     # Phase B: Per-asset impact analysis (parallel if multiple)
     results = {}
@@ -636,31 +794,36 @@ def run_multi_asset_analysis(
             print(f"{'=' * 60}")
             print(f"Error: {result.get('error', 'Unknown')}")
             continue
-        output = format_output(result, as_json=output_json, asset_class=asset)
+        if result.get("output_mode") == "insight":
+            output = format_insight(result, as_json=output_json, asset_class=asset)
+        else:
+            output = format_output(result, as_json=output_json, asset_class=asset)
         print("\n" + output)
 
     return results
 
 
-def run_btc_impact_analysis(
+def run_impact_analysis(
     query: str,
     output_json: bool = False,
     skip_data_fetch: bool = False,
     skip_chain_store: bool = False,
     use_integrated_pipeline: bool = False,
-    image_path: str = None
+    image_path: str = None,
+    output_mode: str = "insight"
 ) -> Dict[str, Any]:
     """
-    Backwards-compatible BTC-only entry point.
+    Single-asset entry point (defaults to BTC).
 
     Args:
-        query: User's question about BTC impact
+        query: User's question about macro event impact
         output_json: If True, return JSON-formatted output
         skip_data_fetch: If True, skip fetching current data (Phase 1 mode)
         skip_chain_store: If True, skip loading/storing logic chains (Phase 3)
         use_integrated_pipeline: If True, use shared/integration.py for
             Variable Mapper → Data Collection wiring instead of standalone fetching
         image_path: Optional path to indicator chart image for vision-based extraction
+        output_mode: "insight" (default) or "belief_space"
 
     Returns:
         Final state dict with analysis results
@@ -672,9 +835,14 @@ def run_btc_impact_analysis(
         skip_data_fetch=skip_data_fetch,
         skip_chain_store=skip_chain_store,
         use_integrated_pipeline=use_integrated_pipeline,
-        image_path=image_path
+        image_path=image_path,
+        output_mode=output_mode
     )
     return results["btc"]
+
+
+# Backward-compatible alias
+run_btc_impact_analysis = run_impact_analysis
 
 
 def enrich_with_historical_event(state: RiskImpactState) -> RiskImpactState:
@@ -773,6 +941,30 @@ def enrich_with_historical_event(state: RiskImpactState) -> RiskImpactState:
 
     instr_count = len(historical_data.get("instruments", {}))
     print(f"[Historical Event] Fetched data for {instr_count} instruments")
+
+    # Multi-analog aggregation
+    if config.ENABLE_MULTI_ANALOG:
+        try:
+            analogs = detect_historical_analogs(
+                query, synthesis, logic_chains,
+                max_analogs=config.MAX_HISTORICAL_ANALOGS,
+                relevance_threshold=config.ANALOG_RELEVANCE_THRESHOLD
+            )
+            if analogs:
+                current_values = state.get("current_values", {})
+                target_asset_name = get_asset_config(asset_class)["name"]
+                enriched = fetch_multiple_analogs(
+                    analogs, query, synthesis, logic_chains,
+                    current_values, asset_class
+                )
+                aggregated = aggregate_analogs(enriched, target_asset_name)
+                state["historical_analogs"] = {
+                    "enriched": enriched,
+                    "aggregated": aggregated
+                }
+                state["historical_analogs_text"] = format_analogs_for_prompt(aggregated)
+        except Exception as e:
+            print(f"[Historical Analogs] Multi-analog enrichment failed: {e}")
 
     return state
 

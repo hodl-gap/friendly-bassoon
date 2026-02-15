@@ -1,8 +1,8 @@
 """
 Relationship Store Module
 
-Manages persistent storage of discovered BTC logic chains.
-Stores chains in data/btc_relationships.json.
+Manages persistent storage of discovered logic chains.
+Stores chains in data/relationships.json (per asset class).
 """
 
 import json

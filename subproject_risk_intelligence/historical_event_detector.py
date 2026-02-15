@@ -18,6 +18,8 @@ from .historical_event_prompts import (
     GAP_DETECTION_PROMPT,
     get_instrument_mapping_prompt,
     DATE_EXTRACTION_PROMPT,
+    MULTI_ANALOG_DETECTION_PROMPT,
+    MULTI_ANALOG_TOOL,
     format_logic_chains_for_prompt
 )
 from .asset_configs import get_asset_config
@@ -556,3 +558,85 @@ def _fallback_date_range(event_description: str) -> Dict[str, Any]:
         "peak_date": None,
         "confidence": "low"
     }
+
+
+def detect_historical_analogs(
+    query: str,
+    synthesis: str,
+    logic_chains: list,
+    max_analogs: int = 5,
+    relevance_threshold: float = 0.5
+) -> List[Dict[str, Any]]:
+    """
+    Detect up to N historical analogs for the current query.
+
+    Uses Haiku + tool_use to find analogous historical events
+    based on shared causal mechanisms.
+
+    Args:
+        query: User's original query
+        synthesis: Retrieved synthesis text
+        logic_chains: Logic chains from retrieval
+        max_analogs: Maximum analogs to return
+        relevance_threshold: Minimum relevance score
+
+    Returns:
+        List of analog dicts: [{event_description, year, relevance_score,
+                                date_search_query, key_mechanism}]
+    """
+    formatted_chains = format_logic_chains_for_prompt(logic_chains)
+
+    prompt = MULTI_ANALOG_DETECTION_PROMPT.format(
+        query=query,
+        synthesis=synthesis[:3000],
+        logic_chains=formatted_chains
+    )
+
+    try:
+        client = anthropic.Anthropic()
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=1000,
+            temperature=0.0,
+            tools=[MULTI_ANALOG_TOOL],
+            tool_choice={"type": "tool", "name": "detect_analogs"},
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        # Log token usage
+        try:
+            from shared.run_logger import log_llm_call
+            log_llm_call("claude-haiku-4-5-20251001", response.usage.input_tokens, response.usage.output_tokens)
+        except Exception:
+            pass
+
+        # Extract tool_use result
+        result = None
+        for block in response.content:
+            if block.type == "tool_use" and block.name == "detect_analogs":
+                result = block.input
+                break
+
+        if not result:
+            print("[Historical Analogs] No tool_use block in response")
+            return []
+
+        analogs = result.get("analogs", [])
+
+        # Filter by relevance threshold and limit
+        filtered = [
+            a for a in analogs
+            if a.get("relevance_score", 0) >= relevance_threshold
+        ]
+        filtered.sort(key=lambda a: a.get("relevance_score", 0), reverse=True)
+        filtered = filtered[:max_analogs]
+
+        print(f"[Historical Analogs] Found {len(filtered)} analogs (from {len(analogs)} candidates)")
+        for a in filtered:
+            print(f"  - {a.get('event_description', '?')} ({a.get('year', '?')}, relevance: {a.get('relevance_score', 0):.2f})")
+
+        return filtered
+
+    except Exception as e:
+        print(f"[Historical Analogs] Detection error: {e}")
+        return []

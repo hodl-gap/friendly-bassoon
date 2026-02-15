@@ -22,7 +22,7 @@ ASSET_CONFIGS: Dict[str, Dict[str, Any]] = {
             {"ticker": "BTC-USD", "source": "Yahoo", "role": "Bitcoin price"},
             {"ticker": "^VIX", "source": "Yahoo", "role": "Volatility index"},
         ],
-        "relationships_file": "btc_relationships.json",
+        "relationships_file": "relationships.json",
         "regime_file": "regime_state.json",
         "prompt_asset_line": "analyze the impact on Bitcoin.",
         "relevant_themes": ["liquidity", "risk_appetite", "crypto_specific", "rates"],

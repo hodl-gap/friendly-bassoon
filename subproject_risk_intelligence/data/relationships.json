@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "last_updated": "2026-02-14T07:24:48.815500",
-    "total_relationships": 153
+    "last_updated": "2026-02-14T11:31:31.097383",
+    "total_relationships": 166
   },
   "relationships": [
     {
@@ -202,9 +202,10 @@
       "source_attribution": "@TedPillows (afb976361a1e97a1_534), BOJ (8d68af75fff9b557_533)",
       "id": "rel_77876310",
       "discovered_at": "2026-02-02T05:41:45.794662",
-      "validation_count": 1,
+      "validation_count": 2,
       "relationship_type": "negative",
-      "confidence": 0.85
+      "confidence": 0.76,
+      "last_validated": "2026-02-14T11:31:31.092927"
     },
     {
       "logic_chain": {
@@ -427,9 +428,10 @@
       "source_attribution": "BOJ (8d68af75fff9b557_533), CoinDesk (cfbe53872aafa7ad_157)",
       "id": "rel_a6f3b212",
       "discovered_at": "2026-02-02T05:41:45.794705",
-      "validation_count": 1,
+      "validation_count": 2,
       "relationship_type": "negative",
-      "confidence": 0.85
+      "confidence": 0.76,
+      "last_validated": "2026-02-14T11:31:31.093844"
     },
     {
       "logic_chain": {
@@ -5034,6 +5036,327 @@
       "discovered_at": "2026-02-14T07:24:48.815492",
       "validation_count": 1,
       "relationship_type": "neutral",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ rate hike",
+            "cause_normalized": "boj_rate",
+            "effect": "market liquidity drain",
+            "effect_normalized": "market_liquidity",
+            "mechanism": "Higher Japanese rates reduce carry trade profitability, triggering position unwind and liquidity outflows → reduced liquidity increases funding stress, forcing deleveraging across leveraged positions"
+          },
+          {
+            "cause": "market liquidity drain",
+            "cause_normalized": "market_liquidity",
+            "effect": "margin calls and forced deleveraging",
+            "effect_normalized": "margin_calls",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "boj_rate -> market_liquidity -> margin_calls"
+      },
+      "terminal_effect": "margin_calls",
+      "mechanism": "Higher Japanese rates reduce carry trade profitability, triggering position unwind and liquidity outflows → reduced liquidity increases funding stress, forcing deleveraging across leveraged positions",
+      "source_attribution": "Source 6",
+      "id": "rel_1e09f04a",
+      "discovered_at": "2026-02-14T11:31:31.092845",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ rate hike to highest since 1995",
+            "cause_normalized": "policy_rate",
+            "effect": "tighter monetary conditions",
+            "effect_normalized": "monetary_tightening",
+            "mechanism": "Higher policy rate reduces liquidity and raises borrowing costs, reversing decades of ultra-loose policy"
+          }
+        ],
+        "chain_summary": "policy_rate -> monetary_tightening"
+      },
+      "terminal_effect": "monetary_tightening",
+      "mechanism": "Higher policy rate reduces liquidity and raises borrowing costs, reversing decades of ultra-loose policy",
+      "source_attribution": "Source 5",
+      "id": "rel_f3e6fbe5",
+      "discovered_at": "2026-02-14T11:31:31.093304",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "CPI projection raised to 1.9%",
+            "cause_normalized": "inflation",
+            "effect": "normalization case strengthened",
+            "effect_normalized": "policy_normalization",
+            "mechanism": "Higher inflation raises justification for policy normalization → realized stronger outlook permits further tightening"
+          },
+          {
+            "cause": "normalization case strengthened",
+            "cause_normalized": "policy_normalization",
+            "effect": "continue rate increases if outlook realized",
+            "effect_normalized": "rate_hike",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "inflation -> policy_normalization -> rate_hike"
+      },
+      "terminal_effect": "rate_hike",
+      "mechanism": "Higher inflation raises justification for policy normalization → realized stronger outlook permits further tightening",
+      "source_attribution": "Source 8",
+      "id": "rel_dd12bd22",
+      "discovered_at": "2026-02-14T11:31:31.093533",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "wage increases continue",
+            "cause_normalized": "wage_growth",
+            "effect": "core CPI inflation gradually rises via pass-through",
+            "effect_normalized": "core_cpi",
+            "mechanism": "Wage growth passed into selling prices increases core inflation → inflation meeting ~2% target prompts policy normalization"
+          },
+          {
+            "cause": "core CPI inflation gradually rises via pass-through",
+            "cause_normalized": "core_cpi",
+            "effect": "BOJ will further raise policy rates and adjust easing degree",
+            "effect_normalized": "policy_rate",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "wage_growth -> core_cpi -> policy_rate"
+      },
+      "terminal_effect": "policy_rate",
+      "mechanism": "Wage growth passed into selling prices increases core inflation → inflation meeting ~2% target prompts policy normalization",
+      "source_attribution": "Source 9",
+      "id": "rel_cc358504",
+      "discovered_at": "2026-02-14T11:31:31.093613",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "press conference hawkish remarks",
+            "cause_normalized": "boj_hawkish_remarks",
+            "effect": "next rate hike moved from Jun 2026 to Mar 2026",
+            "effect_normalized": "boj_hike_timing",
+            "mechanism": "Hawkish guidance accelerates policy path, pulling forward expected tightening by one quarter"
+          }
+        ],
+        "chain_summary": "boj_hawkish_remarks -> boj_hike_timing"
+      },
+      "terminal_effect": "boj_hike_timing",
+      "mechanism": "Hawkish guidance accelerates policy path, pulling forward expected tightening by one quarter",
+      "source_attribution": "Source 4",
+      "id": "rel_5f677df8",
+      "discovered_at": "2026-02-14T11:31:31.093687",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "absence of hawkish remarks (risk resolved)",
+            "cause_normalized": "boj_hawkish_remarks",
+            "effect": "risk eased, hike timing remains Jun 2026",
+            "effect_normalized": "boj_hike_timing",
+            "mechanism": "No hawkish signal keeps expected timing unchanged at baseline Jun 2026"
+          }
+        ],
+        "chain_summary": "boj_hawkish_remarks -> boj_hike_timing"
+      },
+      "terminal_effect": "boj_hike_timing",
+      "mechanism": "No hawkish signal keeps expected timing unchanged at baseline Jun 2026",
+      "source_attribution": "Source 4",
+      "id": "rel_5f677df8",
+      "discovered_at": "2026-02-14T11:31:31.093756",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "JPY surge from intervention risk",
+            "cause_normalized": "jpy_intervention_risk",
+            "effect": "yen carry unwind and global liquidity contraction",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": "Sharp yen appreciation forces carry position unwinding → reduced global liquidity triggers risk asset corrections"
+          },
+          {
+            "cause": "yen carry unwind and global liquidity contraction",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "BTC short-term adjustment and higher volatility",
+            "effect_normalized": "btc_volatility",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "jpy_intervention_risk -> carry_trade_unwind -> btc_volatility"
+      },
+      "terminal_effect": "btc_volatility",
+      "mechanism": "Sharp yen appreciation forces carry position unwinding → reduced global liquidity triggers risk asset corrections",
+      "source_attribution": "Source 10 (yen surge context), Source 2 (carry unwind impact on BTC)",
+      "id": "rel_558e51d1",
+      "discovered_at": "2026-02-14T11:31:31.093833",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Markets pricing ~2 full rate hikes by Oct 2026",
+            "cause_normalized": "rate_hike_expectations",
+            "effect": "implied rates rise from 0.707% (Dec 2025) to 1.023% (Oct 2026)",
+            "effect_normalized": "implied_rates",
+            "mechanism": "Near-certain Dec 2025 hike (91.4% probability) followed by sustained tightening cycle with cumulative +2.179 hikes priced by Oct 2026"
+          }
+        ],
+        "chain_summary": "rate_hike_expectations -> implied_rates"
+      },
+      "terminal_effect": "implied_rates",
+      "mechanism": "Near-certain Dec 2025 hike (91.4% probability) followed by sustained tightening cycle with cumulative +2.179 hikes priced by Oct 2026",
+      "source_attribution": "Source 1, Source 2",
+      "id": "rel_5bec1995",
+      "discovered_at": "2026-02-14T11:31:31.093912",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "margin calls occur during high silver volatility",
+            "cause_normalized": "margin_calls_in_volatility",
+            "effect": "margin calls common for US G-SIBs during volatile periods",
+            "effect_normalized": "g_sib_margin_call_common",
+            "mechanism": "Price swings trigger margin requirements for leveraged positions → G-SIBs receive margin calls in high-volatility episodes"
+          }
+        ],
+        "chain_summary": "margin_calls_in_volatility -> g_sib_margin_call_common"
+      },
+      "terminal_effect": "g_sib_margin_call_common",
+      "mechanism": "Price swings trigger margin requirements for leveraged positions → G-SIBs receive margin calls in high-volatility episodes",
+      "source_attribution": "Source 17",
+      "id": "rel_5589d370",
+      "discovered_at": "2026-02-14T11:31:31.093983",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "mass liquidations",
+            "cause_normalized": "mass_liquidations",
+            "effect": "183,374 traders lost $1.08B",
+            "effect_normalized": "total_liquidation_amount",
+            "mechanism": "Forced position closures due to margin calls during volatility spike"
+          }
+        ],
+        "chain_summary": "mass_liquidations -> total_liquidation_amount"
+      },
+      "terminal_effect": "total_liquidation_amount",
+      "mechanism": "Forced position closures due to margin calls during volatility spike",
+      "source_attribution": "Source 20",
+      "id": "rel_5af80b90",
+      "discovered_at": "2026-02-14T11:31:31.094056",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "single large liquidation",
+            "cause_normalized": "max_single_liquidation",
+            "effect": "concentrated counterparty risk",
+            "effect_normalized": "counterparty_risk",
+            "mechanism": "$13.52M single loss signals concentrated exposure/counterparty stress"
+          }
+        ],
+        "chain_summary": "max_single_liquidation -> counterparty_risk"
+      },
+      "terminal_effect": "counterparty_risk",
+      "mechanism": "$13.52M single loss signals concentrated exposure/counterparty stress",
+      "source_attribution": "Source 20",
+      "id": "rel_c5d8d732",
+      "discovered_at": "2026-02-14T11:31:31.094124",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "G-SIB margin call failure in silver futures",
+            "cause_normalized": "g_sib_margin_call_failure",
+            "effect": "Federal Reserve emergency repo injections ($51B total)",
+            "effect_normalized": "fed_emergency_liquidity",
+            "mechanism": "Major bank liquidated at 2:47 AM after missing 2:00 AM margin call → Fed forced to inject $34B (Dec 28) + $17B (Dec 26) to prevent contagion"
+          }
+        ],
+        "chain_summary": "g_sib_margin_call_failure -> fed_emergency_liquidity"
+      },
+      "terminal_effect": "fed_emergency_liquidity",
+      "mechanism": "Major bank liquidated at 2:47 AM after missing 2:00 AM margin call → Fed forced to inject $34B (Dec 28) + $17B (Dec 26) to prevent contagion",
+      "source_attribution": "Source 18, Source 19",
+      "id": "rel_eb994514",
+      "discovered_at": "2026-02-14T11:31:31.094196",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "policy divergence: Fed cuts vs AxJ end of easing",
+            "cause_normalized": "policy_divergence_fed_vs_axj",
+            "effect": "Asian currencies appreciate, economic growth positive",
+            "effect_normalized": "axj_currency_strength",
+            "mechanism": "Relative policy moves shift FX/carry expectations, capital flows into AxJ → stronger FX and easing disinflation pressure support domestic demand, policy repricing lifts yields"
+          },
+          {
+            "cause": "Asian currencies appreciate, economic growth positive",
+            "cause_normalized": "axj_currency_strength",
+            "effect": "non-export sectors improve, yields rise",
+            "effect_normalized": "govt_yields",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "policy_divergence_fed_vs_axj -> axj_currency_strength -> govt_yields"
+      },
+      "terminal_effect": "govt_yields",
+      "mechanism": "Relative policy moves shift FX/carry expectations, capital flows into AxJ → stronger FX and easing disinflation pressure support domestic demand, policy repricing lifts yields",
+      "source_attribution": "Source 15",
+      "id": "rel_0bac9cf7",
+      "discovered_at": "2026-02-14T11:31:31.094274",
+      "validation_count": 1,
+      "relationship_type": "positive",
       "confidence": 0.55
     }
   ]
