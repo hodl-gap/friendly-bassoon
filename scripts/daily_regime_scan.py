@@ -43,7 +43,7 @@ def main():
     # Track cost via RunLogger
     try:
         from shared.run_logger import RunLogger
-        logger = RunLogger(run_name="daily_regime_scan")
+        logger = RunLogger(query="daily_regime_scan")
     except ImportError:
         logger = None
 

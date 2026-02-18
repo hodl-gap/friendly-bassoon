@@ -168,6 +168,24 @@ def normalize_variables(state: VariableMapperState) -> VariableMapperState:
         raw_name = var.get("name", "")
         context = var.get("context", "")
 
+        # Skip normalization for already-normalized variables (from structure extraction)
+        if var.get("already_normalized"):
+            normalized_var = {
+                "raw_name": raw_name,
+                "normalized_name": raw_name,
+                "category": var.get("category", "unknown"),
+                "is_liquidity": var.get("is_liquidity", False),
+                "matched_variant": raw_name,
+                "match_type": "pre_normalized",
+                "threshold": var.get("threshold"),
+                "threshold_unit": var.get("threshold_unit"),
+                "threshold_condition": var.get("threshold_condition"),
+                "context": context
+            }
+            normalized_variables.append(normalized_var)
+            print(f"[normalization] Pre-normalized: '{raw_name}' (skipping LLM)")
+            continue
+
         # Try exact match (case-insensitive)
         lookup_key = raw_name.lower().strip()
         matched_entry = variant_to_normalized.get(lookup_key)

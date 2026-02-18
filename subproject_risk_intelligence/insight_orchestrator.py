@@ -12,6 +12,7 @@ Risk Intelligence focuses on multi-asset impact analysis.
 
 import sys
 import json
+import copy
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Dict, Any, List
@@ -672,8 +673,8 @@ def run_asset_impact(
     Returns:
         Result state dict for this asset
     """
-    # Copy state to avoid mutation across parallel runs
-    state = dict(shared_state)
+    # Deep copy state to avoid mutation across parallel runs
+    state = copy.deepcopy(shared_state)
     state["asset_class"] = asset_class
 
     asset_name = get_asset_config(asset_class)["name"]

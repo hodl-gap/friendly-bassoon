@@ -89,8 +89,8 @@ For EACH message, extract structured information about who said what.
         "logic_chains": [
             {{
                 "steps": [
-                    {{"cause": "labor market cooling", "cause_normalized": "labor_market", "effect": "wage pressure easing", "effect_normalized": "wage_pressure", "mechanism": "fewer job openings reduce worker bargaining power", "evidence_quote": "The labor market has been cooling, with job openings declining significantly"}},
-                    {{"cause": "wage pressure easing", "cause_normalized": "wage_pressure", "effect": "inflation decline", "effect_normalized": "inflation", "mechanism": "lower wage growth reduces service inflation", "evidence_quote": "This should help bring down service sector inflation over time"}}
+                    {{"cause": "labor market cooling", "cause_normalized": "labor_market", "effect": "wage pressure easing", "effect_normalized": "wage_pressure", "mechanism": "fewer job openings reduce worker bargaining power", "evidence_quote": "The labor market has been cooling, with job openings declining significantly", "polarity": "BEARISH"}},
+                    {{"cause": "wage pressure easing", "cause_normalized": "wage_pressure", "effect": "inflation decline", "effect_normalized": "inflation", "mechanism": "lower wage growth reduces service inflation", "evidence_quote": "This should help bring down service sector inflation over time", "polarity": "BULLISH"}}
                 ]
             }}
         ],
@@ -189,6 +189,7 @@ For EACH message, extract structured information about who said what.
     - "effect_normalized": Normalized variable name (snake_case, for cross-chunk linking)
     - "mechanism": How cause leads to effect
     - "evidence_quote": 1-3 sentences from the original message that support this step (REQUIRED)
+    - "polarity": "BULLISH" | "BEARISH" | "NEUTRAL" - Market direction implied by this step (REQUIRED)
 - Chains should have 2+ steps when the logic continues
 - Single-step chains acceptable if no further effects
 - Empty array [] if no causal relationships

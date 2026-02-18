@@ -53,7 +53,7 @@ def _get_impact_tool(asset_class: str = "btc") -> dict:
                         "properties": {
                             "name": {"type": "string"},
                             "direction": {"type": "string", "enum": ["BULLISH", "BEARISH", "NEUTRAL"]},
-                            "likelihood": {"type": "number"},
+                            "likelihood": {"type": "number", "description": "Likelihood as integer percentage 0-100 (e.g., 65 means 65%)"},
                             "chain": {"type": "string"},
                             "rationale": {"type": "string"}
                         },

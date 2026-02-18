@@ -559,6 +559,7 @@ For EACH message, extract the following fields:
                 "normalized": "TGA",
                 "value": "750B",
                 "direction": "down",
+                "epistemic_type": "observed",
                 "is_new": false
             }},
             {{

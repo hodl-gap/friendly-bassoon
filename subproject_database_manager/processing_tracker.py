@@ -192,7 +192,7 @@ def sync_with_pinecone():
 
         # Get index stats to check if any vectors exist
         stats = index.describe_index_stats()
-        total_vectors = stats.get('total_vector_count', 0)
+        total_vectors = getattr(stats, 'total_vector_count', 0) or 0
 
         if total_vectors == 0:
             print("  Pinecone index is empty, nothing to sync")

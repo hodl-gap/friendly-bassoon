@@ -161,6 +161,9 @@ def load_discovered_data_ids() -> Dict[str, Any]:
             # Convert list to dict keyed by normalized_name
             if isinstance(data, list):
                 return {item.get("normalized_name", ""): item for item in data}
+            # Handle dict with metadata/mappings structure
+            if isinstance(data, dict) and "mappings" in data:
+                return data["mappings"]
             return data
     except Exception as e:
         print(f"[data_fetching] Error loading discovered_data_ids.json: {e}")

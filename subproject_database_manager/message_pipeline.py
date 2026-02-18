@@ -45,6 +45,9 @@ def process_single_channel(
     # Step 1: JSON → CSV
     intermediate_csv = _convert_json_to_csv(json_file, export_path.parent, channel_name, max_messages)
 
+    if intermediate_csv is None:
+        return None
+
     # Step 2: Process with V3
     output_csv = _run_v3_processor(intermediate_csv, channel_name, export_path, output_dir, batch_size)
 
@@ -81,6 +84,7 @@ def _convert_json_to_csv(json_file, raw_dir, channel_name, max_messages):
 
     if len(df) == 0:
         print(f"   ℹ️  No new messages to process")
+        return None
 
     intermediate_csv = raw_dir / f"{channel_name}_messages.csv"
     df.to_csv(intermediate_csv, index=False)
@@ -102,7 +106,8 @@ def _run_v3_processor(intermediate_csv, channel_name, export_path, output_dir, b
         input_csv=str(intermediate_csv),
         output_csv=str(output_csv),
         base_photo_path=str(export_path) + '/',
-        batch_size=batch_size
+        batch_size=batch_size,
+        channel_name=channel_name
     )
     return output_csv
 

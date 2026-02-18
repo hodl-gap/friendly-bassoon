@@ -58,6 +58,7 @@ def map_and_fetch_variables(
         from variable_mapper_orchestrator import run_variable_mapper
         mapper_result = run_variable_mapper(
             synthesis,
+            logic_chains=logic_chains,
             data_temporal_context=temporal_context or {}
         )
         extracted_vars = mapper_result.get("normalized_variables", [])
@@ -192,6 +193,15 @@ def _fetch_data(
             print("[integration] Yahoo adapter not available, using fallback")
             return _fetch_yahoo_fallback(series_id, start_date, end_date)
 
+    elif source_upper == "COINGECKO":
+        try:
+            from adapters.coingecko_adapter import CoinGeckoAdapter
+            adapter = CoinGeckoAdapter()
+            return adapter.fetch(series_id, start_date, end_date)
+        except ImportError:
+            print("[integration] CoinGecko adapter not available")
+            return None
+
     else:
         print(f"[integration] Unknown source: {source}, skipping")
         return None
@@ -317,6 +327,13 @@ def get_adapter_for_source(source: str):
         try:
             from adapters.yahoo_adapter import YahooAdapter
             return YahooAdapter()
+        except ImportError:
+            return None
+
+    elif source_upper == "COINGECKO":
+        try:
+            from adapters.coingecko_adapter import CoinGeckoAdapter
+            return CoinGeckoAdapter()
         except ImportError:
             return None
 

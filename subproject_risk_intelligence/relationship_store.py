@@ -619,7 +619,9 @@ def update_regime_from_analysis(
         liquidity_regime = "transitional"
 
     # Check if regime changed significantly
-    regime_changed = (
+    # On first run (no prior regime), always initialize
+    is_first_run = current.get("liquidity_regime") is None and current.get("dominant_driver") is None
+    regime_changed = is_first_run or (
         liquidity_regime != current.get("liquidity_regime") or
         dominant_driver != current.get("dominant_driver")
     )

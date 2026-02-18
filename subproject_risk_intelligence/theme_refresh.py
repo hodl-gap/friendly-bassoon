@@ -25,6 +25,7 @@ from .relationship_store import load_relationships
 def refresh_theme(
     theme_name: str,
     skip_retrieval: bool = False,
+    asset_class: str = "btc",
 ) -> Dict[str, Any]:
     """
     Refresh a single theme: fetch current data, check active chains, generate assessment.
@@ -32,6 +33,7 @@ def refresh_theme(
     Args:
         theme_name: Theme to refresh (e.g., "liquidity")
         skip_retrieval: If True, skip retrieval step (use existing chains only)
+        asset_class: Asset class for chain storage/loading (default: "btc")
 
     Returns:
         Dict with theme_name, active_chains, triggered_patterns, assessment
@@ -58,14 +60,14 @@ def refresh_theme(
                 retrieval_answer=result.get("answer", ""),
                 confidence={"score": 0.5},
             )
-            store_chains(state, asset_class="btc")
+            store_chains(state, asset_class=asset_class)
             # Reload index after potential new chains
             index = ThemeIndex.load(theme_index_path)
         except Exception as e:
             print(f"[Theme Refresh] Retrieval failed: {e}")
 
     # Step 2: Load chains for this theme
-    db = load_relationships(asset_class="btc")
+    db = load_relationships(asset_class=asset_class)
     all_chains = db.get("relationships", [])
     theme_chains = index.get_theme_chains(theme_name, all_chains)
     print(f"[Theme Refresh] {theme_name}: {len(theme_chains)} chains in theme")
@@ -153,12 +155,13 @@ def refresh_theme(
     }
 
 
-def refresh_all_themes(skip_retrieval: bool = False) -> Dict[str, Dict[str, Any]]:
+def refresh_all_themes(skip_retrieval: bool = False, asset_class: str = "btc") -> Dict[str, Dict[str, Any]]:
     """
     Refresh all themes.
 
     Args:
         skip_retrieval: If True, skip retrieval for all themes
+        asset_class: Asset class for chain storage/loading (default: "btc")
 
     Returns:
         Dict mapping theme_name -> refresh result
@@ -166,7 +169,7 @@ def refresh_all_themes(skip_retrieval: bool = False) -> Dict[str, Dict[str, Any]
     results = {}
     for theme_name in get_all_themes():
         try:
-            results[theme_name] = refresh_theme(theme_name, skip_retrieval=skip_retrieval)
+            results[theme_name] = refresh_theme(theme_name, skip_retrieval=skip_retrieval, asset_class=asset_class)
         except Exception as e:
             print(f"[Theme Refresh] Error refreshing {theme_name}: {e}")
             results[theme_name] = {

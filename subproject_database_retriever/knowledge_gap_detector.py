@@ -7,6 +7,7 @@ This is part of the retrieval layer - topic-agnostic gap detection that works fo
 
 import sys
 import json
+import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Dict, Any, List, Optional
@@ -15,6 +16,9 @@ import anthropic
 
 # Add parent directory for shared imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# Lock to prevent concurrent sys.modules manipulation across threads
+_import_lock = threading.Lock()
 
 from models import call_claude_haiku, call_claude_sonnet
 from knowledge_gap_prompts import (
@@ -282,35 +286,36 @@ def _get_web_search_adapter():
     Returns:
         WebSearchAdapter instance or None if import fails
     """
-    try:
-        data_collection_path = str(Path(__file__).parent.parent / "subproject_data_collection")
+    with _import_lock:
+        try:
+            data_collection_path = str(Path(__file__).parent.parent / "subproject_data_collection")
 
-        # Clear cached modules that would shadow data_collection's imports
-        saved_modules = {}
-        for mod_name in ['config', 'web_search_prompts']:
-            if mod_name in sys.modules:
-                saved_modules[mod_name] = sys.modules.pop(mod_name)
+            # Clear cached modules that would shadow data_collection's imports
+            saved_modules = {}
+            for mod_name in ['config', 'web_search_prompts']:
+                if mod_name in sys.modules:
+                    saved_modules[mod_name] = sys.modules.pop(mod_name)
 
-        # Ensure data_collection path is at the front of sys.path
-        if data_collection_path in sys.path:
-            sys.path.remove(data_collection_path)
-        sys.path.insert(0, data_collection_path)
+            # Ensure data_collection path is at the front of sys.path
+            if data_collection_path in sys.path:
+                sys.path.remove(data_collection_path)
+            sys.path.insert(0, data_collection_path)
 
-        from adapters.web_search_adapter import WebSearchAdapter
+            from adapters.web_search_adapter import WebSearchAdapter
 
-        # Restore previously cached modules
-        for mod_name, mod in saved_modules.items():
-            if mod_name not in sys.modules:
-                sys.modules[mod_name] = mod
+            # Restore previously cached modules
+            for mod_name, mod in saved_modules.items():
+                if mod_name not in sys.modules:
+                    sys.modules[mod_name] = mod
 
-        return WebSearchAdapter(max_results=8)
-    except ImportError as e:
-        print(f"[Knowledge Gap] WebSearchAdapter import failed: {e}")
-        # Restore on failure too
-        for mod_name, mod in saved_modules.items():
-            if mod_name not in sys.modules:
-                sys.modules[mod_name] = mod
-        return None
+            return WebSearchAdapter(max_results=8)
+        except ImportError as e:
+            print(f"[Knowledge Gap] WebSearchAdapter import failed: {e}")
+            # Restore on failure too
+            for mod_name, mod in saved_modules.items():
+                if mod_name not in sys.modules:
+                    sys.modules[mod_name] = mod
+            return None
 
 
 def _search_and_evaluate(
@@ -636,21 +641,22 @@ def fill_gaps_with_data(
 
     # Import data fetcher from risk_intelligence (has the fetch logic)
     try:
-        btc_intel_path = str(Path(__file__).parent.parent / "subproject_risk_intelligence")
-        # Save and clear modules that might conflict
-        saved_modules = {}
-        for mod_name in ['states', 'config']:
-            if mod_name in sys.modules:
-                saved_modules[mod_name] = sys.modules.pop(mod_name)
+        with _import_lock:
+            btc_intel_path = str(Path(__file__).parent.parent / "subproject_risk_intelligence")
+            # Save and clear modules that might conflict
+            saved_modules = {}
+            for mod_name in ['states', 'config']:
+                if mod_name in sys.modules:
+                    saved_modules[mod_name] = sys.modules.pop(mod_name)
 
-        if btc_intel_path not in sys.path:
-            sys.path.insert(0, btc_intel_path)
-        from current_data_fetcher import resolve_variable, fetch_yahoo_with_history, fetch_fred_with_history
+            if btc_intel_path not in sys.path:
+                sys.path.insert(0, btc_intel_path)
+            from current_data_fetcher import resolve_variable, fetch_yahoo_with_history, fetch_fred_with_history
 
-        # Restore saved modules
-        for mod_name, mod in saved_modules.items():
-            if mod_name not in sys.modules:
-                sys.modules[mod_name] = mod
+            # Restore saved modules
+            for mod_name, mod in saved_modules.items():
+                if mod_name not in sys.modules:
+                    sys.modules[mod_name] = mod
     except ImportError as e:
         print(f"[Knowledge Gap] Data fetcher import failed: {e}")
         return _empty_fill_result("data_fetcher_unavailable")
@@ -759,31 +765,32 @@ def fill_gaps_with_data(
 
 def _get_web_chain_adapter():
     """Get WebSearchAdapter configured for chain extraction."""
-    try:
-        data_collection_path = str(Path(__file__).parent.parent / "subproject_data_collection")
+    with _import_lock:
+        try:
+            data_collection_path = str(Path(__file__).parent.parent / "subproject_data_collection")
 
-        saved_modules = {}
-        for mod_name in ['config', 'web_search_prompts']:
-            if mod_name in sys.modules:
-                saved_modules[mod_name] = sys.modules.pop(mod_name)
+            saved_modules = {}
+            for mod_name in ['config', 'web_search_prompts']:
+                if mod_name in sys.modules:
+                    saved_modules[mod_name] = sys.modules.pop(mod_name)
 
-        if data_collection_path in sys.path:
-            sys.path.remove(data_collection_path)
-        sys.path.insert(0, data_collection_path)
+            if data_collection_path in sys.path:
+                sys.path.remove(data_collection_path)
+            sys.path.insert(0, data_collection_path)
 
-        from adapters.web_search_adapter import WebSearchAdapter
+            from adapters.web_search_adapter import WebSearchAdapter
 
-        for mod_name, mod in saved_modules.items():
-            if mod_name not in sys.modules:
-                sys.modules[mod_name] = mod
+            for mod_name, mod in saved_modules.items():
+                if mod_name not in sys.modules:
+                    sys.modules[mod_name] = mod
 
-        return WebSearchAdapter(max_results=8)
-    except ImportError as e:
-        print(f"[Knowledge Gap] WebSearchAdapter import failed: {e}")
-        for mod_name, mod in saved_modules.items():
-            if mod_name not in sys.modules:
-                sys.modules[mod_name] = mod
-        return None
+            return WebSearchAdapter(max_results=8)
+        except ImportError as e:
+            print(f"[Knowledge Gap] WebSearchAdapter import failed: {e}")
+            for mod_name, mod in saved_modules.items():
+                if mod_name not in sys.modules:
+                    sys.modules[mod_name] = mod
+            return None
 
 
 def _format_chain_enrichment(chains: List[Dict[str, Any]], sources: List[str]) -> str:

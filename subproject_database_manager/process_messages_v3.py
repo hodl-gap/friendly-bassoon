@@ -90,6 +90,19 @@ def categorize_by_rules(text: str) -> tuple:
 # =============================================================================
 # Model to use for batch extraction (Step 4)
 # Options: "gpt5", "gpt51", "gpt5_mini", "claude_sonnet", "claude_haiku"
+def _strip_code_block(text: str) -> str:
+    """Strip markdown code block fencing from LLM responses."""
+    text = text.strip()
+    if text.startswith("```"):
+        lines = text.split('\n')
+        # Remove opening line (```json or ```)
+        start = 1
+        # Remove closing ``` if present
+        end = -1 if lines[-1].strip() == "```" else len(lines)
+        text = '\n'.join(lines[start:end]).strip()
+    return text
+
+
 EXTRACTION_MODEL = "gpt5_mini"
 FALLBACK_MODEL = "claude_sonnet"  # Used if primary model fails
 
@@ -124,6 +137,19 @@ def should_extract_image(image_path: str) -> bool:
     return True
 
 
+def _get_media_type(image_path: str) -> str:
+    """Get MIME type from image file extension."""
+    ext = os.path.splitext(image_path)[1].lower()
+    mime_map = {
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.webp': 'image/webp',
+        '.gif': 'image/gif',
+    }
+    return mime_map.get(ext, 'image/jpeg')
+
+
 def encode_image(image_path):
     """Encode image to base64"""
     try:
@@ -149,7 +175,7 @@ def extract_image_summary(image_path, message_text):
                 "type": "image",
                 "source": {
                     "type": "base64",
-                    "media_type": "image/jpeg",
+                    "media_type": _get_media_type(image_path),
                     "data": image_data
                 }
             },
@@ -179,7 +205,7 @@ def extract_image_structured_data(image_path, message_text, message_date):
                 "type": "image",
                 "source": {
                     "type": "base64",
-                    "media_type": "image/jpeg",
+                    "media_type": _get_media_type(image_path),
                     "data": image_data
                 }
             },
@@ -214,7 +240,7 @@ def extract_image_combined(image_path, message_text, message_date):
                 "type": "image",
                 "source": {
                     "type": "base64",
-                    "media_type": "image/jpeg",
+                    "media_type": _get_media_type(image_path),
                     "data": image_data
                 }
             },
@@ -229,12 +255,7 @@ def extract_image_combined(image_path, message_text, message_date):
 
     # Parse JSON response
     try:
-        response_text = response.strip()
-        if response_text.startswith("```"):
-            lines = response_text.split('\n')
-            response_text = '\n'.join(lines[1:-1]) if len(lines) > 2 else response_text
-            if response_text.startswith("json"):
-                response_text = response_text[4:].strip()
+        response_text = _strip_code_block(response)
 
         parsed = json.loads(response_text)
         return {
@@ -285,12 +306,7 @@ def process_batch(messages_batch, category, channel_name, use_gpt5=True):
 
         # Parse response
         try:
-            response_text = response.strip()
-            if response_text.startswith("```"):
-                lines = response_text.split('\n')
-                response_text = '\n'.join(lines[1:-1]) if len(lines) > 2 else response_text
-                if response_text.startswith("json"):
-                    response_text = response_text[4:].strip()
+            response_text = _strip_code_block(response)
 
             extracted_list = json.loads(response_text)
 
@@ -350,12 +366,7 @@ def process_batch(messages_batch, category, channel_name, use_gpt5=True):
 
         # Parse response
         try:
-            response_text = response.strip()
-            if response_text.startswith("```"):
-                lines = response_text.split('\n')
-                response_text = '\n'.join(lines[1:-1]) if len(lines) > 2 else response_text
-                if response_text.startswith("json"):
-                    response_text = response_text[4:].strip()
+            response_text = _strip_code_block(response)
 
             extracted_list = json.loads(response_text)
 
@@ -504,12 +515,7 @@ async def process_batches_parallel(all_batches, channel_name):
 
         # Parse response
         try:
-            response_text = response.strip()
-            if response_text.startswith("```"):
-                lines = response_text.split('\n')
-                response_text = '\n'.join(lines[1:-1]) if len(lines) > 2 else response_text
-                if response_text.startswith("json"):
-                    response_text = response_text[4:].strip()
+            response_text = _strip_code_block(response)
 
             extracted_list = json.loads(response_text)
 
@@ -567,7 +573,7 @@ def process_batches_parallel_sync(all_batches, channel_name):
     return asyncio.run(process_batches_parallel(all_batches, channel_name))
 
 
-def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base_photo_path=None):
+def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base_photo_path=None, channel_name=None):
     """
     V3 Flow:
     1. Extract image summaries FIRST
@@ -605,7 +611,11 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
         csv_dir = Path(input_csv).parent
         base_photo_path = str(csv_dir) + '/'
 
-    print(f"Loaded {len(messages)} messages")
+    # Derive channel_name from parameter or first message
+    if channel_name is None:
+        channel_name = messages[0]['name'] if messages else "Unknown"
+
+    print(f"Loaded {len(messages)} messages (channel: {channel_name})")
 
     # Track timing for each step
     step_times = {}
@@ -739,12 +749,7 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
         llm_based_count += 1
 
         try:
-            cat_text = cat_response.strip()
-            if cat_text.startswith("```"):
-                lines = cat_text.split('\n')
-                cat_text = '\n'.join(lines[1:-1]) if len(lines) > 2 else cat_text
-                if cat_text.startswith("json"):
-                    cat_text = cat_text[4:].strip()
+            cat_text = _strip_code_block(cat_response)
 
             category_data = json.loads(cat_text)
             msg['category'] = category_data.get('category', 'unknown')
@@ -756,7 +761,11 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
 
     step_times['step2_categorization'] = time.time() - step2_start
     print(f"\n⏱️  Step 2 completed in {step_times['step2_categorization']:.1f}s")
-    print(f"    Rule-based: {rule_based_count}, LLM: {llm_based_count} ({rule_based_count/(rule_based_count+llm_based_count)*100:.0f}% saved)")
+    total_categorized = rule_based_count + llm_based_count
+    if total_categorized > 0:
+        print(f"    Rule-based: {rule_based_count}, LLM: {llm_based_count} ({rule_based_count/total_categorized*100:.0f}% saved)")
+    else:
+        print(f"    No messages categorized")
 
     # Track filtered messages (categories that won't be extracted) to avoid re-categorization
     from processing_tracker import mark_filtered
@@ -803,7 +812,6 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
     print("=" * 80, flush=True)
     step4_start = time.time()
 
-    channel_name = messages[0]['name'] if messages else "Unknown"
     all_results = []
 
     # Collect all batches for parallel processing
