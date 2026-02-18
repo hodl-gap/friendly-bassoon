@@ -1,458 +1,388 @@
-# BTC Intelligence Subproject - Claude Context
+# Risk Intelligence Subproject - Claude Context
 
 ## Project Overview
-This subproject analyzes the impact of **specific macro events or data updates** on Bitcoin price. Given a current event, it retrieves relevant logic chains, finds similar historical analogs, and produces directional assessments with confidence scores.
+This subproject is the research engine of an autonomous Bridgewater-style research team. Given a macro event or data update, it retrieves relevant logic chains, builds multi-hop causal graphs, finds historical analogs with quantified outcomes, and produces **multi-track causal insights** grounded in historical evidence.
 
 ## Core Purpose
 
-**Input**: A specific event or data update happening NOW (or hypothetically)
-**Output**: BTC directional impact (BULLISH/BEARISH/NEUTRAL) with confidence and rationale
+**Input**: A specific macro event or data update (current or hypothetical)
+**Output**: Multi-track insight report with independent reasoning tracks, each containing causal mechanisms, historical evidence, asset implications, and monitoring variables
 
-### What BTC Intelligence Does
+### What Risk Intelligence Does
 - Takes a **specific event/data update** as input
-- Retrieves logic chains explaining the causal mechanism (event → ... → BTC)
-- Finds **similar historical events** referenced in research
-- Fetches **actual data from historical analogs** to ground predictions
-- Fetches **current data for same instruments** to compare "then vs now"
-- **Extrapolates** past logic chains to predict current BTC impact
+- Retrieves logic chains explaining causal mechanisms (event → ... → asset impact)
+- Builds a **multi-hop causal graph** from retrieved + historical chains, finds all paths from trigger to terminal effects
+- Finds up to **5 historical analogs** and aggregates statistics (direction distribution, magnitude, timing)
+- Produces **independent reasoning tracks** — each with its own evidence, implications, and monitoring variables
+- Supports **multi-asset analysis** (BTC, equity, or both)
 
-### What BTC Intelligence Does NOT Do
-- Answer "what happened in X?" questions (that's the Retriever's job)
-- General market comparisons without specific events
-- Explain mechanisms without directional output
+### Output Modes
+- **`insight`** (default): Multi-track reasoning with independent evidence per track. Each track has causal mechanism, historical precedent counts, asset implications with magnitude ranges, and monitoring variables with thresholds.
+- **`belief_space`** (legacy): Multi-scenario output with direction, confidence scores, contradictions, and regime uncertainty.
 
 ### Valid Query Examples
 ```
-"TGA increased +10% this week, what's the BTC impact?"
-"A new global contagion is spreading, what's the BTC impact?"
-"JPY strengthened 12% rapidly, what's the BTC impact?"
-"Fed just announced 50bps emergency rate cut, what's the BTC impact?"
+"How does the February 2026 Japan snap election affect risk assets and yen carry trades?"
+"TGA increased +10% this week, what's the impact on risk assets?"
+"A new global contagion is spreading, what's the impact on BTC?"
+"Fed just announced 50bps emergency rate cut, what's the impact?"
 ```
 
 ### Invalid Query Examples
 ```
-"What happened in August 2024 yen crash?" → Use Retriever
-"Compare current market to March 2020" → Too vague, no specific event
-"Explain how TGA affects liquidity" → Use Retriever
+"What happened in August 2024 yen crash?" -> Use Retriever
+"Compare current market to March 2020" -> Too vague, no specific event
+"Explain how TGA affects liquidity" -> Use Retriever
 ```
 
 ## Technology Stack
-- **Input**: Specific event/data update → BTC impact question
+- **Input**: Specific event/data update -> macro impact question
 - **Retrieval**: Uses `subproject_database_retriever` for logic chains
-- **Historical Analog**: Fetches actual data from similar past events
-- **Analysis**: Claude Sonnet for impact assessment
-- **Output**: Direction, Confidence, Time Horizon, Rationale, Risk Factors
-- **Framework**: Simple sequential workflow (LangGraph in future phases)
+- **Chain Graph**: Multi-hop causal path-finding via `shared/chain_graph.py`
+- **Historical Analogs**: Up to 5 analogs fetched in parallel, aggregated statistics
+- **Analysis**: Claude Opus for insight analysis, Sonnet for belief space, Haiku for extraction
+- **Output**: Multi-track insight reports or legacy belief space scenarios
+- **Framework**: Simple sequential workflow
 
 ## Architecture
 
 ### Code Organization
 ```
 subproject_risk_intelligence/
-├── __init__.py                      # Package exports
-├── __main__.py                      # CLI entry point
-├── insight_orchestrator.py           # Main workflow
-├── states.py                        # RiskImpactState definition
-├── config.py                        # Configuration
-├── impact_analysis.py               # LLM-based impact analysis
-├── impact_analysis_prompts.py       # Analysis prompts (includes MACRO REGIME section)
-├── variable_extraction.py           # Extract variables from chains (Phase 2)
-├── current_data_fetcher.py          # Fetch live data with period changes (Phase 2)
-├── pattern_validator.py             # Validate research patterns vs current data (Phase 2)
-├── relationship_store.py            # Logic chain persistence with theme index + validation reinforcement
-├── historical_event_detector.py     # Historical event detection + instrument mapping (Phase 4)
-├── historical_event_prompts.py      # LLM prompts for historical detection (Phase 4)
-├── historical_data_fetcher.py       # Fetch historical data + metrics (Phase 4)
-├── theme_refresh.py                 # Daily theme monitoring + regime assessment
-│
-├── data/
-│   ├── relationships.json            # Persistent chain storage
-│   ├── theme_index.json             # Theme-organized chain index (auto-maintained)
-│   └── variable_frequency.json      # Variable appearance frequency tracking (auto-maintained)
-│
-└── CLAUDE.md                        # This file
-```
+|-- __init__.py                      # Package exports (run_impact_analysis, run_multi_asset_analysis)
+|-- __main__.py                      # CLI entry point (--mode insight|belief_space, --asset)
+|-- insight_orchestrator.py          # Main workflow orchestration
+|-- states.py                        # RiskImpactState, InsightTrack type definitions
+|-- config.py                        # Configuration (multi-analog, historical detection flags)
+|-- impact_analysis.py               # Dual-mode LLM analysis (insight + belief_space dispatch)
+|-- impact_analysis_prompts.py       # INSIGHT_SYSTEM_PROMPT, BELIEF_SPACE_SYSTEM_PROMPT, shared data sections
+|-- asset_configs.py                 # Per-asset configuration (BTC, equity)
+|-- variable_extraction.py           # Extract variables from chains (Phase 2)
+|-- current_data_fetcher.py          # Fetch live data with period changes (Phase 2)
+|-- pattern_validator.py             # Validate research patterns vs current data (Phase 2)
+|-- relationship_store.py            # Logic chain persistence with theme index + validation reinforcement
+|-- historical_event_detector.py     # Historical event detection + multi-analog detection
+|-- historical_event_prompts.py      # LLM prompts for historical detection + MULTI_ANALOG_TOOL
+|-- historical_data_fetcher.py       # Fetch historical data + metrics
+|-- historical_aggregator.py         # Multi-analog parallel fetch + aggregate statistics
+|-- theme_refresh.py                 # Daily theme monitoring + regime assessment
+|
+|-- data/
+|   |-- relationships.json           # Persistent chain storage
+|   |-- theme_index.json             # Theme-organized chain index (auto-maintained)
+|   +-- variable_frequency.json      # Variable appearance frequency tracking (auto-maintained)
+|
++-- CLAUDE.md                        # This file
 
-**Note**: Knowledge gap detection files (`knowledge_gap_detector.py`, `knowledge_gap_prompts.py`) were moved to `subproject_database_retriever` to make gap detection topic-agnostic. BTC Intelligence now receives enriched context from the retrieval layer.
+shared/
+|-- chain_graph.py                   # ChainGraph: directed graph with DFS path-finding
+|-- schemas.py                       # Canonical types: LogicChainStep, LogicChain, ConfidenceMetadata
+|-- model_config.py                  # Central model selection for all subprojects
+|-- run_logger.py                    # Pipeline run logger with LLM cost tracking
+|-- snapshot.py                      # State capture for debugging
+|-- variable_resolver.py             # Variable -> data source lookup
+|-- theme_config.py                  # 6 macro themes with anchor variables
++-- theme_index.py                   # Theme-organized chain index
+```
 
 ### Workflow (Current)
 ```
 query (CLI input)
-    │
-    ▼
-┌─────────────────────────┐
-│ 1. retrieve_context     │  Call run_retrieval(query) from database_retriever
-│                         │  Retriever now handles:
-│                         │    - Query expansion
-│                         │    - Vector search
-│                         │    - Answer generation
-│                         │    - Gap detection & filling (moved here)
-│                         │    - Web chain extraction
-│                         │  Returns: enriched context with merged DB + web chains
-└───────────┬─────────────┘
-            │
-            ▼
-┌─────────────────────────┐
-│ 2. load_chains          │  Load chains by theme (via ThemeIndex + asset's relevant_themes)
-│                         │  Load per-theme assessments into state (macro regime context)
-│                         │  Find relevant chains for current query
-└───────────┬─────────────┘
-            │
-            ▼
-┌─────────────────────────┐
-│ 3. extract_variables    │  Parse chains/synthesis for variable names
-│                         │  Output: [tga, bank_reserves, btc, sofr, ...]
-└───────────┬─────────────┘
-            │
-            ▼
-┌─────────────────────────┐
-│ 4. fetch_current_data   │  Fetch from FRED (TGA, SOFR, etc.)
-│                         │  Fetch from Yahoo (BTC, DXY, etc.)
-│                         │  Include 1w and 1m period changes
-│                         │  Output: {btc: $75K (-15% 1w), tga: $923B (+6% 1w), ...}
-└───────────┬─────────────┘
-            │
-            ▼
-┌─────────────────────────┐
-│ 5. validate_patterns    │  Extract quantitative patterns from research
-│                         │  (e.g., "TGA +200% over 3mo → BTC crash")
-│                         │  Validate against current data
-│                         │  Output: triggered/not-triggered for each pattern
-└───────────┬─────────────┘
-            │
-            ▼
-┌─────────────────────────┐
-│ 5.5 enrich_historical   │  Detect if query references historical event
-│     _event              │  If gap detected:
-│                         │    - identify_instruments() from synthesis
-│                         │    - get_date_range() via web search
-│                         │    - fetch_historical_event_data() from Yahoo/FRED
-│                         │    - compare_to_current() for "Then vs Now"
-│                         │  Output: historical_event_data in state
-└───────────┬─────────────┘
-            │
-            ▼
-┌─────────────────────────┐
-│ 6. analyze_impact       │  LLM call with:
-│                         │    - Retrieved answer/synthesis
-│                         │    - Logic chains (DB + web merged)
-│                         │    - Current data + historical chains
-│                         │    - Validated patterns (triggered status)
-│                         │    - Historical event comparison (if detected)
-│                         │    - Gap enrichment text (from retriever)
-│                         │    - MACRO REGIME context (per-theme assessments)
-│                         │  Output: direction, confidence, rationale, risks
-└───────────┬─────────────┘
-            │
-            ▼
-┌─────────────────────────┐
-│ 7. store_chains         │  Extract new chains from answer
-│                         │  Semantic dedup (Jaccard similarity on variable pairs)
-│                         │  Similar chains: increment validation_count + blend confidence
-│                         │  New chains: save to relationships.json
-│                         │  Update theme index + variable frequency tracker
-└───────────┬─────────────┘
-            │
-            ▼
-        Output (CLI display with current values + changes)
+    |
+    v
++-------------------------+
+| 1. retrieve_context     |  Call run_retrieval(query) from database_retriever
+|                         |  Retriever handles: query expansion, vector search,
+|                         |  answer generation, gap detection/filling, web chain extraction
+|                         |  Returns: enriched context with merged DB + web chains
++-----------+-------------+
+            |
+            v
++-------------------------+
+| 2. load_chains          |  Load chains by theme (via ThemeIndex + asset's relevant_themes)
+|                         |  Load per-theme assessments into state (macro regime context)
++-----------+-------------+
+            |
+            v
++-------------------------+
+| 2.5 build_chain_graph   |  Build directed graph from retrieved + historical chains
+|                         |  Find trigger variables matching query
+|                         |  DFS to find all multi-hop paths from triggers to terminals
+|                         |  Group paths into reasoning tracks
+|                         |  Output: chain_tracks, chain_graph_text for prompt
++-----------+-------------+
+            |
+            v
++-------------------------+
+| 3. extract_variables    |  Parse chains/synthesis for variable names
+|                         |  Output: [tga, bank_reserves, btc, sofr, ...]
++-----------+-------------+
+            |
+            v
++-------------------------+
+| 4. fetch_current_data   |  Fetch from FRED (TGA, SOFR, etc.)
+|                         |  Fetch from Yahoo (BTC, DXY, etc.)
+|                         |  Include 1w and 1m period changes
++-----------+-------------+
+            |
+            v
++-------------------------+
+| 5. validate_patterns    |  Extract quantitative patterns from research
+|                         |  Validate against current data
+|                         |  Output: triggered/not-triggered for each pattern
++-----------+-------------+
+            |
+            v
++-------------------------+
+| 5.5 enrich_historical   |  Single-analog: detect historical gap, fetch data, compare
+|     _event              |  Multi-analog: detect up to 5 analogs via LLM,
+|                         |    fetch data in parallel (ThreadPoolExecutor),
+|                         |    aggregate stats (direction, magnitude, timing)
+|                         |  Output: historical_event_data + historical_analogs
++-----------+-------------+
+            |
+            v
++-------------------------+
+| 6. analyze_impact       |  Dual-mode dispatch based on output_mode:
+|                         |
+|                         |  INSIGHT mode (default):
+|                         |    - INSIGHT_SYSTEM_PROMPT + output_insight tool
+|                         |    - Produces independent reasoning tracks
+|                         |    - Each track: mechanism, evidence, implications, monitors
+|                         |    - Populates legacy fields from best track for compat
+|                         |
+|                         |  BELIEF_SPACE mode (legacy):
+|                         |    - BELIEF_SPACE_SYSTEM_PROMPT + output_assessment tool
+|                         |    - Produces scenarios with likelihoods + contradictions
+|                         |    - Direction, confidence, rationale, risk factors
+|                         |
+|                         |  Both modes receive:
+|                         |    - Retrieved answer/synthesis + logic chains
+|                         |    - Current data + validated patterns
+|                         |    - Multi-hop causal paths (chain_graph_text)
+|                         |    - Historical analog aggregation (historical_analogs_text)
+|                         |    - MACRO REGIME context (per-theme assessments)
+|                         |    - Historical event comparison (if detected)
+|                         |    - Gap enrichment text (from retriever)
++-----------+-------------+
+            |
+            v
++-------------------------+
+| 7. store_chains         |  Extract new chains from answer
+|                         |  Semantic dedup (Jaccard similarity on variable pairs)
+|                         |  Similar chains: increment validation_count + blend confidence
+|                         |  New chains: save to relationships.json
+|                         |  Update theme index + variable frequency tracker
++-----------+-------------+
+            |
+            v
+        Output (format_insight or format_output)
 ```
-
-**Note**: Step 5.6 (Knowledge Gap Detection) was removed. Gap detection is now handled by the retrieval layer in Step 1. BTC Intelligence receives enriched context with merged logic chains and gap enrichment text.
 
 ## Usage
 
 ```bash
-# Current data update → BTC impact
-python -m subproject_risk_intelligence "TGA increased +10% this week, what's the BTC impact?"
-python -m subproject_risk_intelligence "Fed just cut rates 50bps, what's the BTC impact?"
-python -m subproject_risk_intelligence "DXY strengthened 5% this month, what's the BTC impact?"
+# Default insight mode (multi-track reasoning)
+python -m subproject_risk_intelligence "How does the Japan snap election affect risk assets?"
+python -m subproject_risk_intelligence "TGA increased +10% this week, what's the impact?"
 
-# Current event with historical analog (triggers Phase 4)
-python -m subproject_risk_intelligence "A new global contagion is spreading, what's the BTC impact?"
-python -m subproject_risk_intelligence "JPY is strengthening rapidly like in August 2024, what's the BTC impact?"
+# Legacy belief_space mode (scenarios + contradictions)
+python -m subproject_risk_intelligence --mode belief_space "Fed just cut rates 50bps"
+
+# Multi-asset analysis
+python -m subproject_risk_intelligence --asset btc,equity "A new global contagion is spreading"
+
+# Skip data fetch / chain store for faster iteration
+python -m subproject_risk_intelligence --skip-data --skip-chains "Test query"
 
 # JSON output
-python -m subproject_risk_intelligence --json "Bank reserves dropped 5%, what's the BTC impact?"
+python -m subproject_risk_intelligence --json "Bank reserves dropped 5%"
 
 # Verbose mode
-python -m subproject_risk_intelligence -v "VIX spiked to 40, what's the BTC impact?"
+python -m subproject_risk_intelligence -v "VIX spiked to 40"
 ```
 
-## Output Format
+## Output Formats
 
-### CLI Output
+### Insight Mode (default)
 ```
 ============================================================
-DIRECTION: BEARISH
-CONFIDENCE: 0.75 (4 chains, 3 sources)
-TIME HORIZON: weeks (medium decay)
+INSIGHT REPORT -- BITCOIN
+============================================================
 
-CURRENT DATA:
-  **Crypto**:
-    - BTC: $75,470.91 (↓$13,714 / -15.4% 1w; ↓$15,556 / -17.1% 1m)
-  **Liquidity**:
-    - TGA: $923B (↑$54B / +6.2% 1w; ↑$86B / +10.2% 1m)
-    - BANK_RESERVES: $2.94T
-    - FED_BALANCE_SHEET: $6.59T (↑$3B / +0.0% 1w)
-  **Rates**:
-    - SOFR: 3.65% (→0.00pp / +0.0% 1w)
+TRACK 1: BOJ Tightening Acceleration Track
+  Confidence: 72%
+  Mechanism: election -> fiscal_expansion -> BOJ_rate_hike -> carry_unwind -> BTC_selloff
+  Time Horizon: February 2026 - June 2026
+  Evidence: 3 precedents, 67% success rate
+    3/3 prior BOJ rate hike episodes correlated with BTC drawdowns of 20-30%.
+    - BOJ rate hike August 2000: SPY +5.9% (1mo), VIX -18.1% (1mo)
+    - BOJ negative rate January 2016: SPY -4.7% (1mo), VIX +5.5% (1mo)
+  Asset Implications:
+    - BTC: bearish (-20% to -30%, 1-3 months)
+    - USDJPY: bearish (yen strengthens) (-3% to -8%, 2-4 weeks)
+  Monitor:
+    - BOJ April 2026 hike probability >70%: Confirms accelerated timeline
+    - JGB 10-year yield >1.90%: Signals aggressive tightening
+----------------------------------------
 
-RATIONALE:
-The TGA has increased +$86B (+10.2%) over the past month to $923B,
-representing a liquidity drain from the banking system...
+TRACK 2: Carry Trade Unwind Liquidity Drain Track
+  ...
+----------------------------------------
 
-STRONGEST CHAIN: tga_increase -> bank_reserves_drain -> funding_stress -> btc_pressure
+SYNTHESIS:
+[Narrative connecting all tracks with quantified relationships]
 
-RISK FACTORS:
-  - Rapid TGA drawdown reversal if Treasury begins spending aggressively
-  - Institutional accumulation override at lower BTC prices
-  - Fed balance sheet expansion could override Treasury liquidity drain
+KEY UNCERTAINTIES:
+  - BOJ April vs June 2026 hike timing
+  - Carry trade positioning data opacity
 ============================================================
 ```
 
-### JSON Output
-```json
-{
-  "direction": "BEARISH",
-  "confidence": {
-    "score": 0.75,
-    "chain_count": 4,
-    "source_diversity": 3,
-    "strongest_chain": "tga_increase -> bank_reserves_drain -> funding_stress -> btc_pressure"
-  },
-  "time_horizon": "weeks",
-  "decay_profile": "medium",
-  "rationale": "...",
-  "risk_factors": ["...", "...", "..."],
-  "current_values": {"btc": {...}, "tga": {...}, ...},
-  "btc_price": 75470.91
-}
+### Belief Space Mode (legacy)
+```
+============================================================
+BELIEF SPACE ANALYSIS -- BITCOIN
+============================================================
+
+SCENARIOS (Market Belief Paths):
+  [1] Carry Trade Unwind Cascade
+      Direction: BEARISH
+      Likelihood: 45%
+      Chain: BOJ rate hike -> yen strengthens -> carry unwind -> risk asset selling
+
+  [2] Fiscal Dominance / Yen Weakness
+      Direction: BULLISH
+      Likelihood: 30%
+      ...
+
+CONTRADICTIONS (Coexisting Beliefs):
+  * "BOJ hikes cause carry unwind" vs "Takaichi fiscal dominance keeps yen weak"
+
+SUMMARY:
+  Primary Direction: BEARISH
+  Confidence: 0.55 (6 chains, 10 sources)
+  Regime Uncertainty: high
+============================================================
+```
+
+## Key Components
+
+### Multi-Hop Chain Graph (`shared/chain_graph.py`)
+
+Directed graph of causal chains built at query time. Ephemeral (built fresh per query), dict-of-lists, no external deps.
+
+| Method | Purpose |
+|--------|---------|
+| `add_chain()` / `add_chains_from_list()` | Build graph from chain steps (handles both `{steps}` and `{logic_chain: {steps}}` formats) |
+| `find_paths(start, end, max_depth)` | DFS with cycle detection, returns all paths |
+| `get_tracks(trigger)` | Group paths by terminal effect into reasoning tracks |
+| `get_trigger_variables(query)` | Match query tokens to graph variables, sorted by out-degree |
+| `format_for_prompt(tracks)` | Format as `## MULTI-HOP CAUSAL PATHS` section |
+
+### Historical N-Analog Aggregation (`historical_aggregator.py`)
+
+Finds up to 5 historical analogs, fetches market data in parallel, computes aggregate statistics.
+
+| Function | Purpose |
+|----------|---------|
+| `detect_historical_analogs()` | LLM (Haiku + tool_use) detects up to 5 analogs with relevance scores |
+| `fetch_multiple_analogs()` | Parallel data fetch via ThreadPoolExecutor (max 3 workers) |
+| `aggregate_analogs()` | Direction distribution, magnitude (median/min/max), timing (recovery days) |
+| `format_analogs_for_prompt()` | Format as `## HISTORICAL PRECEDENT ANALYSIS (Multi-Analog)` section |
+
+### Dual-Mode Impact Analysis (`impact_analysis.py`)
+
+```python
+def analyze_impact(state, asset_class="btc"):
+    output_mode = state.get("output_mode", "insight")
+    if output_mode == "insight":
+        return _analyze_insight(state, asset_class)   # INSIGHT_SYSTEM_PROMPT + output_insight tool
+    else:
+        return _analyze_belief_space(state, asset_class)  # BELIEF_SPACE_SYSTEM_PROMPT + output_assessment tool
+```
+
+Shared prompt data preparation via `_prepare_prompt_data()` feeds both modes.
+
+### Key Functions
+
+| Function | File | Purpose |
+|----------|------|---------|
+| `run_impact_analysis()` | `insight_orchestrator.py` | Single-asset entry point (default: BTC) |
+| `run_multi_asset_analysis()` | `insight_orchestrator.py` | Multi-asset entry point |
+| `build_chain_graph()` | `insight_orchestrator.py` | Build ChainGraph from retrieved + historical chains |
+| `format_insight()` | `insight_orchestrator.py` | Format insight tracks for CLI display |
+| `format_output()` | `insight_orchestrator.py` | Format belief space for CLI display (legacy) |
+| `analyze_impact()` | `impact_analysis.py` | Dual-mode dispatch (insight vs belief_space) |
+| `_analyze_insight()` | `impact_analysis.py` | Insight mode: tracks with evidence + implications |
+| `_analyze_belief_space()` | `impact_analysis.py` | Legacy mode: scenarios + contradictions |
+| `get_insight_prompt()` | `impact_analysis_prompts.py` | Build insight prompt with shared data sections |
+| `get_impact_analysis_prompt()` | `impact_analysis_prompts.py` | Build belief space prompt (legacy) |
+| `_format_data_sections()` | `impact_analysis_prompts.py` | Shared data formatting (DRY between modes) |
+| `detect_historical_gap()` | `historical_event_detector.py` | Single-analog gap detection |
+| `detect_historical_analogs()` | `historical_event_detector.py` | Multi-analog detection (up to 5) |
+| `enrich_with_historical_event()` | `insight_orchestrator.py` | Orchestrate single + multi-analog enrichment |
+
+## State Definition (`states.py`)
+
+Key types:
+- `InsightTrack` — Single reasoning track: title, causal_mechanism, historical_evidence, asset_implications, monitoring_variables, confidence, time_horizon
+- `RiskImpactState` — Full pipeline state including: chain_tracks, chain_graph_text, historical_analogs, historical_analogs_text, output_mode, insight_output
+
+## Configuration (`config.py`)
+
+```python
+# Historical Event Detection (Phase 4)
+ENABLE_HISTORICAL_EVENT_DETECTION = True
+HISTORICAL_DATE_BUFFER_DAYS = 7
+MAX_INSTRUMENTS_PER_EVENT = 6
+
+# Multi-Analog Historical Precedent Analysis
+ENABLE_MULTI_ANALOG = True         # env: RISK_MULTI_ANALOG
+MAX_HISTORICAL_ANALOGS = 5
+ANALOG_RELEVANCE_THRESHOLD = 0.5
 ```
 
 ## Implementation Phases
 
 | Phase | Status | Description |
 |-------|--------|-------------|
-| Phase 1: MVP | ✅ Done | Core loop: retrieve → analyze → output |
-| Phase 2: Data Fetching | ✅ Done | Fetch current values (FRED, Yahoo) with period changes |
-| Phase 2b: Pattern Validation | ✅ Done | Extract & validate research patterns vs current data |
-| Phase 3: Chain Store | ✅ Done | Persist discovered logic chains |
-| Phase 4: Historical Event Detection | ✅ Done | Detect historical event gaps, fetch actual market data |
-| Phase 5: Knowledge Gap Filling | ➡️ Moved | **Moved to `subproject_database_retriever`** - now topic-agnostic |
-| Phase 6: Theme-Organized Chains | ✅ Done | Theme index, theme-based loading, macro regime context in prompts |
-| Phase 7: Validation Reinforcement | ✅ Done | Semantic dedup with Jaccard similarity, validation_count, confidence blending |
-| Phase 8: Daily Monitoring | ✅ Done | Theme refresh with active chain detection, morning briefing |
+| Phase 1: MVP | Done | Core loop: retrieve -> analyze -> output |
+| Phase 2: Data Fetching | Done | Fetch current values (FRED, Yahoo) with period changes |
+| Phase 2b: Pattern Validation | Done | Extract & validate research patterns vs current data |
+| Phase 3: Chain Store | Done | Persist discovered logic chains |
+| Phase 4: Historical Event Detection | Done | Detect historical event gaps, fetch actual market data |
+| Phase 5: Knowledge Gap Filling | Moved | Moved to `subproject_database_retriever` (topic-agnostic) |
+| Phase 6: Theme-Organized Chains | Done | Theme index, theme-based loading, macro regime context in prompts |
+| Phase 7: Validation Reinforcement | Done | Semantic dedup with Jaccard similarity |
+| Phase 8: Daily Monitoring | Done | Theme refresh with active chain detection, morning briefing |
+| Multi-Hop Chain Graph | Done | Directed graph with DFS path-finding, reasoning tracks |
+| N-Analog Aggregation | Done | Up to 5 analogs, parallel fetch, aggregate statistics |
+| Insight Output Format | Done | Multi-track reasoning with evidence, implications, monitoring |
 
-## Historical Event Detection (Phase 4)
-
-### Purpose
-When user asks about a **CURRENT event**, the system finds **similar historical analogs** in the research, fetches **actual data from those past events**, and **extrapolates** the logic chains to predict current BTC impact.
-
-### Problem
-User asks: "A new contagion is spreading, what's the BTC impact?"
-- Retriever finds research that mentions **COVID 2020** as a similar historical analog
-- Research explains the logic chains qualitatively (contagion → risk-off → BTC sell)
-- But research lacks **actual historical prices** (BTC dropped 45%, VIX spiked 158%)
-- Without actual data, LLM can't ground predictions ("last time this happened, BTC dropped X%")
-
-### Solution
-1. Detect when retrieved research **references a historical analog**
-2. Fetch **actual data from that historical event** (prices, correlations, magnitudes)
-3. Fetch **current data for same instruments** (to compare "then vs now")
-4. **Extrapolate** logic chains: "Last time contagion spread, VIX spiked before BTC crashed. Current VIX is X, suggesting..."
-
-### Flow
-```
-Query: "A new global contagion is spreading, what's the BTC impact?"
-    │
-    ▼
-[1] retrieve_context()
-    └─ Finds research mentioning "COVID 2020" as similar historical event
-    │
-    ▼
-[2] detect_historical_gap()
-    ├─ Research mentions COVID but lacks actual 2020 price data
-    └─ → gap_detected = True, analog = "March 2020 COVID crash"
-    │
-    ▼
-[3] identify_instruments()
-    ├─ From research: VIX, SP500, BTC mentioned in COVID context
-    └─ → [^GSPC, ^VIX, BTC-USD, ^TNX, GC=F]
-    │
-    ▼
-[4] get_date_range()
-    └─ → 2020-02-23 to 2020-04-07
-    │
-    ▼
-[5] fetch_historical_event_data()
-    ├─ Historical (March 2020): BTC -45%, VIX +158%, SP500 -28%
-    └─ Correlations: BTC vs SP500: 0.82, BTC vs VIX: -0.84
-    │
-    ▼
-[6] fetch_current_data() [already done in Step 4]
-    └─ Current: BTC -15%, VIX +5%, SP500 -0.7%
-    │
-    ▼
-[7] compare_to_current()
-    └─ "Current VIX (+5%) much smaller than COVID analog (+158%)"
-    └─ "If VIX approaches COVID levels, expect BTC to drop similarly"
-    │
-    ▼
-[8] analyze_impact()
-    └─ Extrapolates: "Based on COVID analog where BTC dropped 45% with 0.82
-       SP500 correlation, current contagion could trigger similar risk-off.
-       However, current stress indicators (VIX +5%) are far below COVID levels
-       (+158%), suggesting impact may be more muted unless stress escalates."
-```
-
-### Key Insight: Extrapolation Logic
-The system should identify **leading indicators** from historical analogs:
-- "In COVID, VIX spiked BEFORE BTC crashed"
-- "In COVID, option spreads widened BEFORE the crash"
-- Then check: "What are current VIX / option spreads?" to predict if similar pattern developing
-
-### Configuration (`config.py`)
-```python
-ENABLE_HISTORICAL_EVENT_DETECTION = True  # Toggle feature
-HISTORICAL_DATE_BUFFER_DAYS = 7           # Days buffer around event
-MAX_INSTRUMENTS_PER_EVENT = 6             # Limit instruments fetched
-```
-
-### Output Format (added to impact analysis prompt)
-```
-## HISTORICAL ANALOG: March 2020 COVID Crash
-**Period:** 2020-02-23 to 2020-04-07
-
-**What happened in the analog:**
-- BTC: -45.5% (peak 2020-02-14, trough 2020-03-13)
-- SP500: -28.5% (peak 2020-02-19, trough 2020-03-23)
-- VIX: +158.5% (peak 2020-03-16, trough 2020-02-19)
-
-**Correlations during analog:**
-- BTC vs SP500: 0.82 (moved together)
-- BTC vs VIX: -0.84 (inverse relationship)
-
-**Then vs Now (same instruments):**
-- VIX: Then +158.5% → Now +5.8% (stress much lower)
-- SP500: Then -28.5% → Now -0.7% (drawdown much smaller)
-- BTC: Then -45.5% → Now -15.6% (decline smaller)
-
-**Extrapolation:**
-Current stress indicators far below COVID levels. If VIX approaches 80+
-(COVID peak), expect BTC drawdown to approach -45% range.
-```
-
-### Key Functions
-
-| Function | File | Purpose |
-|----------|------|---------|
-| `detect_historical_gap()` | `historical_event_detector.py` | Regex + LLM to detect if query needs historical data |
-| `identify_instruments()` | `historical_event_detector.py` | LLM extracts instruments from synthesis/chains |
-| `get_date_range()` | `historical_event_detector.py` | Web search + LLM for event dates |
-| `fetch_historical_event_data()` | `historical_data_fetcher.py` | Fetch from Yahoo/FRED, calculate metrics |
-| `compare_to_current()` | `historical_data_fetcher.py` | Compare historical vs current values |
-| `format_historical_data_for_prompt()` | `historical_data_fetcher.py` | Format for LLM prompt |
-| `parse_logic_chains_from_answer()` | `insight_orchestrator.py` | Extract chains from Stage 1 answer text |
-| `enrich_with_historical_event()` | `insight_orchestrator.py` | Step 5.5 orchestration |
-
-### Gap Detection Triggers
-The system detects historical analog gaps when:
-1. Retrieved research **references a past event** (e.g., "similar to COVID 2020", "like the 2024 yen crash")
-2. Research explains **logic chains qualitatively** but lacks **actual prices/data**
-3. User's query involves a **current event** that maps to the historical reference
-
-**Keywords in research that trigger detection:**
-```
-"similar to [year]", "like in [year]", "reminiscent of",
-"[year] analog", "comparable to [event]", "last time this happened"
-```
-
-### Cost
-~$0.001 per query when gap detected (zero when no gap)
-
-## Knowledge Gap Filling (Phase 5) - MOVED
-
-**This functionality has been moved to `subproject_database_retriever`.**
-
-Gap detection and filling is now handled by the retrieval layer to make it topic-agnostic. BTC Intelligence receives enriched context from the retriever with:
-- `logic_chains`: Merged DB + web chains
-- `gap_enrichment_text`: Additional context from filled gaps
-- `filled_gaps`, `partially_filled_gaps`, `unfillable_gaps`: Gap status
-
-See `subproject_database_retriever/CLAUDE.md` for full documentation.
-
-### BTC Intelligence Can Still Request More Info
-
-If the initial retrieval doesn't cover something needed for analysis, BTC Intelligence can request additional context:
-
-```python
-from insight_orchestrator import request_additional_context
-
-# Request more info on a specific topic
-state = request_additional_context(state, topic="analyst price targets BTC 2026")
-```
-
-This triggers another retrieval call and merges the additional chains with existing ones.
-
-## Web Chain Extraction (Phase 6) - MOVED
-
-**This functionality has been moved to `subproject_database_retriever`.**
-
-Web chain extraction is now part of the retrieval layer's gap filling workflow. When `topic_not_covered` gap is detected, the retriever:
-1. Generates multi-angle queries using `expand_for_web_chain_extraction()`
-2. Searches trusted web sources for each dimension
-3. Extracts logic chains with cause/effect/mechanism
-4. Merges web chains with DB chains (web=0.7 weight, db=1.0 weight)
-
-See `subproject_database_retriever/CLAUDE.md` for full documentation.
-
-## Theme-Organized Chains (Phase 6)
-
-### Theme-Based Chain Loading
+## Theme-Organized Chains
 
 Chains are organized by 6 macro themes: `liquidity`, `positioning`, `rates`, `risk_appetite`, `crypto_specific`, `event_calendar`. Each asset has `relevant_themes` in its config.
 
-When loading chains, the system:
-1. Looks up asset's `relevant_themes` (e.g., BTC → `["liquidity", "risk_appetite", "crypto_specific", "rates"]`)
-2. Loads chain IDs from `theme_index.json` for those themes
-3. Deduplicates and filters by query relevance
-4. Loads per-theme assessments into `state["theme_states"]`
+The impact analysis prompt includes a `## MACRO REGIME` section with per-theme assessments, populated by `scripts/daily_regime_scan.py --all --briefing`.
 
-### Macro Regime Context
-
-The impact analysis prompt now includes a `## MACRO REGIME` section with per-theme assessments:
-```
-## MACRO REGIME (per-theme assessments)
-LIQUIDITY: Tightening — TGA draining reserves, SOFR elevated [3 active chains]
-RATES: Hawkish hold — no cuts expected through Q2 [2 active chains]
-```
-
-This section is populated by running `scripts/daily_regime_scan.py --all --briefing`.
-
-### Validation Reinforcement (Phase 7)
+### Validation Reinforcement
 
 When storing chains, semantic deduplication uses Jaccard similarity on normalized `(cause, effect)` variable pairs:
 - Threshold: 0.7 (70% variable pair overlap)
-- Similar chains: `validation_count += 1`, `last_validated` updated, confidence blended (0.7 old + 0.3 new)
+- Similar chains: `validation_count += 1`, confidence blended (0.7 old + 0.3 new)
 - New chains: stored as normal
 
-### Daily Monitoring (Phase 8)
+### Daily Monitoring
 
-`theme_refresh.py` provides:
-- `refresh_theme(theme_name)`: checks anchor variable movements (5% threshold over 7 days), marks active chains
-- `refresh_all_themes()`: iterates all 6 themes
-- `generate_briefing(theme_states)`: template-based morning briefing
-
+`theme_refresh.py` provides `refresh_theme()`, `refresh_all_themes()`, `generate_briefing()`.
 CLI: `python scripts/daily_regime_scan.py --all --briefing`
 
 ## Dependencies
 
 ### Sibling Subprojects
-- `subproject_database_retriever` - Provides `run_retrieval()` function which now returns enriched context with:
-  - Gap detection results
-  - Merged logic chains (DB + web)
-  - Gap enrichment text
-- `subproject_data_collection` - Provides `WebSearchAdapter` for web search (Phase 4), `trusted_domains` for source filtering
+- `subproject_database_retriever` - Provides `run_retrieval()` with gap detection, merged chains, enrichment text
+- `subproject_data_collection` - Provides `WebSearchAdapter` for web search, `trusted_domains` for filtering
 
 ### Parent Directory
 - `models.py` - AI model functions (`call_claude_sonnet`, `call_claude_haiku`)
@@ -463,13 +393,10 @@ CLI: `python scripts/daily_regime_scan.py --all --briefing`
 - **Yahoo Finance** - Market data (BTC, ETH, DXY, VIX, etc.) via `yfinance`
 - **Tavily** - Web search for knowledge gap filling (via WebSearchAdapter)
 
-## TODO
-
-- None currently. Gap detection moved to retriever.
-
 ## Notes for AI Assistants
 - **Follow established patterns** from other subprojects
 - **Main file = orchestration only** - no business logic
 - **Prompts in separate files** - `*_prompts.py`
 - **AI calls via parent's `models.py`**
+- **Dual-mode output** - always maintain both insight and belief_space paths
 - **CRITICAL: DO NOT OVERCOMPLICATE** - Keep it minimal and focused

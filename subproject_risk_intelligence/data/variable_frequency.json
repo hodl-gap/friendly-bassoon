@@ -210,8 +210,8 @@
     },
     "carry_trade_unwind": {
       "first_seen": "2026-02-14T06:54:16.208729",
-      "last_seen": "2026-02-14T07:24:48.819022",
-      "chain_count": 19,
+      "last_seen": "2026-02-14T11:31:31.101099",
+      "chain_count": 20,
       "sources": [
         "CoinDesk (cfbe53872aafa7ad_157) for full chain",
         "Source 7 (steps 1-2, steps 3-4)",
@@ -229,7 +229,8 @@
         "Source 2 (7b77309cfd6630df_70)",
         "Source 2 (steps 1-2), Source 7 (step 4 for BTC impact)",
         "Source 1 (df0468450c5fb327_71) event description + Source 2, 3, 4 logic chains",
-        "Source 7 (catalyst), Source 9 (transmission mechanism)"
+        "Source 7 (catalyst), Source 9 (transmission mechanism)",
+        "Source 10 (yen surge context), Source 2 (carry unwind impact on BTC)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -342,8 +343,8 @@
     },
     "btc_volatility": {
       "first_seen": "2026-02-14T06:54:16.208741",
-      "last_seen": "2026-02-14T07:24:48.819010",
-      "chain_count": 7,
+      "last_seen": "2026-02-14T11:31:31.101099",
+      "chain_count": 8,
       "sources": [
         "Source 78c9945a42691062_43",
         "Source 10 (QRA → reserves), Source 15 (reserves → bailout need), Source 11/12 (SOFR volume as stress indicator)",
@@ -351,7 +352,8 @@
         "Generic source (id: 78c9945a42691062_43)",
         "Source 2 (7b77309cfd6630df_70), Source 4 (78c9945a42691062_43)",
         "5eb637a4c093a7b6_15 → 78c9945a42691062_43/407f42bd9bfc3d8a_453",
-        "Source 7 (catalyst), Source 10 (steps 2-3)"
+        "Source 7 (catalyst), Source 10 (steps 2-3)",
+        "Source 10 (yen surge context), Source 2 (carry unwind impact on BTC)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -1979,22 +1981,24 @@
     },
     "market_liquidity": {
       "first_seen": "2026-02-14T06:54:16.208997",
-      "last_seen": "2026-02-14T07:24:48.819016",
-      "chain_count": 2,
+      "last_seen": "2026-02-14T11:31:31.101064",
+      "chain_count": 3,
       "sources": [
         "CoinDesk/NY Fed (carry unwind) → BOJ (9a7dfa8be11634e4_493) for liquidity→margin call chain",
-        "Source 7 (political context), Source 1 (BOJ policy chain)"
+        "Source 7 (political context), Source 1 (BOJ policy chain)",
+        "Source 6"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "margin_calls": {
       "first_seen": "2026-02-14T06:54:16.208997",
-      "last_seen": "2026-02-14T07:24:48.819016",
-      "chain_count": 2,
+      "last_seen": "2026-02-14T11:31:31.101064",
+      "chain_count": 3,
       "sources": [
         "CoinDesk/NY Fed (carry unwind) → BOJ (9a7dfa8be11634e4_493) for liquidity→margin call chain",
-        "Source 7 (political context), Source 1 (BOJ policy chain)"
+        "Source 7 (political context), Source 1 (BOJ policy chain)",
+        "Source 6"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -2164,15 +2168,16 @@
     },
     "jpy_intervention_risk": {
       "first_seen": "2026-02-14T06:54:16.209027",
-      "last_seen": "2026-02-14T06:54:16.209082",
-      "chain_count": 8,
+      "last_seen": "2026-02-14T11:31:31.101099",
+      "chain_count": 9,
       "sources": [
         "Source 2 (7b77309cfd6630df_70), Source 4 (78c9945a42691062_43)",
         "Source 3 (steps 1-2), Source 4 (step 3)",
         "7b77309cfd6630df_70",
         "Source 2 (7b77309cfd6630df_70)",
         "Source 2 (steps 1-2), Source 7 (step 4 for BTC impact)",
-        "Source 1 (df0468450c5fb327_71) event description + Source 2, 3, 4 logic chains"
+        "Source 1 (df0468450c5fb327_71) event description + Source 2, 3, 4 logic chains",
+        "Source 10 (yen surge context), Source 2 (carry unwind impact on BTC)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -2601,10 +2606,11 @@
     },
     "mass_liquidations": {
       "first_seen": "2026-02-14T06:54:16.209116",
-      "last_seen": "2026-02-14T06:54:16.209116",
-      "chain_count": 1,
+      "last_seen": "2026-02-14T11:31:31.101108",
+      "chain_count": 2,
       "sources": [
-        "CME (id: 37d8c1eb04cd4d51_651), Liquidation data (id: 83239156e271e491_103, id: 0f7bcc32a97a775e_102)"
+        "CME (id: 37d8c1eb04cd4d51_651), Liquidation data (id: 83239156e271e491_103, id: 0f7bcc32a97a775e_102)",
+        "Source 20"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -2809,10 +2815,11 @@
     },
     "boj_rate": {
       "first_seen": "2026-02-14T07:24:48.819016",
-      "last_seen": "2026-02-14T07:24:48.819016",
-      "chain_count": 1,
+      "last_seen": "2026-02-14T11:31:31.101064",
+      "chain_count": 2,
       "sources": [
-        "Source 7 (political context), Source 1 (BOJ policy chain)"
+        "Source 7 (political context), Source 1 (BOJ policy chain)",
+        "Source 6"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -2836,7 +2843,618 @@
       ],
       "is_anchor": false,
       "anchor_theme": null
+    },
+    "policy_rate": {
+      "first_seen": "2026-02-14T11:31:31.101079",
+      "last_seen": "2026-02-14T11:31:31.101090",
+      "chain_count": 2,
+      "sources": [
+        "Source 5",
+        "Source 9"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "monetary_tightening": {
+      "first_seen": "2026-02-14T11:31:31.101079",
+      "last_seen": "2026-02-14T11:31:31.101079",
+      "chain_count": 1,
+      "sources": [
+        "Source 5"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "rate_hike": {
+      "first_seen": "2026-02-14T11:31:31.101085",
+      "last_seen": "2026-02-14T11:31:31.101085",
+      "chain_count": 1,
+      "sources": [
+        "Source 8"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "policy_normalization": {
+      "first_seen": "2026-02-14T11:31:31.101085",
+      "last_seen": "2026-02-14T11:31:31.101085",
+      "chain_count": 1,
+      "sources": [
+        "Source 8"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "inflation": {
+      "first_seen": "2026-02-14T11:31:31.101085",
+      "last_seen": "2026-02-14T11:31:31.101085",
+      "chain_count": 1,
+      "sources": [
+        "Source 8"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "wage_growth": {
+      "first_seen": "2026-02-14T11:31:31.101090",
+      "last_seen": "2026-02-14T11:31:31.101090",
+      "chain_count": 1,
+      "sources": [
+        "Source 9"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "core_cpi": {
+      "first_seen": "2026-02-14T11:31:31.101090",
+      "last_seen": "2026-02-14T11:31:31.101090",
+      "chain_count": 1,
+      "sources": [
+        "Source 9"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_hawkish_remarks": {
+      "first_seen": "2026-02-14T11:31:31.101094",
+      "last_seen": "2026-02-14T11:31:31.101097",
+      "chain_count": 2,
+      "sources": [
+        "Source 4"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_hike_timing": {
+      "first_seen": "2026-02-14T11:31:31.101094",
+      "last_seen": "2026-02-14T11:31:31.101097",
+      "chain_count": 2,
+      "sources": [
+        "Source 4"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "implied_rates": {
+      "first_seen": "2026-02-14T11:31:31.101102",
+      "last_seen": "2026-02-14T11:31:31.101102",
+      "chain_count": 1,
+      "sources": [
+        "Source 1, Source 2"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "rate_hike_expectations": {
+      "first_seen": "2026-02-14T11:31:31.101102",
+      "last_seen": "2026-02-14T11:31:31.101102",
+      "chain_count": 1,
+      "sources": [
+        "Source 1, Source 2"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "g_sib_margin_call_common": {
+      "first_seen": "2026-02-14T11:31:31.101106",
+      "last_seen": "2026-02-14T11:31:31.101106",
+      "chain_count": 1,
+      "sources": [
+        "Source 17"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "margin_calls_in_volatility": {
+      "first_seen": "2026-02-14T11:31:31.101106",
+      "last_seen": "2026-02-14T11:31:31.101106",
+      "chain_count": 1,
+      "sources": [
+        "Source 17"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "total_liquidation_amount": {
+      "first_seen": "2026-02-14T11:31:31.101108",
+      "last_seen": "2026-02-14T11:31:31.101108",
+      "chain_count": 1,
+      "sources": [
+        "Source 20"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "max_single_liquidation": {
+      "first_seen": "2026-02-14T11:31:31.101111",
+      "last_seen": "2026-02-14T11:31:31.101111",
+      "chain_count": 1,
+      "sources": [
+        "Source 20"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "counterparty_risk": {
+      "first_seen": "2026-02-14T11:31:31.101111",
+      "last_seen": "2026-02-14T11:31:31.101111",
+      "chain_count": 1,
+      "sources": [
+        "Source 20"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "g_sib_margin_call_failure": {
+      "first_seen": "2026-02-14T11:31:31.101115",
+      "last_seen": "2026-02-14T11:31:31.101115",
+      "chain_count": 1,
+      "sources": [
+        "Source 18, Source 19"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "fed_emergency_liquidity": {
+      "first_seen": "2026-02-14T11:31:31.101115",
+      "last_seen": "2026-02-14T11:31:31.101115",
+      "chain_count": 1,
+      "sources": [
+        "Source 18, Source 19"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "axj_currency_strength": {
+      "first_seen": "2026-02-14T11:31:31.101118",
+      "last_seen": "2026-02-14T11:31:31.101118",
+      "chain_count": 1,
+      "sources": [
+        "Source 15"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "govt_yields": {
+      "first_seen": "2026-02-14T11:31:31.101118",
+      "last_seen": "2026-02-14T11:31:31.101118",
+      "chain_count": 1,
+      "sources": [
+        "Source 15"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "policy_divergence_fed_vs_axj": {
+      "first_seen": "2026-02-14T11:31:31.101118",
+      "last_seen": "2026-02-14T11:31:31.101118",
+      "chain_count": 1,
+      "sources": [
+        "Source 15"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_concerns_about_inflation_and_yen_weakness_i": {
+      "first_seen": "2026-02-15T11:10:51.386851",
+      "last_seen": "2026-02-15T11:10:51.386851",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "takaichi's_political_stance_favoring_lower_interes": {
+      "first_seen": "2026-02-15T11:10:51.386851",
+      "last_seen": "2026-02-15T11:10:51.386851",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_signals_urgency_for_rate_hikes,_with_market_ex": {
+      "first_seen": "2026-02-15T11:10:51.386899",
+      "last_seen": "2026-02-15T11:10:51.386899",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "weak_yen_persists_as_primary_economic_concern": {
+      "first_seen": "2026-02-15T11:10:51.386899",
+      "last_seen": "2026-02-15T11:10:51.386899",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_may_accelerate_rate_hike_timeline_to_april": {
+      "first_seen": "2026-02-15T11:10:51.386921",
+      "last_seen": "2026-02-15T11:10:51.386921",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_concerns_over_takaichi's_approach_to_moneta": {
+      "first_seen": "2026-02-15T11:10:51.386921",
+      "last_seen": "2026-02-15T11:10:51.386921",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "takaichi's_election_victory_and_limited_fiscal_roo": {
+      "first_seen": "2026-02-15T11:10:51.386936",
+      "last_seen": "2026-02-15T11:10:51.386936",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_volatility_and_bond_market_instability_incr": {
+      "first_seen": "2026-02-15T11:10:51.386936",
+      "last_seen": "2026-02-15T11:10:51.386936",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "snap_election_called_by_takaichi_creates_political": {
+      "first_seen": "2026-02-15T11:10:51.386948",
+      "last_seen": "2026-02-15T11:10:51.386948",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "japan_bond_market_experiences_violent_price_swings": {
+      "first_seen": "2026-02-15T11:10:51.386948",
+      "last_seen": "2026-02-15T11:10:51.386948",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "yen_strengthens_and_becomes_more_expensive_to_borr": {
+      "first_seen": "2026-02-15T11:10:51.386960",
+      "last_seen": "2026-02-15T11:10:51.386960",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_signals_rate_hikes_and_raises_benchmark_rates": {
+      "first_seen": "2026-02-15T11:10:51.386960",
+      "last_seen": "2026-02-15T11:10:51.386960",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "selling_pressure_emerges_in_risk_assets_including_": {
+      "first_seen": "2026-02-15T11:10:51.386971",
+      "last_seen": "2026-02-15T11:10:51.386971",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "yen_carry_trade_unwinding_occurs_due_to_higher_boj": {
+      "first_seen": "2026-02-15T11:10:51.386971",
+      "last_seen": "2026-02-15T11:10:51.386971",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_rate_hike_signals_and_bond_yield_surge_occur": {
+      "first_seen": "2026-02-15T11:10:51.386982",
+      "last_seen": "2026-02-15T11:10:51.386982",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "global_risk_asset_prices_decline_and_liquidity_dri": {
+      "first_seen": "2026-02-15T11:10:51.386982",
+      "last_seen": "2026-02-15T11:10:51.386982",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "global_liquidity_source_dries_up,_affecting_bitcoi": {
+      "first_seen": "2026-02-15T11:10:51.386993",
+      "last_seen": "2026-02-15T11:10:51.386993",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance Canada"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "decades-long_ultra-low_boj_rates_end_with_rate_hik": {
+      "first_seen": "2026-02-15T11:10:51.386993",
+      "last_seen": "2026-02-15T11:10:51.386993",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance Canada"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "downward_pressure_emerges_on_u.s._equities,_bitcoi": {
+      "first_seen": "2026-02-15T11:10:51.387003",
+      "last_seen": "2026-02-15T11:10:51.387003",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_governor_kazuo_ueda_hints_at_potential_rate_hi": {
+      "first_seen": "2026-02-15T11:10:51.387003",
+      "last_seen": "2026-02-15T11:10:51.387003",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "increased_demand_for_precious_metals_as_a_store_of": {
+      "first_seen": "2026-02-15T11:10:51.387013",
+      "last_seen": "2026-02-15T11:10:51.387013",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "prime_minister_takaichi_calls_snap_election_for_fe": {
+      "first_seen": "2026-02-15T11:10:51.387013",
+      "last_seen": "2026-02-15T11:10:51.387013",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "takaichi_election_victory_and_expansionary_fiscal_": {
+      "first_seen": "2026-02-15T11:10:51.387024",
+      "last_seen": "2026-02-15T11:10:51.387024",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "japanese_stocks_soar_to_record_highs": {
+      "first_seen": "2026-02-15T11:10:51.387024",
+      "last_seen": "2026-02-15T11:10:51.387024",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "initial_stock_market_decline_followed_by_recovery_": {
+      "first_seen": "2026-02-15T11:10:51.387038",
+      "last_seen": "2026-02-15T11:10:51.387038",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_announces_century-long_plan_to_gradually_sell_": {
+      "first_seen": "2026-02-15T11:10:51.387038",
+      "last_seen": "2026-02-15T11:10:51.387038",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "takaichi's_expansionary_fiscal_policy_ambitions_fa": {
+      "first_seen": "2026-02-15T11:10:51.387049",
+      "last_seen": "2026-02-15T11:10:51.387049",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "limited_room_for_maneuver_and_potential_voter_disa": {
+      "first_seen": "2026-02-15T11:10:51.387049",
+      "last_seen": "2026-02-15T11:10:51.387049",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "yen_weakens_against_dollar_as_markets_adjust_expec": {
+      "first_seen": "2026-02-15T11:10:51.387059",
+      "last_seen": "2026-02-15T11:10:51.387059",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_governor_ueda_signals_potential_operations_for": {
+      "first_seen": "2026-02-15T11:10:51.387059",
+      "last_seen": "2026-02-15T11:10:51.387059",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "yen_depreciation_(weakening)": {
+      "first_seen": "2026-02-15T11:10:51.387069",
+      "last_seen": "2026-02-15T11:10:51.387069",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "takaichi's_landslide_election_victory": {
+      "first_seen": "2026-02-15T11:10:51.387069",
+      "last_seen": "2026-02-15T11:10:51.387069",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "yen_weakness_and_fiscal_stimulus_concerns": {
+      "first_seen": "2026-02-15T11:10:51.387079",
+      "last_seen": "2026-02-15T11:10:51.387079",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "increased_pressure_on_jgb_yields_and_bond_market_v": {
+      "first_seen": "2026-02-15T11:10:51.387079",
+      "last_seen": "2026-02-15T11:10:51.387079",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "political_uncertainty_and_yen_volatility_from_elec": {
+      "first_seen": "2026-02-15T11:10:51.387089",
+      "last_seen": "2026-02-15T11:10:51.387089",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "safe-haven_flows_into_yen_and_flattening_pressure_": {
+      "first_seen": "2026-02-15T11:10:51.387089",
+      "last_seen": "2026-02-15T11:10:51.387089",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "takaichi's_electoral_mandate_and_fiscal_policy_sig": {
+      "first_seen": "2026-02-15T11:10:51.387098",
+      "last_seen": "2026-02-15T11:10:51.387098",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_uncertainty_about_boj_policy_direction_and_": {
+      "first_seen": "2026-02-15T11:10:51.387098",
+      "last_seen": "2026-02-15T11:10:51.387098",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_expectations_of_japanese_government_interve": {
+      "first_seen": "2026-02-15T11:10:51.387108",
+      "last_seen": "2026-02-15T11:10:51.387108",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "yen_weakness_approaching_intervention_thresholds": {
+      "first_seen": "2026-02-15T11:10:51.387108",
+      "last_seen": "2026-02-15T11:10:51.387108",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
     }
   },
-  "last_updated": "2026-02-14T07:24:48.819047"
+  "last_updated": "2026-02-15T11:10:51.387182"
 }

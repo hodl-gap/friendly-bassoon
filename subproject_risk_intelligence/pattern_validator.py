@@ -430,6 +430,12 @@ def validate_patterns(state: RiskImpactState) -> RiskImpactState:
         return state
 
     # Step 2: Validate each pattern
+    # Guard: skip non-dict entries and cap at reasonable limit
+    patterns = [p for p in patterns if isinstance(p, dict)]
+    if len(patterns) > 50:
+        print(f"[Pattern Validator] WARNING: {len(patterns)} patterns extracted, capping at 50")
+        patterns = patterns[:50]
+
     validated = []
 
     for pattern in patterns:

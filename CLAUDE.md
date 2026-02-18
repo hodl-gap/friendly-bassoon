@@ -1,5 +1,21 @@
 # Macro Research Intelligence Platform
 
+## Goal
+
+Build an autonomous version of Bridgewater's research team. Bridgewater separates research from trading: the research team looks at data, patterns, news — everything — to develop **insights**. Traders then look at insights to develop **trade ideas**. This project focuses solely on the research team: producing insights, NOT trade ideas.
+
+An insight is a multi-track causal understanding grounded in historical evidence. For example:
+- Track A: War imminent (news) → 17 wars since 17th century show stock market up after war (historical pattern) → war bullish equities
+- Track B: War imminent (news) → government prints money (macro intuition from research DB) → money printing hits market within 3 months (historical precedent timing) → liquidity long-term bullish for risk assets
+
+The system should eventually be fully proactive (continuously monitoring and surfacing insights without human queries), asset-mapped (insights map to specific asset classes), and draw on deep historical precedents. The current implementation starts with query-driven research and overall risk asset coverage as stepping stones toward that goal.
+
+## Data Source: Telegram as IB Research Proxy
+
+The primary (and currently only) ingestion source is Telegram channels run by IB analysts who share gated analysis reports from investment banks (Goldman Sachs, BofA, Morgan Stanley, etc.). This is a practical workaround for not having direct access to IB research terminals. The content is institutional-grade macro research — the same reports that drive Wall Street analysis. The ingestion pipeline (`database_manager`) is source-agnostic: if direct IB report access becomes available, it only requires adding a new adapter.
+
+## What This System Produces
+
 Research module for a macro-data oriented hedge fund. Traders query the system with macro events, positioning data, or indicator readings (e.g., "GS Prime Book shows record shorting — what are the historical precedents?"), and the system produces structured research output that traders use to generate trade ideas.
 
 ## What This System Produces
