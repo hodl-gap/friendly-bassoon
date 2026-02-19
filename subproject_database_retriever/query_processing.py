@@ -17,6 +17,7 @@ from states import RetrieverState
 from query_processing_prompts import (
     QUERY_EXPANSION_PROMPT_SIMPLE,
     QUERY_EXPANSION_PROMPT_COMPLEX,
+    QUERY_REFINEMENT_PROMPT,
 )
 from config import SIMPLE_QUERY_MAX_WORDS, SIMPLE_QUERY_DIMENSIONS, COMPLEX_QUERY_DIMENSIONS
 
@@ -186,10 +187,31 @@ def expand_query(query: str) -> tuple:
 
 
 def refine_query(original_query: str, previous_chunks: list) -> str:
-    """Refine query based on previous retrieval results."""
-    # Simple refinement: just return original for now
-    # TODO: Implement smarter refinement based on retrieved context
-    return original_query
+    """Refine query based on previous retrieval results.
+
+    Uses a Haiku call to examine what was (or wasn't) found and
+    generate a refined query with alternative terminology.
+    """
+    chunk_summaries = "\n".join(
+        f"- {c.get('metadata', {}).get('title', 'Untitled')}: {c.get('metadata', {}).get('text', '')[:100]}..."
+        for c in previous_chunks[:5]
+    )
+
+    prompt = QUERY_REFINEMENT_PROMPT.format(
+        query=original_query,
+        chunk_count=len(previous_chunks),
+        chunk_summaries=chunk_summaries or "(no chunks found)"
+    )
+
+    try:
+        messages = [{"role": "user", "content": prompt}]
+        refined = call_claude_haiku(messages, temperature=0.3, max_tokens=200).strip()
+        if refined and refined != original_query:
+            return refined
+        return original_query
+    except Exception as e:
+        print(f"[query_processing] Query refinement failed: {e}")
+        return original_query
 
 
 def expand_for_web_chain_extraction(query: str, gap_description: str) -> list:

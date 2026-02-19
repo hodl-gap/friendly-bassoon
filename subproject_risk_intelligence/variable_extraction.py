@@ -48,6 +48,77 @@ VARIABLE_PATTERNS = {
 }
 
 
+def identify_analysis_variables(query: str) -> set:
+    """
+    Identify analysis-frame variables from the query alone (before retrieval).
+
+    Single Haiku call that identifies variables MECHANICALLY implied by the query,
+    even if no retrieved chunk mentions them explicitly.
+    E.g., "carry trade unwind" → {usdjpy, boj_rate, vix}
+
+    Returns set of normalized variable names, or empty set on failure.
+    """
+    from .variable_extraction_prompts import ANALYSIS_FRAME_PROMPT
+
+    # Build known variable vocabulary
+    known_vars = list(VARIABLE_PATTERNS.keys())
+    from shared.variable_resolver import YAHOO_FALLBACK
+    known_vars.extend(YAHOO_FALLBACK.keys())
+    known_vars = sorted(set(known_vars))
+
+    prompt = ANALYSIS_FRAME_PROMPT.format(
+        query=query,
+        known_variables=", ".join(known_vars)
+    )
+
+    try:
+        client = anthropic.Anthropic()
+
+        analysis_frame_tool = {
+            "name": "identify_variables",
+            "description": "Return the key variables implied by this query.",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "variables": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Normalized variable names from the known vocabulary (3-8 max)"
+                    }
+                },
+                "required": ["variables"]
+            }
+        }
+
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=300,
+            temperature=0.0,
+            tools=[analysis_frame_tool],
+            tool_choice={"type": "tool", "name": "identify_variables"},
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        # Log token usage
+        try:
+            from shared.run_logger import log_llm_call
+            log_llm_call("claude-haiku-4-5-20251001", response.usage.input_tokens, response.usage.output_tokens)
+        except Exception:
+            pass
+
+        for block in response.content:
+            if block.type == "tool_use" and block.name == "identify_variables":
+                variables = set(v.lower().strip() for v in block.input.get("variables", []))
+                print(f"[Variable Extraction] Query-frame identified {len(variables)} variables: {sorted(variables)}")
+                return variables
+
+        return set()
+
+    except Exception as e:
+        print(f"[Variable Extraction] Query-frame extraction failed: {e}")
+        return set()
+
+
 def extract_variables_llm(state) -> set:
     """
     Extract variables using LLM inference (single Haiku call).
@@ -156,6 +227,14 @@ def extract_variables(state: RiskImpactState) -> RiskImpactState:
     Uses LLM inference if enabled, falls back to keyword matching.
     """
     extracted = set()
+    query_frame_vars = set()
+
+    # Step 0: Identify query-frame variables (before any retrieval content)
+    # These are variables mechanically implied by the query itself
+    query = state.get("query", "")
+    if query and config.USE_LLM_VARIABLE_EXTRACTION:
+        query_frame_vars = identify_analysis_variables(query)
+        extracted.update(query_frame_vars)
 
     # Always run keyword extraction from chains (these have high-quality normalized data)
     logic_chains = state.get("logic_chains", [])
@@ -197,7 +276,7 @@ def extract_variables(state: RiskImpactState) -> RiskImpactState:
     for var in extracted:
         variables_list.append({
             "normalized": var,
-            "source": "extraction"
+            "source": "query_frame" if var in query_frame_vars else "extraction"
         })
 
     state["extracted_variables"] = variables_list

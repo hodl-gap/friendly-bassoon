@@ -29,3 +29,18 @@ IMPORTANT:
 - Only suggest truly new variables that aren't covered by existing names
 - Include logically implied variables even if not explicitly mentioned
 - Be thorough but relevant — only include variables connected to the analysis"""
+
+
+ANALYSIS_FRAME_PROMPT = """Given this macro research query, identify the key variables
+that MUST be tracked to analyze this event, regardless of what the database returns.
+
+QUERY: {query}
+
+Think about:
+1. What variables are DIRECTLY referenced? (e.g., "yen" → usdjpy)
+2. What variables are MECHANICALLY implied? (e.g., "carry trade" → usdjpy, boj_rate, vix)
+3. What is the TARGET asset or macro indicator?
+
+KNOWN VARIABLES: {known_variables}
+
+Return ONLY variables from the known vocabulary. Be selective — 3-8 variables max."""

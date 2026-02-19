@@ -16,6 +16,69 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from .states import RiskImpactState
 
 
+def fetch_conditions_at_date(
+    variables: list,
+    target_date: str,
+    window_days: int = 7
+) -> dict:
+    """Fetch macro variable values at a specific historical date.
+
+    For each variable, fetches data in a narrow window around target_date
+    and returns the closest data point. Reuses existing _fetch_fred_data()
+    and _fetch_yahoo_data().
+
+    Args:
+        variables: List of dicts [{"normalized": str, "ticker": str, "source": str}]
+        target_date: YYYY-MM-DD (analog peak/start date)
+        window_days: Look back N days for nearest data point
+
+    Returns:
+        {variable_name: {"value": float, "date": str, "source": str}}
+    """
+    from datetime import timedelta
+
+    target_dt = datetime.strptime(target_date, "%Y-%m-%d")
+    start_dt = target_dt - timedelta(days=window_days)
+    end_dt = target_dt + timedelta(days=window_days)
+
+    conditions = {}
+
+    for var in variables:
+        normalized = var.get("normalized", "")
+        ticker = var.get("ticker", "")
+        source = var.get("source", "")
+
+        if not ticker or not source:
+            continue
+
+        try:
+            data = []
+            if source == "FRED":
+                data = _fetch_fred_data(ticker, start_dt, end_dt)
+            elif source == "Yahoo":
+                data = _fetch_yahoo_data(ticker, start_dt, end_dt)
+
+            if not data:
+                continue
+
+            # Find closest data point to target_date
+            closest = min(data, key=lambda d: abs(
+                (datetime.strptime(d[0], "%Y-%m-%d") - target_dt).days
+            ))
+
+            conditions[normalized] = {
+                "value": closest[1],
+                "date": closest[0],
+                "source": source
+            }
+
+        except Exception as e:
+            print(f"[Historical Conditions] Error fetching {normalized} at {target_date}: {e}")
+            continue
+
+    return conditions
+
+
 def fetch_historical_event_data(
     instruments: List[Dict[str, str]],
     start_date: str,

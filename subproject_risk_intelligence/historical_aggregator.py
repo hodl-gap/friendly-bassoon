@@ -12,7 +12,7 @@ from statistics import median, mean
 import anthropic
 
 from .historical_event_detector import identify_instruments, get_date_range
-from .historical_data_fetcher import fetch_historical_event_data, compare_to_current
+from .historical_data_fetcher import fetch_historical_event_data, compare_to_current, fetch_conditions_at_date
 from .asset_configs import get_asset_config
 from . import config
 from .historical_event_prompts import MECHANISM_VALIDATION_PROMPT
@@ -113,7 +113,8 @@ def fetch_multiple_analogs(
     synthesis: str,
     logic_chains: list,
     current_values: dict,
-    asset_class: str = "btc"
+    asset_class: str = "btc",
+    condition_variables: list = None
 ) -> List[Dict[str, Any]]:
     """Fetch data for N analogs in parallel.
 
@@ -127,6 +128,8 @@ def fetch_multiple_analogs(
         logic_chains: Logic chains from retrieval
         current_values: Current market values for comparison
         asset_class: Asset class for instrument identification
+        condition_variables: List of variable dicts for macro condition comparison
+            [{"normalized": str, "ticker": str, "source": str}]
 
     Returns:
         List of enriched analog dicts with market data
@@ -160,6 +163,17 @@ def fetch_multiple_analogs(
             if current_values and historical_data.get("instruments"):
                 comparison = compare_to_current(historical_data, current_values)
 
+            # Fetch macro conditions at analog start date ("Then" side)
+            conditions_then = {}
+            if condition_variables:
+                try:
+                    conditions_then = fetch_conditions_at_date(
+                        condition_variables,
+                        date_range.get("start_date")
+                    )
+                except Exception as e:
+                    print(f"[Historical Analogs] Condition fetch failed for {event}: {e}")
+
             result_dict = {
                 **analog,
                 "period": {
@@ -170,6 +184,7 @@ def fetch_multiple_analogs(
                 "instruments": historical_data.get("instruments", {}),
                 "correlations": historical_data.get("correlations", {}),
                 "comparison_to_current": comparison,
+                "conditions_then": conditions_then,
                 "fetch_success": True,
             }
 
@@ -332,8 +347,19 @@ def aggregate_analogs(
     return result
 
 
-def format_analogs_for_prompt(aggregated: Dict[str, Any]) -> str:
-    """Format as '## HISTORICAL PRECEDENT ANALYSIS (Multi-Analog)' section for prompt."""
+def format_analogs_for_prompt(
+    aggregated: Dict[str, Any],
+    enriched_analogs: List[Dict[str, Any]] = None,
+    current_conditions: Dict[str, Any] = None
+) -> str:
+    """Format as '## HISTORICAL PRECEDENT ANALYSIS (Multi-Analog)' section for prompt.
+
+    Args:
+        aggregated: Output from aggregate_analogs()
+        enriched_analogs: List of enriched analog dicts (for conditions_then)
+        current_conditions: Current macro values {var_name: {"value": ..., "source": ...}}
+            Used for the "NOW" side of the Then vs Now comparison
+    """
     if not aggregated or not aggregated.get("per_analog"):
         return ""
 
@@ -360,6 +386,14 @@ def format_analogs_for_prompt(aggregated: Dict[str, Any]) -> str:
     lines.append("")
     lines.append("**Per-analog breakdown:**")
 
+    # Build a lookup from event description to enriched analog for conditions_then
+    conditions_lookup = {}
+    if enriched_analogs:
+        for ea in enriched_analogs:
+            event_key = ea.get("event_description", "")
+            if ea.get("conditions_then"):
+                conditions_lookup[event_key] = ea["conditions_then"]
+
     for a in aggregated.get("per_analog", []):
         event = a.get("event", "?")
         year = a.get("year", "?")
@@ -375,5 +409,27 @@ def format_analogs_for_prompt(aggregated: Dict[str, Any]) -> str:
                      f"[relevance: {relevance:.1f}]")
         if mechanism:
             lines.append(f"  Mechanism: {mechanism}")
+
+        # Add "Macro Backdrop (Then vs Now)" if conditions available
+        conditions_then = conditions_lookup.get(event, {})
+        if conditions_then and current_conditions:
+            backdrop_lines = []
+            for var_name, then_data in sorted(conditions_then.items()):
+                then_val = then_data.get("value")
+                if then_val is None:
+                    continue
+                now_data = current_conditions.get(var_name, {})
+                now_val = now_data.get("value")
+                if now_val is not None:
+                    backdrop_lines.append(
+                        f"    - {var_name.upper()}: THEN {then_val:.2f} vs NOW {now_val:.2f}"
+                    )
+                else:
+                    backdrop_lines.append(
+                        f"    - {var_name.upper()}: THEN {then_val:.2f} (no current data)"
+                    )
+            if backdrop_lines:
+                lines.append("  **Macro Backdrop (Then vs Now)**:")
+                lines.extend(backdrop_lines)
 
     return "\n".join(lines)

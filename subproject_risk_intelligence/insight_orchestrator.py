@@ -857,6 +857,36 @@ def run_impact_analysis(
 run_btc_impact_analysis = run_impact_analysis
 
 
+def _build_condition_variables(extracted_variables: list) -> list:
+    """Build condition_variables list for fetch_conditions_at_date().
+
+    Resolves each extracted variable to its ticker and source using
+    the same resolution chain as current_data_fetcher.
+
+    Args:
+        extracted_variables: List of dicts [{"normalized": str, "source": str}]
+
+    Returns:
+        List of dicts [{"normalized": str, "ticker": str, "source": str}]
+    """
+    from .current_data_fetcher import resolve_variable
+
+    condition_vars = []
+    for var in extracted_variables:
+        normalized = var.get("normalized", "")
+        if not normalized:
+            continue
+        resolved = resolve_variable(normalized)
+        if resolved:
+            condition_vars.append({
+                "normalized": normalized,
+                "ticker": resolved["series_id"],
+                "source": resolved["source"]
+            })
+
+    return condition_vars
+
+
 def enrich_with_historical_event(state: RiskImpactState) -> RiskImpactState:
     """
     Step 5.5: Detect and fetch historical event data if needed.
@@ -965,16 +995,27 @@ def enrich_with_historical_event(state: RiskImpactState) -> RiskImpactState:
             if analogs:
                 current_values = state.get("current_values", {})
                 target_asset_name = get_asset_config(asset_class)["name"]
+
+                # Build condition_variables from extracted variables for Then vs Now
+                condition_variables = _build_condition_variables(
+                    state.get("extracted_variables", [])
+                )
+
                 enriched = fetch_multiple_analogs(
                     analogs, query, synthesis, logic_chains,
-                    current_values, asset_class
+                    current_values, asset_class,
+                    condition_variables=condition_variables
                 )
                 aggregated = aggregate_analogs(enriched, target_asset_name)
                 state["historical_analogs"] = {
                     "enriched": enriched,
                     "aggregated": aggregated
                 }
-                state["historical_analogs_text"] = format_analogs_for_prompt(aggregated)
+                state["historical_analogs_text"] = format_analogs_for_prompt(
+                    aggregated,
+                    enriched_analogs=enriched,
+                    current_conditions=current_values
+                )
         except Exception as e:
             print(f"[Historical Analogs] Multi-analog enrichment failed: {e}")
 

@@ -121,5 +121,22 @@ REASONING: Funding defense, infrastructure, and AI investment requires massive g
 QUERY: Government debt issuance, credit expansion, and money supply growth from defense spending, public investment, and AI capex cycle"""
 
 
+QUERY_REFINEMENT_PROMPT = """You are refining a financial research query because the initial
+search returned insufficient results.
+
+ORIGINAL QUERY: {query}
+
+WHAT WAS FOUND (brief summaries of {chunk_count} chunks):
+{chunk_summaries}
+
+Your task: Generate a SINGLE refined query that:
+1. Broadens the search if results were too narrow
+2. Uses alternative terminology for the same concepts
+3. Removes overly specific qualifiers that may have limited recall
+4. Keeps the core research intent intact
+
+Return ONLY the refined query text, nothing else."""
+
+
 # Legacy prompt for backward compatibility
 QUERY_EXPANSION_PROMPT = QUERY_EXPANSION_PROMPT_COMPLEX
