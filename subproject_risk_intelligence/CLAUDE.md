@@ -14,8 +14,10 @@ This subproject is the research engine of an autonomous Bridgewater-style resear
 - Builds a **multi-hop causal graph** from retrieved + historical chains, finds all paths from trigger to terminal effects
 - Finds up to **5 historical analogs** and aggregates statistics (direction distribution, magnitude, timing)
 - **Validates quantitative claims** from synthesis against actual data (correlation, p-value)
-- Computes **derived macro metrics** (term premium, real yield, SOFR spread) from raw data
-- Produces **independent reasoning tracks** — each with its own evidence, implications, and monitoring variables
+- Computes **derived macro metrics** (term premium, real yield, credit spreads, real fed funds, etc.) from raw data
+- Detects **convergence points** where multiple independent causes feed the same effect (AND logic)
+- **Characterizes the current macro regime** vs historical analogs ("then vs now" comparison via Haiku + tool_use)
+- Produces **temporally sequenced reasoning tracks** — each with its own evidence, implications, monitoring variables, and optional phase ordering
 - Supports **multi-asset analysis** (BTC, equity, or both)
 
 ### Output Modes
@@ -111,6 +113,7 @@ query (CLI input)
 |                         |  Find trigger variables matching query
 |                         |  DFS to find all multi-hop paths from triggers to terminals
 |                         |  Group paths into reasoning tracks
+|                         |  Detect convergence points (nodes with in-degree >= 2)
 |                         |  Output: chain_tracks, chain_graph_text for prompt
 +-----------+-------------+
             |
@@ -125,7 +128,7 @@ query (CLI input)
 | 4. fetch_current_data   |  Fetch from FRED (TGA, SOFR, etc.)
 |                         |  Fetch from Yahoo (BTC, DXY, etc.)
 |                         |  Include 1w and 1m period changes
-|                         |  Compute derived metrics: term_premium, real_yield_10y, sofr_spread
+|                         |  Compute derived metrics (8 total: spreads, real rates, credit, etc.)
 +-----------+-------------+
             |
             v
@@ -155,6 +158,15 @@ query (CLI input)
             |
             v
 +-------------------------+
+| 5.7 characterize_regime |  Compare current macro regime vs historical analogs
+|                         |  Uses Haiku + tool_use for structured output
+|                         |  Produces: regime name, closest analog, similarities, differences
+|                         |  Output: regime_characterization_text for prompt
+|                         |  Feature-flagged: ENABLE_REGIME_CHARACTERIZATION
++-----------+-------------+
+            |
+            v
++-------------------------+
 | 6. analyze_impact       |  Dual-mode dispatch based on output_mode:
 |                         |
 |                         |  INSIGHT mode (default):
@@ -175,6 +187,7 @@ query (CLI input)
 |                         |    - Multi-hop causal paths (chain_graph_text)
 |                         |    - Historical analog aggregation (historical_analogs_text)
 |                         |    - MACRO REGIME context (per-theme assessments)
+|                         |    - Regime characterization (then vs now comparison)
 |                         |    - Historical event comparison (if detected)
 |                         |    - Gap enrichment text (from retriever)
 +-----------+-------------+
@@ -292,7 +305,8 @@ Directed graph of causal chains built at query time. Ephemeral (built fresh per 
 | `find_paths(start, end, max_depth)` | DFS with cycle detection, returns all paths |
 | `get_tracks(trigger)` | Group paths by terminal effect into reasoning tracks |
 | `get_trigger_variables(query)` | Match query tokens to graph variables, sorted by out-degree |
-| `format_for_prompt(tracks)` | Format as `## MULTI-HOP CAUSAL PATHS` section |
+| `get_convergence_points(min_in_degree)` | Find nodes where multiple independent causes converge (in-degree >= 2) |
+| `format_for_prompt(tracks, convergence_points)` | Format as `## MULTI-HOP CAUSAL PATHS` + `## CONVERGENCE POINTS` sections |
 
 ### Historical N-Analog Aggregation (`historical_aggregator.py`)
 
@@ -314,6 +328,11 @@ Computes standard macro spreads from raw fetched data. Traders think in derived 
 | `term_premium` | us10y - us02y | Yield curve slope |
 | `real_yield_10y` | us10y - breakeven_inflation | Inflation-adjusted yield |
 | `sofr_spread` | sofr - fed_funds | Money market stress indicator |
+| `equity_risk_premium` | sp500_earnings_yield - us10y | Equity vs bond attractiveness |
+| `credit_spread_ig` | ig_corporate_yield - us10y | Investment grade credit risk |
+| `credit_spread_hy` | hy_corporate_yield - us10y | High yield credit risk |
+| `real_fed_funds` | fed_funds - breakeven_inflation | Inflation-adjusted policy rate |
+| `money_supply_velocity_proxy` | nominal_gdp_proxy - m2 | Money velocity approximation |
 
 `compute_derived_metrics()` is called in both `fetch_current_data()` (current values) and `fetch_conditions_at_date()` (historical Then-vs-Now comparison). Derived values include period-over-period changes when input changes are available.
 
@@ -337,6 +356,18 @@ Replaces the universal 5% weekly change threshold for active chain detection wit
 `extract_chain_triggers()` uses Haiku + tool_use (same pattern as `extract_patterns()` in pattern_validator) to extract 1-2 trigger conditions per chain at store time. Each trigger specifies `{variable, condition_type, condition_value, condition_direction, timeframe_days}`.
 
 `theme_refresh.py` reads `chain["trigger_conditions"]` and falls back to the 5% heuristic when no triggers exist. Backfill script: `python scripts/backfill_chain_triggers.py`.
+
+### Convergence Detection (`shared/chain_graph.py`)
+
+Detects when multiple independent causes feed the same intermediate node (e.g., TGA drawdown AND Fed QE AND fiscal spending all → liquidity). Uses the existing `self.reverse` adjacency to find nodes with in-degree >= 2. Results appear in the LLM prompt as `## CONVERGENCE POINTS (multiple causes → same effect)`.
+
+### Sequential Reasoning (`impact_analysis.py`, `insight_orchestrator.py`)
+
+Tracks can express temporal dependency via `sequence_position` (1=first, 2=next, etc.). The LLM is instructed to assign sequence positions when tracks are genuinely sequential (e.g., "carry unwind selloff" phase 1 → "central bank easing response" phase 2 → "liquidity-driven recovery" phase 3). Output rendering sorts sequenced tracks first and displays "Phase: N".
+
+### Regime Characterization (`insight_orchestrator.py`)
+
+Compares current market conditions against historical analogs to produce a structured "then vs now" assessment. Uses Haiku + tool_use (same pattern as other extraction steps) to output: regime name, closest analog, similarities, key differences, and summary. Results appear in the LLM prompt as `## REGIME CHARACTERIZATION (Then vs Now)`. Feature-flagged via `ENABLE_REGIME_CHARACTERIZATION`.
 
 ### Dual-Mode Impact Analysis (`impact_analysis.py`)
 
@@ -369,15 +400,17 @@ Shared prompt data preparation via `_prepare_prompt_data()` feeds both modes.
 | `detect_historical_gap()` | `historical_event_detector.py` | Single-analog gap detection |
 | `detect_historical_analogs()` | `historical_event_detector.py` | Multi-analog detection (up to 5) |
 | `enrich_with_historical_event()` | `insight_orchestrator.py` | Orchestrate single + multi-analog enrichment |
-| `compute_derived_metrics()` | `current_data_fetcher.py` | Compute term_premium, real_yield_10y, sofr_spread |
+| `compute_derived_metrics()` | `current_data_fetcher.py` | Compute 8 derived metrics from raw data |
 | `validate_claims()` | `insight_orchestrator.py` | Wire data_collection claim validation into pipeline |
 | `extract_chain_triggers()` | `relationship_store.py` | Extract chain-specific trigger conditions via Haiku |
+| `characterize_regime()` | `insight_orchestrator.py` | Compare current regime vs historical analogs (Haiku + tool_use) |
+| `get_convergence_points()` | `shared/chain_graph.py` | Find nodes where multiple causes converge |
 
 ## State Definition (`states.py`)
 
 Key types:
-- `InsightTrack` — Single reasoning track: title, causal_mechanism, historical_evidence, asset_implications, monitoring_variables, confidence, time_horizon
-- `RiskImpactState` — Full pipeline state including: chain_tracks, chain_graph_text, historical_analogs, historical_analogs_text, claim_validation_results, output_mode, insight_output
+- `InsightTrack` — Single reasoning track: title, causal_mechanism, historical_evidence, asset_implications, monitoring_variables, confidence, time_horizon, sequence_position (temporal ordering)
+- `RiskImpactState` — Full pipeline state including: chain_tracks, chain_graph_text, historical_analogs, historical_analogs_text, claim_validation_results, regime_characterization_text, output_mode, insight_output
 
 ## Configuration (`config.py`)
 
@@ -397,6 +430,9 @@ ENABLE_CLAIM_VALIDATION = True     # env: RISK_CLAIM_VALIDATION
 
 # Chain-Specific Trigger Conditions (per-chain activation thresholds)
 ENABLE_CHAIN_TRIGGERS = True       # env: RISK_CHAIN_TRIGGERS
+
+# Regime Characterization (then vs now comparison)
+ENABLE_REGIME_CHARACTERIZATION = True  # env: RISK_REGIME_CHAR
 ```
 
 ## Implementation Phases
@@ -415,9 +451,12 @@ ENABLE_CHAIN_TRIGGERS = True       # env: RISK_CHAIN_TRIGGERS
 | Multi-Hop Chain Graph | Done | Directed graph with DFS path-finding, reasoning tracks |
 | N-Analog Aggregation | Done | Up to 5 analogs, parallel fetch, aggregate statistics |
 | Insight Output Format | Done | Multi-track reasoning with evidence, implications, monitoring |
-| Derived Metrics | Done | term_premium, real_yield_10y, sofr_spread from raw data |
+| Derived Metrics | Done | 8 derived metrics: spreads, credit, real rates from raw data |
 | Claim Validation | Done | Wire data_collection claim validation into insight pipeline |
 | Chain-Specific Triggers | Done | Per-chain activation thresholds replace universal 5% heuristic |
+| Convergence Detection | Done | Detect multi-cause convergence points in chain graph |
+| Sequential Reasoning | Done | Temporal ordering of tracks (sequence_position) for phased analysis |
+| Regime Characterization | Done | "Then vs Now" regime comparison via Haiku + tool_use |
 
 ## Theme-Organized Chains
 

@@ -52,6 +52,9 @@ ADDITIONAL_FRED_SERIES = {
     "sofr": "SOFR",
     "fed_funds": "FEDFUNDS",
     "breakeven_inflation": "T5YIFR",
+    "ig_corporate_yield": "BAMLC0A4CBBBEY",   # ICE BofA BBB Corporate Yield
+    "hy_corporate_yield": "BAMLH0A0HYM2EY",   # ICE BofA US High Yield Effective Yield
+    "m2": "M2SL",                               # M2 Money Supply
 }
 
 # FRED series that are released monthly (need extended lookback for change calculations)
@@ -83,6 +86,26 @@ DERIVED_METRICS = {
     "sofr_spread": {
         "formula": "sofr - fed_funds",
         "inputs": ["sofr", "fed_funds"],
+    },
+    "equity_risk_premium": {
+        "formula": "sp500_earnings_yield - us10y",
+        "inputs": ["sp500_earnings_yield", "us10y"],
+    },
+    "credit_spread_ig": {
+        "formula": "ig_corporate_yield - us10y",
+        "inputs": ["ig_corporate_yield", "us10y"],
+    },
+    "credit_spread_hy": {
+        "formula": "hy_corporate_yield - us10y",
+        "inputs": ["hy_corporate_yield", "us10y"],
+    },
+    "real_fed_funds": {
+        "formula": "fed_funds - breakeven_inflation",
+        "inputs": ["fed_funds", "breakeven_inflation"],
+    },
+    "money_supply_velocity_proxy": {
+        "formula": "nominal_gdp_proxy - m2",
+        "inputs": ["nominal_gdp_proxy", "m2"],
     },
 }
 
@@ -491,7 +514,8 @@ def format_current_values_for_prompt(current_values: Dict[str, Any]) -> str:
     categories = {
         "Crypto": ["btc", "eth"],
         "Liquidity": ["tga", "bank_reserves", "reserves", "fed_balance_sheet", "rrp"],
-        "Rates": ["sofr", "fed_funds", "us10y", "us02y", "term_premium", "real_yield_10y", "sofr_spread"],
+        "Rates": ["sofr", "fed_funds", "us10y", "us02y", "term_premium", "real_yield_10y", "sofr_spread",
+                  "equity_risk_premium", "credit_spread_ig", "credit_spread_hy", "real_fed_funds", "money_supply_velocity_proxy"],
         "Indices": ["sp500", "nasdaq", "dow", "russell2000", "spy", "qqq"],
         "Sectors": ["igv", "xlk", "smh", "soxx", "xly", "xlf", "xle"],
         "Big Tech": ["googl", "amzn", "msft", "meta", "aapl", "nvda", "orcl"],
@@ -580,7 +604,8 @@ def format_value(var_name: str, value: float) -> str:
     if var_name in ["btc", "eth", "gold"]:
         return f"${value:,.2f}"
 
-    if var_name in ["sofr", "fed_funds", "us10y", "us02y", "vix", "term_premium", "real_yield_10y", "sofr_spread"]:
+    if var_name in ["sofr", "fed_funds", "us10y", "us02y", "vix", "term_premium", "real_yield_10y", "sofr_spread",
+                     "equity_risk_premium", "credit_spread_ig", "credit_spread_hy", "real_fed_funds"]:
         return f"{value:.2f}%"
 
     if var_name in ["dxy", "sp500", "spy", "qqq"]:
@@ -606,7 +631,8 @@ def format_change_value(var_name: str, change: float) -> str:
     if var_name in ["btc", "eth", "gold"]:
         return f"${abs(change):,.0f}"
 
-    if var_name in ["sofr", "fed_funds", "us10y", "us02y", "vix", "term_premium", "real_yield_10y", "sofr_spread"]:
+    if var_name in ["sofr", "fed_funds", "us10y", "us02y", "vix", "term_premium", "real_yield_10y", "sofr_spread",
+                     "equity_risk_premium", "credit_spread_ig", "credit_spread_hy", "real_fed_funds"]:
         return f"{abs(change):.2f}pp"  # percentage points
 
     if var_name in ["dxy", "sp500", "spy", "qqq"]:

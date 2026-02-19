@@ -149,6 +149,32 @@ class ChainGraph:
         tracks.sort(key=lambda t: t["path_count"], reverse=True)
         return tracks
 
+    def get_convergence_points(self, min_in_degree: int = 2) -> List[Dict[str, Any]]:
+        """Find nodes where multiple independent causes converge.
+
+        Returns list of convergence points with their feeding causes and mechanisms.
+        """
+        convergence = []
+        for node, parents in self.reverse.items():
+            unique_causes = set()
+            cause_details = []
+            for cause, meta in parents:
+                if cause not in unique_causes:
+                    unique_causes.add(cause)
+                    cause_details.append({
+                        "cause": cause,
+                        "mechanism": meta.get("mechanism", ""),
+                        "source": meta.get("source", ""),
+                    })
+            if len(unique_causes) >= min_in_degree:
+                convergence.append({
+                    "node": node,
+                    "in_degree": len(unique_causes),
+                    "causes": cause_details,
+                })
+        convergence.sort(key=lambda c: c["in_degree"], reverse=True)
+        return convergence
+
     def get_trigger_variables(self, query_text: str) -> List[str]:
         """Find variables in graph whose name appears in the query, sorted by out-degree."""
         import re
@@ -168,7 +194,7 @@ class ChainGraph:
         matches.sort(key=lambda x: x[1], reverse=True)
         return [var for var, _ in matches]
 
-    def format_for_prompt(self, tracks: List[Dict[str, Any]], max_tracks: int = 5) -> str:
+    def format_for_prompt(self, tracks: List[Dict[str, Any]], max_tracks: int = 5, convergence_points: Optional[List[Dict[str, Any]]] = None) -> str:
         """Format as '## MULTI-HOP CAUSAL PATHS' section for prompt."""
         if not tracks:
             return ""
@@ -195,6 +221,12 @@ class ChainGraph:
                 lines.append(f"  ... and {track['path_count'] - 3} more paths")
 
             lines.append("")
+
+        if convergence_points:
+            lines.append("## CONVERGENCE POINTS (multiple causes → same effect)")
+            for cp in convergence_points[:5]:
+                causes_str = " + ".join(c["cause"] for c in cp["causes"])
+                lines.append(f"  {causes_str} → {cp['node']} (in-degree: {cp['in_degree']})")
 
         return "\n".join(lines)
 

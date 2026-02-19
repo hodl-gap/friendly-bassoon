@@ -2,6 +2,21 @@
 
 from .asset_configs import get_asset_config
 
+REGIME_CHARACTERIZATION_PROMPT = """Given current market conditions and historical analog data, characterize the current macro regime and compare it to historical precedents.
+
+CURRENT MARKET DATA:
+{current_values_text}
+
+HISTORICAL ANALOGS:
+{historical_analogs_text}
+
+Produce a concise regime characterization that:
+1. Names the current regime (e.g., "late-cycle tightening", "early easing", "liquidity injection")
+2. Lists 2-3 key similarities to the closest historical analog
+3. Lists 2-3 key differences ("this time is different because...")
+4. States which analog is most relevant and why
+"""
+
 # Legacy belief space system prompt
 BELIEF_SPACE_SYSTEM_PROMPT = """You are a quantitative macro analyst mapping the BELIEF SPACE around market events.
 
@@ -90,6 +105,17 @@ Track 3: Flight to Digital Gold
   Monitor: Bank CDS spreads, stablecoin inflows
 ```
 
+## TEMPORAL SEQUENCING (when applicable)
+
+If tracks have a temporal dependency (one creates conditions for another), assign sequence_position:
+- sequence_position=1: happens first (near-term catalyst)
+- sequence_position=2: follows from Track 1's outcome (medium-term)
+- sequence_position=3: long-term structural consequence
+
+Example: "Carry unwind selloff (1-3mo)" → "Central bank easing response (3-6mo)" → "Liquidity-driven recovery (6-12mo)"
+
+Only use sequencing when tracks are genuinely sequential. Independent parallel tracks should omit sequence_position.
+
 ## KNOWLEDGE GAPS AND DATA
 You will receive current market data, historical chain graphs, and precedent analysis. Use ALL of it.
 Where information is missing, widen your confidence intervals and note the gap.
@@ -127,7 +153,8 @@ def get_impact_analysis_prompt(
     theme_states: dict = None,
     chain_graph_text: str = "",
     historical_analogs_text: str = "",
-    claim_validation_text: str = ""
+    claim_validation_text: str = "",
+    regime_characterization_text: str = ""
 ) -> str:
     """Build the impact analysis prompt."""
 
@@ -228,6 +255,11 @@ def get_impact_analysis_prompt(
     if theme_states:
         regime_section = format_theme_states_for_prompt(theme_states) + "\n"
 
+    # Format regime characterization section (Gap 1)
+    regime_char_section = ""
+    if regime_characterization_text:
+        regime_char_section = f"\n## REGIME CHARACTERIZATION (Then vs Now)\n{regime_characterization_text}\n"
+
     # Format chain graph section
     chain_graph_section = ""
     if chain_graph_text:
@@ -258,7 +290,7 @@ def get_impact_analysis_prompt(
 ## RETRIEVAL CONFIDENCE
 {conf_text}
 {current_values_section}{historical_chains_section}{validated_patterns_section}{historical_event_section}
-{knowledge_gaps_section}{gap_enrichment_section}{regime_section}{chain_graph_section}{historical_analogs_section}{claim_validation_section}---
+{knowledge_gaps_section}{gap_enrichment_section}{regime_section}{regime_char_section}{chain_graph_section}{historical_analogs_section}{claim_validation_section}---
 
 Based on the above context, current market data, pattern validation, and any historical event comparisons, {get_asset_config(asset_class)["prompt_asset_line"]}
 Pay special attention to TRIGGERED patterns - these indicate that conditions from research are currently active.
@@ -339,7 +371,8 @@ def _format_data_sections(
     theme_states: dict = None,
     chain_graph_text: str = "",
     historical_analogs_text: str = "",
-    claim_validation_text: str = ""
+    claim_validation_text: str = "",
+    regime_characterization_text: str = ""
 ) -> str:
     """Build the data sections shared between belief_space and insight prompts."""
 
@@ -412,6 +445,9 @@ def _format_data_sections(
     if theme_states:
         sections.append(format_theme_states_for_prompt(theme_states))
 
+    if regime_characterization_text:
+        sections.append(f"\n## REGIME CHARACTERIZATION (Then vs Now)\n{regime_characterization_text}")
+
     if chain_graph_text:
         sections.append(f"\n{chain_graph_text}")
 
@@ -457,7 +493,8 @@ def get_insight_prompt(
     theme_states: dict = None,
     chain_graph_text: str = "",
     historical_analogs_text: str = "",
-    claim_validation_text: str = ""
+    claim_validation_text: str = "",
+    regime_characterization_text: str = ""
 ) -> str:
     """Build the insight analysis prompt (track-based output)."""
 
@@ -476,7 +513,8 @@ def get_insight_prompt(
         theme_states=theme_states,
         chain_graph_text=chain_graph_text,
         historical_analogs_text=historical_analogs_text,
-        claim_validation_text=claim_validation_text
+        claim_validation_text=claim_validation_text,
+        regime_characterization_text=regime_characterization_text
     )
 
     return f"""{data_sections}

@@ -19,6 +19,7 @@ class InsightTrack(TypedDict, total=False):
     monitoring_variables: List[Dict]    # [{variable, condition, meaning}]
     confidence: float
     time_horizon: str
+    sequence_position: int              # 1, 2, 3... for temporal ordering (Gap 3)
 
 
 class RiskImpactState(TypedDict, total=False):
@@ -140,6 +141,9 @@ class RiskImpactState(TypedDict, total=False):
     # Historical N-analog aggregation (Phase 3)
     historical_analogs: Dict[str, Any]  # {"enriched": [...], "aggregated": {...}}
     historical_analogs_text: str  # Formatted for prompt
+
+    # Regime characterization (Gap 1)
+    regime_characterization_text: str  # Formatted "Then vs Now" regime comparison
 
     # Insight output (Phase 1 - output format)
     output_mode: str  # "insight" or "belief_space"

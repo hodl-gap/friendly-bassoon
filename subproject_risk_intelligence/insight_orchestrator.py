@@ -273,7 +273,10 @@ def format_insight(state: RiskImpactState, as_json: bool = False, asset_class: s
         "=" * 60,
     ]
 
-    for i, track in enumerate(tracks, 1):
+    # Sort tracks: sequenced tracks first (by position), then unsequenced
+    tracks_sorted = sorted(tracks, key=lambda t: (t.get("sequence_position") or 999, tracks.index(t)))
+
+    for i, track in enumerate(tracks_sorted, 1):
         title = track.get("title", f"Track {i}")
         confidence = track.get("confidence", 0)
         mechanism = track.get("causal_mechanism", "N/A")
@@ -284,6 +287,9 @@ def format_insight(state: RiskImpactState, as_json: bool = False, asset_class: s
         lines.append(f"  Confidence: {confidence*100:.0f}%")
         lines.append(f"  Mechanism: {mechanism}")
         lines.append(f"  Time Horizon: {time_horizon}")
+        seq = track.get("sequence_position")
+        if seq:
+            lines.append(f"  Phase: {seq}")
 
         # Historical evidence
         evidence = track.get("historical_evidence", {})
@@ -761,7 +767,14 @@ def run_asset_impact(
     for trigger in triggers[:3]:
         all_tracks.extend(chain_graph.get_tracks(trigger))
     state["chain_tracks"] = all_tracks
-    state["chain_graph_text"] = chain_graph.format_for_prompt(all_tracks)
+    convergence = chain_graph.get_convergence_points()
+    state["chain_graph_text"] = chain_graph.format_for_prompt(all_tracks, convergence_points=convergence)
+
+    # Regime characterization (Gap 1): compare current regime vs historical analogs
+    if config.ENABLE_REGIME_CHARACTERIZATION:
+        state = characterize_regime(state)
+        if ENABLE_SNAPSHOTS:
+            snapshot_state(f"characterize_regime_{asset_class}", state, "out")
 
     # Run impact analysis with asset-specific prompt
     state = analyze_impact(state, asset_class=asset_class)
@@ -945,6 +958,88 @@ def _build_condition_variables(extracted_variables: list) -> list:
             })
 
     return condition_vars
+
+
+def characterize_regime(state: RiskImpactState) -> RiskImpactState:
+    """Characterize current macro regime vs historical analogs (Gap 1)."""
+    current_values = state.get("current_values", {})
+    historical_analogs_text = state.get("historical_analogs_text", "")
+
+    if not current_values or not historical_analogs_text:
+        return state
+
+    current_values_text = format_current_values_for_prompt(current_values)
+
+    from .impact_analysis_prompts import REGIME_CHARACTERIZATION_PROMPT
+    prompt = REGIME_CHARACTERIZATION_PROMPT.format(
+        current_values_text=current_values_text,
+        historical_analogs_text=historical_analogs_text,
+    )
+
+    tool = {
+        "name": "output_regime",
+        "description": "Output regime characterization",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "regime_name": {"type": "string"},
+                "closest_analog": {"type": "string"},
+                "similarities": {"type": "array", "items": {"type": "string"}},
+                "differences": {"type": "array", "items": {"type": "string"}},
+                "summary": {"type": "string"}
+            },
+            "required": ["regime_name", "summary"]
+        }
+    }
+
+    try:
+        import anthropic
+        client = anthropic.Anthropic()
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=1500,
+            temperature=0.2,
+            messages=[{"role": "user", "content": prompt}],
+            tools=[tool],
+            tool_choice={"type": "tool", "name": "output_regime"}
+        )
+
+        try:
+            from shared.run_logger import log_llm_call
+            log_llm_call("claude-haiku-4-5-20251001", response.usage.input_tokens, response.usage.output_tokens)
+        except Exception:
+            pass
+
+        regime = None
+        for block in response.content:
+            if block.type == "tool_use" and block.name == "output_regime":
+                regime = block.input
+                break
+
+        if regime is None:
+            print("[Regime Characterization] No tool_use block found")
+            return state
+
+        text_lines = [f"**Current Regime**: {regime['regime_name']}"]
+        if regime.get("closest_analog"):
+            text_lines.append(f"**Closest Analog**: {regime['closest_analog']}")
+        if regime.get("similarities"):
+            text_lines.append("**Similarities**:")
+            for s in regime["similarities"]:
+                text_lines.append(f"  - {s}")
+        if regime.get("differences"):
+            text_lines.append("**Key Differences (this time is different)**:")
+            for d in regime["differences"]:
+                text_lines.append(f"  - {d}")
+        text_lines.append(f"\n{regime.get('summary', '')}")
+
+        state["regime_characterization_text"] = "\n".join(text_lines)
+        print(f"[Regime Characterization] Regime: {regime['regime_name']}")
+
+    except Exception as e:
+        print(f"[Regime Characterization] Failed: {e}")
+
+    return state
 
 
 def enrich_with_historical_event(state: RiskImpactState) -> RiskImpactState:

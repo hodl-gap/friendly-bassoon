@@ -105,7 +105,7 @@ Topic Coverage Analysis:
     # Build prompt
     prompt = GAP_DETECTION_PROMPT.format(
         query=query,
-        synthesis=synthesis[:4000],  # Truncate to save tokens
+        synthesis=synthesis[:8000],  # Truncate to save tokens
         chains_text=chains_text,
         topic_coverage_text=topic_text
     )

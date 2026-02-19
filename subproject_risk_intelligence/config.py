@@ -57,6 +57,9 @@ ENABLE_CLAIM_VALIDATION = os.getenv("RISK_CLAIM_VALIDATION", "true").lower() == 
 # Chain-Specific Trigger Conditions (per-chain activation thresholds)
 ENABLE_CHAIN_TRIGGERS = os.getenv("RISK_CHAIN_TRIGGERS", "true").lower() == "true"
 
+# Gap 1: Regime Characterization (compare "now vs then" at regime level)
+ENABLE_REGIME_CHARACTERIZATION = os.getenv("RISK_REGIME_CHAR", "true").lower() == "true"
+
 # Gap 5: Prediction Tracking
 ENABLE_PREDICTION_TRACKING = os.getenv("RISK_PREDICTION_TRACKING", "true").lower() == "true"
 PREDICTION_LEDGER_PATH = DATA_DIR / "prediction_ledger.json"

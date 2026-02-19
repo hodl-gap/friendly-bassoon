@@ -152,7 +152,11 @@ def _get_insight_tool(asset_class: str = "btc") -> dict:
                                 }
                             },
                             "confidence": {"type": "number"},
-                            "time_horizon": {"type": "string"}
+                            "time_horizon": {"type": "string"},
+                            "sequence_position": {
+                                "type": "integer",
+                                "description": "Temporal order (1=first, 2=next...). Use when tracks have sequential dependency."
+                            }
                         },
                         "required": ["title", "causal_mechanism", "asset_implications", "confidence"]
                     }
@@ -177,7 +181,7 @@ def _parse_insight_tool_result(tool_input: Dict[str, Any]) -> Dict[str, Any]:
 
     parsed_tracks = []
     for i, t in enumerate(tracks):
-        parsed_tracks.append({
+        track_data = {
             "track_id": f"track_{i+1}",
             "title": t.get("title", f"Track {i+1}"),
             "causal_mechanism": t.get("causal_mechanism", ""),
@@ -187,7 +191,10 @@ def _parse_insight_tool_result(tool_input: Dict[str, Any]) -> Dict[str, Any]:
             "monitoring_variables": t.get("monitoring_variables", []),
             "confidence": t.get("confidence", 0.5),
             "time_horizon": t.get("time_horizon", "unknown"),
-        })
+        }
+        if t.get("sequence_position") is not None:
+            track_data["sequence_position"] = t["sequence_position"]
+        parsed_tracks.append(track_data)
 
     return {
         "tracks": parsed_tracks,
@@ -347,6 +354,7 @@ def _prepare_prompt_data(state: RiskImpactState, asset_class: str) -> dict:
         "chain_graph_text": state.get("chain_graph_text", ""),
         "historical_analogs_text": state.get("historical_analogs_text", ""),
         "claim_validation_text": claim_validation_text,
+        "regime_characterization_text": state.get("regime_characterization_text", ""),
     }
 
 
