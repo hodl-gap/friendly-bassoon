@@ -12,9 +12,7 @@ import hashlib
 import json
 from pathlib import Path
 
-import sys
-sys.path.append(str(Path(__file__).parent.parent))
-from config import CACHE_DIR, ENABLE_CACHE, CACHE_EXPIRY_HOURS
+from ._config import CACHE_DIR, ENABLE_CACHE, CACHE_EXPIRY_HOURS
 
 
 class BaseDataAdapter(ABC):

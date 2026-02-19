@@ -10,9 +10,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 from pathlib import Path
 
-import sys
-sys.path.append(str(Path(__file__).parent.parent))
-from config import FRED_API_KEY, MAX_RETRIES, RETRY_DELAY_SECONDS
+from ._config import FRED_API_KEY, MAX_RETRIES, RETRY_DELAY_SECONDS
 
 from .base_adapter import BaseDataAdapter
 import time

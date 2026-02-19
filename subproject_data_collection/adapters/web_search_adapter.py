@@ -17,10 +17,11 @@ import hashlib
 import time
 
 # Add parent paths for imports
-sys.path.append(str(Path(__file__).parent.parent))
-sys.path.append(str(Path(__file__).parent.parent.parent))
+_dc_root = Path(__file__).parent.parent
+sys.path.append(str(_dc_root))
+sys.path.append(str(_dc_root.parent))
 
-from config import CACHE_DIR, ENABLE_CACHE, CACHE_EXPIRY_HOURS, WEB_SEARCH_BACKEND
+from ._config import CACHE_DIR, ENABLE_CACHE, CACHE_EXPIRY_HOURS, WEB_SEARCH_BACKEND
 from models import call_claude_haiku
 from web_search_prompts import (
     EXTRACT_DATA_POINTS_PROMPT,

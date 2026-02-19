@@ -11,9 +11,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional, List
 from pathlib import Path
 
-import sys
-sys.path.append(str(Path(__file__).parent.parent))
-from config import MAX_RETRIES, RETRY_DELAY_SECONDS
+from ._config import MAX_RETRIES, RETRY_DELAY_SECONDS
 
 from .base_adapter import BaseDataAdapter
 
