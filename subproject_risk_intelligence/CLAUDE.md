@@ -13,6 +13,8 @@ This subproject is the research engine of an autonomous Bridgewater-style resear
 - Retrieves logic chains explaining causal mechanisms (event → ... → asset impact)
 - Builds a **multi-hop causal graph** from retrieved + historical chains, finds all paths from trigger to terminal effects
 - Finds up to **5 historical analogs** and aggregates statistics (direction distribution, magnitude, timing)
+- **Validates quantitative claims** from synthesis against actual data (correlation, p-value)
+- Computes **derived macro metrics** (term premium, real yield, SOFR spread) from raw data
 - Produces **independent reasoning tracks** — each with its own evidence, implications, and monitoring variables
 - Supports **multi-asset analysis** (BTC, equity, or both)
 
@@ -58,14 +60,14 @@ subproject_risk_intelligence/
 |-- impact_analysis_prompts.py       # INSIGHT_SYSTEM_PROMPT, BELIEF_SPACE_SYSTEM_PROMPT, shared data sections
 |-- asset_configs.py                 # Per-asset configuration (BTC, equity)
 |-- variable_extraction.py           # Extract variables from chains (Phase 2)
-|-- current_data_fetcher.py          # Fetch live data with period changes (Phase 2)
+|-- current_data_fetcher.py          # Fetch live data with period changes + derived metrics (Phase 2)
 |-- pattern_validator.py             # Validate research patterns vs current data (Phase 2)
-|-- relationship_store.py            # Logic chain persistence with theme index + validation reinforcement
+|-- relationship_store.py            # Logic chain persistence with theme index + validation reinforcement + trigger extraction
 |-- historical_event_detector.py     # Historical event detection + multi-analog detection
 |-- historical_event_prompts.py      # LLM prompts for historical detection + MULTI_ANALOG_TOOL
 |-- historical_data_fetcher.py       # Fetch historical data + metrics
 |-- historical_aggregator.py         # Multi-analog parallel fetch + aggregate statistics
-|-- theme_refresh.py                 # Daily theme monitoring + regime assessment
+|-- theme_refresh.py                 # Daily theme monitoring + chain-specific trigger evaluation
 |
 |-- data/
 |   |-- relationships.json           # Persistent chain storage
@@ -123,6 +125,16 @@ query (CLI input)
 | 4. fetch_current_data   |  Fetch from FRED (TGA, SOFR, etc.)
 |                         |  Fetch from Yahoo (BTC, DXY, etc.)
 |                         |  Include 1w and 1m period changes
+|                         |  Compute derived metrics: term_premium, real_yield_10y, sofr_spread
++-----------+-------------+
+            |
+            v
++-------------------------+
+| 4.5 validate_claims     |  Call run_claim_validation() from data_collection
+|                         |  Parses quantitative claims from synthesis
+|                         |  Validates against actual data (correlation, p-value)
+|                         |  Output: claim_validation_results
+|                         |  Feature-flagged: ENABLE_CLAIM_VALIDATION
 +-----------+-------------+
             |
             v
@@ -158,7 +170,8 @@ query (CLI input)
 |                         |
 |                         |  Both modes receive:
 |                         |    - Retrieved answer/synthesis + logic chains
-|                         |    - Current data + validated patterns
+|                         |    - Current data (raw + derived metrics) + validated patterns
+|                         |    - Claim validation results (confirmed/refuted with stats)
 |                         |    - Multi-hop causal paths (chain_graph_text)
 |                         |    - Historical analog aggregation (historical_analogs_text)
 |                         |    - MACRO REGIME context (per-theme assessments)
@@ -171,7 +184,8 @@ query (CLI input)
 | 7. store_chains         |  Extract new chains from answer
 |                         |  Semantic dedup (Jaccard similarity on variable pairs)
 |                         |  Similar chains: increment validation_count + blend confidence
-|                         |  New chains: save to relationships.json
+|                         |  New chains: extract trigger_conditions (Haiku + tool_use)
+|                         |  Save to relationships.json
 |                         |  Update theme index + variable frequency tracker
 +-----------+-------------+
             |
@@ -291,6 +305,39 @@ Finds up to 5 historical analogs, fetches market data in parallel, computes aggr
 | `aggregate_analogs()` | Direction distribution, magnitude (median/min/max), timing (recovery days) |
 | `format_analogs_for_prompt()` | Format as `## HISTORICAL PRECEDENT ANALYSIS (Multi-Analog)` section |
 
+### Derived Macro Metrics (`current_data_fetcher.py`)
+
+Computes standard macro spreads from raw fetched data. Traders think in derived metrics — "real yield rose 50bps" is actionable, "10Y at 4.5% and breakeven at 2.3%" requires mental math.
+
+| Metric | Formula | Inputs |
+|--------|---------|--------|
+| `term_premium` | us10y - us02y | Yield curve slope |
+| `real_yield_10y` | us10y - breakeven_inflation | Inflation-adjusted yield |
+| `sofr_spread` | sofr - fed_funds | Money market stress indicator |
+
+`compute_derived_metrics()` is called in both `fetch_current_data()` (current values) and `fetch_conditions_at_date()` (historical Then-vs-Now comparison). Derived values include period-over-period changes when input changes are available.
+
+### Claim Validation (`insight_orchestrator.py` → `data_collection`)
+
+Wires the existing `data_collection` claim validation pipeline into the insight flow. After data fetch, `validate_claims()` calls `run_claim_validation(synthesis_text=...)` which parses quantitative claims, fetches historical data, and validates statistically.
+
+Results appear in the LLM prompt as `## CLAIM VALIDATION (Data-Tested)`:
+```
+- "BTC follows gold with 63-428 day lag": PARTIALLY CONFIRMED (correlation=0.45, p=0.001)
+- "VIX above 30 leads to BTC selloff": CONFIRMED (correlation=-0.72, p=0.000)
+- "TGA drawdown always leads to reserve increase": REFUTED (correlation=-0.15, p=0.420)
+```
+
+Feature-flagged via `ENABLE_CLAIM_VALIDATION` (default: true).
+
+### Chain-Specific Trigger Conditions (`relationship_store.py`, `theme_refresh.py`)
+
+Replaces the universal 5% weekly change threshold for active chain detection with variable-appropriate thresholds. A 5% VIX move is routine; a 5% DXY move is extreme.
+
+`extract_chain_triggers()` uses Haiku + tool_use (same pattern as `extract_patterns()` in pattern_validator) to extract 1-2 trigger conditions per chain at store time. Each trigger specifies `{variable, condition_type, condition_value, condition_direction, timeframe_days}`.
+
+`theme_refresh.py` reads `chain["trigger_conditions"]` and falls back to the 5% heuristic when no triggers exist. Backfill script: `python scripts/backfill_chain_triggers.py`.
+
 ### Dual-Mode Impact Analysis (`impact_analysis.py`)
 
 ```python
@@ -322,12 +369,15 @@ Shared prompt data preparation via `_prepare_prompt_data()` feeds both modes.
 | `detect_historical_gap()` | `historical_event_detector.py` | Single-analog gap detection |
 | `detect_historical_analogs()` | `historical_event_detector.py` | Multi-analog detection (up to 5) |
 | `enrich_with_historical_event()` | `insight_orchestrator.py` | Orchestrate single + multi-analog enrichment |
+| `compute_derived_metrics()` | `current_data_fetcher.py` | Compute term_premium, real_yield_10y, sofr_spread |
+| `validate_claims()` | `insight_orchestrator.py` | Wire data_collection claim validation into pipeline |
+| `extract_chain_triggers()` | `relationship_store.py` | Extract chain-specific trigger conditions via Haiku |
 
 ## State Definition (`states.py`)
 
 Key types:
 - `InsightTrack` — Single reasoning track: title, causal_mechanism, historical_evidence, asset_implications, monitoring_variables, confidence, time_horizon
-- `RiskImpactState` — Full pipeline state including: chain_tracks, chain_graph_text, historical_analogs, historical_analogs_text, output_mode, insight_output
+- `RiskImpactState` — Full pipeline state including: chain_tracks, chain_graph_text, historical_analogs, historical_analogs_text, claim_validation_results, output_mode, insight_output
 
 ## Configuration (`config.py`)
 
@@ -341,6 +391,12 @@ MAX_INSTRUMENTS_PER_EVENT = 6
 ENABLE_MULTI_ANALOG = True         # env: RISK_MULTI_ANALOG
 MAX_HISTORICAL_ANALOGS = 5
 ANALOG_RELEVANCE_THRESHOLD = 0.5
+
+# Claim Validation (wires data_collection into insight pipeline)
+ENABLE_CLAIM_VALIDATION = True     # env: RISK_CLAIM_VALIDATION
+
+# Chain-Specific Trigger Conditions (per-chain activation thresholds)
+ENABLE_CHAIN_TRIGGERS = True       # env: RISK_CHAIN_TRIGGERS
 ```
 
 ## Implementation Phases
@@ -359,6 +415,9 @@ ANALOG_RELEVANCE_THRESHOLD = 0.5
 | Multi-Hop Chain Graph | Done | Directed graph with DFS path-finding, reasoning tracks |
 | N-Analog Aggregation | Done | Up to 5 analogs, parallel fetch, aggregate statistics |
 | Insight Output Format | Done | Multi-track reasoning with evidence, implications, monitoring |
+| Derived Metrics | Done | term_premium, real_yield_10y, sofr_spread from raw data |
+| Claim Validation | Done | Wire data_collection claim validation into insight pipeline |
+| Chain-Specific Triggers | Done | Per-chain activation thresholds replace universal 5% heuristic |
 
 ## Theme-Organized Chains
 
@@ -378,11 +437,13 @@ When storing chains, semantic deduplication uses Jaccard similarity on normalize
 `theme_refresh.py` provides `refresh_theme()`, `refresh_all_themes()`, `generate_briefing()`.
 CLI: `python scripts/daily_regime_scan.py --all --briefing`
 
+Active chain detection uses chain-specific `trigger_conditions` when available (e.g., VIX needs 20% move, DXY needs 2% move), falling back to the universal 5% heuristic for chains without triggers. Backfill existing chains: `python scripts/backfill_chain_triggers.py`.
+
 ## Dependencies
 
 ### Sibling Subprojects
 - `subproject_database_retriever` - Provides `run_retrieval()` with gap detection, merged chains, enrichment text
-- `subproject_data_collection` - Provides `WebSearchAdapter` for web search, `trusted_domains` for filtering
+- `subproject_data_collection` - Provides `run_claim_validation()` for statistical claim testing, `WebSearchAdapter` for web search
 
 ### Parent Directory
 - `models.py` - AI model functions (`call_claude_sonnet`, `call_claude_haiku`)
