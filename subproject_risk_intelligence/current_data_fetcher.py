@@ -51,6 +51,7 @@ ADDITIONAL_FRED_SERIES = {
     "us10y": "DGS10",
     "sofr": "SOFR",
     "fed_funds": "FEDFUNDS",
+    "breakeven_inflation": "T5YIFR",
 }
 
 # FRED series that are released monthly (need extended lookback for change calculations)
@@ -64,6 +65,96 @@ MONTHLY_FRED_SERIES = {
 # Default lookback days (45 for daily/weekly, 120 for monthly)
 DEFAULT_LOOKBACK_DAYS = 45
 MONTHLY_LOOKBACK_DAYS = 120
+
+
+# ============================================================================
+# Derived Metrics (Gap 2: standard macro spreads)
+# ============================================================================
+
+DERIVED_METRICS = {
+    "term_premium": {
+        "formula": "us10y - us02y",
+        "inputs": ["us10y", "us02y"],
+    },
+    "real_yield_10y": {
+        "formula": "us10y - breakeven_inflation",
+        "inputs": ["us10y", "breakeven_inflation"],
+    },
+    "sofr_spread": {
+        "formula": "sofr - fed_funds",
+        "inputs": ["sofr", "fed_funds"],
+    },
+}
+
+
+def compute_derived_metrics(current_values: dict) -> dict:
+    """
+    Compute derived macro metrics from raw values.
+
+    Computes standard macro spreads that traders use:
+    - term_premium: us10y - us02y (yield curve slope)
+    - real_yield_10y: us10y - breakeven_inflation
+    - sofr_spread: sofr - fed_funds
+
+    Args:
+        current_values: Dict of variable -> {value, date, source, ...}
+
+    Returns:
+        Dict of derived variable -> {value, date, source: "derived", changes}
+    """
+    derived = {}
+
+    for metric_name, definition in DERIVED_METRICS.items():
+        inputs = definition["inputs"]
+
+        if not all(inp in current_values for inp in inputs):
+            continue
+
+        input_a = current_values[inputs[0]]
+        input_b = current_values[inputs[1]]
+
+        val_a = input_a.get("value")
+        val_b = input_b.get("value")
+
+        if val_a is None or val_b is None:
+            continue
+
+        derived_value = val_a - val_b
+
+        # Use most recent date from inputs
+        date_a = input_a.get("date", "")
+        date_b = input_b.get("date", "")
+        derived_date = max(date_a, date_b) if date_a and date_b else date_a or date_b
+
+        result = {
+            "value": round(derived_value, 4),
+            "date": derived_date,
+            "source": "derived",
+            "formula": definition["formula"],
+        }
+
+        # Compute derived changes if both inputs have change data
+        changes = {}
+        for period in ["change_1w", "change_1m"]:
+            change_a = input_a.get("changes", {}).get(period)
+            change_b = input_b.get("changes", {}).get(period)
+            if change_a and change_b:
+                abs_change = change_a["absolute"] - change_b["absolute"]
+                # Compute prior derived value for percentage
+                prior_value = derived_value - abs_change
+                pct_change = (abs_change / abs(prior_value)) * 100 if prior_value != 0 else 0.0
+                direction = "↑" if abs_change > 0 else "↓" if abs_change < 0 else "→"
+                changes[period] = {
+                    "absolute": round(abs_change, 4),
+                    "percentage": round(pct_change, 2),
+                    "direction": direction,
+                }
+        result["changes"] = changes
+
+        derived[metric_name] = result
+        print(f"[current_data] {metric_name}: {result['value']:.4f} (derived: {definition['formula']})")
+
+    return derived
 
 
 def resolve_variable(variable: str) -> Optional[Dict[str, Any]]:
@@ -370,6 +461,10 @@ def fetch_current_data(state: "RiskImpactState") -> "RiskImpactState":
         except Exception as e:
             print(f"[Current Data] Auto-discovery error: {e}")
 
+    # Compute derived metrics from raw values (Gap 2)
+    derived = compute_derived_metrics(current_values)
+    current_values.update(derived)
+
     state["current_values"] = current_values
     state["fetch_errors"] = fetch_errors
 
@@ -396,7 +491,7 @@ def format_current_values_for_prompt(current_values: Dict[str, Any]) -> str:
     categories = {
         "Crypto": ["btc", "eth"],
         "Liquidity": ["tga", "bank_reserves", "reserves", "fed_balance_sheet", "rrp"],
-        "Rates": ["sofr", "fed_funds", "us10y", "us02y"],
+        "Rates": ["sofr", "fed_funds", "us10y", "us02y", "term_premium", "real_yield_10y", "sofr_spread"],
         "Indices": ["sp500", "nasdaq", "dow", "russell2000", "spy", "qqq"],
         "Sectors": ["igv", "xlk", "smh", "soxx", "xly", "xlf", "xle"],
         "Big Tech": ["googl", "amzn", "msft", "meta", "aapl", "nvda", "orcl"],
@@ -485,7 +580,7 @@ def format_value(var_name: str, value: float) -> str:
     if var_name in ["btc", "eth", "gold"]:
         return f"${value:,.2f}"
 
-    if var_name in ["sofr", "fed_funds", "us10y", "us02y", "vix"]:
+    if var_name in ["sofr", "fed_funds", "us10y", "us02y", "vix", "term_premium", "real_yield_10y", "sofr_spread"]:
         return f"{value:.2f}%"
 
     if var_name in ["dxy", "sp500", "spy", "qqq"]:
@@ -511,7 +606,7 @@ def format_change_value(var_name: str, change: float) -> str:
     if var_name in ["btc", "eth", "gold"]:
         return f"${abs(change):,.0f}"
 
-    if var_name in ["sofr", "fed_funds", "us10y", "us02y", "vix"]:
+    if var_name in ["sofr", "fed_funds", "us10y", "us02y", "vix", "term_premium", "real_yield_10y", "sofr_spread"]:
         return f"{abs(change):.2f}pp"  # percentage points
 
     if var_name in ["dxy", "sp500", "spy", "qqq"]:

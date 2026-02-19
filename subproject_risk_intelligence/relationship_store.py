@@ -365,6 +365,122 @@ def is_duplicate_chain(new_chain: Dict, existing_chains: List[Dict]) -> bool:
     return find_similar_chain(new_chain, existing_chains) is not None
 
 
+# ============================================================================
+# Chain-Specific Trigger Conditions
+# ============================================================================
+
+TRIGGER_EXTRACTION_TOOL = {
+    "name": "output_triggers",
+    "description": "Extract trigger conditions for a logic chain",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "triggers": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "variable": {"type": "string", "description": "Normalized variable name (e.g., 'vix', 'us10y', 'tga')"},
+                        "condition_type": {
+                            "type": "string",
+                            "enum": ["percentage_change", "absolute_threshold"],
+                        },
+                        "condition_value": {"type": "number", "description": "Threshold value (e.g., 10 for 10% change, 40 for VIX > 40)"},
+                        "condition_direction": {
+                            "type": "string",
+                            "enum": ["increase", "decrease", "above", "below"],
+                        },
+                        "timeframe_days": {"type": "integer", "description": "Observation window in days (default 7)"},
+                    },
+                    "required": ["variable", "condition_type", "condition_value", "condition_direction"],
+                },
+                "maxItems": 2,
+            }
+        },
+        "required": ["triggers"],
+    },
+}
+
+
+def extract_chain_triggers(chain: dict) -> list:
+    """
+    Extract trigger conditions for a chain using Haiku + tool_use.
+
+    Each trigger specifies when a chain becomes "active" based on
+    variable-appropriate thresholds (e.g., 5% VIX move is routine,
+    but 5% DXY move is extreme).
+
+    Args:
+        chain: Chain dict with mechanism, logic_chain.steps, etc.
+
+    Returns:
+        List of trigger condition dicts, or empty list on failure
+    """
+    import anthropic
+
+    mechanism = chain.get("mechanism", "")
+    steps = chain.get("logic_chain", {}).get("steps", [])
+    summary = chain.get("logic_chain", {}).get("chain_summary", "")
+
+    if not steps and not mechanism:
+        return []
+
+    # Build context from chain
+    cause = steps[0].get("cause", "") if steps else ""
+    cause_norm = steps[0].get("cause_normalized", "") if steps else ""
+    effect = steps[-1].get("effect", "") if steps else ""
+
+    prompt = f"""Given this macro logic chain, extract 1-2 trigger conditions that would activate it.
+
+Chain: {summary}
+Cause: {cause} (normalized: {cause_norm})
+Terminal effect: {effect}
+Mechanism: {mechanism}
+
+Consider the NORMAL volatility range for each variable:
+- VIX: 5% weekly change is routine, 20%+ is significant
+- DXY: 0.5% weekly change is routine, 2%+ is significant
+- us10y/us02y: 5bps weekly change is routine, 15bps+ is significant
+- TGA: 3% weekly change is routine, 10%+ is significant
+- BTC: 5% weekly change is routine, 15%+ is significant
+- Gold: 2% weekly change is routine, 5%+ is significant
+- S&P 500: 2% weekly change is routine, 5%+ is significant
+
+Extract trigger conditions that represent MEANINGFUL moves for the cause variable."""
+
+    try:
+        client = anthropic.Anthropic()
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=500,
+            temperature=0.0,
+            messages=[{"role": "user", "content": prompt}],
+            tools=[TRIGGER_EXTRACTION_TOOL],
+            tool_choice={"type": "tool", "name": "output_triggers"},
+        )
+
+        try:
+            from shared.run_logger import log_llm_call
+            log_llm_call("claude-haiku-4-5-20251001", response.usage.input_tokens, response.usage.output_tokens)
+        except Exception:
+            pass
+
+        for block in response.content:
+            if block.type == "tool_use" and block.name == "output_triggers":
+                triggers = block.input.get("triggers", [])
+                # Ensure timeframe_days defaults
+                for t in triggers:
+                    if "timeframe_days" not in t:
+                        t["timeframe_days"] = 7
+                return triggers
+
+        return []
+
+    except Exception as e:
+        print(f"[Chain Triggers] Extraction failed for chain: {e}")
+        return []
+
+
 def store_chains(state: RiskImpactState, asset_class: str = "btc") -> RiskImpactState:
     """
     Extract and store new logic chains discovered in this run.
@@ -410,6 +526,17 @@ def store_chains(state: RiskImpactState, asset_class: str = "btc") -> RiskImpact
             chain["validation_count"] = 1
             chain["relationship_type"] = determine_relationship_type(chain)
             chain["confidence"] = state.get("confidence", {}).get("score", 0.5)
+
+            # Extract chain-specific trigger conditions
+            if config.ENABLE_CHAIN_TRIGGERS:
+                try:
+                    triggers = extract_chain_triggers(chain)
+                    if triggers:
+                        chain["trigger_conditions"] = triggers
+                        print(f"[Chain Triggers] Extracted {len(triggers)} triggers for chain {chain['id']}")
+                except Exception as e:
+                    print(f"[Chain Triggers] Extraction error: {e}")
+
             new_chains.append(chain)
 
     if reinforced_count > 0:

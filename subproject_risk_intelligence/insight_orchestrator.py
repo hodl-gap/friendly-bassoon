@@ -581,6 +581,60 @@ def request_additional_context(state: RiskImpactState, topic: str) -> RiskImpact
     return state
 
 
+def validate_claims(state: RiskImpactState) -> RiskImpactState:
+    """
+    Validate claims from synthesis using data_collection's claim validation pipeline.
+
+    Calls run_claim_validation() which:
+    1. Parses quantitative claims from synthesis text
+    2. Resolves data IDs for referenced variables
+    3. Fetches historical data
+    4. Validates claims statistically (correlation, p-value)
+
+    Updates state with:
+    - claim_validation_results: List of validated/refuted claims
+    """
+    synthesis = state.get("synthesis", "")
+    if not synthesis:
+        state["claim_validation_results"] = []
+        return state
+
+    print("\n[Claim Validation] Validating claims from synthesis...")
+
+    try:
+        import sys
+        # Ensure data_collection is importable
+        dc_path = str(config.DATA_COLLECTION_DIR)
+        if dc_path not in sys.path:
+            sys.path.append(dc_path)
+
+        from subproject_data_collection.data_collection_orchestrator import run_claim_validation
+
+        result = run_claim_validation(synthesis_text=synthesis)
+
+        # Extract validation results from the returned state
+        final_output = result.get("final_output", {})
+        validation_results = final_output.get("results", [])
+
+        state["claim_validation_results"] = validation_results
+
+        if validation_results:
+            confirmed = sum(1 for r in validation_results if "confirmed" in r.get("status", ""))
+            refuted = sum(1 for r in validation_results if "refuted" in r.get("status", ""))
+            print(f"[Claim Validation] {len(validation_results)} claims validated: {confirmed} confirmed, {refuted} refuted")
+        else:
+            print("[Claim Validation] No quantitative claims found to validate")
+
+    except ImportError as e:
+        print(f"[Claim Validation] data_collection not available: {e}")
+        state["claim_validation_results"] = []
+    except Exception as e:
+        print(f"[Claim Validation] Validation failed: {e}")
+        state["claim_validation_results"] = []
+
+    return state
+
+
 def prepare_shared_context(
     query: str,
     skip_data_fetch: bool = False,
@@ -623,6 +677,12 @@ def prepare_shared_context(
                 state = fetch_current_data(state)
                 if ENABLE_SNAPSHOTS:
                     snapshot_state("fetch_current_data", state, "out")
+
+    # Step 2.5: Validate claims from synthesis using data_collection pipeline
+    if not skip_data_fetch and config.ENABLE_CLAIM_VALIDATION:
+        state = validate_claims(state)
+        if ENABLE_SNAPSHOTS:
+            snapshot_state("validate_claims", state, "out")
 
     # Step 3: Validate research patterns against current data
     if not skip_data_fetch:

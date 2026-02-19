@@ -76,6 +76,14 @@ def fetch_conditions_at_date(
             print(f"[Historical Conditions] Error fetching {normalized} at {target_date}: {e}")
             continue
 
+    # Compute derived metrics for Then-vs-Now comparison (Gap 2)
+    try:
+        from .current_data_fetcher import compute_derived_metrics
+        derived = compute_derived_metrics(conditions)
+        conditions.update(derived)
+    except Exception as e:
+        print(f"[Historical Conditions] Derived metrics error: {e}")
+
     return conditions
 
 

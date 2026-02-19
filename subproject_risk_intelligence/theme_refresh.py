@@ -96,36 +96,57 @@ def refresh_theme(
             else:
                 continue
 
-        # Construct a synthetic pattern for the cause variable
-        pattern = {
-            "variable": cause_var,
-            "condition_type": "percentage_change",
-            "condition_value": 5.0,  # 5% movement threshold
-            "condition_direction": "increase",
-            "timeframe_days": 7,
-        }
+        # Use chain-specific triggers if available, else fall back to 5% heuristic
+        triggers = chain.get("trigger_conditions", [])
+        if not triggers:
+            triggers = [
+                {
+                    "variable": cause_var,
+                    "condition_type": "percentage_change",
+                    "condition_value": 5.0,
+                    "condition_direction": "increase",
+                    "timeframe_days": 7,
+                },
+            ]
 
-        # Fetch data and evaluate
+        # Evaluate each trigger pattern
+        chain_triggered = False
+        trigger_explanation = ""
+        trigger_variable = cause_var
         try:
-            data = fetch_historical_for_pattern(cause_var, timeframe_days=7)
-            if data is None:
-                continue
+            for pattern in triggers:
+                pattern_var = pattern.get("variable", cause_var)
+                timeframe = pattern.get("timeframe_days", 7)
+                data = fetch_historical_for_pattern(pattern_var, timeframe_days=timeframe)
+                if data is None:
+                    continue
 
-            result = evaluate_pattern(pattern, data)
+                result = evaluate_pattern(pattern, data)
 
-            # Check both directions
-            if not result.get("triggered"):
-                pattern_down = dict(pattern)
-                pattern_down["condition_direction"] = "decrease"
-                result = evaluate_pattern(pattern_down, data)
+                # Check both directions if not triggered
+                if not result.get("triggered"):
+                    pattern_down = dict(pattern)
+                    if pattern.get("condition_direction") == "increase":
+                        pattern_down["condition_direction"] = "decrease"
+                    elif pattern.get("condition_direction") == "decrease":
+                        pattern_down["condition_direction"] = "increase"
+                    else:
+                        continue
+                    result = evaluate_pattern(pattern_down, data)
 
-            if result.get("triggered"):
+                if result.get("triggered"):
+                    chain_triggered = True
+                    trigger_explanation = result.get("explanation", "")
+                    trigger_variable = pattern_var
+                    break
+
+            if chain_triggered:
                 active_chains.append(chain)
                 triggered_patterns.append({
-                    "variable": cause_var,
+                    "variable": trigger_variable,
                     "chain_id": chain.get("id"),
                     "chain_summary": chain.get("logic_chain", {}).get("chain_summary", ""),
-                    "explanation": result.get("explanation", ""),
+                    "explanation": trigger_explanation,
                 })
         except Exception as e:
             # Data fetch failed for this variable, skip

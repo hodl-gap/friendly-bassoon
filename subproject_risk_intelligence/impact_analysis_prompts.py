@@ -126,7 +126,8 @@ def get_impact_analysis_prompt(
     asset_class: str = "btc",
     theme_states: dict = None,
     chain_graph_text: str = "",
-    historical_analogs_text: str = ""
+    historical_analogs_text: str = "",
+    claim_validation_text: str = ""
 ) -> str:
     """Build the impact analysis prompt."""
 
@@ -237,6 +238,11 @@ def get_impact_analysis_prompt(
     if historical_analogs_text:
         historical_analogs_section = f"\n{historical_analogs_text}\n"
 
+    # Format claim validation section
+    claim_validation_section = ""
+    if claim_validation_text:
+        claim_validation_section = f"\n{claim_validation_text}\n"
+
     return f"""## USER QUERY
 {query}
 
@@ -252,7 +258,7 @@ def get_impact_analysis_prompt(
 ## RETRIEVAL CONFIDENCE
 {conf_text}
 {current_values_section}{historical_chains_section}{validated_patterns_section}{historical_event_section}
-{knowledge_gaps_section}{gap_enrichment_section}{regime_section}{chain_graph_section}{historical_analogs_section}---
+{knowledge_gaps_section}{gap_enrichment_section}{regime_section}{chain_graph_section}{historical_analogs_section}{claim_validation_section}---
 
 Based on the above context, current market data, pattern validation, and any historical event comparisons, {get_asset_config(asset_class)["prompt_asset_line"]}
 Pay special attention to TRIGGERED patterns - these indicate that conditions from research are currently active.
@@ -332,7 +338,8 @@ def _format_data_sections(
     gap_enrichment_text: str = "",
     theme_states: dict = None,
     chain_graph_text: str = "",
-    historical_analogs_text: str = ""
+    historical_analogs_text: str = "",
+    claim_validation_text: str = ""
 ) -> str:
     """Build the data sections shared between belief_space and insight prompts."""
 
@@ -411,6 +418,9 @@ def _format_data_sections(
     if historical_analogs_text:
         sections.append(f"\n{historical_analogs_text}")
 
+    if claim_validation_text:
+        sections.append(f"\n{claim_validation_text}")
+
     optional_text = "\n".join(sections)
 
     return f"""## USER QUERY
@@ -446,7 +456,8 @@ def get_insight_prompt(
     asset_class: str = "btc",
     theme_states: dict = None,
     chain_graph_text: str = "",
-    historical_analogs_text: str = ""
+    historical_analogs_text: str = "",
+    claim_validation_text: str = ""
 ) -> str:
     """Build the insight analysis prompt (track-based output)."""
 
@@ -464,7 +475,8 @@ def get_insight_prompt(
         gap_enrichment_text=gap_enrichment_text,
         theme_states=theme_states,
         chain_graph_text=chain_graph_text,
-        historical_analogs_text=historical_analogs_text
+        historical_analogs_text=historical_analogs_text,
+        claim_validation_text=claim_validation_text
     )
 
     return f"""{data_sections}

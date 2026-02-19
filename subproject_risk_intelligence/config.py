@@ -51,6 +51,12 @@ USE_LLM_VARIABLE_EXTRACTION = os.getenv("RISK_LLM_VAR_EXTRACTION", "true").lower
 AUTO_DISCOVER_UNMAPPED = os.getenv("RISK_AUTO_DISCOVER", "true").lower() == "true"
 MAX_AUTO_DISCOVERIES = 3
 
+# Claim Validation (wires data_collection claim validation into insight pipeline)
+ENABLE_CLAIM_VALIDATION = os.getenv("RISK_CLAIM_VALIDATION", "true").lower() == "true"
+
+# Chain-Specific Trigger Conditions (per-chain activation thresholds)
+ENABLE_CHAIN_TRIGGERS = os.getenv("RISK_CHAIN_TRIGGERS", "true").lower() == "true"
+
 # Gap 5: Prediction Tracking
 ENABLE_PREDICTION_TRACKING = os.getenv("RISK_PREDICTION_TRACKING", "true").lower() == "true"
 PREDICTION_LEDGER_PATH = DATA_DIR / "prediction_ledger.json"

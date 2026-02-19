@@ -304,6 +304,32 @@ def _prepare_prompt_data(state: RiskImpactState, asset_class: str) -> dict:
     historical_event_data = state.get("historical_event_data", {})
     historical_event_text = format_historical_data_for_prompt(historical_event_data)
 
+    # Format claim validation results
+    claim_validation_text = ""
+    claim_results = state.get("claim_validation_results", [])
+    if claim_results:
+        lines = ["## CLAIM VALIDATION (Data-Tested)"]
+        for r in claim_results:
+            claim = r.get("claim", "Unknown claim")
+            status = r.get("status", "unknown")
+            correlation = r.get("actual_correlation")
+            p_value = r.get("p_value")
+            interpretation = r.get("interpretation", "")
+
+            status_upper = status.upper().replace("_", " ")
+            stats_parts = []
+            if correlation is not None:
+                stats_parts.append(f"correlation={correlation:.2f}")
+            if p_value is not None:
+                stats_parts.append(f"p={p_value:.3f}")
+            stats_str = f" ({', '.join(stats_parts)})" if stats_parts else ""
+
+            line = f'- "{claim}": {status_upper}{stats_str}'
+            if interpretation:
+                line += f" — {interpretation}"
+            lines.append(line)
+        claim_validation_text = "\n".join(lines)
+
     return {
         "query": query,
         "retrieval_answer": state.get("retrieval_answer", ""),
@@ -320,6 +346,7 @@ def _prepare_prompt_data(state: RiskImpactState, asset_class: str) -> dict:
         "theme_states": state.get("theme_states", None),
         "chain_graph_text": state.get("chain_graph_text", ""),
         "historical_analogs_text": state.get("historical_analogs_text", ""),
+        "claim_validation_text": claim_validation_text,
     }
 
 

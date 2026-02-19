@@ -130,6 +130,9 @@ class RiskImpactState(TypedDict, total=False):
     partially_filled_gaps: List[Dict[str, Any]]  # Gaps with partial info
     unfillable_gaps: List[Dict[str, Any]]  # Gaps that could not be filled
 
+    # Claim validation results (from data_collection claim validation)
+    claim_validation_results: List[Dict[str, Any]]
+
     # Multi-hop chain graph (Phase 2 - chain traversal)
     chain_tracks: List[Dict[str, Any]]  # Multi-hop tracks from chain graph
     chain_graph_text: str  # Formatted graph for prompt
