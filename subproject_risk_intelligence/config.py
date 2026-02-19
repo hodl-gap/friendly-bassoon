@@ -40,3 +40,17 @@ MAX_ATTEMPTS_PER_GAP = 2  # Max attempts per gap (primary + 1 refinement)
 ENABLE_MULTI_ANALOG = os.getenv("RISK_MULTI_ANALOG", "true").lower() == "true"
 MAX_HISTORICAL_ANALOGS = 5
 ANALOG_RELEVANCE_THRESHOLD = 0.5
+
+# Gap 2: Grounded Historical Analogs
+ENABLE_RESEARCH_ANALOG_SEARCH = os.getenv("RISK_RESEARCH_ANALOGS", "true").lower() == "true"
+ENABLE_MECHANISM_VALIDATION = os.getenv("RISK_MECHANISM_VALIDATION", "true").lower() == "true"
+MECHANISM_MATCH_THRESHOLD = 0.3
+
+# Gap 4: LLM-Powered Variable Extraction
+USE_LLM_VARIABLE_EXTRACTION = os.getenv("RISK_LLM_VAR_EXTRACTION", "true").lower() == "true"
+AUTO_DISCOVER_UNMAPPED = os.getenv("RISK_AUTO_DISCOVER", "true").lower() == "true"
+MAX_AUTO_DISCOVERIES = 3
+
+# Gap 5: Prediction Tracking
+ENABLE_PREDICTION_TRACKING = os.getenv("RISK_PREDICTION_TRACKING", "true").lower() == "true"
+PREDICTION_LEDGER_PATH = DATA_DIR / "prediction_ledger.json"

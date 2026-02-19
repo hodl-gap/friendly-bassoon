@@ -126,6 +126,21 @@ def load_chains(state: RiskImpactState, asset_class: str = "btc") -> RiskImpactS
                     if ts:
                         theme_states[theme_name] = ts
                 state["theme_states"] = theme_states
+
+                # Attach prediction hit rates to chains (Gap 5)
+                try:
+                    if config.ENABLE_PREDICTION_TRACKING:
+                        from .prediction_tracker import get_chain_hit_rates
+                        chain_ids = [c.get("id") for c in state.get("historical_chains", []) if c.get("id")]
+                        if chain_ids:
+                            hit_rates = get_chain_hit_rates(chain_ids)
+                            for chain in state["historical_chains"]:
+                                cid = chain.get("id")
+                                if cid and cid in hit_rates:
+                                    chain["hit_rate"] = hit_rates[cid]
+                except Exception as e:
+                    print(f"[Relationship Store] Hit rate attachment error: {e}")
+
                 return state
     except Exception as e:
         print(f"[Relationship Store] Theme-based loading failed, falling back: {e}")
@@ -140,6 +155,20 @@ def load_chains(state: RiskImpactState, asset_class: str = "btc") -> RiskImpactS
         print(f"[Relationship Store] Loaded {len(chains)} historical chains")
     else:
         print("[Relationship Store] No historical chains found")
+
+    # Attach prediction hit rates to chains (Gap 5)
+    try:
+        if config.ENABLE_PREDICTION_TRACKING:
+            from .prediction_tracker import get_chain_hit_rates
+            chain_ids = [c.get("id") for c in state.get("historical_chains", []) if c.get("id")]
+            if chain_ids:
+                hit_rates = get_chain_hit_rates(chain_ids)
+                for chain in state["historical_chains"]:
+                    cid = chain.get("id")
+                    if cid and cid in hit_rates:
+                        chain["hit_rate"] = hit_rates[cid]
+    except Exception as e:
+        print(f"[Relationship Store] Hit rate attachment error: {e}")
 
     return state
 
@@ -491,7 +520,11 @@ def format_historical_chains_for_prompt(chains: List[Dict]) -> str:
         summary = chain.get("logic_chain", {}).get("chain_summary", "unknown")
         rel_type = chain.get("relationship_type", "unknown")
         conf = chain.get("confidence", 0)
-        lines.append(f"{i}. {summary} ({rel_type}, conf: {conf:.2f})")
+        hit_rate_info = ""
+        hr = chain.get("hit_rate")
+        if hr:
+            hit_rate_info = f", hit_rate: {hr['hit_rate']:.0%} ({hr['confirmed']}/{hr['total']})"
+        lines.append(f"{i}. {summary} ({rel_type}, conf: {conf:.2f}{hit_rate_info})")
 
     return "\n".join(lines)
 

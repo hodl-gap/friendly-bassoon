@@ -197,6 +197,88 @@ MULTI_ANALOG_TOOL = {
 }
 
 
+CONTEXT_ANALOG_EXTRACTION_PROMPT = """You are extracting HISTORICAL EVENT references from already-retrieved research context.
+
+RESEARCH SYNTHESIS:
+{synthesis}
+
+LOGIC CHAINS (from research database and web sources):
+{chains}
+
+Your task: Identify historical market events that are EXPLICITLY MENTIONED or clearly referenced in the text above. These will be used as analogs for the current macro situation.
+
+RULES:
+- ONLY extract events that appear in the provided text — do NOT add events from your own knowledge
+- Each event should have a clear time period (year or month+year)
+- Extract the causal mechanism described in the text for each event
+- Score relevance based on how detailed the reference is (more detail = higher relevance)
+- Provide a date search query to find exact dates for each event
+- If no historical events are mentioned, return an empty analogs list
+
+Return ONLY events from the text above."""
+
+
+CONTEXT_ANALOG_TOOL = {
+    "name": "extract_context_analogs",
+    "description": "Extract historical event analogs explicitly mentioned in the research context.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "analogs": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "event_description": {
+                            "type": "string",
+                            "description": "Brief description of the historical event"
+                        },
+                        "year": {
+                            "type": "integer",
+                            "description": "Year the event occurred"
+                        },
+                        "relevance_score": {
+                            "type": "number",
+                            "description": "How detailed the reference is (0.0-1.0)"
+                        },
+                        "date_search_query": {
+                            "type": "string",
+                            "description": "Search query to find exact dates for this event"
+                        },
+                        "key_mechanism": {
+                            "type": "string",
+                            "description": "The causal mechanism described in the text"
+                        }
+                    },
+                    "required": ["event_description", "year", "relevance_score", "date_search_query", "key_mechanism"]
+                }
+            }
+        },
+        "required": ["analogs"]
+    }
+}
+
+
+MECHANISM_VALIDATION_PROMPT = """You are validating whether a claimed causal mechanism actually played out during a historical market event.
+
+HISTORICAL EVENT: {event}
+
+CLAIMED MECHANISM: {mechanism}
+
+ACTUAL MARKET DATA (peak-to-trough changes during the event):
+{market_data}
+
+Your task: Score how well the actual market data CONFIRMS the claimed causal mechanism.
+
+Scoring guide:
+- 0.8-1.0: Market data strongly confirms the mechanism (direction, magnitude, and timing align)
+- 0.5-0.7: Market data partially supports it (direction correct but magnitude/timing unclear)
+- 0.3-0.5: Weak support (some data points align, others don't)
+- 0.0-0.3: Market data contradicts the mechanism (wrong direction or no significant move)
+
+Be specific about what confirms or contradicts the mechanism."""
+
+
 def format_logic_chains_for_prompt(logic_chains: list) -> str:
     """Format logic chains for inclusion in prompts."""
     if not logic_chains:

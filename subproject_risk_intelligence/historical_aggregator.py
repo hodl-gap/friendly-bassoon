@@ -9,9 +9,102 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, Any, List
 from statistics import median, mean
 
+import anthropic
+
 from .historical_event_detector import identify_instruments, get_date_range
 from .historical_data_fetcher import fetch_historical_event_data, compare_to_current
 from .asset_configs import get_asset_config
+from . import config
+from .historical_event_prompts import MECHANISM_VALIDATION_PROMPT
+
+
+def validate_analog_mechanism(analog: Dict[str, Any], market_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Validate whether the claimed causal mechanism played out in the market data.
+
+    One Haiku call per analog (~$0.01).
+
+    Args:
+        analog: Analog dict with key_mechanism, event_description
+        market_data: Instrument data from historical fetch
+
+    Returns:
+        Dict with mechanism_match (0.0-1.0) and validation_note
+    """
+    mechanism = analog.get("key_mechanism", "")
+    event = analog.get("event_description", "")
+
+    if not mechanism:
+        return {"mechanism_match": 0.5, "validation_note": "No mechanism to validate"}
+
+    # Format market data summary
+    data_summary = []
+    instruments = market_data.get("instruments", {})
+    for name, data in instruments.items():
+        metrics = data.get("metrics", {})
+        change = metrics.get("peak_to_trough_pct")
+        if change is not None:
+            data_summary.append(f"{name}: {change:+.1f}%")
+
+    if not data_summary:
+        return {"mechanism_match": 0.5, "validation_note": "Insufficient market data for validation"}
+
+    prompt = MECHANISM_VALIDATION_PROMPT.format(
+        event=event,
+        mechanism=mechanism,
+        market_data=", ".join(data_summary)
+    )
+
+    validation_tool = {
+        "name": "validate_mechanism",
+        "description": "Score whether the claimed causal mechanism is confirmed by actual market data.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "mechanism_match": {
+                    "type": "number",
+                    "description": "Score 0.0-1.0: how well the market data confirms the claimed mechanism"
+                },
+                "validation_note": {
+                    "type": "string",
+                    "description": "Brief note explaining the score"
+                }
+            },
+            "required": ["mechanism_match", "validation_note"]
+        }
+    }
+
+    try:
+        client = anthropic.Anthropic()
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=300,
+            temperature=0.0,
+            tools=[validation_tool],
+            tool_choice={"type": "tool", "name": "validate_mechanism"},
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        # Log token usage
+        try:
+            from shared.run_logger import log_llm_call
+            log_llm_call("claude-haiku-4-5-20251001", response.usage.input_tokens, response.usage.output_tokens)
+        except Exception:
+            pass
+
+        for block in response.content:
+            if block.type == "tool_use" and block.name == "validate_mechanism":
+                result = block.input
+                return {
+                    "mechanism_match": result.get("mechanism_match", 0.5),
+                    "validation_note": result.get("validation_note", "")
+                }
+
+        return {"mechanism_match": 0.5, "validation_note": "No tool response"}
+
+    except Exception as e:
+        print(f"[Historical Analogs] Mechanism validation error for {event}: {e}")
+        return {"mechanism_match": 0.5, "validation_note": f"Validation error: {e}"}
 
 
 def fetch_multiple_analogs(
@@ -67,7 +160,7 @@ def fetch_multiple_analogs(
             if current_values and historical_data.get("instruments"):
                 comparison = compare_to_current(historical_data, current_values)
 
-            return {
+            result_dict = {
                 **analog,
                 "period": {
                     "start": date_range.get("start_date"),
@@ -79,6 +172,14 @@ def fetch_multiple_analogs(
                 "comparison_to_current": comparison,
                 "fetch_success": True,
             }
+
+            # Mechanism validation (Gap 2)
+            if config.ENABLE_MECHANISM_VALIDATION:
+                validation = validate_analog_mechanism(analog, historical_data)
+                result_dict["mechanism_match"] = validation["mechanism_match"]
+                result_dict["validation_note"] = validation["validation_note"]
+
+            return result_dict
 
         except Exception as e:
             print(f"[Historical Analogs] Failed to fetch {event}: {e}")
@@ -100,6 +201,17 @@ def fetch_multiple_analogs(
 
     # Sort by relevance score (preserve original order)
     enriched.sort(key=lambda a: a.get("relevance_score", 0), reverse=True)
+
+    # Filter by mechanism match threshold (Gap 2)
+    if config.ENABLE_MECHANISM_VALIDATION:
+        before_filter = len(enriched)
+        enriched = [
+            a for a in enriched
+            if not a.get("fetch_success") or a.get("mechanism_match", 1.0) >= config.MECHANISM_MATCH_THRESHOLD
+        ]
+        filtered_count = before_filter - len(enriched)
+        if filtered_count > 0:
+            print(f"[Historical Analogs] Filtered {filtered_count} analogs below mechanism_match threshold ({config.MECHANISM_MATCH_THRESHOLD})")
 
     successful = sum(1 for a in enriched if a.get("fetch_success"))
     print(f"[Historical Analogs] Fetched {successful}/{len(analogs)} analogs successfully")

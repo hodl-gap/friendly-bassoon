@@ -7,8 +7,11 @@ Extracts normalized variables from retrieved logic chains and synthesis.
 import re
 from typing import List, Dict, Any, Set
 
+import anthropic
+
 from .states import RiskImpactState
 from .asset_configs import get_asset_config
+from . import config
 
 
 # Common variable patterns to extract from text
@@ -45,41 +48,149 @@ VARIABLE_PATTERNS = {
 }
 
 
+def extract_variables_llm(state) -> set:
+    """
+    Extract variables using LLM inference (single Haiku call).
+
+    Identifies both explicitly named and logically implied variables.
+    Falls back to keyword extraction on failure.
+    """
+    from .variable_extraction_prompts import VARIABLE_INFERENCE_PROMPT
+
+    query = state.get("query", "")
+    synthesis = state.get("synthesis", "")[:1500]
+
+    # Build chain text (truncated)
+    chains_text = ""
+    for chain in state.get("logic_chains", [])[:5]:
+        if chain.get("chain_text"):
+            chains_text += chain["chain_text"] + "\n"
+        elif chain.get("steps"):
+            steps = chain.get("steps", [])
+            parts = []
+            for s in steps:
+                parts.append(f"{s.get('cause', '?')} -> {s.get('effect', '?')}")
+            chains_text += " -> ".join(parts) + "\n"
+
+    # Build known variable vocabulary
+    known_vars = list(VARIABLE_PATTERNS.keys())
+    from shared.variable_resolver import YAHOO_FALLBACK
+    known_vars.extend(YAHOO_FALLBACK.keys())
+    known_vars = sorted(set(known_vars))
+
+    prompt = VARIABLE_INFERENCE_PROMPT.format(
+        query=query,
+        synthesis=synthesis,
+        chains=chains_text[:1500],
+        known_variables=", ".join(known_vars)
+    )
+
+    try:
+        client = anthropic.Anthropic()
+
+        variable_extraction_tool = {
+            "name": "extract_variables",
+            "description": "Return the list of variables relevant to this macro analysis.",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "variables": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Normalized variable names from the known vocabulary"
+                    },
+                    "suggested_new": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "New variable names not in known vocabulary (snake_case)"
+                    }
+                },
+                "required": ["variables"]
+            }
+        }
+
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=500,
+            temperature=0.0,
+            tools=[variable_extraction_tool],
+            tool_choice={"type": "tool", "name": "extract_variables"},
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        # Log token usage
+        try:
+            from shared.run_logger import log_llm_call
+            log_llm_call("claude-haiku-4-5-20251001", response.usage.input_tokens, response.usage.output_tokens)
+        except Exception:
+            pass
+
+        # Extract tool_use result
+        result = None
+        for block in response.content:
+            if block.type == "tool_use" and block.name == "extract_variables":
+                result = block.input
+                break
+
+        if result:
+            variables = set(v.lower().strip() for v in result.get("variables", []))
+            suggested = result.get("suggested_new", [])
+            if suggested:
+                print(f"[Variable Extraction] LLM suggested new variables: {suggested}")
+                state["suggested_new_variables"] = suggested
+            print(f"[Variable Extraction] LLM extracted {len(variables)} variables")
+            return variables
+
+        print("[Variable Extraction] LLM returned no tool_use block, falling back to keyword extraction")
+        return None
+
+    except Exception as e:
+        print(f"[Variable Extraction] LLM extraction failed: {e}, falling back to keyword extraction")
+        return None
+
+
 def extract_variables(state: RiskImpactState) -> RiskImpactState:
     """
     Extract normalized variables from retrieved context.
 
-    Parses:
-    - Logic chains from retrieved chunks
-    - Synthesis text for variable mentions
-    - Answer text for variable mentions
-
-    Updates state with:
-    - extracted_variables: List of variable dicts
+    Uses LLM inference if enabled, falls back to keyword matching.
     """
     extracted = set()
 
-    # 1. Extract from logic chains
+    # Always run keyword extraction from chains (these have high-quality normalized data)
     logic_chains = state.get("logic_chains", [])
     for chain in logic_chains:
         chain_vars = extract_from_chain(chain)
         extracted.update(chain_vars)
 
-    # 2. Extract from synthesis text
     synthesis = state.get("synthesis", "")
     if synthesis:
         synthesis_vars = extract_from_text(synthesis)
         extracted.update(synthesis_vars)
 
-    # 3. Extract from answer text
     answer = state.get("retrieval_answer", "")
     if answer:
         answer_vars = extract_from_text(answer)
         extracted.update(answer_vars)
 
-    # Always include the target asset's primary variable
+    keyword_count = len(extracted)
+
+    # Supplement with LLM-inferred variables (adds logically implied ones)
+    if config.USE_LLM_VARIABLE_EXTRACTION:
+        llm_vars = extract_variables_llm(state)
+        if llm_vars is not None:
+            new_from_llm = llm_vars - extracted
+            extracted.update(llm_vars)
+            if new_from_llm:
+                print(f"[Variable Extraction] LLM added {len(new_from_llm)} implied variables: {sorted(new_from_llm)}")
+
+    # Always include priority variables for the asset class
     asset_cfg = get_asset_config(state.get("asset_class", "btc"))
     extracted.add(asset_cfg["always_include_variable"])
+
+    # Always merge priority variables
+    priority = get_priority_variables(state.get("asset_class", "btc"))
+    extracted.update(priority)
 
     # Convert to list of dicts with metadata
     variables_list = []

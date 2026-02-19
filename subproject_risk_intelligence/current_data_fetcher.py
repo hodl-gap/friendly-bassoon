@@ -22,6 +22,7 @@ from dotenv import load_dotenv
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from shared.variable_resolver import resolve_variable as _resolve_variable
+from . import config
 
 # RiskImpactState imported lazily inside fetch_current_data() to allow
 # standalone imports of utility functions (resolve_variable, fetch_*_with_history)
@@ -333,6 +334,41 @@ def fetch_current_data(state: "RiskImpactState") -> "RiskImpactState":
             else:
                 print(f"[current_data] {error}")
                 fetch_errors.append(var_name)
+
+    # Auto-discover unmapped variables (Gap 4)
+    if fetch_errors and config.AUTO_DISCOVER_UNMAPPED:
+        try:
+            unresolved = fetch_errors[:config.MAX_AUTO_DISCOVERIES]
+            if unresolved:
+                print(f"[Current Data] Auto-discovering {len(unresolved)} unmapped variables: {unresolved}")
+                from subproject_variable_mapper.data_id_discovery import discover_data_ids_sync
+                for var_name in unresolved:
+                    try:
+                        discovered = discover_data_ids_sync([var_name])
+                        if discovered:
+                            # Retry fetch
+                            mapping = resolve_variable(var_name)
+                            if mapping:
+                                source = mapping["source"]
+                                series_id = mapping["series_id"]
+                                lookback = MONTHLY_LOOKBACK_DAYS if series_id in MONTHLY_FRED_SERIES else DEFAULT_LOOKBACK_DAYS
+                                result = None
+                                if source == "FRED":
+                                    result = fetch_fred_with_history(series_id, lookback)
+                                elif source == "Yahoo":
+                                    result = fetch_yahoo_with_history(series_id, lookback)
+                                if result:
+                                    history = result.pop("history", [])
+                                    result["changes"] = calculate_changes(history)
+                                    current_values[var_name] = result
+                                    fetch_errors.remove(var_name)
+                                    print(f"[Current Data] Auto-discovered and fetched: {var_name}")
+                    except Exception as e:
+                        print(f"[Current Data] Auto-discovery failed for {var_name}: {e}")
+        except ImportError:
+            print("[Current Data] Variable mapper not available for auto-discovery")
+        except Exception as e:
+            print(f"[Current Data] Auto-discovery error: {e}")
 
     state["current_values"] = current_values
     state["fetch_errors"] = fetch_errors

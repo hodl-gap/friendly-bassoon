@@ -232,6 +232,16 @@ For EACH message, extract the following fields:
    - **IMPORTANT**: Empty object {} if regime context not clearly discernible from message content
    - Do NOT infer regime from date alone - only tag when explicitly mentioned or strongly implied
 
+12. **historical_references** - Array of historical events explicitly mentioned in the message
+   - Purpose: Ground historical analogs in research-sourced references
+   - ONLY extract if the message EXPLICITLY mentions a historical event — NO LLM inference
+   - Structure:
+     - "event": Brief event description (e.g., "2008 GFC", "August 2024 yen carry unwind")
+     - "period": Time period (e.g., "2008", "August 2024")
+     - "mechanism": The causal mechanism described (e.g., "carry trade unwind triggered forced selling")
+     - "outcome": The described market outcome (e.g., "BTC dropped 30% in 2 weeks")
+   - Empty array [] if no historical events explicitly mentioned
+
 **Output format (JSON array, one entry per message):**
 ```json
 [
@@ -269,7 +279,10 @@ For EACH message, extract the following fields:
             "valid_from": "2022-06",
             "valid_until": null,
             "is_forward_looking": false
-        }
+        },
+        "historical_references": [
+            {"event": "August 2024 yen carry unwind", "period": "August 2024", "mechanism": "BOJ rate hike triggered carry trade unwind", "outcome": "BTC dropped 20% in 5 days"}
+        ]
     }
 ]
 ```
@@ -539,6 +552,16 @@ For EACH message, extract the following fields:
    - **IMPORTANT**: Empty object {{}} if regime context not clearly discernible from message content
    - Do NOT infer regime from date alone - only tag when explicitly mentioned or strongly implied
 
+12. **historical_references** - Array of historical events explicitly mentioned in the message
+   - Purpose: Ground historical analogs in research-sourced references
+   - ONLY extract if the message EXPLICITLY mentions a historical event — NO LLM inference
+   - Structure:
+     - "event": Brief event description (e.g., "2008 GFC", "August 2024 yen carry unwind")
+     - "period": Time period (e.g., "2008", "August 2024")
+     - "mechanism": The causal mechanism described (e.g., "carry trade unwind triggered forced selling")
+     - "outcome": The described market outcome (e.g., "BTC dropped 30% in 2 weeks")
+   - Empty array [] if no historical events explicitly mentioned
+
 **Output format (JSON array, one entry per message):**
 ```json
 [
@@ -593,7 +616,10 @@ For EACH message, extract the following fields:
             "valid_from": "2022-06",
             "valid_until": null,
             "is_forward_looking": false
-        }}
+        }},
+        "historical_references": [
+            {{"event": "August 2024 yen carry unwind", "period": "August 2024", "mechanism": "BOJ rate hike triggered carry trade unwind", "outcome": "BTC dropped 20% in 5 days"}}
+        ]
     }}
 ]
 ```

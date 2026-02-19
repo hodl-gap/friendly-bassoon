@@ -166,6 +166,18 @@ def refresh_all_themes(skip_retrieval: bool = False, asset_class: str = "btc") -
     Returns:
         Dict mapping theme_name -> refresh result
     """
+    # Check prediction outcomes (Gap 5)
+    evaluated = []
+    try:
+        from . import config
+        if config.ENABLE_PREDICTION_TRACKING:
+            from .prediction_tracker import check_outcomes
+            evaluated = check_outcomes(asset_class)
+            if evaluated:
+                print(f"[Prediction Tracker] Evaluated {len(evaluated)} predictions")
+    except Exception as e:
+        print(f"[Prediction Tracker] Outcome check error: {e}")
+
     results = {}
     for theme_name in get_all_themes():
         try:
@@ -219,5 +231,24 @@ def generate_briefing(theme_states: Dict[str, Dict[str, Any]]) -> str:
 
     lines.insert(1, f"Active chains across all themes: {total_active}")
     lines.insert(2, "")
+
+    # Prediction scorecard (Gap 5)
+    try:
+        from . import config
+        if config.ENABLE_PREDICTION_TRACKING:
+            import json as _json
+            ledger_path = config.PREDICTION_LEDGER_PATH
+            if ledger_path.exists():
+                with open(ledger_path) as f:
+                    ledger = _json.load(f)
+                recent_evaluated = [p for p in ledger.get("predictions", []) if p.get("status") != "pending"]
+                if recent_evaluated:
+                    confirmed = sum(1 for p in recent_evaluated if p.get("outcome", {}).get("score") == "confirmed")
+                    total_eval = len(recent_evaluated)
+                    lines.append("")
+                    lines.append(f"## PREDICTION SCORECARD")
+                    lines.append(f"Evaluated: {total_eval} predictions, {confirmed} confirmed ({confirmed/total_eval*100:.0f}% hit rate)")
+    except Exception:
+        pass
 
     return "\n".join(lines)

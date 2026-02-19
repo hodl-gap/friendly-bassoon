@@ -20,6 +20,8 @@ from .historical_event_prompts import (
     DATE_EXTRACTION_PROMPT,
     MULTI_ANALOG_DETECTION_PROMPT,
     MULTI_ANALOG_TOOL,
+    CONTEXT_ANALOG_EXTRACTION_PROMPT,
+    CONTEXT_ANALOG_TOOL,
     format_logic_chains_for_prompt
 )
 from .asset_configs import get_asset_config
@@ -38,6 +40,110 @@ TEMPORAL_PATTERNS = [
     r"compare.*(to|with).*\d{4}",  # compare ... to ... year (allow words between)
     r"like in \d{4}",
 ]
+
+
+def extract_analogs_from_context(
+    synthesis: str,
+    logic_chains: list,
+    max_results: int = 5
+) -> List[Dict[str, Any]]:
+    """
+    Extract historical analog candidates from already-retrieved chains and synthesis.
+
+    Uses both DB chains and web chains that are already in the state,
+    rather than doing a separate Pinecone search. A single Haiku call
+    extracts ONLY events explicitly mentioned in the text.
+
+    Args:
+        synthesis: Retrieved synthesis text (includes DB + web chain content)
+        logic_chains: Merged logic chains (DB + web, distinguished by source_type)
+        max_results: Maximum analogs to return
+
+    Returns:
+        List of analog dicts with source: "retrieved_context"
+    """
+    if not synthesis and not logic_chains:
+        return []
+
+    # Format chains with source_type info so LLM sees both DB and web chains
+    chain_lines = []
+    for i, chain in enumerate(logic_chains[:10], 1):
+        source_type = chain.get("source_type", "database")
+        source = chain.get("source", "")
+        tag = f"[{source_type}]" if source_type else ""
+
+        if chain.get("chain_text"):
+            chain_lines.append(f"{i}. {tag} {chain['chain_text']} [Source: {source}]")
+        elif chain.get("steps"):
+            steps = chain.get("steps", [])
+            parts = [f"{s.get('cause', '?')} -> {s.get('effect', '?')}" for s in steps]
+            chain_lines.append(f"{i}. {tag} {' -> '.join(parts)} [Source: {source}]")
+        elif chain.get("chain_summary"):
+            chain_lines.append(f"{i}. {tag} {chain['chain_summary']} [Source: {source}]")
+
+    chains_text = "\n".join(chain_lines) if chain_lines else "(No chains)"
+
+    prompt = CONTEXT_ANALOG_EXTRACTION_PROMPT.format(
+        synthesis=synthesis[:2000],
+        chains=chains_text,
+    )
+
+    try:
+        client = anthropic.Anthropic()
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=800,
+            temperature=0.0,
+            tools=[CONTEXT_ANALOG_TOOL],
+            tool_choice={"type": "tool", "name": "extract_context_analogs"},
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        # Log token usage
+        try:
+            from shared.run_logger import log_llm_call
+            log_llm_call("claude-haiku-4-5-20251001", response.usage.input_tokens, response.usage.output_tokens)
+        except Exception:
+            pass
+
+        result = None
+        for block in response.content:
+            if block.type == "tool_use" and block.name == "extract_context_analogs":
+                result = block.input
+                break
+
+        if not result:
+            print("[Historical Analogs] No tool_use block in context extraction response")
+            return []
+
+        analogs = []
+        for a in result.get("analogs", [])[:max_results]:
+            analogs.append({
+                "event_description": a.get("event_description", ""),
+                "year": a.get("year", 0),
+                "relevance_score": a.get("relevance_score", 0.5),
+                "date_search_query": a.get("date_search_query", ""),
+                "key_mechanism": a.get("key_mechanism", ""),
+                "source": "retrieved_context",
+            })
+
+        web_count = sum(1 for c in logic_chains if c.get("source_type") == "web")
+        print(f"[Historical Analogs] Extracted {len(analogs)} analogs from context "
+              f"({len(logic_chains)} chains, {web_count} web)")
+        return analogs
+
+    except Exception as e:
+        print(f"[Historical Analogs] Context analog extraction error: {e}")
+        return []
+
+
+def _extract_year(period_str: str) -> int:
+    """Extract year from a period string like 'August 2024' or '2008'."""
+    import re
+    match = re.search(r'(19|20)\d{2}', str(period_str))
+    if match:
+        return int(match.group())
+    return 0
 
 
 def _quick_temporal_check(query: str) -> bool:
@@ -570,20 +676,50 @@ def detect_historical_analogs(
     """
     Detect up to N historical analogs for the current query.
 
-    Uses Haiku + tool_use to find analogous historical events
-    based on shared causal mechanisms.
-
-    Args:
-        query: User's original query
-        synthesis: Retrieved synthesis text
-        logic_chains: Logic chains from retrieval
-        max_analogs: Maximum analogs to return
-        relevance_threshold: Minimum relevance score
-
-    Returns:
-        List of analog dicts: [{event_description, year, relevance_score,
-                                date_search_query, key_mechanism}]
+    Uses research database first (if enabled), then LLM parametric memory.
     """
+    all_analogs = []
+
+    # Step 1: Extract analogs from already-retrieved context (DB + web chains)
+    if config.ENABLE_RESEARCH_ANALOG_SEARCH:
+        context_analogs = extract_analogs_from_context(synthesis, logic_chains, max_results=max_analogs)
+        for analog in context_analogs:
+            # Boost relevance for context-grounded analogs
+            analog["relevance_score"] = min(1.0, analog.get("relevance_score", 0.5) + 0.15)
+        all_analogs.extend(context_analogs)
+
+    # Step 2: Fill remaining slots with LLM parametric detection
+    remaining_slots = max_analogs - len(all_analogs)
+    if remaining_slots > 0:
+        llm_analogs = _detect_analogs_llm(query, synthesis, logic_chains, remaining_slots, relevance_threshold)
+        for analog in llm_analogs:
+            analog["source"] = "llm_parametric"
+        all_analogs.extend(llm_analogs)
+
+    # Filter by relevance threshold and limit
+    filtered = [
+        a for a in all_analogs
+        if a.get("relevance_score", 0) >= relevance_threshold
+    ]
+    filtered.sort(key=lambda a: a.get("relevance_score", 0), reverse=True)
+    filtered = filtered[:max_analogs]
+
+    print(f"[Historical Analogs] Found {len(filtered)} analogs (from {len(all_analogs)} candidates)")
+    for a in filtered:
+        source = a.get("source", "unknown")
+        print(f"  - {a.get('event_description', '?')} ({a.get('year', '?')}, relevance: {a.get('relevance_score', 0):.2f}, source: {source})")
+
+    return filtered
+
+
+def _detect_analogs_llm(
+    query: str,
+    synthesis: str,
+    logic_chains: list,
+    max_analogs: int = 5,
+    relevance_threshold: float = 0.5
+) -> List[Dict[str, Any]]:
+    """Original LLM-based analog detection (extracted from detect_historical_analogs)."""
     formatted_chains = format_logic_chains_for_prompt(logic_chains)
 
     prompt = MULTI_ANALOG_DETECTION_PROMPT.format(
@@ -618,25 +754,20 @@ def detect_historical_analogs(
                 break
 
         if not result:
-            print("[Historical Analogs] No tool_use block in response")
+            print("[Historical Analogs] No tool_use block in LLM response")
             return []
 
         analogs = result.get("analogs", [])
 
-        # Filter by relevance threshold and limit
+        # Filter by relevance threshold
         filtered = [
             a for a in analogs
             if a.get("relevance_score", 0) >= relevance_threshold
         ]
-        filtered.sort(key=lambda a: a.get("relevance_score", 0), reverse=True)
         filtered = filtered[:max_analogs]
-
-        print(f"[Historical Analogs] Found {len(filtered)} analogs (from {len(analogs)} candidates)")
-        for a in filtered:
-            print(f"  - {a.get('event_description', '?')} ({a.get('year', '?')}, relevance: {a.get('relevance_score', 0):.2f})")
 
         return filtered
 
     except Exception as e:
-        print(f"[Historical Analogs] Detection error: {e}")
+        print(f"[Historical Analogs] LLM detection error: {e}")
         return []

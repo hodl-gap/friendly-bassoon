@@ -42,6 +42,7 @@ from .historical_event_detector import detect_historical_gap, identify_instrumen
 from .historical_data_fetcher import fetch_historical_event_data, compare_to_current
 from .historical_aggregator import fetch_multiple_analogs, aggregate_analogs, format_analogs_for_prompt
 from .asset_configs import get_asset_config
+from .prediction_tracker import extract_predictions, log_predictions
 from shared.chain_graph import ChainGraph
 from . import config
 
@@ -706,6 +707,16 @@ def run_asset_impact(
     state = analyze_impact(state, asset_class=asset_class)
     if ENABLE_SNAPSHOTS:
         snapshot_state(f"analyze_impact_{asset_class}", state, "out")
+
+    # Prediction tracking (Gap 5)
+    if config.ENABLE_PREDICTION_TRACKING:
+        try:
+            predictions = extract_predictions(state, asset_class)
+            if predictions:
+                log_predictions(predictions)
+                print(f"[Prediction Tracker] Logged {len(predictions)} predictions")
+        except Exception as e:
+            print(f"[Prediction Tracker] Logging error: {e}")
 
     # Store asset-specific chains
     if not skip_chain_store:
