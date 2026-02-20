@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "last_updated": "2026-02-14T11:31:31.097383",
-    "total_relationships": 166
+    "last_updated": "2026-02-20T02:26:13.342718",
+    "total_relationships": 246
   },
   "relationships": [
     {
@@ -3200,9 +3200,10 @@
       "source_attribution": "Generic source (id: 78c9945a42691062_43)",
       "id": "rel_c90c3607",
       "discovered_at": "2026-02-04T00:16:25.729094",
-      "validation_count": 1,
+      "validation_count": 2,
       "relationship_type": "positive",
-      "confidence": 0.78
+      "confidence": 0.7709999999999999,
+      "last_validated": "2026-02-20T02:17:21.553114"
     },
     {
       "logic_chain": {
@@ -5063,9 +5064,10 @@
       "source_attribution": "Source 6",
       "id": "rel_1e09f04a",
       "discovered_at": "2026-02-14T11:31:31.092845",
-      "validation_count": 1,
+      "validation_count": 2,
       "relationship_type": "positive",
-      "confidence": 0.55
+      "confidence": 0.61,
+      "last_validated": "2026-02-20T02:17:18.405773"
     },
     {
       "logic_chain": {
@@ -5358,6 +5360,3503 @@
       "validation_count": 1,
       "relationship_type": "positive",
       "confidence": 0.55
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "technology sector exhaustion",
+            "cause_normalized": "tech_exhaustion",
+            "effect": "consolidation/drawdown period starting late February/early March",
+            "effect_normalized": "correction_start",
+            "mechanism": "Major tech stocks (Nvidia, Microsoft) trading sideways after three-year run signals momentum exhaustion, triggering sector-wide correction"
+          }
+        ],
+        "chain_summary": "tech_exhaustion -> correction_start"
+      },
+      "terminal_effect": "correction_start",
+      "mechanism": "Major tech stocks (Nvidia, Microsoft) trading sideways after three-year run signals momentum exhaustion, triggering sector-wide correction",
+      "source_attribution": "Source 1, Source 2",
+      "id": "rel_2b332872",
+      "discovered_at": "2026-02-19T08:55:37.894801",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "tech_exhaustion",
+          "condition_type": "absolute_threshold",
+          "condition_value": 30,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 5,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "software sector selloff ahead of earnings (CRM -7%)",
+            "cause_normalized": "software_selloff",
+            "effect": "broader market downside pressure, source-of-funds selling",
+            "effect_normalized": "market_pressure",
+            "mechanism": "Pre-earnings distrust in software names forces fund-raising selling that spills into broader market flows"
+          }
+        ],
+        "chain_summary": "software_selloff -> market_pressure"
+      },
+      "terminal_effect": "market_pressure",
+      "mechanism": "Pre-earnings distrust in software names forces fund-raising selling that spills into broader market flows",
+      "source_attribution": "Source 6",
+      "id": "rel_9de3b9ea",
+      "discovered_at": "2026-02-19T08:55:39.418838",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "software_selloff",
+          "condition_type": "percentage_change",
+          "condition_value": 5,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 3,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "rare sector rotation pattern (all sectors positive except Tech -1.8%)",
+            "cause_normalized": "sector_rotation_away_tech",
+            "effect": "significant concerns specific to Tech sector",
+            "effect_normalized": "tech_sector_concerns",
+            "mechanism": "Extremely rare pattern (only 11 occurrences since 1990) indicates major investor rotation away from expensive Tech stocks, similar to 2000-2001 tech bubble and 2007 pre-crisis periods"
+          }
+        ],
+        "chain_summary": "sector_rotation_away_tech -> tech_sector_concerns"
+      },
+      "terminal_effect": "tech_sector_concerns",
+      "mechanism": "Extremely rare pattern (only 11 occurrences since 1990) indicates major investor rotation away from expensive Tech stocks, similar to 2000-2001 tech bubble and 2007 pre-crisis periods",
+      "source_attribution": "Source 3",
+      "id": "rel_3b6c6087",
+      "discovered_at": "2026-02-19T08:55:40.818418",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "sector_rotation_away_tech",
+          "condition_type": "absolute_threshold",
+          "condition_value": -1.8,
+          "condition_direction": "below",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "asset price bubble",
+            "cause_normalized": "asset_price_bubble",
+            "effect": "consumer price inflation (CPI) impact",
+            "effect_normalized": "cpi_inflation",
+            "mechanism": "Asset-price driven wealth effect transmits to demand/inflation → inflation expectations raise term premium → higher yields reduce equity valuations and trigger correction"
+          },
+          {
+            "cause": "consumer price inflation (CPI) impact",
+            "cause_normalized": "cpi_inflation",
+            "effect": "bond yields rise sharply",
+            "effect_normalized": "bond_yields_up",
+            "mechanism": ""
+          },
+          {
+            "cause": "bond yields rise sharply",
+            "cause_normalized": "bond_yields_up",
+            "effect": "equity correction in H1 2026",
+            "effect_normalized": "equity_correction",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "asset_price_bubble -> cpi_inflation -> bond_yields_up -> equity_correction"
+      },
+      "terminal_effect": "equity_correction",
+      "mechanism": "Asset-price driven wealth effect transmits to demand/inflation → inflation expectations raise term premium → higher yields reduce equity valuations and trigger correction",
+      "source_attribution": "Source 17 (step 1), Source 9 (steps 2-3)",
+      "id": "rel_736ff89f",
+      "discovered_at": "2026-02-19T08:55:43.262114",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "asset_price_bubble",
+          "condition_type": "percentage_change",
+          "condition_value": 5,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "cpi_inflation",
+          "condition_type": "absolute_threshold",
+          "condition_value": 3.5,
+          "condition_direction": "above",
+          "timeframe_days": 30
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Mag 7 rapid price velocity (192% rise)",
+            "cause_normalized": "mag_7_rapid_price_velocity_(192%_rise)",
+            "effect": "entering mature/late-stage bubble",
+            "effect_normalized": "bubble_late_stage",
+            "mechanism": "Velocity comparable to past bubbles suggests late-stage dynamics → historical pattern shows bond yields rose in 12 of 14 past bubbles → rising real rates historically coincide with bubble peaks and subsequent declines"
+          },
+          {
+            "cause": "entering mature/late-stage bubble",
+            "cause_normalized": "bubble_late_stage",
+            "effect": "real rates near 3% may trigger correction",
+            "effect_normalized": "correction_trigger",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "mag_7_rapid_price_velocity_(192%_rise) -> bubble_late_stage -> correction_trigger"
+      },
+      "terminal_effect": "correction_trigger",
+      "mechanism": "Velocity comparable to past bubbles suggests late-stage dynamics → historical pattern shows bond yields rose in 12 of 14 past bubbles → rising real rates historically coincide with bubble peaks and subsequent declines",
+      "source_attribution": "Source 20 (all steps)",
+      "id": "rel_6d393d42",
+      "discovered_at": "2026-02-19T08:55:44.767148",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "mag_7_rapid_price_velocity",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "us10y",
+          "condition_type": "absolute_threshold",
+          "condition_value": 3.0,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "higher return concentration in 2025 vs 2000",
+            "cause_normalized": "equity_concentration",
+            "effect": "tech-centric structure more vulnerable",
+            "effect_normalized": "tech_vulnerability",
+            "mechanism": "Greater concentration in tech increases systemic sensitivity to sector shocks, making SaaS/software particularly vulnerable to selloffs"
+          },
+          {
+            "cause": "tech-centric structure more vulnerable",
+            "cause_normalized": "tech_vulnerability",
+            "effect": "correction amplified in concentrated sectors",
+            "effect_normalized": "correction_amplified_in_concentrated_sectors",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "equity_concentration -> tech_vulnerability -> correction_amplified_in_concentrated_sectors"
+      },
+      "terminal_effect": "correction_amplified_in_concentrated_sectors",
+      "mechanism": "Greater concentration in tech increases systemic sensitivity to sector shocks, making SaaS/software particularly vulnerable to selloffs",
+      "source_attribution": "Source 17",
+      "id": "rel_f762770d",
+      "discovered_at": "2026-02-19T08:55:46.377249",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 25,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 6,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Trump fiscal retrenchment",
+            "cause_normalized": "fiscal_retrenchment",
+            "effect": "pressure on central bank to cut rates",
+            "effect_normalized": "fed_cut_pressure",
+            "mechanism": "Fiscal tightening creates pressure for rate cuts → policy easing expectations drive asset re-pricing detached from fundamentals → policy-driven gains form bubble → deterioration precedes collapse (180-year historical pattern)"
+          },
+          {
+            "cause": "pressure on central bank to cut rates",
+            "cause_normalized": "fed_cut_pressure",
+            "effect": "equities rally driven by policy expectations",
+            "effect_normalized": "equity_rally_policy_driven",
+            "mechanism": ""
+          },
+          {
+            "cause": "equities rally driven by policy expectations",
+            "cause_normalized": "equity_rally_policy_driven",
+            "effect": "bubble formation risk",
+            "effect_normalized": "bubble_risk",
+            "mechanism": ""
+          },
+          {
+            "cause": "bubble formation risk",
+            "cause_normalized": "bubble_risk",
+            "effect": "financial market deterioration",
+            "effect_normalized": "market_deterioration",
+            "mechanism": ""
+          },
+          {
+            "cause": "financial market deterioration",
+            "cause_normalized": "market_deterioration",
+            "effect": "asset bubble burst",
+            "effect_normalized": "bubble_burst",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "fiscal_retrenchment -> fed_cut_pressure -> equity_rally_policy_driven -> bubble_risk -> market_deterioration -> bubble_burst"
+      },
+      "terminal_effect": "bubble_burst",
+      "mechanism": "Fiscal tightening creates pressure for rate cuts → policy easing expectations drive asset re-pricing detached from fundamentals → policy-driven gains form bubble → deterioration precedes collapse (180-year historical pattern)",
+      "source_attribution": "Source 19 (steps 1-4), Source 16 (steps 5-6)",
+      "id": "rel_049166db",
+      "discovered_at": "2026-02-19T08:55:47.721820",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "fiscal_retrenchment",
+          "condition_type": "absolute_threshold",
+          "condition_value": 10,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "us10y",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "crypto fund inflows",
+            "cause_normalized": "crypto_fund_inflows",
+            "effect": "accelerated risk rally",
+            "effect_normalized": "risk_rally",
+            "mechanism": "Crypto flows increase overall risk appetite → retail buying amplifies speculative moves → higher bond yields flip the game, reversing bank stock strength and reducing risk appetite"
+          },
+          {
+            "cause": "accelerated risk rally",
+            "cause_normalized": "risk_rally",
+            "effect": "retail bubble formation",
+            "effect_normalized": "bubble_risk",
+            "mechanism": ""
+          },
+          {
+            "cause": "retail bubble formation",
+            "cause_normalized": "bubble_risk",
+            "effect": "correction when bond yields rise",
+            "effect_normalized": "correction_when_bond_yields_rise",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "crypto_fund_inflows -> risk_rally -> bubble_risk -> correction_when_bond_yields_rise"
+      },
+      "terminal_effect": "correction_when_bond_yields_rise",
+      "mechanism": "Crypto flows increase overall risk appetite → retail buying amplifies speculative moves → higher bond yields flip the game, reversing bank stock strength and reducing risk appetite",
+      "source_attribution": "Source 19 (all steps)",
+      "id": "rel_d77edda2",
+      "discovered_at": "2026-02-19T08:55:48.920095",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "crypto_fund_inflows",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "US fiscal math creates political pressure on Fed",
+            "cause_normalized": "fiscal_pressure_on_fed",
+            "effect": "pressure to lower policy rate",
+            "effect_normalized": "fed_rate_cut",
+            "mechanism": "High mandatory spending leaves interest expense ($1T in 2025 context) as primary fiscal lever → rate cuts + tax/currency easing boost aggregate demand → reflation fuels asset price excesses → bubbles historically end with sharp rate rises"
+          },
+          {
+            "cause": "pressure to lower policy rate",
+            "cause_normalized": "fed_rate_cut",
+            "effect": "nominal GDP boom / reflation",
+            "effect_normalized": "nominal_gdp_boom",
+            "mechanism": ""
+          },
+          {
+            "cause": "nominal GDP boom / reflation",
+            "cause_normalized": "nominal_gdp_boom",
+            "effect": "asset bubble formation, eventual bond yield spike ends bubble",
+            "effect_normalized": "risk_asset_bubble",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "fiscal_pressure_on_fed -> fed_rate_cut -> nominal_gdp_boom -> risk_asset_bubble"
+      },
+      "terminal_effect": "risk_asset_bubble",
+      "mechanism": "High mandatory spending leaves interest expense ($1T in 2025 context) as primary fiscal lever → rate cuts + tax/currency easing boost aggregate demand → reflation fuels asset price excesses → bubbles historically end with sharp rate rises",
+      "source_attribution": "Source 4 (all steps)",
+      "id": "rel_be177894",
+      "discovered_at": "2026-02-19T08:55:50.235875",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "fiscal_pressure_on_fed",
+          "condition_type": "absolute_threshold",
+          "condition_value": 75,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "us10y",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "short-term additional upside (6-8 weeks from Jan 8)",
+            "cause_normalized": "short_term_upside",
+            "effect": "correction likely start late Feb/early Mar",
+            "effect_normalized": "correction_start",
+            "mechanism": "Momentum exhaustion after short-term gains triggers correction → initial correction extends into multi-month downtrend"
+          },
+          {
+            "cause": "correction likely start late Feb/early Mar",
+            "cause_normalized": "correction_start",
+            "effect": "price decline may persist through May",
+            "effect_normalized": "downtrend_through_may",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "short_term_upside -> correction_start -> downtrend_through_may"
+      },
+      "terminal_effect": "downtrend_through_may",
+      "mechanism": "Momentum exhaustion after short-term gains triggers correction → initial correction extends into multi-month downtrend",
+      "source_attribution": "Source 2, Source 11",
+      "id": "rel_365dfeca",
+      "discovered_at": "2026-02-19T08:55:51.775091",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 5,
+          "condition_direction": "increase",
+          "timeframe_days": 42
+        },
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "decrease",
+          "timeframe_days": 42
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "seasonal pattern: strong start through mid-April",
+            "cause_normalized": "seasonal_pattern:_strong_start_through_mid-april",
+            "effect": "weak period mid-April through October",
+            "effect_normalized": "seasonal_weakness",
+            "mechanism": "Historical composite shows Q1 strength followed by summer/fall weakness, with strongest performance in Q1 and Q4"
+          },
+          {
+            "cause": "weak period mid-April through October",
+            "cause_normalized": "seasonal_weakness",
+            "effect": "'Sell in May' effect",
+            "effect_normalized": "'sell_in_may'_effect",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "seasonal_pattern:_strong_start_through_mid-april -> seasonal_weakness -> 'sell_in_may'_effect"
+      },
+      "terminal_effect": "'sell_in_may'_effect",
+      "mechanism": "Historical composite shows Q1 strength followed by summer/fall weakness, with strongest performance in Q1 and Q4",
+      "source_attribution": "Source 12",
+      "id": "rel_75f04a15",
+      "discovered_at": "2026-02-19T08:55:54.389071",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 5,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "bear markets typically bottom in December",
+            "cause_normalized": "december_bottom",
+            "effect": "consolidation February-March",
+            "effect_normalized": "consolidation_period",
+            "mechanism": "Tax-loss harvesting drives December bottoms → 30-day wash-sale period creates February-March consolidation → repurchasing drives spring recovery"
+          },
+          {
+            "cause": "consolidation February-March",
+            "cause_normalized": "consolidation_period",
+            "effect": "strong recovery from April onward",
+            "effect_normalized": "recovery_phase",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "december_bottom -> consolidation_period -> recovery_phase"
+      },
+      "terminal_effect": "recovery_phase",
+      "mechanism": "Tax-loss harvesting drives December bottoms → 30-day wash-sale period creates February-March consolidation → repurchasing drives spring recovery",
+      "source_attribution": "Source 13, Source 14",
+      "id": "rel_a558d89b",
+      "discovered_at": "2026-02-19T08:55:55.954071",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 10,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "vix",
+          "condition_type": "absolute_threshold",
+          "condition_value": 30,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "US 30-year real rate reached 2.8% (May 2025 context)",
+            "cause_normalized": "real_rates_high",
+            "effect": "S&P 500 at 22x forward P/E vulnerable",
+            "effect_normalized": "valuation_pressure",
+            "mechanism": "High real rates (highest since Nov 2008) pressure equity valuations → current 22x P/E requires either restored confidence, end of dollar weakness, or policy reversal to sustain"
+          },
+          {
+            "cause": "S&P 500 at 22x forward P/E vulnerable",
+            "cause_normalized": "valuation_pressure",
+            "effect": "without EPS growth, multiple compression risk",
+            "effect_normalized": "multiple_compression",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "real_rates_high -> valuation_pressure -> multiple_compression"
+      },
+      "terminal_effect": "multiple_compression",
+      "mechanism": "High real rates (highest since Nov 2008) pressure equity valuations → current 22x P/E requires either restored confidence, end of dollar weakness, or policy reversal to sustain",
+      "source_attribution": "Source 7",
+      "id": "rel_f498208f",
+      "discovered_at": "2026-02-19T08:55:57.536798",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "us10y",
+          "condition_type": "absolute_threshold",
+          "condition_value": 2.8,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "us10y",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "defensive sectors declined to 15-16% of global market cap (matching 2000 tech bubble low)",
+            "cause_normalized": "defensive_underweight",
+            "effect": "extreme market concentration in growth/tech",
+            "effect_normalized": "growth_concentration",
+            "mechanism": "Defensive sectors at 25-year low relative valuation indicates severe overweight in growth stocks → mirrors late 1999/early 2000 conditions that preceded tech bubble burst"
+          },
+          {
+            "cause": "extreme market concentration in growth/tech",
+            "cause_normalized": "growth_concentration",
+            "effect": "elevated correction risk",
+            "effect_normalized": "elevated_correction_risk",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "defensive_underweight -> growth_concentration -> elevated_correction_risk"
+      },
+      "terminal_effect": "elevated_correction_risk",
+      "mechanism": "Defensive sectors at 25-year low relative valuation indicates severe overweight in growth stocks → mirrors late 1999/early 2000 conditions that preceded tech bubble burst",
+      "source_attribution": "Source 5",
+      "id": "rel_663a57fb",
+      "discovered_at": "2026-02-19T08:55:59.089189",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "defensive_underweight",
+          "condition_type": "absolute_threshold",
+          "condition_value": 16,
+          "condition_direction": "below",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "growth_concentration",
+          "condition_type": "absolute_threshold",
+          "condition_value": 75,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "bond and equity volatility near historical lows",
+            "cause_normalized": "volatility_lows",
+            "effect": "pattern associated with pre-crisis or post-bubble peak",
+            "effect_normalized": "pre_crisis_signal",
+            "mechanism": "Very low volatility historically links to near-crisis or bubble-peak regimes → higher sovereign interest expense raises debt-service burden, amplifying bond-market vulnerability"
+          },
+          {
+            "cause": "pattern associated with pre-crisis or post-bubble peak",
+            "cause_normalized": "pre_crisis_signal",
+            "effect": "US Treasury net interest payments rising (>$1T 12m cum)",
+            "effect_normalized": "us_treasury_net_interest_payments",
+            "mechanism": ""
+          },
+          {
+            "cause": "US Treasury net interest payments rising (>$1T 12m cum)",
+            "cause_normalized": "us_treasury_net_interest_payments",
+            "effect": "increased structural bond-market risk",
+            "effect_normalized": "bond_market_risk",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "volatility_lows -> pre_crisis_signal -> us_treasury_net_interest_payments -> bond_market_risk"
+      },
+      "terminal_effect": "bond_market_risk",
+      "mechanism": "Very low volatility historically links to near-crisis or bubble-peak regimes → higher sovereign interest expense raises debt-service burden, amplifying bond-market vulnerability",
+      "source_attribution": "Source 10 (all steps)",
+      "id": "rel_ebd410a1",
+      "discovered_at": "2026-02-19T08:56:00.271309",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "vix",
+          "condition_type": "absolute_threshold",
+          "condition_value": 15,
+          "condition_direction": "below",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "us10y",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "'AI Bubble' mentions spiked 10x (1,700 mentions late Dec 2024/early Jan 2025)",
+            "cause_normalized": "ai_bubble_sentiment",
+            "effect": "growing market concern about AI overvaluation",
+            "effect_normalized": "valuation_skepticism",
+            "mechanism": "Dramatic surge in bubble mentions around Nvidia earnings and Chinese AI competitor event indicates shift in market sentiment toward AI stock skepticism"
+          },
+          {
+            "cause": "growing market concern about AI overvaluation",
+            "cause_normalized": "valuation_skepticism",
+            "effect": "DeepSeek selloff event",
+            "effect_normalized": "competitive_threat",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "ai_bubble_sentiment -> valuation_skepticism -> competitive_threat"
+      },
+      "terminal_effect": "competitive_threat",
+      "mechanism": "Dramatic surge in bubble mentions around Nvidia earnings and Chinese AI competitor event indicates shift in market sentiment toward AI stock skepticism",
+      "source_attribution": "Source 8",
+      "id": "rel_e3811c3b",
+      "discovered_at": "2026-02-19T08:56:01.659168",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "ai_bubble_sentiment",
+          "condition_type": "percentage_change",
+          "condition_value": 300,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 25,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "policy-related headlines (Trump endorses CCCA)",
+            "cause_normalized": "policy_headline_risk",
+            "effect": "selling in consumer-facing financials and software",
+            "effect_normalized": "sector_selling",
+            "mechanism": "Headline risk increases perceived regulatory threat → triggers targeted selling in affected sectors → spills into broader market"
+          },
+          {
+            "cause": "selling in consumer-facing financials and software",
+            "cause_normalized": "sector_selling",
+            "effect": "broader market contagion",
+            "effect_normalized": "broader_market_contagion",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "policy_headline_risk -> sector_selling -> broader_market_contagion"
+      },
+      "terminal_effect": "broader_market_contagion",
+      "mechanism": "Headline risk increases perceived regulatory threat → triggers targeted selling in affected sectors → spills into broader market",
+      "source_attribution": "Source 6",
+      "id": "rel_ef2d8ca9",
+      "discovered_at": "2026-02-19T08:56:02.863722",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 5,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "political intervention in monetary policy",
+            "cause_normalized": "political_intervention",
+            "effect": "rally extension possible",
+            "effect_normalized": "rally_extension",
+            "mechanism": "Policy interference can alter rate path, extending asset upswings (Nixon 1971 example) → market cycles can top ahead of official rate pivots → higher nominal/real yields reduce valuations, triggering lagged market declines (Japan 1985-1992, dotcom 1998-2002 patterns)"
+          },
+          {
+            "cause": "rally extension possible",
+            "cause_normalized": "rally_extension",
+            "effect": "asset markets peaking before rate pivot",
+            "effect_normalized": "asset_peak_before_pivot",
+            "mechanism": ""
+          },
+          {
+            "cause": "asset markets peaking before rate pivot",
+            "cause_normalized": "asset_peak_before_pivot",
+            "effect": "delayed asset market collapse when rates/real rates exceed threshold",
+            "effect_normalized": "asset_collapse",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "political_intervention -> rally_extension -> asset_peak_before_pivot -> asset_collapse"
+      },
+      "terminal_effect": "asset_collapse",
+      "mechanism": "Policy interference can alter rate path, extending asset upswings (Nixon 1971 example) → market cycles can top ahead of official rate pivots → higher nominal/real yields reduce valuations, triggering lagged market declines (Japan 1985-1992, dotcom 1998-2002 patterns)",
+      "source_attribution": "Source 18 (all steps)",
+      "id": "rel_c5b3f50c",
+      "discovered_at": "2026-02-19T08:56:04.622088",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "us10y",
+          "condition_type": "absolute_threshold",
+          "condition_value": 15,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "AI agents capability expansion to perform software tasks autonomously",
+            "cause_normalized": "ai_agents_capability_expansion_to_perform_software",
+            "effect": "$300 billion market value evaporated from SaaS sector on February 4, 2026",
+            "effect_normalized": "$300_billion_market_value_evaporated_from_saas_sector_on_february_4,_2026",
+            "mechanism": "AI agents demonstrated ability to draft legal documents, run financial models, and manage customer relationships independently, eliminating need for multiple software subscriptions and triggering massive sell-off as investors repriced traditional SaaS business models"
+          }
+        ],
+        "chain_summary": "ai_agents_capability_expansion_to_perform_software -> $300_billion_market_value_evaporated_from_saas_sector_on_february_4,_2026"
+      },
+      "terminal_effect": "$300_billion_market_value_evaporated_from_saas_sector_on_february_4,_2026",
+      "mechanism": "AI agents demonstrated ability to draft legal documents, run financial models, and manage customer relationships independently, eliminating need for multiple software subscriptions and triggering massive sell-off as investors repriced traditional SaaS business models",
+      "source_attribution": "Source 2, Source 1",
+      "id": "rel_f471665a",
+      "discovered_at": "2026-02-19T09:02:15.157688",
+      "validation_count": 5,
+      "relationship_type": "neutral",
+      "confidence": 0.7251449999999998,
+      "trigger_conditions": [
+        {
+          "variable": "saas_sector_valuation",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "ai_agents_capability_index",
+          "condition_type": "absolute_threshold",
+          "condition_value": 75,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ],
+      "last_validated": "2026-02-19T09:46:33.748260"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Anthropic released 11 new plug-ins for Claude Cowork AI tool at end of January 2026",
+            "cause_normalized": "anthropic_released_11_new_plug-ins_for_claude_cowork_ai_tool_at_end_of_january_2026",
+            "effect": "Massive sell-off in SaaS stocks",
+            "effect_normalized": "massive_sell_off_in_saas_stocks",
+            "mechanism": "The release demonstrated practical agentic AI capabilities that can replace traditional SaaS functionality, providing concrete evidence of disruption threat and triggering immediate investor panic"
+          }
+        ],
+        "chain_summary": "anthropic_released_11_new_plug-ins_for_claude_cowork_ai_tool_at_end_of_january_2026 -> massive_sell_off_in_saas_stocks"
+      },
+      "terminal_effect": "massive_sell_off_in_saas_stocks",
+      "mechanism": "The release demonstrated practical agentic AI capabilities that can replace traditional SaaS functionality, providing concrete evidence of disruption threat and triggering immediate investor panic",
+      "source_attribution": "Source 5\n\n## Multi-Hop: AI Disruption → Valuation Compression → Sector Collapse",
+      "id": "rel_c21235bb",
+      "discovered_at": "2026-02-19T09:02:16.800843",
+      "validation_count": 4,
+      "relationship_type": "positive",
+      "confidence": 0.7273499999999998,
+      "trigger_conditions": [
+        {
+          "variable": "saas_stocks",
+          "condition_type": "percentage_change",
+          "condition_value": 5,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "vix",
+          "condition_type": "absolute_threshold",
+          "condition_value": 25,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ],
+      "last_validated": "2026-02-19T09:46:33.748394"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Second-order impact of AI disruption hitting software company bottom lines ahead of schedule",
+            "cause_normalized": "second_order_impact_of_ai_disruption_hitting_softw",
+            "effect": "$300 billion in market value evaporates across SaaS, data, and software-heavy firms in February 2026",
+            "effect_normalized": "$300_billion_in_market_value_evaporates_across_saas,_data,_and_software-heavy_firms_in_february_2026",
+            "mechanism": "AI disruption immediately impacted revenue and profitability (not slow-burn hyperscaler cash burn) → rapid repricing and investor panic selling → dramatic compression in valuation multiples as market repriced software business models"
+          },
+          {
+            "cause": "$300 billion in market value evaporates across SaaS, data, and software-heavy firms in February 2026",
+            "cause_normalized": "$300_billion_in_market_value_evaporates_across_saas,_data,_and_software-heavy_firms_in_february_2026",
+            "effect": "Software price/sales ratio declines from 9x (September 2025) to 6x (February 2026)",
+            "effect_normalized": "software_price/sales_ratio_declines_from_9x_(september_2025)_to_6x_(february_2026)",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "second_order_impact_of_ai_disruption_hitting_softw -> $300_billion_in_market_value_evaporates_across_saas,_data,_and_software-heavy_firms_in_february_2026 -> software_price/sales_ratio_declines_from_9x_(september_2025)_to_6x_(february_2026)"
+      },
+      "terminal_effect": "software_price/sales_ratio_declines_from_9x_(september_2025)_to_6x_(february_2026)",
+      "mechanism": "AI disruption immediately impacted revenue and profitability (not slow-burn hyperscaler cash burn) → rapid repricing and investor panic selling → dramatic compression in valuation multiples as market repriced software business models",
+      "source_attribution": "Source 1 (steps 1-2), Source 3 (step 2)",
+      "id": "rel_acb9d5ea",
+      "discovered_at": "2026-02-19T09:02:18.177345",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "software_sector_valuation_multiple",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "decrease",
+          "timeframe_days": 30
+        },
+        {
+          "variable": "software_sector_earnings_growth",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 30
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Goldman Sachs projection that 60% of software economics will shift to AI agents by 2030",
+            "cause_normalized": "goldman_sachs_projection_that_60%_of_software_economics_will_shift_to_ai_agents_by_2030",
+            "effect": "Investor revaluation of traditional SaaS companies and compression of valuation multiples",
+            "effect_normalized": "investor_revaluation_of_traditional_saas_companies",
+            "mechanism": "Forward-looking research showing structural shift in profit pools away from legacy SaaS seats toward agentic systems → investors reassessed long-term viability of traditional subscription models → dramatic multiple compression signals market repricing of growth assumptions"
+          },
+          {
+            "cause": "Investor revaluation of traditional SaaS companies and compression of valuation multiples",
+            "cause_normalized": "investor_revaluation_of_traditional_saas_companies",
+            "effect": "Software price/sales ratio declines from 9x (September 2025) to 6x (February 2026)",
+            "effect_normalized": "software_price/sales_ratio_declines_from_9x_(september_2025)_to_6x_(february_2026)",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "goldman_sachs_projection_that_60%_of_software_economics_will_shift_to_ai_agents_by_2030 -> investor_revaluation_of_traditional_saas_companies -> software_price/sales_ratio_declines_from_9x_(september_2025)_to_6x_(february_2026)"
+      },
+      "terminal_effect": "software_price/sales_ratio_declines_from_9x_(september_2025)_to_6x_(february_2026)",
+      "mechanism": "Forward-looking research showing structural shift in profit pools away from legacy SaaS seats toward agentic systems → investors reassessed long-term viability of traditional subscription models → dramatic multiple compression signals market repricing of growth assumptions",
+      "source_attribution": "Source 6 (steps 1-2), Source 3 (step 2 outcome)",
+      "id": "rel_e36f2d04",
+      "discovered_at": "2026-02-19T09:02:20.299851",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "software_ps_ratio",
+          "condition_type": "absolute_threshold",
+          "condition_value": 8.5,
+          "condition_direction": "below",
+          "timeframe_days": 30
+        },
+        {
+          "variable": "saas_multiple_compression",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 30
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Earnings misses from major SaaS companies (Microsoft, ServiceNow, SAP)",
+            "cause_normalized": "earnings_misses_from_major_saas_companies_(microsoft,_servicenow,_sap)",
+            "effect": "Sector-wide stock price collapse and continued market sell-off",
+            "effect_normalized": "sector_wide_stock_price_collapse_and_continued_mar",
+            "mechanism": "Disappointing earnings reports from industry heavyweights triggered investor panic and reassessment of growth assumptions, causing indiscriminate selling across the entire SaaS sector as investors extrapolated weakness to all companies"
+          }
+        ],
+        "chain_summary": "earnings_misses_from_major_saas_companies_(microsoft,_servicenow,_sap) -> sector_wide_stock_price_collapse_and_continued_mar"
+      },
+      "terminal_effect": "sector_wide_stock_price_collapse_and_continued_mar",
+      "mechanism": "Disappointing earnings reports from industry heavyweights triggered investor panic and reassessment of growth assumptions, causing indiscriminate selling across the entire SaaS sector as investors extrapolated weakness to all companies",
+      "source_attribution": "Source 4",
+      "id": "rel_39db0baf",
+      "discovered_at": "2026-02-19T09:02:21.821430",
+      "validation_count": 5,
+      "relationship_type": "neutral",
+      "confidence": 0.7251449999999998,
+      "trigger_conditions": [
+        {
+          "variable": "saas_sector_earnings",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "sp500_saas_index",
+          "condition_type": "percentage_change",
+          "condition_value": 8,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ],
+      "last_validated": "2026-02-19T09:46:35.277688"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Software price/sales ratio declines from 9x (September 2025) to 6x (February 2026)",
+            "cause_normalized": "software_price/sales_ratio_declines_from_9x_(september_2025)_to_6x_(february_2026)",
+            "effect": "Wall Street forced to rethink valuation multiples and revenue/earnings growth expectations for software stocks",
+            "effect_normalized": "wall_street_forced_to_rethink_valuation_multiples_",
+            "mechanism": "33% compression in valuation multiples (9x to 6x) over 5 months signals fundamental market repricing, forcing analysts to downgrade growth assumptions and reassess long-term earnings power due to AI disruption threat"
+          }
+        ],
+        "chain_summary": "software_price/sales_ratio_declines_from_9x_(september_2025)_to_6x_(february_2026) -> wall_street_forced_to_rethink_valuation_multiples_"
+      },
+      "terminal_effect": "wall_street_forced_to_rethink_valuation_multiples_",
+      "mechanism": "33% compression in valuation multiples (9x to 6x) over 5 months signals fundamental market repricing, forcing analysts to downgrade growth assumptions and reassess long-term earnings power due to AI disruption threat",
+      "source_attribution": "Source 3\n\n## AI Revenue Quality and Strategy Credibility",
+      "id": "rel_5114878a",
+      "discovered_at": "2026-02-19T09:02:23.291104",
+      "validation_count": 5,
+      "relationship_type": "negative",
+      "confidence": 0.7251449999999998,
+      "trigger_conditions": [
+        {
+          "variable": "software_price_sales_ratio",
+          "condition_type": "percentage_change",
+          "condition_value": 33,
+          "condition_direction": "decrease",
+          "timeframe_days": 150
+        },
+        {
+          "variable": "software_price_sales_ratio",
+          "condition_type": "absolute_threshold",
+          "condition_value": 6,
+          "condition_direction": "below",
+          "timeframe_days": 150
+        }
+      ],
+      "last_validated": "2026-02-19T09:46:33.748660"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Market skepticism about AI revenue quality and traditional seat-based revenue decline",
+            "cause_normalized": "market_skepticism_about_ai_revenue_quality_and_tra",
+            "effect": "SaaS companies with unproven AI strategies face valuation pressure and stock underperformance",
+            "effect_normalized": "saas_companies_with_unproven_ai_strategies_face_va",
+            "mechanism": "Investors discount valuations when companies cannot demonstrate that new AI revenue streams offset declining legacy revenue, creating a credibility gap where market punishes companies unable to prove successful business model transition"
+          }
+        ],
+        "chain_summary": "market_skepticism_about_ai_revenue_quality_and_tra -> saas_companies_with_unproven_ai_strategies_face_va"
+      },
+      "terminal_effect": "saas_companies_with_unproven_ai_strategies_face_va",
+      "mechanism": "Investors discount valuations when companies cannot demonstrate that new AI revenue streams offset declining legacy revenue, creating a credibility gap where market punishes companies unable to prove successful business model transition",
+      "source_attribution": "Source 7\n\n## Macroeconomic Amplification",
+      "id": "rel_a4c235bc",
+      "discovered_at": "2026-02-19T09:02:24.875341",
+      "validation_count": 2,
+      "relationship_type": "neutral",
+      "confidence": 0.7349999999999999,
+      "trigger_conditions": [
+        {
+          "variable": "vix",
+          "condition_type": "absolute_threshold",
+          "condition_value": 25,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 5,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ],
+      "last_validated": "2026-02-19T09:16:18.488804"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Weak labor market signals (rising jobless claims, declining job openings, layoff announcements)",
+            "cause_normalized": "weak_labor_market_signals_(rising_jobless_claims,_declining_job_openings,_layoff_announcements)",
+            "effect": "Amplification of tech sector sell-off and broader market decline",
+            "effect_normalized": "amplification_of_tech_sector_sell_off_and_broader_",
+            "mechanism": "Labor market weakness signals reduced corporate spending capacity and economic slowdown, compounding investor concerns about SaaS revenue growth and customer retention as enterprises cut software budgets in response to deteriorating business conditions"
+          }
+        ],
+        "chain_summary": "weak_labor_market_signals_(rising_jobless_claims,_declining_job_openings,_layoff_announcements) -> amplification_of_tech_sector_sell_off_and_broader_"
+      },
+      "terminal_effect": "amplification_of_tech_sector_sell_off_and_broader_",
+      "mechanism": "Labor market weakness signals reduced corporate spending capacity and economic slowdown, compounding investor concerns about SaaS revenue growth and customer retention as enterprises cut software budgets in response to deteriorating business conditions",
+      "source_attribution": "Source 8\n\n## Structural Business Model Vulnerabilities",
+      "id": "rel_cd7ece5e",
+      "discovered_at": "2026-02-19T09:02:26.191261",
+      "validation_count": 2,
+      "relationship_type": "neutral",
+      "confidence": 0.7349999999999999,
+      "trigger_conditions": [
+        {
+          "variable": "jobless_claims",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "job_openings",
+          "condition_type": "percentage_change",
+          "condition_value": 10,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ],
+      "last_validated": "2026-02-19T09:16:19.918040"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "SaaS companies neglected customer outcomes and business efficiency while pursuing growth",
+            "cause_normalized": "saas_companies_neglected_customer_outcomes_and_bus",
+            "effect": "Market multiples contracted and investor sentiment shifted from 'growth at all costs' to 'efficient growth'",
+            "effect_normalized": "market_multiples_contracted_and_investor_sentiment",
+            "mechanism": "When market conditions tightened, investors reassessed valuations based on actual unit economics and customer value delivery rather than top-line growth, causing repricing of SaaS stocks that had prioritized expansion over profitability and customer success"
+          }
+        ],
+        "chain_summary": "saas_companies_neglected_customer_outcomes_and_bus -> market_multiples_contracted_and_investor_sentiment"
+      },
+      "terminal_effect": "market_multiples_contracted_and_investor_sentiment",
+      "mechanism": "When market conditions tightened, investors reassessed valuations based on actual unit economics and customer value delivery rather than top-line growth, causing repricing of SaaS stocks that had prioritized expansion over profitability and customer success",
+      "source_attribution": "Source 9",
+      "id": "rel_36551337",
+      "discovered_at": "2026-02-19T09:02:27.733046",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 25,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "us10y",
+          "condition_type": "absolute_threshold",
+          "condition_value": 20,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Market conditions tightened with increasing challenges in closing new deals and customer renewal hesitation",
+            "cause_normalized": "market_conditions_tightened_with_increasing_challe",
+            "effect": "SaaS companies face pressure to demonstrate durable, efficient growth rather than top-line expansion",
+            "effect_normalized": "saas_companies_face_pressure_to_demonstrate_durabl",
+            "mechanism": "Reduced deal flow and customer churn force companies to focus on retention and unit economics to survive market contraction, exposing companies with weak fundamentals that had relied on favorable market conditions to mask operational inefficiencies"
+          }
+        ],
+        "chain_summary": "market_conditions_tightened_with_increasing_challe -> saas_companies_face_pressure_to_demonstrate_durabl"
+      },
+      "terminal_effect": "saas_companies_face_pressure_to_demonstrate_durabl",
+      "mechanism": "Reduced deal flow and customer churn force companies to focus on retention and unit economics to survive market contraction, exposing companies with weak fundamentals that had relied on favorable market conditions to mask operational inefficiencies",
+      "source_attribution": "Source 10\n\n## Valuation Context (Pre-Meltdown Baseline)",
+      "id": "rel_d9dd82b5",
+      "discovered_at": "2026-02-19T09:02:29.017564",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "vix",
+          "condition_type": "absolute_threshold",
+          "condition_value": 25,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 5,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Second-order impact of AI disruption hitting software company bottom lines ahead of schedule",
+            "cause_normalized": "second_order_impact_of_ai_disruption_hitting_softw",
+            "effect": "$300 billion in market value evaporates across SaaS, data, and software-heavy firms in February 2026",
+            "effect_normalized": "$300_billion_in_market_value_evaporates_across_saas,_data,_and_software-heavy_firms_in_february_2026",
+            "mechanism": "Instead of slow-burn hyperscaler cash burn, AI disruption is immediately impacting revenue and profitability of software companies, causing rapid repricing and investor panic selling"
+          }
+        ],
+        "chain_summary": "second_order_impact_of_ai_disruption_hitting_softw -> $300_billion_in_market_value_evaporates_across_saas,_data,_and_software-heavy_firms_in_february_2026"
+      },
+      "terminal_effect": "$300_billion_in_market_value_evaporates_across_saas,_data,_and_software-heavy_firms_in_february_2026",
+      "mechanism": "Instead of slow-burn hyperscaler cash burn, AI disruption is immediately impacting revenue and profitability of software companies, causing rapid repricing and investor panic selling",
+      "source_attribution": "Source 1",
+      "id": "rel_5ab5b99a",
+      "discovered_at": "2026-02-19T09:16:15.812985",
+      "validation_count": 4,
+      "relationship_type": "positive",
+      "confidence": 0.7131399999999999,
+      "trigger_conditions": [
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 8,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 35,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ],
+      "last_validated": "2026-02-19T09:46:35.277864"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Goldman Sachs projection that 60% of software economics will shift to AI agents by 2030",
+            "cause_normalized": "goldman_sachs_projection_that_60%_of_software_economics_will_shift_to_ai_agents_by_2030",
+            "effect": "Investor revaluation of traditional SaaS companies and compression of valuation multiples",
+            "effect_normalized": "investor_revaluation_of_traditional_saas_companies",
+            "mechanism": "Forward-looking research showing structural shift in profit pools away from legacy SaaS seats toward agentic systems caused investors to reassess the long-term viability of traditional subscription models"
+          }
+        ],
+        "chain_summary": "goldman_sachs_projection_that_60%_of_software_economics_will_shift_to_ai_agents_by_2030 -> investor_revaluation_of_traditional_saas_companies"
+      },
+      "terminal_effect": "investor_revaluation_of_traditional_saas_companies",
+      "mechanism": "Forward-looking research showing structural shift in profit pools away from legacy SaaS seats toward agentic systems caused investors to reassess the long-term viability of traditional subscription models",
+      "source_attribution": "Source 6",
+      "id": "rel_aa841811",
+      "discovered_at": "2026-02-19T09:16:17.072629",
+      "validation_count": 2,
+      "relationship_type": "neutral",
+      "confidence": 0.706,
+      "trigger_conditions": [
+        {
+          "variable": "saas_valuation_multiples",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "ai_agent_adoption_rate",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ],
+      "last_validated": "2026-02-19T09:25:03.614703"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Easy access to venture capital and cheap public capital",
+            "cause_normalized": "easy_access_to_venture_capital_and_cheap_public_ca",
+            "effect": "SaaS companies adopted 'growth at all costs' mentality, neglecting unit economics and customer value",
+            "effect_normalized": "saas_companies_adopted_'growth_at_all_costs'_mentality,_neglecting_unit_economics_and_customer_value",
+            "mechanism": "Abundant funding removed financial discipline, allowing companies to prioritize growth metrics over sustainable business fundamentals → When market conditions tightened, investors reassessed valuations based on actual unit economics and customer value delivery, causing repricing of SaaS stocks"
+          },
+          {
+            "cause": "SaaS companies adopted 'growth at all costs' mentality, neglecting unit economics and customer value",
+            "cause_normalized": "saas_companies_adopted_'growth_at_all_costs'_mentality,_neglecting_unit_economics_and_customer_value",
+            "effect": "Market multiples contracted and investor sentiment shifted from 'growth at all costs' to 'efficient growth'",
+            "effect_normalized": "market_multiples_contracted_and_investor_sentiment",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "easy_access_to_venture_capital_and_cheap_public_ca -> saas_companies_adopted_'growth_at_all_costs'_mentality,_neglecting_unit_economics_and_customer_value -> market_multiples_contracted_and_investor_sentiment"
+      },
+      "terminal_effect": "market_multiples_contracted_and_investor_sentiment",
+      "mechanism": "Abundant funding removed financial discipline, allowing companies to prioritize growth metrics over sustainable business fundamentals → When market conditions tightened, investors reassessed valuations based on actual unit economics and customer value delivery, causing repricing of SaaS stocks",
+      "source_attribution": "Source 9 (steps 1-2), Source 8 (steps 2-3)",
+      "id": "rel_71bcc778",
+      "discovered_at": "2026-02-19T09:16:18.488906",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.7,
+      "trigger_conditions": [
+        {
+          "variable": "us10y",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "vix",
+          "condition_type": "absolute_threshold",
+          "condition_value": 25,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Information Technology sector trading at 34.81 P/E (October 2025)",
+            "cause_normalized": "information_technology_pe",
+            "effect": "Sector classified as 'Overvalued' on 5-year basis and 'Expensive' on 10/20-year basis",
+            "effect_normalized": "sector_overvaluation",
+            "mechanism": "Elevated valuations relative to historical norms created vulnerability to repricing when growth assumptions were challenged by AI disruption narrative"
+          }
+        ],
+        "chain_summary": "information_technology_pe -> sector_overvaluation"
+      },
+      "terminal_effect": "sector_overvaluation",
+      "mechanism": "Elevated valuations relative to historical norms created vulnerability to repricing when growth assumptions were challenged by AI disruption narrative",
+      "source_attribution": "Source 12",
+      "id": "rel_7ff719dc",
+      "discovered_at": "2026-02-19T09:16:19.918134",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.7,
+      "trigger_conditions": [
+        {
+          "variable": "information_technology_pe",
+          "condition_type": "absolute_threshold",
+          "condition_value": 34.81,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "information_technology_pe",
+          "condition_type": "percentage_change",
+          "condition_value": 10,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Anthropic released 11 new plug-ins for Claude Cowork AI tool (end of January 2026)",
+            "cause_normalized": "anthropic_released_11_new_plug-ins_for_claude_cowork_ai_tool_(end_of_january_2026)",
+            "effect": "massive sell-off in SaaS stocks",
+            "effect_normalized": "massive_sell_off_in_saas_stocks",
+            "mechanism": "The release demonstrated practical agentic AI capabilities that can replace traditional SaaS functionality, triggering investor fears about business model disruption"
+          }
+        ],
+        "chain_summary": "anthropic_released_11_new_plug-ins_for_claude_cowork_ai_tool_(end_of_january_2026) -> massive_sell_off_in_saas_stocks"
+      },
+      "terminal_effect": "massive_sell_off_in_saas_stocks",
+      "mechanism": "The release demonstrated practical agentic AI capabilities that can replace traditional SaaS functionality, triggering investor fears about business model disruption",
+      "source_attribution": "Source 4",
+      "id": "rel_6022038f",
+      "discovered_at": "2026-02-19T09:24:59.237005",
+      "validation_count": 2,
+      "relationship_type": "positive",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "saas_stocks",
+          "condition_type": "percentage_change",
+          "condition_value": 5,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ],
+      "last_validated": "2026-02-19T09:30:41.210259"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Earnings misses and revenue guidance cuts across SaaS sector",
+            "cause_normalized": "earnings_misses_and_revenue_guidance_cuts_across_s",
+            "effect": "massive sell-off in SaaS stocks with $300 billion in market value evaporating",
+            "effect_normalized": "massive_sell-off_in_saas_stocks_with_$300_billion_in_market_value_evaporating",
+            "mechanism": "Companies reporting below-market expectations and cutting forward guidance trigger investor panic selling. Market data shows ~$300 billion evaporated on February 4, 2026, with IGV Software Index down 30% from late-September peak"
+          }
+        ],
+        "chain_summary": "earnings_misses_and_revenue_guidance_cuts_across_s -> massive_sell-off_in_saas_stocks_with_$300_billion_in_market_value_evaporating"
+      },
+      "terminal_effect": "massive_sell-off_in_saas_stocks_with_$300_billion_in_market_value_evaporating",
+      "mechanism": "Companies reporting below-market expectations and cutting forward guidance trigger investor panic selling. Market data shows ~$300 billion evaporated on February 4, 2026, with IGV Software Index down 30% from late-September peak",
+      "source_attribution": "Source 3",
+      "id": "rel_c11bce8c",
+      "discovered_at": "2026-02-19T09:25:00.496003",
+      "validation_count": 4,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "saas_earnings_misses",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "saas_revenue_guidance_cuts",
+          "condition_type": "percentage_change",
+          "condition_value": 10,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ],
+      "last_validated": "2026-02-19T09:46:35.277779"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Slowdown in cloud computing growth (AWS and Microsoft cloud growth deceleration)",
+            "cause_normalized": "slowdown_in_cloud_computing_growth_(aws_and_microsoft_cloud_growth_deceleration)",
+            "effect": "investor sentiment toward software stocks plunges, triggering sector-wide sell-off",
+            "effect_normalized": "investor_sentiment_toward_software_stocks_plunges,_triggering_sector-wide_sell-off",
+            "mechanism": "Cloud computing slowdown signals weakening demand for traditional SaaS infrastructure. Microsoft stock plunged partly due to cloud growth slowdown, and AWS performance is being keenly examined as indicator of sector health"
+          }
+        ],
+        "chain_summary": "slowdown_in_cloud_computing_growth_(aws_and_microsoft_cloud_growth_deceleration) -> investor_sentiment_toward_software_stocks_plunges,_triggering_sector-wide_sell-off"
+      },
+      "terminal_effect": "investor_sentiment_toward_software_stocks_plunges,_triggering_sector-wide_sell-off",
+      "mechanism": "Cloud computing slowdown signals weakening demand for traditional SaaS infrastructure. Microsoft stock plunged partly due to cloud growth slowdown, and AWS performance is being keenly examined as indicator of sector health",
+      "source_attribution": "Source 13",
+      "id": "rel_b629f336",
+      "discovered_at": "2026-02-19T09:25:02.054559",
+      "validation_count": 2,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "cloud_computing_growth_rate",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "software_sector_relative_performance",
+          "condition_type": "percentage_change",
+          "condition_value": 8,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ],
+      "last_validated": "2026-02-19T09:38:25.239878"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "AI agents expanding market share and capturing disproportionate share of profit pool",
+            "cause_normalized": "ai_agents_expanding_market_share_and_capturing_dis",
+            "effect": "traditional SaaS business model valuations become obsolete, forcing Wall Street to rethink valuation multiples",
+            "effect_normalized": "traditional_saas_business_model_valuations_become_",
+            "mechanism": "By 2030, over 60% of software economics expected to flow through agentic systems rather than legacy SaaS seats. Value shifts toward systems that own execution rather than interfaces, undermining the predictable revenue and low churn assumptions that justified high multiples for traditional SaaS"
+          }
+        ],
+        "chain_summary": "ai_agents_expanding_market_share_and_capturing_dis -> traditional_saas_business_model_valuations_become_"
+      },
+      "terminal_effect": "traditional_saas_business_model_valuations_become_",
+      "mechanism": "By 2030, over 60% of software economics expected to flow through agentic systems rather than legacy SaaS seats. Value shifts toward systems that own execution rather than interfaces, undermining the predictable revenue and low churn assumptions that justified high multiples for traditional SaaS",
+      "source_attribution": "Source 7",
+      "id": "rel_89bf1d02",
+      "discovered_at": "2026-02-19T09:25:03.614906",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "ai_agents_expanding_market_share_and_capturing_dis",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "saas_valuation_multiples",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Outdated valuation assumptions (predictable revenue, low churn, high recovery value) no longer apply to SaaS sector",
+            "cause_normalized": "outdated_valuation_assumptions_(predictable_revenue,_low_churn,_high_recovery_value)_no_longer_apply_to_saas_sector",
+            "effect": "SaaS stocks trading at valuations disconnected from underlying business fundamentals, leading to correction",
+            "effect_normalized": "saas_stocks_trading_at_valuations_disconnected_fro",
+            "mechanism": "Over the last decade, capital flowed into SaaS based on shared assumptions about business model stability. As AI agents disrupt these assumptions, the valuation foundation crumbles, forcing repricing of entire sector"
+          }
+        ],
+        "chain_summary": "outdated_valuation_assumptions_(predictable_revenue,_low_churn,_high_recovery_value)_no_longer_apply_to_saas_sector -> saas_stocks_trading_at_valuations_disconnected_fro"
+      },
+      "terminal_effect": "saas_stocks_trading_at_valuations_disconnected_fro",
+      "mechanism": "Over the last decade, capital flowed into SaaS based on shared assumptions about business model stability. As AI agents disrupt these assumptions, the valuation foundation crumbles, forcing repricing of entire sector",
+      "source_attribution": "Source 10",
+      "id": "rel_c5c63205",
+      "discovered_at": "2026-02-19T09:25:05.003374",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "saas_sector_valuation_multiple",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "vix",
+          "condition_type": "absolute_threshold",
+          "condition_value": 25,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "High valuation multiples and growth expectations in SaaS companies",
+            "cause_normalized": "high_valuation_multiples_and_growth_expectations_i",
+            "effect": "sharp share price declines when growth slows or margins contract",
+            "effect_normalized": "sharp_share_price_declines_when_growth_slows_or_ma",
+            "mechanism": "Premium valuations are predicated on sustained rapid revenue growth and margin expansion. Any deviation from these expectations triggers repricing downward as investors reassess the company's ability to justify its valuation"
+          }
+        ],
+        "chain_summary": "high_valuation_multiples_and_growth_expectations_i -> sharp_share_price_declines_when_growth_slows_or_ma"
+      },
+      "terminal_effect": "sharp_share_price_declines_when_growth_slows_or_ma",
+      "mechanism": "Premium valuations are predicated on sustained rapid revenue growth and margin expansion. Any deviation from these expectations triggers repricing downward as investors reassess the company's ability to justify its valuation",
+      "source_attribution": "Source 8",
+      "id": "rel_117a14a0",
+      "discovered_at": "2026-02-19T09:25:06.609780",
+      "validation_count": 2,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "growth_expectations",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "valuation_multiples",
+          "condition_type": "percentage_change",
+          "condition_value": 10,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ],
+      "last_validated": "2026-02-19T09:38:25.240133"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Valuation multiples above historical tech peer averages combined with execution risk",
+            "cause_normalized": "valuation_multiples_above_historical_tech_peer_ave",
+            "effect": "market confidence in growth prospects fluctuates, reflected in volatile stock performance and mixed analyst ratings",
+            "effect_normalized": "market_confidence_in_growth_prospects_fluctuates,_reflected_in_volatile_stock_performance_and_mixed_analyst_ratings",
+            "mechanism": "Elevated valuations create high expectations for execution. Any uncertainty about the company's ability to deliver on cloud transition or digital transformation initiatives causes investor sentiment to swing between optimism and caution"
+          }
+        ],
+        "chain_summary": "valuation_multiples_above_historical_tech_peer_ave -> market_confidence_in_growth_prospects_fluctuates,_reflected_in_volatile_stock_performance_and_mixed_analyst_ratings"
+      },
+      "terminal_effect": "market_confidence_in_growth_prospects_fluctuates,_reflected_in_volatile_stock_performance_and_mixed_analyst_ratings",
+      "mechanism": "Elevated valuations create high expectations for execution. Any uncertainty about the company's ability to deliver on cloud transition or digital transformation initiatives causes investor sentiment to swing between optimism and caution",
+      "source_attribution": "Source 11",
+      "id": "rel_a48c8d3f",
+      "discovered_at": "2026-02-19T09:25:07.912262",
+      "validation_count": 2,
+      "relationship_type": "neutral",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "valuation_multiples",
+          "condition_type": "absolute_threshold",
+          "condition_value": 15,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 25,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ],
+      "last_validated": "2026-02-19T09:38:26.896177"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Broad market selloff and sector-wide pessimism in software stocks",
+            "cause_normalized": "broad_market_selloff_and_sector_wide_pessimism_in_",
+            "effect": "software stock valuations compress to all-time low multiples",
+            "effect_normalized": "software_stock_valuations_compress_to_all_time_low",
+            "mechanism": "Panic selling and negative sentiment drive down stock prices, reducing valuation multiples even for high-quality companies with strong growth prospects"
+          }
+        ],
+        "chain_summary": "broad_market_selloff_and_sector_wide_pessimism_in_ -> software_stock_valuations_compress_to_all_time_low"
+      },
+      "terminal_effect": "software_stock_valuations_compress_to_all_time_low",
+      "mechanism": "Panic selling and negative sentiment drive down stock prices, reducing valuation multiples even for high-quality companies with strong growth prospects",
+      "source_attribution": "Source 12",
+      "id": "rel_24de73bd",
+      "discovered_at": "2026-02-19T09:25:09.254186",
+      "validation_count": 3,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 5,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ],
+      "last_validated": "2026-02-19T09:46:33.748790"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "AI agents expanding market share and capturing disproportionate share of profit pool",
+            "cause_normalized": "ai_agents_expanding_market_share_and_capturing_dis",
+            "effect": "traditional SaaS business model valuations become obsolete",
+            "effect_normalized": "traditional_saas_business_model_valuations_become_",
+            "mechanism": "By 2030, over 60% of software economics expected to flow through agentic systems rather than legacy SaaS seats, undermining predictable revenue assumptions → market reprices business models downward → dramatic 33% compression in valuation multiples over 5 months"
+          },
+          {
+            "cause": "traditional SaaS business model valuations become obsolete",
+            "cause_normalized": "traditional_saas_business_model_valuations_become_",
+            "effect": "software price/sales ratio declines from 9x (September 2025) to 6x (February 2026)",
+            "effect_normalized": "software_price/sales_ratio_declines_from_9x_(september_2025)_to_6x_(february_2026)",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "ai_agents_expanding_market_share_and_capturing_dis -> traditional_saas_business_model_valuations_become_ -> software_price/sales_ratio_declines_from_9x_(september_2025)_to_6x_(february_2026)"
+      },
+      "terminal_effect": "software_price/sales_ratio_declines_from_9x_(september_2025)_to_6x_(february_2026)",
+      "mechanism": "By 2030, over 60% of software economics expected to flow through agentic systems rather than legacy SaaS seats, undermining predictable revenue assumptions → market reprices business models downward → dramatic 33% compression in valuation multiples over 5 months",
+      "source_attribution": "Source 9 (steps 1-2), Source 6 (step 3)",
+      "id": "rel_2edda6c3",
+      "discovered_at": "2026-02-19T09:30:41.210459",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "ai_agents_expanding_market_share_and_capturing_dis",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "increase",
+          "timeframe_days": 30
+        },
+        {
+          "variable": "software_price_sales_ratio",
+          "condition_type": "absolute_threshold",
+          "condition_value": 7.5,
+          "condition_direction": "below",
+          "timeframe_days": 150
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "second-order impact of AI disruption hitting software company bottom lines ahead of schedule",
+            "cause_normalized": "second_order_impact_of_ai_disruption_hitting_softw",
+            "effect": "earnings misses from major SaaS companies (Microsoft, ServiceNow, SAP)",
+            "effect_normalized": "earnings_misses_from_major_saas_companies_(microsoft,_servicenow,_sap)",
+            "mechanism": "AI disruption immediately impacting revenue and profitability rather than slow-burn effect → major companies report below-market expectations → industry heavyweights' disappointing results trigger investor panic and reassessment of growth assumptions across entire sector"
+          },
+          {
+            "cause": "earnings misses from major SaaS companies (Microsoft, ServiceNow, SAP)",
+            "cause_normalized": "earnings_misses_from_major_saas_companies_(microsoft,_servicenow,_sap)",
+            "effect": "sector-wide stock price collapse and continued market sell-off",
+            "effect_normalized": "sector_wide_stock_price_collapse_and_continued_mar",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "second_order_impact_of_ai_disruption_hitting_softw -> earnings_misses_from_major_saas_companies_(microsoft,_servicenow,_sap) -> sector_wide_stock_price_collapse_and_continued_mar"
+      },
+      "terminal_effect": "sector_wide_stock_price_collapse_and_continued_mar",
+      "mechanism": "AI disruption immediately impacting revenue and profitability rather than slow-burn effect → major companies report below-market expectations → industry heavyweights' disappointing results trigger investor panic and reassessment of growth assumptions across entire sector",
+      "source_attribution": "Source 5 (step 1), Source 4 (steps 2-3)",
+      "id": "rel_3b91844f",
+      "discovered_at": "2026-02-19T09:30:42.691422",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 5,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "slowdown in cloud computing growth (AWS and Microsoft cloud growth deceleration)",
+            "cause_normalized": "slowdown_in_cloud_computing_growth_(aws_and_microsoft_cloud_growth_deceleration)",
+            "effect": "investor sentiment toward software stocks plunges",
+            "effect_normalized": "investor_sentiment_toward_software_stocks_plunges",
+            "mechanism": "Cloud computing slowdown signals weakening demand for traditional SaaS infrastructure → Microsoft stock plunged partly due to cloud growth slowdown, AWS performance examined as sector health indicator → negative sentiment drives panic selling"
+          },
+          {
+            "cause": "investor sentiment toward software stocks plunges",
+            "cause_normalized": "investor_sentiment_toward_software_stocks_plunges",
+            "effect": "sector-wide sell-off",
+            "effect_normalized": "massive_sell_off_in_saas_stocks",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "slowdown_in_cloud_computing_growth_(aws_and_microsoft_cloud_growth_deceleration) -> investor_sentiment_toward_software_stocks_plunges -> massive_sell_off_in_saas_stocks"
+      },
+      "terminal_effect": "massive_sell_off_in_saas_stocks",
+      "mechanism": "Cloud computing slowdown signals weakening demand for traditional SaaS infrastructure → Microsoft stock plunged partly due to cloud growth slowdown, AWS performance examined as sector health indicator → negative sentiment drives panic selling",
+      "source_attribution": "Source 11 (steps 1-2), Source 2 (step 3)",
+      "id": "rel_8fd3351a",
+      "discovered_at": "2026-02-19T09:30:44.038156",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "cloud_computing_growth_rate",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "saas_sector_momentum",
+          "condition_type": "percentage_change",
+          "condition_value": 8,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "SaaS revenue growth deceleration (20%-22% guidance vs. 29% prior year)",
+            "cause_normalized": "saas_revenue_growth_deceleration_(20%-22%_guidance_vs._29%_prior_year)",
+            "effect": "guidance revision signals market maturation and competitive pressure",
+            "effect_normalized": "guidance_revision_signals_market_maturation_and_co",
+            "mechanism": "Slowing growth rates reflect market saturation, increased customer acquisition costs, and potential churn → market maturation undermines growth assumptions → valuations compress as forward growth rates (4.5%) fall below historical rates (5.4% annualized)"
+          },
+          {
+            "cause": "guidance revision signals market maturation and competitive pressure",
+            "cause_normalized": "guidance_revision_signals_market_maturation_and_co",
+            "effect": "downward pressure on SaaS index valuations and stock prices",
+            "effect_normalized": "downward_pressure_on_saas_index_valuations_and_sto",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "saas_revenue_growth_deceleration_(20%-22%_guidance_vs._29%_prior_year) -> guidance_revision_signals_market_maturation_and_co -> downward_pressure_on_saas_index_valuations_and_sto"
+      },
+      "terminal_effect": "downward_pressure_on_saas_index_valuations_and_sto",
+      "mechanism": "Slowing growth rates reflect market saturation, increased customer acquisition costs, and potential churn → market maturation undermines growth assumptions → valuations compress as forward growth rates (4.5%) fall below historical rates (5.4% annualized)",
+      "source_attribution": "Source 10 (steps 1-2), Source 8 (step 3)",
+      "id": "rel_ca219399",
+      "discovered_at": "2026-02-19T09:30:45.880985",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "saas_revenue_growth",
+          "condition_type": "percentage_change",
+          "condition_value": 30,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "saas_index",
+          "condition_type": "absolute_threshold",
+          "condition_value": 20,
+          "condition_direction": "below",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "high valuation multiples and growth expectations in SaaS companies",
+            "cause_normalized": "high_valuation_multiples_and_growth_expectations_i",
+            "effect": "sharp share price declines when growth slows or margins contract",
+            "effect_normalized": "sharp_share_price_declines_when_growth_slows_or_ma",
+            "mechanism": "Premium valuations predicated on sustained rapid revenue growth and margin expansion → any deviation from expectations triggers repricing downward → panic selling and negative sentiment drive valuations to historic lows even for high-quality companies"
+          },
+          {
+            "cause": "sharp share price declines when growth slows or margins contract",
+            "cause_normalized": "sharp_share_price_declines_when_growth_slows_or_ma",
+            "effect": "software stock valuations compress to all-time low multiples",
+            "effect_normalized": "software_stock_valuations_compress_to_all_time_low",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "high_valuation_multiples_and_growth_expectations_i -> sharp_share_price_declines_when_growth_slows_or_ma -> software_stock_valuations_compress_to_all_time_low"
+      },
+      "terminal_effect": "software_stock_valuations_compress_to_all_time_low",
+      "mechanism": "Premium valuations predicated on sustained rapid revenue growth and margin expansion → any deviation from expectations triggers repricing downward → panic selling and negative sentiment drive valuations to historic lows even for high-quality companies",
+      "source_attribution": "Source 7 (steps 1-2), Source 12 (step 3)",
+      "id": "rel_e6746af3",
+      "discovered_at": "2026-02-19T09:30:47.857940",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 5,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "SaaS company valuation compression (high growth priced in, slowing growth rates)",
+            "cause_normalized": "saas_company_valuation_compression_(high_growth_priced_in,_slowing_growth_rates)",
+            "effect": "software price/sales ratio declines from 9x (September 2025) to 6x (February 2026)",
+            "effect_normalized": "software_price/sales_ratio_declines_from_9x_(september_2025)_to_6x_(february_2026)",
+            "mechanism": "When expected growth rates fall below historical rates, 'good news' already reflected in prices → dramatic 33% compression in valuation multiples signals market repricing → investors downgrade growth assumptions due to AI disruption threat, forcing fundamental reassessment"
+          },
+          {
+            "cause": "software price/sales ratio declines from 9x (September 2025) to 6x (February 2026)",
+            "cause_normalized": "software_price/sales_ratio_declines_from_9x_(september_2025)_to_6x_(february_2026)",
+            "effect": "Wall Street forced to rethink valuation multiples and revenue/earnings growth expectations",
+            "effect_normalized": "wall_street_forced_to_rethink_valuation_multiples_",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "saas_company_valuation_compression_(high_growth_priced_in,_slowing_growth_rates) -> software_price/sales_ratio_declines_from_9x_(september_2025)_to_6x_(february_2026) -> wall_street_forced_to_rethink_valuation_multiples_"
+      },
+      "terminal_effect": "wall_street_forced_to_rethink_valuation_multiples_",
+      "mechanism": "When expected growth rates fall below historical rates, 'good news' already reflected in prices → dramatic 33% compression in valuation multiples signals market repricing → investors downgrade growth assumptions due to AI disruption threat, forcing fundamental reassessment",
+      "source_attribution": "Source 8 (step 1), Source 6 (steps 2-3)",
+      "id": "rel_73732dac",
+      "discovered_at": "2026-02-19T09:30:49.202773",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "saas_valuation_multiple",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 90
+        },
+        {
+          "variable": "saas_growth_rate",
+          "condition_type": "percentage_change",
+          "condition_value": 10,
+          "condition_direction": "decrease",
+          "timeframe_days": 90
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "broad market selloff and sector-wide pessimism in software stocks",
+            "cause_normalized": "broad_market_selloff_and_sector_wide_pessimism_in_",
+            "effect": "software stock valuations compress to all-time low multiples",
+            "effect_normalized": "software_stock_valuations_compress_to_all_time_low",
+            "mechanism": "Panic selling and negative sentiment drive down stock prices → valuation multiples reduce even for high-quality companies with strong growth prospects → indiscriminate selling across entire sector amplifies losses to $300 billion scale"
+          },
+          {
+            "cause": "software stock valuations compress to all-time low multiples",
+            "cause_normalized": "software_stock_valuations_compress_to_all_time_low",
+            "effect": "$300 billion in market value evaporates across SaaS, data, and software-heavy firms",
+            "effect_normalized": "$300_billion_in_market_value_evaporates_across_saas,_data,_and_software-heavy_firms",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "broad_market_selloff_and_sector_wide_pessimism_in_ -> software_stock_valuations_compress_to_all_time_low -> $300_billion_in_market_value_evaporates_across_saas,_data,_and_software-heavy_firms"
+      },
+      "terminal_effect": "$300_billion_in_market_value_evaporates_across_saas,_data,_and_software-heavy_firms",
+      "mechanism": "Panic selling and negative sentiment drive down stock prices → valuation multiples reduce even for high-quality companies with strong growth prospects → indiscriminate selling across entire sector amplifies losses to $300 billion scale",
+      "source_attribution": "Source 12 (steps 1-2), Source 2 (step 3)",
+      "id": "rel_c7d96cb5",
+      "discovered_at": "2026-02-19T09:30:50.670828",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 25,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 5,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "AI agents capability expansion to perform software tasks autonomously",
+            "cause_normalized": "ai_agents_capability_expansion_to_perform_software",
+            "effect": "$300 billion market value evaporated from SaaS sector on February 4, 2026",
+            "effect_normalized": "$300_billion_market_value_evaporated_from_saas_sector_on_february_4,_2026",
+            "mechanism": "AI agents demonstrating ability to draft legal documents, run financial models, and manage customer relationships independently reduces demand for traditional SaaS subscriptions → massive investor panic selling eliminates $300B in market value → fundamental repricing forces reassessment of SaaS business model viability and appropriate valuation frameworks"
+          },
+          {
+            "cause": "$300 billion market value evaporated from SaaS sector on February 4, 2026",
+            "cause_normalized": "$300_billion_market_value_evaporated_from_saas_sector_on_february_4,_2026",
+            "effect": "Wall Street forced to rethink valuation multiples",
+            "effect_normalized": "wall_street_forced_to_rethink_valuation_multiples_",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "ai_agents_capability_expansion_to_perform_software -> $300_billion_market_value_evaporated_from_saas_sector_on_february_4,_2026 -> wall_street_forced_to_rethink_valuation_multiples_"
+      },
+      "terminal_effect": "wall_street_forced_to_rethink_valuation_multiples_",
+      "mechanism": "AI agents demonstrating ability to draft legal documents, run financial models, and manage customer relationships independently reduces demand for traditional SaaS subscriptions → massive investor panic selling eliminates $300B in market value → fundamental repricing forces reassessment of SaaS business model viability and appropriate valuation frameworks",
+      "source_attribution": "Source 5 (steps 1-2), Source 1 (step 2-3)",
+      "id": "rel_bde8cbce",
+      "discovered_at": "2026-02-19T09:38:20.666900",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "saas_sector_valuation",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "ai_agents_capability_expansion_to_perform_software",
+          "condition_type": "absolute_threshold",
+          "condition_value": 3,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Intensified investor concerns around AI and large language models disrupting SaaS business models",
+            "cause_normalized": "intensified_investor_concerns_around_ai_and_large_",
+            "effect": "SaaS index drawdown of 28% from October 2025 high, with valuation compression across sector",
+            "effect_normalized": "saas_index_drawdown_of_28%_from_october_2025_high,_with_valuation_compression_across_sector",
+            "mechanism": "Market reprices SaaS companies downward due to perceived threat from AI-native competitors and uncertainty about LLM impact on traditional software moats"
+          }
+        ],
+        "chain_summary": "intensified_investor_concerns_around_ai_and_large_ -> saas_index_drawdown_of_28%_from_october_2025_high,_with_valuation_compression_across_sector"
+      },
+      "terminal_effect": "saas_index_drawdown_of_28%_from_october_2025_high,_with_valuation_compression_across_sector",
+      "mechanism": "Market reprices SaaS companies downward due to perceived threat from AI-native competitors and uncertainty about LLM impact on traditional software moats",
+      "source_attribution": "Source 4",
+      "id": "rel_811c0aeb",
+      "discovered_at": "2026-02-19T09:38:22.028760",
+      "validation_count": 2,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 25,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 6,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ],
+      "last_validated": "2026-02-19T09:46:33.748535"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Goldman Sachs projection that 60% of software economics will shift to AI agents by 2030",
+            "cause_normalized": "goldman_sachs_projection_that_60%_of_software_economics_will_shift_to_ai_agents_by_2030",
+            "effect": "Investor revaluation of traditional SaaS companies and compression of valuation multiples",
+            "effect_normalized": "investor_revaluation_of_traditional_saas_companies",
+            "mechanism": "Forward-looking research showing structural shift in profit pools away from legacy SaaS seats toward agentic systems → investors reassess long-term viability of traditional subscription models → value shifts toward systems that own execution rather than interfaces, undermining predictable revenue and low churn assumptions that justified high multiples"
+          },
+          {
+            "cause": "Investor revaluation of traditional SaaS companies and compression of valuation multiples",
+            "cause_normalized": "investor_revaluation_of_traditional_saas_companies",
+            "effect": "Traditional SaaS business model valuations become obsolete",
+            "effect_normalized": "traditional_saas_business_model_valuations_become_",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "goldman_sachs_projection_that_60%_of_software_economics_will_shift_to_ai_agents_by_2030 -> investor_revaluation_of_traditional_saas_companies -> traditional_saas_business_model_valuations_become_"
+      },
+      "terminal_effect": "traditional_saas_business_model_valuations_become_",
+      "mechanism": "Forward-looking research showing structural shift in profit pools away from legacy SaaS seats toward agentic systems → investors reassess long-term viability of traditional subscription models → value shifts toward systems that own execution rather than interfaces, undermining predictable revenue and low churn assumptions that justified high multiples",
+      "source_attribution": "Source 10 (steps 1-2), Source 13 (step 2-3)",
+      "id": "rel_a70dd934",
+      "discovered_at": "2026-02-19T09:38:23.397566",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "saas_valuations",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 30
+        },
+        {
+          "variable": "ai_agent_adoption_rate",
+          "condition_type": "percentage_change",
+          "condition_value": 25,
+          "condition_direction": "increase",
+          "timeframe_days": 30
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "SaaS company valuation compression (high growth priced in, slowing growth rates)",
+            "cause_normalized": "saas_company_valuation_compression_(high_growth_priced_in,_slowing_growth_rates)",
+            "effect": "Downward pressure on SaaS index valuations and stock prices",
+            "effect_normalized": "downward_pressure_on_saas_index_valuations_and_sto",
+            "mechanism": "When expected growth rates (4.5% forward) fall below historical rates (5.4% annualized), market reprices valuations downward as 'good news' is already reflected in prices"
+          }
+        ],
+        "chain_summary": "saas_company_valuation_compression_(high_growth_priced_in,_slowing_growth_rates) -> downward_pressure_on_saas_index_valuations_and_sto"
+      },
+      "terminal_effect": "downward_pressure_on_saas_index_valuations_and_sto",
+      "mechanism": "When expected growth rates (4.5% forward) fall below historical rates (5.4% annualized), market reprices valuations downward as 'good news' is already reflected in prices",
+      "source_attribution": "Source 9",
+      "id": "rel_2e29254d",
+      "discovered_at": "2026-02-19T09:38:25.240279",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "saas_growth_expectations",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "us10y",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Tech sector earnings disappointments and valuation concerns",
+            "cause_normalized": "tech_sector_earnings_disappointments_and_valuation",
+            "effect": "Broad market decline across Dow, Nasdaq, and S&P 500",
+            "effect_normalized": "broad_market_decline_across_dow,_nasdaq,_and_s&p_500",
+            "mechanism": "Negative earnings reports trigger sell-offs in technology stocks, which comprise significant index weightings, causing cascading declines across major indices"
+          }
+        ],
+        "chain_summary": "tech_sector_earnings_disappointments_and_valuation -> broad_market_decline_across_dow,_nasdaq,_and_s&p_500"
+      },
+      "terminal_effect": "broad_market_decline_across_dow,_nasdaq,_and_s&p_500",
+      "mechanism": "Negative earnings reports trigger sell-offs in technology stocks, which comprise significant index weightings, causing cascading declines across major indices",
+      "source_attribution": "Source 16",
+      "id": "rel_398cd68f",
+      "discovered_at": "2026-02-19T09:38:26.896378",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "nasdaq",
+          "condition_type": "percentage_change",
+          "condition_value": 5,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Institutional analyst reports identifying logical inconsistencies in SaaS valuation multiples (e.g., 25x forward earnings appearing reasonable vs. 100x for others)",
+            "cause_normalized": "institutional_analyst_reports_identifying_logical_",
+            "effect": "Market repricing creates differentiation between overvalued and fairly-valued SaaS stocks within the broader drawdown",
+            "effect_normalized": "market_repricing_creates_differentiation_between_o",
+            "mechanism": "Analyst scrutiny of valuation multiples relative to growth rates and profitability trajectories forces selective repricing rather than uniform sector decline"
+          }
+        ],
+        "chain_summary": "institutional_analyst_reports_identifying_logical_ -> market_repricing_creates_differentiation_between_o"
+      },
+      "terminal_effect": "market_repricing_creates_differentiation_between_o",
+      "mechanism": "Analyst scrutiny of valuation multiples relative to growth rates and profitability trajectories forces selective repricing rather than uniform sector decline",
+      "source_attribution": "Source 11",
+      "id": "rel_695c7dee",
+      "discovered_at": "2026-02-19T09:38:28.182770",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 5,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Goldman Sachs projection that 60% of software economics will shift to AI agents by 2030",
+            "cause_normalized": "goldman_sachs_projection_that_60%_of_software_economics_will_shift_to_ai_agents_by_2030",
+            "effect": "Investor revaluation of traditional SaaS companies and compression of valuation multiples",
+            "effect_normalized": "investor_revaluation_of_traditional_saas_companies",
+            "mechanism": "Forward-looking research showing structural shift in profit pools away from legacy SaaS seats toward agentic systems → investors reassess long-term viability of traditional subscription models → decade-long assumptions about business model stability crumble → valuation foundation collapses forcing repricing of entire sector"
+          },
+          {
+            "cause": "Investor revaluation of traditional SaaS companies and compression of valuation multiples",
+            "cause_normalized": "investor_revaluation_of_traditional_saas_companies",
+            "effect": "Outdated valuation assumptions (predictable revenue, low churn, high recovery value) no longer apply to SaaS sector",
+            "effect_normalized": "outdated_valuation_assumptions_(predictable_revenue,_low_churn,_high_recovery_value)_no_longer_apply_to_saas_sector",
+            "mechanism": ""
+          },
+          {
+            "cause": "Outdated valuation assumptions (predictable revenue, low churn, high recovery value) no longer apply to SaaS sector",
+            "cause_normalized": "outdated_valuation_assumptions_(predictable_revenue,_low_churn,_high_recovery_value)_no_longer_apply_to_saas_sector",
+            "effect": "SaaS stocks trading at valuations disconnected from underlying business fundamentals, leading to correction",
+            "effect_normalized": "saas_stocks_trading_at_valuations_disconnected_fro",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "goldman_sachs_projection_that_60%_of_software_economics_will_shift_to_ai_agents_by_2030 -> investor_revaluation_of_traditional_saas_companies -> outdated_valuation_assumptions_(predictable_revenue,_low_churn,_high_recovery_value)_no_longer_apply_to_saas_sector -> saas_stocks_trading_at_valuations_disconnected_fro"
+      },
+      "terminal_effect": "saas_stocks_trading_at_valuations_disconnected_fro",
+      "mechanism": "Forward-looking research showing structural shift in profit pools away from legacy SaaS seats toward agentic systems → investors reassess long-term viability of traditional subscription models → decade-long assumptions about business model stability crumble → valuation foundation collapses forcing repricing of entire sector",
+      "source_attribution": "Source 10 (steps 1-2), Source 8 (steps 3-4)",
+      "id": "rel_25d44cb6",
+      "discovered_at": "2026-02-19T09:46:33.748951",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "saas_sector_valuation_multiple",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "ai_agent_adoption_rate",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "High valuation multiples and growth expectations in SaaS companies",
+            "cause_normalized": "high_valuation_multiples_and_growth_expectations_i",
+            "effect": "Sharp share price declines when growth slows or margins contract",
+            "effect_normalized": "sharp_share_price_declines_when_growth_slows_or_ma",
+            "mechanism": "Premium valuations predicated on sustained rapid revenue growth and margin expansion → any deviation from these expectations triggers repricing downward as investors reassess ability to justify valuation → results in 28% sector drawdown"
+          },
+          {
+            "cause": "Sharp share price declines when growth slows or margins contract",
+            "cause_normalized": "sharp_share_price_declines_when_growth_slows_or_ma",
+            "effect": "S&P 500 software index declined ~28% from October 2025 high",
+            "effect_normalized": "s&p_500_software_index_declined_~28%_from_october_2025_high",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "high_valuation_multiples_and_growth_expectations_i -> sharp_share_price_declines_when_growth_slows_or_ma -> s&p_500_software_index_declined_~28%_from_october_2025_high"
+      },
+      "terminal_effect": "s&p_500_software_index_declined_~28%_from_october_2025_high",
+      "mechanism": "Premium valuations predicated on sustained rapid revenue growth and margin expansion → any deviation from these expectations triggers repricing downward as investors reassess ability to justify valuation → results in 28% sector drawdown",
+      "source_attribution": "Source 11 (steps 1-2), Source 12 (step 3)",
+      "id": "rel_98afd519",
+      "discovered_at": "2026-02-19T09:46:35.277975",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "sp500_software",
+          "condition_type": "percentage_change",
+          "condition_value": 5,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "growth_expectations_sentiment",
+          "condition_type": "absolute_threshold",
+          "condition_value": 40,
+          "condition_direction": "below",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "S&P 500 software index declined ~28% from October 2025 high",
+            "cause_normalized": "s&p_500_software_index_declined_~28%_from_october_2025_high",
+            "effect": "Long-only investors shift capital away from software to chip stocks and memory makers",
+            "effect_normalized": "long_only_investors_shift_capital_away_from_softwa",
+            "mechanism": "Portfolio rebalancing and risk management in response to severe drawdowns; investors rotate to alternative tech sectors perceived as less impacted by AI disruption"
+          }
+        ],
+        "chain_summary": "s&p_500_software_index_declined_~28%_from_october_2025_high -> long_only_investors_shift_capital_away_from_softwa"
+      },
+      "terminal_effect": "long_only_investors_shift_capital_away_from_softwa",
+      "mechanism": "Portfolio rebalancing and risk management in response to severe drawdowns; investors rotate to alternative tech sectors perceived as less impacted by AI disruption",
+      "source_attribution": "Source 12",
+      "id": "rel_2f40b8f6",
+      "discovered_at": "2026-02-19T09:46:36.800777",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "s&p_500_software_index",
+          "condition_type": "percentage_change",
+          "condition_value": 5,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "s&p_500_software_index",
+          "condition_type": "absolute_threshold",
+          "condition_value": 28,
+          "condition_direction": "below",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "SaaS company loan defaults estimated to potentially run as high as 13% this year",
+            "cause_normalized": "saas_company_loan_defaults_estimated_to_potentiall",
+            "effect": "BDC ETFs with high SaaS sector exposure face elevated risk and portfolio drawdown",
+            "effect_normalized": "bdc_etfs_with_high_saas_sector_exposure_face_eleva",
+            "mechanism": "Increased default rates in SaaS debt holdings reduce asset values and income generation for BDCs, particularly those overweighted in the sector"
+          }
+        ],
+        "chain_summary": "saas_company_loan_defaults_estimated_to_potentiall -> bdc_etfs_with_high_saas_sector_exposure_face_eleva"
+      },
+      "terminal_effect": "bdc_etfs_with_high_saas_sector_exposure_face_eleva",
+      "mechanism": "Increased default rates in SaaS debt holdings reduce asset values and income generation for BDCs, particularly those overweighted in the sector",
+      "source_attribution": "Source 14",
+      "id": "rel_7db33a33",
+      "discovered_at": "2026-02-19T09:46:38.280942",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "saas_company_loan_defaults",
+          "condition_type": "absolute_threshold",
+          "condition_value": 13,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "saas_company_loan_defaults",
+          "condition_type": "percentage_change",
+          "condition_value": 25,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "SaaS company loan defaults estimated at 13% annually, combined with high leverage in BDC portfolios",
+            "cause_normalized": "saas_company_loan_defaults_estimated_at_13%_annually,_combined_with_high_leverage_in_bdc_portfolios",
+            "effect": "BDC sector drawdown hurts NAV and reduces dividend income as interest rates fall",
+            "effect_normalized": "bdc_sector_drawdown_hurts_nav_and_reduces_dividend",
+            "mechanism": "Elevated default risk in SaaS debt holdings forces BDCs to mark down portfolio values and reduces cash flow from interest income in lower rate environment"
+          }
+        ],
+        "chain_summary": "saas_company_loan_defaults_estimated_at_13%_annually,_combined_with_high_leverage_in_bdc_portfolios -> bdc_sector_drawdown_hurts_nav_and_reduces_dividend"
+      },
+      "terminal_effect": "bdc_sector_drawdown_hurts_nav_and_reduces_dividend",
+      "mechanism": "Elevated default risk in SaaS debt holdings forces BDCs to mark down portfolio values and reduces cash flow from interest income in lower rate environment",
+      "source_attribution": "Source 15",
+      "id": "rel_3db2a0ca",
+      "discovered_at": "2026-02-19T09:46:39.614783",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "saas_credit_stress",
+          "condition_type": "absolute_threshold",
+          "condition_value": 13,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "bdc_leverage_ratio",
+          "condition_type": "absolute_threshold",
+          "condition_value": 1.5,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Snap election called by Takaichi creates political uncertainty",
+            "cause_normalized": "snap_election_called_by_takaichi_creates_political",
+            "effect": "Japan bond market experiences violent price swings and creates $7 trillion global market risk",
+            "effect_normalized": "japan_bond_market_experiences_violent_price_swings",
+            "mechanism": "Political uncertainty surrounding Takaichi's election and policy direction triggers unpredictable capital flows and volatility in Japanese bond markets, which have systemic importance to global financial markets"
+          }
+        ],
+        "chain_summary": "snap_election_called_by_takaichi_creates_political -> japan_bond_market_experiences_violent_price_swings"
+      },
+      "terminal_effect": "japan_bond_market_experiences_violent_price_swings",
+      "mechanism": "Political uncertainty surrounding Takaichi's election and policy direction triggers unpredictable capital flows and volatility in Japanese bond markets, which have systemic importance to global financial markets",
+      "source_attribution": "Source 3",
+      "id": "rel_44ac4ae9",
+      "discovered_at": "2026-02-20T02:17:11.399414",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "jgb_volatility",
+          "condition_type": "percentage_change",
+          "condition_value": 25,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "jpy",
+          "condition_type": "percentage_change",
+          "condition_value": 3,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Political uncertainty and yen volatility from election",
+            "cause_normalized": "political_uncertainty_and_yen_volatility_from_elec",
+            "effect": "Safe-haven flows into yen and flattening pressure on JGB yields",
+            "effect_normalized": "safe_haven_flows_into_yen_and_flattening_pressure_",
+            "mechanism": "Political risk premia from election uncertainty trigger flight-to-safety capital flows into the yen as a safe-haven asset, while simultaneously creating yield curve flattening pressure"
+          }
+        ],
+        "chain_summary": "political_uncertainty_and_yen_volatility_from_elec -> safe_haven_flows_into_yen_and_flattening_pressure_"
+      },
+      "terminal_effect": "safe_haven_flows_into_yen_and_flattening_pressure_",
+      "mechanism": "Political risk premia from election uncertainty trigger flight-to-safety capital flows into the yen as a safe-haven asset, while simultaneously creating yield curve flattening pressure",
+      "source_attribution": "Source 2",
+      "id": "rel_8a97a44e",
+      "discovered_at": "2026-02-20T02:17:13.278569",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "jpy",
+          "condition_type": "percentage_change",
+          "condition_value": 3,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Takaichi's electoral mandate and fiscal policy signals",
+            "cause_normalized": "takaichi's_electoral_mandate_and_fiscal_policy_signals",
+            "effect": "Market uncertainty about BOJ policy direction and potential GPIF portfolio reallocation",
+            "effect_normalized": "market_uncertainty_about_boj_policy_direction_and_",
+            "mechanism": "Strong electoral victory creates ambiguity about whether Takaichi will pursue aggressive stimulus (pressuring bonds) or moderate approach (supporting bonds), forcing markets to reassess BOJ accommodation and institutional investor positioning"
+          }
+        ],
+        "chain_summary": "takaichi's_electoral_mandate_and_fiscal_policy_signals -> market_uncertainty_about_boj_policy_direction_and_"
+      },
+      "terminal_effect": "market_uncertainty_about_boj_policy_direction_and_",
+      "mechanism": "Strong electoral victory creates ambiguity about whether Takaichi will pursue aggressive stimulus (pressuring bonds) or moderate approach (supporting bonds), forcing markets to reassess BOJ accommodation and institutional investor positioning",
+      "source_attribution": "Source 7",
+      "id": "rel_6c5a7125",
+      "discovered_at": "2026-02-20T02:17:14.560846",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "us10y",
+          "condition_type": "absolute_threshold",
+          "condition_value": 15,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "fiscal spending expansion prospect",
+            "cause_normalized": "fiscal_expansion",
+            "effect": "nominal rates rise",
+            "effect_normalized": "jgb_nominal_rate",
+            "mechanism": "Expected government spending increases nominal yield compensation → market interprets fiscal as inflation acceleration signal, inflation expectations outpace nominal yields → more negative real yields reduce currency purchasing power → currency value decline incentivizes shift into real assets as store of value"
+          },
+          {
+            "cause": "nominal rates rise",
+            "cause_normalized": "jgb_nominal_rate",
+            "effect": "expected inflation rises faster than nominal, real rates deepen negative",
+            "effect_normalized": "real_rates",
+            "mechanism": ""
+          },
+          {
+            "cause": "expected inflation rises faster than nominal, real rates deepen negative",
+            "cause_normalized": "real_rates",
+            "effect": "yen purchasing power loss, yen weakens",
+            "effect_normalized": "jpy_weakness",
+            "mechanism": ""
+          },
+          {
+            "cause": "yen purchasing power loss, yen weakens",
+            "cause_normalized": "jpy_weakness",
+            "effect": "increased demand for real assets",
+            "effect_normalized": "real_assets_demand",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "fiscal_expansion -> jgb_nominal_rate -> real_rates -> jpy_weakness -> real_assets_demand"
+      },
+      "terminal_effect": "real_assets_demand",
+      "mechanism": "Expected government spending increases nominal yield compensation → market interprets fiscal as inflation acceleration signal, inflation expectations outpace nominal yields → more negative real yields reduce currency purchasing power → currency value decline incentivizes shift into real assets as store of value",
+      "source_attribution": "Source 16 (all steps)",
+      "id": "rel_89acd0be",
+      "discovered_at": "2026-02-20T02:17:15.796574",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "fiscal_expansion",
+          "condition_type": "percentage_change",
+          "condition_value": 10,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "us10y",
+          "condition_type": "absolute_threshold",
+          "condition_value": 15,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ signals rate hikes and raises benchmark rates",
+            "cause_normalized": "boj_signals_rate_hikes_and_raises_benchmark_rates",
+            "effect": "Yen strengthens and becomes more expensive to borrow",
+            "effect_normalized": "yen_strengthens_and_becomes_more_expensive_to_borr",
+            "mechanism": "Higher Japanese interest rates increase the cost of borrowing yen, reducing the attractiveness of the carry trade → traders close leveraged positions funded by cheap yen borrowing → they must sell higher-beta assets to deleverage, creating cascading selling pressure across correlated markets"
+          },
+          {
+            "cause": "Yen strengthens and becomes more expensive to borrow",
+            "cause_normalized": "yen_strengthens_and_becomes_more_expensive_to_borr",
+            "effect": "Yen carry trade unwinding occurs",
+            "effect_normalized": "yen_carry_trade_unwinding_occurs_due_to_higher_boj",
+            "mechanism": ""
+          },
+          {
+            "cause": "Yen carry trade unwinding occurs",
+            "cause_normalized": "yen_carry_trade_unwinding_occurs_due_to_higher_boj",
+            "effect": "Selling pressure emerges in risk assets including U.S. tech stocks, Bitcoin, and crypto markets",
+            "effect_normalized": "selling_pressure_emerges_in_risk_assets_including_",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "boj_signals_rate_hikes_and_raises_benchmark_rates -> yen_strengthens_and_becomes_more_expensive_to_borr -> yen_carry_trade_unwinding_occurs_due_to_higher_boj -> selling_pressure_emerges_in_risk_assets_including_"
+      },
+      "terminal_effect": "selling_pressure_emerges_in_risk_assets_including_",
+      "mechanism": "Higher Japanese interest rates increase the cost of borrowing yen, reducing the attractiveness of the carry trade → traders close leveraged positions funded by cheap yen borrowing → they must sell higher-beta assets to deleverage, creating cascading selling pressure across correlated markets",
+      "source_attribution": "Source 6 (steps 1-2), Source 1 (steps 2-3)",
+      "id": "rel_796c6a5e",
+      "discovered_at": "2026-02-20T02:17:17.046621",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "boj_policy_rate",
+          "condition_type": "absolute_threshold",
+          "condition_value": 0.25,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "jpy_index",
+          "condition_type": "percentage_change",
+          "condition_value": 2,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Decades-long ultra-low BOJ rates end with rate hike signals",
+            "cause_normalized": "decades_long_ultra_low_boj_rates_end_with_rate_hik",
+            "effect": "Global liquidity source dries up, affecting Bitcoin and leveraged positions worldwide",
+            "effect_normalized": "global_liquidity_source_dries_up,_affecting_bitcoin_and_leveraged_positions_worldwide",
+            "mechanism": "The shift from near-zero rates breaks a 30-year structural source of cheap funding for global carry trades, forcing reallocation away from high-beta assets"
+          }
+        ],
+        "chain_summary": "decades_long_ultra_low_boj_rates_end_with_rate_hik -> global_liquidity_source_dries_up,_affecting_bitcoin_and_leveraged_positions_worldwide"
+      },
+      "terminal_effect": "global_liquidity_source_dries_up,_affecting_bitcoin_and_leveraged_positions_worldwide",
+      "mechanism": "The shift from near-zero rates breaks a 30-year structural source of cheap funding for global carry trades, forcing reallocation away from high-beta assets",
+      "source_attribution": "Source 4",
+      "id": "rel_19dea3bc",
+      "discovered_at": "2026-02-20T02:17:18.405953",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "us10y",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "dxy",
+          "condition_type": "percentage_change",
+          "condition_value": 2,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "carry position unwind",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "need to repurchase USD to close dollar-borrowed positions",
+            "effect_normalized": "usd_repurchase",
+            "mechanism": "Closing dollar-short positions requires buying dollars, increasing demand for USD → large-scale dollar buying reduces available USD liquidity in money markets → reduced USD liquidity pushes short-term money-market rates higher"
+          },
+          {
+            "cause": "need to repurchase USD to close dollar-borrowed positions",
+            "cause_normalized": "usd_repurchase",
+            "effect": "temporary global dollar shortage",
+            "effect_normalized": "usd_shortage",
+            "mechanism": ""
+          },
+          {
+            "cause": "temporary global dollar shortage",
+            "cause_normalized": "usd_shortage",
+            "effect": "SOFR spike",
+            "effect_normalized": "sofr",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "carry_trade_unwind -> usd_repurchase -> usd_shortage -> sofr"
+      },
+      "terminal_effect": "sofr",
+      "mechanism": "Closing dollar-short positions requires buying dollars, increasing demand for USD → large-scale dollar buying reduces available USD liquidity in money markets → reduced USD liquidity pushes short-term money-market rates higher",
+      "source_attribution": "Source 8 (all steps)",
+      "id": "rel_768d4cef",
+      "discovered_at": "2026-02-20T02:17:19.820149",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "carry_trade_unwind",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "dxy",
+          "condition_type": "percentage_change",
+          "condition_value": 2,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "USD/JPY violent reversal 159",
+            "cause_normalized": "usd/jpy_violent_reversal_159",
+            "effect": "156",
+            "effect_normalized": "usd_jpy",
+            "mechanism": "Sharp FX moves trigger political/governmental concern and escalation of public warnings → prime minister's unusual direct remark moves beyond routine jawboning toward preparatory steps for intervention → FX-driven volatility transmits to high-beta assets due to carry and leverage exposures"
+          },
+          {
+            "cause": "156",
+            "cause_normalized": "usd_jpy",
+            "effect": "government response elevated",
+            "effect_normalized": "govt_response_elevated",
+            "mechanism": ""
+          },
+          {
+            "cause": "government response elevated",
+            "cause_normalized": "govt_response_elevated",
+            "effect": "PM Takaichi direct verbal warning",
+            "effect_normalized": "pm_verbal_warning",
+            "mechanism": ""
+          },
+          {
+            "cause": "PM Takaichi direct verbal warning",
+            "cause_normalized": "pm_verbal_warning",
+            "effect": "operational signalling, intervention possibility open",
+            "effect_normalized": "operational_signalling",
+            "mechanism": ""
+          },
+          {
+            "cause": "operational signalling, intervention possibility open",
+            "cause_normalized": "operational_signalling",
+            "effect": "FX volatility spill to equities and crypto",
+            "effect_normalized": "fx_vol_spill",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "usd/jpy_violent_reversal_159 -> usd_jpy -> govt_response_elevated -> pm_verbal_warning -> operational_signalling -> fx_vol_spill"
+      },
+      "terminal_effect": "fx_vol_spill",
+      "mechanism": "Sharp FX moves trigger political/governmental concern and escalation of public warnings → prime minister's unusual direct remark moves beyond routine jawboning toward preparatory steps for intervention → FX-driven volatility transmits to high-beta assets due to carry and leverage exposures",
+      "source_attribution": "Source 10 (all steps)",
+      "id": "rel_2452a49a",
+      "discovered_at": "2026-02-20T02:17:21.553332",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "usdjpy",
+          "condition_type": "percentage_change",
+          "condition_value": 3,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "usdjpy",
+          "condition_type": "percentage_change",
+          "condition_value": 3,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "tailwind",
+            "cause_normalized": "tailwind",
+            "effect": "headwind",
+            "effect_normalized": "momentum_reversal",
+            "mechanism": "Shift from favorable to unfavorable market conditions causes systematic flows to top out and seasonality to worsen → reversal of systematic flows plus seasonal weakness increases realized/implied volatility → higher volatility raises demand for downside protection and hedges"
+          },
+          {
+            "cause": "headwind",
+            "cause_normalized": "momentum_reversal",
+            "effect": "systematic strategies peaking / seasonal deterioration",
+            "effect_normalized": "systematic_strategies_peak",
+            "mechanism": ""
+          },
+          {
+            "cause": "systematic strategies peaking / seasonal deterioration",
+            "cause_normalized": "systematic_strategies_peak",
+            "effect": "volatility large spike",
+            "effect_normalized": "volatility_spike",
+            "mechanism": ""
+          },
+          {
+            "cause": "volatility large spike",
+            "cause_normalized": "volatility_spike",
+            "effect": "downside hedging increases",
+            "effect_normalized": "downside_hedging",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "tailwind -> momentum_reversal -> systematic_strategies_peak -> volatility_spike -> downside_hedging"
+      },
+      "terminal_effect": "downside_hedging",
+      "mechanism": "Shift from favorable to unfavorable market conditions causes systematic flows to top out and seasonality to worsen → reversal of systematic flows plus seasonal weakness increases realized/implied volatility → higher volatility raises demand for downside protection and hedges",
+      "source_attribution": "Source 13 (all steps)",
+      "id": "rel_df1f3bbf",
+      "discovered_at": "2026-02-20T02:17:22.806526",
+      "validation_count": 2,
+      "relationship_type": "neutral",
+      "confidence": 0.7589999999999999,
+      "trigger_conditions": [
+        {
+          "variable": "tailwind",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 25,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ],
+      "last_validated": "2026-02-20T02:26:09.146675"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Contraction of U.S. dollar liquidity from macro events",
+            "cause_normalized": "contraction_of_u.s._dollar_liquidity_from_macro_events",
+            "effect": "Broad market crash across long-duration assets including tech/SaaS stocks",
+            "effect_normalized": "broad_market_crash_across_long_duration_assets_inc",
+            "mechanism": "U.S. total liquidity becomes dominant factor in market cycle, creating pressure across all long-duration assets as risk capital withdraws from market"
+          }
+        ],
+        "chain_summary": "contraction_of_u.s._dollar_liquidity_from_macro_events -> broad_market_crash_across_long_duration_assets_inc"
+      },
+      "terminal_effect": "broad_market_crash_across_long_duration_assets_inc",
+      "mechanism": "U.S. total liquidity becomes dominant factor in market cycle, creating pressure across all long-duration assets as risk capital withdraws from market",
+      "source_attribution": "Source 11",
+      "id": "rel_46086003",
+      "discovered_at": "2026-02-20T02:17:23.955997",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "dxy",
+          "condition_type": "percentage_change",
+          "condition_value": 2,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "tga",
+          "condition_type": "percentage_change",
+          "condition_value": 10,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "U.S. dollar liquidity contraction from macro events",
+            "cause_normalized": "u.s._dollar_liquidity_contraction_from_macro_events",
+            "effect": "$250B crash across risk assets including crypto and equities",
+            "effect_normalized": "$250b_crash_across_risk_assets_including_crypto_and_equities",
+            "mechanism": "Reduced dollar liquidity constrains capital availability for risk assets, forcing liquidations across long-duration assets including growth stocks and cryptocurrencies"
+          }
+        ],
+        "chain_summary": "u.s._dollar_liquidity_contraction_from_macro_events -> $250b_crash_across_risk_assets_including_crypto_and_equities"
+      },
+      "terminal_effect": "$250b_crash_across_risk_assets_including_crypto_and_equities",
+      "mechanism": "Reduced dollar liquidity constrains capital availability for risk assets, forcing liquidations across long-duration assets including growth stocks and cryptocurrencies",
+      "source_attribution": "Source 12",
+      "id": "rel_e51278ba",
+      "discovered_at": "2026-02-20T02:17:25.176728",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "dxy",
+          "condition_type": "percentage_change",
+          "condition_value": 2,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "tga",
+          "condition_type": "percentage_change",
+          "condition_value": 10,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "actual FX intervention",
+            "cause_normalized": "fx_intervention",
+            "effect": "easing monetary policy expectations",
+            "effect_normalized": "policy_easing_expectations",
+            "mechanism": "Intervention may be followed by looser policy outlook, supporting risk assets medium-term (conditional reversal of initial negative impact)"
+          }
+        ],
+        "chain_summary": "fx_intervention -> policy_easing_expectations"
+      },
+      "terminal_effect": "policy_easing_expectations",
+      "mechanism": "Intervention may be followed by looser policy outlook, supporting risk assets medium-term (conditional reversal of initial negative impact)",
+      "source_attribution": "Source 9",
+      "id": "rel_b1fc48d2",
+      "discovered_at": "2026-02-20T02:17:26.734856",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "dxy",
+          "condition_type": "percentage_change",
+          "condition_value": 2,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "fx_intervention",
+          "condition_type": "absolute_threshold",
+          "condition_value": 1,
+          "condition_direction": "above",
+          "timeframe_days": 1
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ Governor Ueda signals potential operations for stable yield formation amid policy uncertainty",
+            "cause_normalized": "boj_governor_ueda_signals_potential_operations_for",
+            "effect": "Yen weakens against dollar as markets adjust expectations for BOJ monetary policy stance",
+            "effect_normalized": "yen_weakens_against_dollar_as_markets_adjust_expec",
+            "mechanism": "Signals of yield curve control or intervention reduce expectations for aggressive rate hikes, weakening the yen as carry trade dynamics shift"
+          }
+        ],
+        "chain_summary": "boj_governor_ueda_signals_potential_operations_for -> yen_weakens_against_dollar_as_markets_adjust_expec"
+      },
+      "terminal_effect": "yen_weakens_against_dollar_as_markets_adjust_expec",
+      "mechanism": "Signals of yield curve control or intervention reduce expectations for aggressive rate hikes, weakening the yen as carry trade dynamics shift",
+      "source_attribution": "Source 17",
+      "id": "rel_fbdf1ba5",
+      "discovered_at": "2026-02-20T02:17:27.972164",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "us10y",
+          "condition_type": "absolute_threshold",
+          "condition_value": 15,
+          "condition_direction": "below",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "dxy",
+          "condition_type": "percentage_change",
+          "condition_value": 2,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Yen weakness and fiscal stimulus concerns",
+            "cause_normalized": "yen_weakness_and_fiscal_stimulus_concerns",
+            "effect": "Increased pressure on JGB yields and bond market volatility",
+            "effect_normalized": "increased_pressure_on_jgb_yields_and_bond_market_v",
+            "mechanism": "Market concerns about fiscal spending beyond Japan's means and currency depreciation create selling pressure on government bonds, driving yields higher and increasing volatility"
+          }
+        ],
+        "chain_summary": "yen_weakness_and_fiscal_stimulus_concerns -> increased_pressure_on_jgb_yields_and_bond_market_v"
+      },
+      "terminal_effect": "increased_pressure_on_jgb_yields_and_bond_market_v",
+      "mechanism": "Market concerns about fiscal spending beyond Japan's means and currency depreciation create selling pressure on government bonds, driving yields higher and increasing volatility",
+      "source_attribution": "Source 15",
+      "id": "rel_1a901dfd",
+      "discovered_at": "2026-02-20T02:17:29.169290",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.75,
+      "trigger_conditions": [
+        {
+          "variable": "dxy",
+          "condition_type": "percentage_change",
+          "condition_value": 2,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "jgb_10y",
+          "condition_type": "absolute_threshold",
+          "condition_value": 15,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "record short positioning",
+            "cause_normalized": "short_interest",
+            "effect": "short squeeze risk",
+            "effect_normalized": "short_squeeze_risk",
+            "mechanism": "Extreme short interest creates vulnerability to rapid price moves → concentrated shorts must buy to cover simultaneously → buying pressure drives sharp rallies"
+          },
+          {
+            "cause": "short squeeze risk",
+            "cause_normalized": "short_squeeze_risk",
+            "effect": "forced covering, rally",
+            "effect_normalized": "forced_covering",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "short_interest -> short_squeeze_risk -> forced_covering"
+      },
+      "terminal_effect": "forced_covering",
+      "mechanism": "Extreme short interest creates vulnerability to rapid price moves → concentrated shorts must buy to cover simultaneously → buying pressure drives sharp rallies",
+      "source_attribution": "Source 1 (steps 1-2), Source 3 (steps 1-2)",
+      "id": "rel_aadc62e6",
+      "discovered_at": "2026-02-20T02:26:02.408052",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.78,
+      "trigger_conditions": [
+        {
+          "variable": "short_interest",
+          "condition_type": "absolute_threshold",
+          "condition_value": 90,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "short_interest",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "crowded short positioning",
+            "cause_normalized": "crowded_short_vol",
+            "effect": "higher squeeze risk if vol re-prices",
+            "effect_normalized": "volatility_squeeze_risk",
+            "mechanism": "Asset managers built largest short volatility futures position since Jun 2024 → concentrated short-gamma exposure increases vulnerability → any volatility spike forces rapid covering, amplifying price moves"
+          },
+          {
+            "cause": "higher squeeze risk if vol re-prices",
+            "cause_normalized": "volatility_squeeze_risk",
+            "effect": "amplified moves on volatility spikes",
+            "effect_normalized": "amplified_moves_on_volatility_spikes",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "crowded_short_vol -> volatility_squeeze_risk -> amplified_moves_on_volatility_spikes"
+      },
+      "terminal_effect": "amplified_moves_on_volatility_spikes",
+      "mechanism": "Asset managers built largest short volatility futures position since Jun 2024 → concentrated short-gamma exposure increases vulnerability → any volatility spike forces rapid covering, amplifying price moves",
+      "source_attribution": "Source 2, Source 7",
+      "id": "rel_c49a08f2",
+      "discovered_at": "2026-02-20T02:26:03.716075",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.78,
+      "trigger_conditions": [
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "vix",
+          "condition_type": "absolute_threshold",
+          "condition_value": 25,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "crowded positioning",
+            "cause_normalized": "crowded_positioning",
+            "effect": "systemic vulnerability",
+            "effect_normalized": "systemic_vulnerability",
+            "mechanism": "Short yen positions reached decade highs in weak yen environment → any reversal triggers forced unwinding → leveraged portfolios liquidate simultaneously across markets"
+          },
+          {
+            "cause": "systemic vulnerability",
+            "cause_normalized": "systemic_vulnerability",
+            "effect": "cascading liquidations",
+            "effect_normalized": "cascading_liquidations",
+            "mechanism": ""
+          },
+          {
+            "cause": "cascading liquidations",
+            "cause_normalized": "cascading_liquidations",
+            "effect": "market turbulence and volatility",
+            "effect_normalized": "market_turbulence_and_volatility",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "crowded_positioning -> systemic_vulnerability -> cascading_liquidations -> market_turbulence_and_volatility"
+      },
+      "terminal_effect": "market_turbulence_and_volatility",
+      "mechanism": "Short yen positions reached decade highs in weak yen environment → any reversal triggers forced unwinding → leveraged portfolios liquidate simultaneously across markets",
+      "source_attribution": "Source 6 (yen carry trade precedent), Source 5 (equity market impact)",
+      "id": "rel_1d2b60ca",
+      "discovered_at": "2026-02-20T02:26:05.162844",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.78,
+      "trigger_conditions": [
+        {
+          "variable": "jpy",
+          "condition_type": "percentage_change",
+          "condition_value": 3,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "vix",
+          "condition_type": "absolute_threshold",
+          "condition_value": 25,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "hedge fund concentration at 20-year highs",
+            "cause_normalized": "portfolio_density",
+            "effect": "reduced diversification",
+            "effect_normalized": "crowding_index",
+            "mechanism": "Portfolio density increased from ~53% (2005) to 71% (2026), crowding index deteriorated from 11% to 5% → multiple funds hold similar positions → selling pressure triggers correlated liquidations"
+          },
+          {
+            "cause": "reduced diversification",
+            "cause_normalized": "crowding_index",
+            "effect": "amplified volatility during selling pressure",
+            "effect_normalized": "correlated_liquidations",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "portfolio_density -> crowding_index -> correlated_liquidations"
+      },
+      "terminal_effect": "correlated_liquidations",
+      "mechanism": "Portfolio density increased from ~53% (2005) to 71% (2026), crowding index deteriorated from 11% to 5% → multiple funds hold similar positions → selling pressure triggers correlated liquidations",
+      "source_attribution": "Source 12",
+      "id": "rel_d1a68ecc",
+      "discovered_at": "2026-02-20T02:26:06.353707",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.78,
+      "trigger_conditions": [
+        {
+          "variable": "portfolio_density",
+          "condition_type": "absolute_threshold",
+          "condition_value": 70,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "crowding_index",
+          "condition_type": "absolute_threshold",
+          "condition_value": 5,
+          "condition_direction": "below",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "excessive long positioning",
+            "cause_normalized": "investor_long_exposure",
+            "effect": "S&P 500 underperformance over 1-3 months",
+            "effect_normalized": "s&p_500_underperformance_over_1-3_months",
+            "mechanism": "20-year historical pattern shows extreme long positioning by retail and professional investors precedes near-term weakness → positioning unwinds drive mean-reversion"
+          },
+          {
+            "cause": "S&P 500 underperformance over 1-3 months",
+            "cause_normalized": "s&p_500_underperformance_over_1-3_months",
+            "effect": "mean-reversion and equity weakness",
+            "effect_normalized": "mean-reversion_and_equity_weakness",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "investor_long_exposure -> s&p_500_underperformance_over_1-3_months -> mean-reversion_and_equity_weakness"
+      },
+      "terminal_effect": "mean-reversion_and_equity_weakness",
+      "mechanism": "20-year historical pattern shows extreme long positioning by retail and professional investors precedes near-term weakness → positioning unwinds drive mean-reversion",
+      "source_attribution": "Source 8",
+      "id": "rel_b7f7441f",
+      "discovered_at": "2026-02-20T02:26:07.606380",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.78,
+      "trigger_conditions": [
+        {
+          "variable": "investor_long_exposure",
+          "condition_type": "absolute_threshold",
+          "condition_value": 75,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 5,
+          "condition_direction": "decrease",
+          "timeframe_days": 30
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "large levered concentrated positions",
+            "cause_normalized": "basis_trade_size",
+            "effect": "mass liquidation risk",
+            "effect_normalized": "mass_liquidation",
+            "mechanism": "Hedge fund basis trades surged to $1.5T (in 2019+ context), concentrated in 5y/10y curve → forced rapid unwinds strain dealer balance sheets → short-term funding markets face serious pressure"
+          },
+          {
+            "cause": "mass liquidation risk",
+            "cause_normalized": "mass_liquidation",
+            "effect": "dealer and short-term funding stress",
+            "effect_normalized": "dealer_and_funding_stress",
+            "mechanism": ""
+          },
+          {
+            "cause": "dealer and short-term funding stress",
+            "cause_normalized": "dealer_and_funding_stress",
+            "effect": "liquidity squeeze",
+            "effect_normalized": "liquidity_squeeze",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "basis_trade_size -> mass_liquidation -> dealer_and_funding_stress -> liquidity_squeeze"
+      },
+      "terminal_effect": "liquidity_squeeze",
+      "mechanism": "Hedge fund basis trades surged to $1.5T (in 2019+ context), concentrated in 5y/10y curve → forced rapid unwinds strain dealer balance sheets → short-term funding markets face serious pressure",
+      "source_attribution": "Source 9",
+      "id": "rel_d947feeb",
+      "discovered_at": "2026-02-20T02:26:09.146802",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.78,
+      "trigger_conditions": [
+        {
+          "variable": "basis_trade_size",
+          "condition_type": "absolute_threshold",
+          "condition_value": 1.2,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "us10y",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "USD CTA max short",
+            "cause_normalized": "cta_positioning",
+            "effect": "USD vulnerable to short-covering",
+            "effect_normalized": "usd_short_squeeze",
+            "mechanism": "CTA positioning at maximum short levels creates asymmetric risk → any positive USD catalyst triggers algorithmic buy-to-cover → concentrated covering amplifies move"
+          },
+          {
+            "cause": "USD vulnerable to short-covering",
+            "cause_normalized": "usd_short_squeeze",
+            "effect": "forced buying drives USD rally",
+            "effect_normalized": "forced_buying_drives_usd_rally",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "cta_positioning -> usd_short_squeeze -> forced_buying_drives_usd_rally"
+      },
+      "terminal_effect": "forced_buying_drives_usd_rally",
+      "mechanism": "CTA positioning at maximum short levels creates asymmetric risk → any positive USD catalyst triggers algorithmic buy-to-cover → concentrated covering amplifies move",
+      "source_attribution": "Source 4",
+      "id": "rel_010d5a94",
+      "discovered_at": "2026-02-20T02:26:10.683688",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.78,
+      "trigger_conditions": [
+        {
+          "variable": "cta_positioning",
+          "condition_type": "absolute_threshold",
+          "condition_value": 90,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "dxy",
+          "condition_type": "percentage_change",
+          "condition_value": 2,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "extremely low volatility",
+            "cause_normalized": "low_volatility_regime",
+            "effect": "hedging demand via VIX products",
+            "effect_normalized": "vix_hedging_demand",
+            "mechanism": "March 2025 vol spike to 103 collapsed to 4-6 by July 2025 → leveraged VIX ETN holders (~90% AUM) hedge long equity exposure → traders exploit by selling front-month VIX → persistent low vol causes hedge frustration and shift to daily ATM SPX options"
+          },
+          {
+            "cause": "hedging demand via VIX products",
+            "cause_normalized": "vix_hedging_demand",
+            "effect": "front-month VIX selling pressure",
+            "effect_normalized": "vix_suppression",
+            "mechanism": ""
+          },
+          {
+            "cause": "front-month VIX selling pressure",
+            "cause_normalized": "vix_suppression",
+            "effect": "gamma bleed and hedge capitulation",
+            "effect_normalized": "hedge_capitulation",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "low_volatility_regime -> vix_hedging_demand -> vix_suppression -> hedge_capitulation"
+      },
+      "terminal_effect": "hedge_capitulation",
+      "mechanism": "March 2025 vol spike to 103 collapsed to 4-6 by July 2025 → leveraged VIX ETN holders (~90% AUM) hedge long equity exposure → traders exploit by selling front-month VIX → persistent low vol causes hedge frustration and shift to daily ATM SPX options",
+      "source_attribution": "Source 11",
+      "id": "rel_619535a4",
+      "discovered_at": "2026-02-20T02:26:11.849392",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.78,
+      "trigger_conditions": [
+        {
+          "variable": "vix",
+          "condition_type": "absolute_threshold",
+          "condition_value": 12,
+          "condition_direction": "below",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 25,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
     }
   ]
 }

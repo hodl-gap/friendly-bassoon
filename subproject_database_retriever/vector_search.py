@@ -88,6 +88,16 @@ def search_vectors(state: RetrieverState) -> RetrieverState:
         include_metadata=True
     )
 
+    # Debug log full Pinecone results
+    try:
+        from shared.debug_logger import debug_log_data_fetch
+        debug_log_data_fetch("Pinecone", "query", {"query": original_query[:200], "top_k": stage1_top_k}, {
+            "match_count": len(original_results.matches),
+            "matches": [{"id": m.id, "score": m.score, "metadata_keys": list(m.metadata.keys()) if m.metadata else []} for m in original_results.matches],
+        })
+    except Exception:
+        pass
+
     protected_count = 0
     for match in original_results.matches:
         if match.score >= stage1_threshold and protected_count < ORIGINAL_QUERY_TOP_N:

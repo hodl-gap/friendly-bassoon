@@ -242,8 +242,14 @@ These queries will be used to search the web for logic chains (cause → effect 
 - Each query should target a DIFFERENT ANGLE of the topic
 - Use concrete market terms: "equities", "stocks", "CAPEX", "valuation", etc.
 - Include relevant entities: company names, sectors, market terms
-- Keep queries searchable (5-12 words each)
+- Keep queries SHORT and focused (5-8 words max) — fewer terms yield better search results
 - DO NOT include specific domain names like "Bitcoin" or "crypto" unless the topic requires it
+
+## Required Angle Coverage (generate 4 queries, one per angle)
+1. Direct trigger/catalyst — what specific event or data release caused this
+2. Upstream enabler — what CAPEX, infrastructure spending, or capital allocation by the DISRUPTORS (e.g., big-tech hyperscalers, not the disrupted companies) ENABLED or amplified the forces behind this event
+3. Counterargument or contradiction — opposing analyst views, "logically impossible" arguments, bearish/bullish disagreements from named institutions
+4. Quantitative impact — specific dollar amounts, percentage moves, index levels, drawdowns
 
 Topic to cover: {combined_topic}
 

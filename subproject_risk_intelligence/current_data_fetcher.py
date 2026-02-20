@@ -232,6 +232,13 @@ def fetch_fred_with_history(series_id: str, lookback_days: int = 45) -> Optional
         response.raise_for_status()
         data = response.json()
 
+        # Debug log full FRED response
+        try:
+            from shared.debug_logger import debug_log_data_fetch
+            debug_log_data_fetch("FRED", url, params, data)
+        except Exception:
+            pass
+
         if data.get("observations"):
             # Filter out missing values and build history
             history = []
@@ -275,6 +282,16 @@ def fetch_yahoo_with_history(ticker: str, lookback_days: int = 45) -> Optional[D
             for idx, row in hist.iterrows():
                 date_str = idx.strftime("%Y-%m-%d")
                 history.append((date_str, float(row["Close"])))
+
+            # Debug log full Yahoo response
+            try:
+                from shared.debug_logger import debug_log_data_fetch
+                debug_log_data_fetch("Yahoo", ticker, {"period": period}, {
+                    "rows": len(hist),
+                    "history": history,
+                })
+            except Exception:
+                pass
 
             if history:
                 latest = history[-1]

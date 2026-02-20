@@ -1681,6 +1681,31 @@ def detect_and_fill_gaps(
     data_fetch_gaps = [g for g in gaps_to_fill if g.get("fill_method") == "data_fetch"]
     historical_analog_gaps = [g for g in gaps_to_fill if g.get("fill_method") == "historical_analog"]
 
+    # Override: if answer_generation flagged incomplete chains but LLM gap detector
+    # said topic is COVERED (e.g. from previously persisted web chains), inject a
+    # web_chain_extraction gap so we search for additional angles
+    if topic_coverage and topic_coverage.get("needs_web_chain_extraction") and not web_chain_gaps:
+        # Focus on what upstream CAUSES are missing, not downstream effects
+        # Chains explain what happened but not the investment/structural forces behind it
+        missing_desc = (
+            "Existing chains explain direct triggers but are missing: "
+            "(1) upstream investment by the DISRUPTORS — e.g. hyperscaler/big-tech CAPEX and "
+            "infrastructure spending that enabled or amplified the disruption, "
+            "(2) institutional contradictions — named analyst reports calling out logical "
+            "inconsistencies in market pricing"
+        )
+
+        injected_gap = {
+            "category": "topic_not_covered",
+            "status": "GAP",
+            "fill_method": "web_chain_extraction",
+            "found": "Direct triggers covered but upstream investment/spending dynamics and contradictions missing",
+            "missing": missing_desc,
+            "search_query": query,
+        }
+        web_chain_gaps.append(injected_gap)
+        print(f"[Knowledge Gap] Injected web_chain_extraction gap (chain override): {missing_desc[:200]}")
+
     print(f"[Knowledge Gap] Gap split: {len(web_chain_gaps)} web_chain, {len(web_search_gaps)} web_search, {len(data_fetch_gaps)} data_fetch, {len(historical_analog_gaps)} historical_analog")
 
     all_filled = []

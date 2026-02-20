@@ -186,6 +186,20 @@ class WebSearchAdapter:
             results = []
             for r in response.get("results", []):
                 raw_content = r.get("raw_content") or ""
+
+                # Debug log FULL results before truncation
+                try:
+                    from shared.debug_logger import debug_log_web_search
+                    debug_log_web_search(query, {
+                        "title": r.get("title", ""),
+                        "snippet": r.get("content", ""),
+                        "url": r.get("url", ""),
+                        "raw_content_length": len(raw_content),
+                        "raw_content_full": raw_content,
+                    })
+                except Exception:
+                    pass
+
                 # Truncate raw content to avoid blowing up the prompt
                 if len(raw_content) > 3000:
                     raw_content = raw_content[:3000] + "\n... [truncated]"

@@ -49,7 +49,8 @@
         "rel_c7661b5a",
         "rel_6ee3048c",
         "rel_aee3f4f6",
-        "rel_8f25bbd5"
+        "rel_8f25bbd5",
+        "rel_768d4cef"
       ],
       "active_chain_ids": [],
       "last_refreshed": "2026-02-14T07:25:54.723188",
@@ -63,7 +64,9 @@
         "futures_oi"
       ],
       "query_template": "Current market positioning data prime book leverage CTA",
-      "chain_ids": [],
+      "chain_ids": [
+        "rel_010d5a94"
+      ],
       "active_chain_ids": [],
       "last_refreshed": null,
       "assessment": null
@@ -89,7 +92,8 @@
         "rel_c8066446",
         "rel_de8a5244",
         "rel_6ee3048c",
-        "rel_8f25bbd5"
+        "rel_8f25bbd5",
+        "rel_768d4cef"
       ],
       "active_chain_ids": [],
       "last_refreshed": null,

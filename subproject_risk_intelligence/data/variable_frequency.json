@@ -111,8 +111,8 @@
     },
     "sofr": {
       "first_seen": "2026-02-14T06:54:16.208718",
-      "last_seen": "2026-02-14T07:24:48.819006",
-      "chain_count": 12,
+      "last_seen": "2026-02-20T02:17:30.441534",
+      "chain_count": 13,
       "sources": [
         "2d482ab65308767d_41 (steps 1-3), contextual interpretation for BTC impact",
         "Source 2 (interpretation context)",
@@ -125,7 +125,8 @@
         "CoinDesk (cfbe53872aafa7ad_157) → Plan G Research (1ff0edc5cd7a3aeb_201) → NY Fed (f302d29e63075107_204)",
         "CoinDesk → Plan G Research → NY Fed",
         "Source 6 (inverse of stated mechanism), Sources 16-17 (SOFR volume/rate stress indicators), Source 15 (news-driven BTC weakness pattern)",
-        "Source 7 (catalyst), Source 10 (steps 2-3), Source 16 (steps 4-6)"
+        "Source 7 (catalyst), Source 10 (steps 2-3), Source 16 (steps 4-6)",
+        "Source 8 (all steps)"
       ],
       "is_anchor": true,
       "anchor_theme": "rates"
@@ -210,8 +211,8 @@
     },
     "carry_trade_unwind": {
       "first_seen": "2026-02-14T06:54:16.208729",
-      "last_seen": "2026-02-14T11:31:31.101099",
-      "chain_count": 20,
+      "last_seen": "2026-02-20T02:17:30.441534",
+      "chain_count": 21,
       "sources": [
         "CoinDesk (cfbe53872aafa7ad_157) for full chain",
         "Source 7 (steps 1-2, steps 3-4)",
@@ -230,7 +231,8 @@
         "Source 2 (steps 1-2), Source 7 (step 4 for BTC impact)",
         "Source 1 (df0468450c5fb327_71) event description + Source 2, 3, 4 logic chains",
         "Source 7 (catalyst), Source 9 (transmission mechanism)",
-        "Source 10 (yen surge context), Source 2 (carry unwind impact on BTC)"
+        "Source 10 (yen surge context), Source 2 (carry unwind impact on BTC)",
+        "Source 8 (all steps)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -516,12 +518,13 @@
     },
     "fx_intervention": {
       "first_seen": "2026-02-14T06:54:16.208756",
-      "last_seen": "2026-02-14T07:24:48.819013",
-      "chain_count": 3,
+      "last_seen": "2026-02-20T02:17:30.441555",
+      "chain_count": 4,
       "sources": [
         "Source 78c9945a42691062_43",
         "78c9945a42691062_43",
-        "Source 7 (catalyst), Source 10 (steps 4-5)"
+        "Source 7 (catalyst), Source 10 (steps 4-5)",
+        "Source 9"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -541,13 +544,14 @@
     },
     "policy_easing_expectations": {
       "first_seen": "2026-02-14T06:54:16.208756",
-      "last_seen": "2026-02-14T07:24:48.819013",
-      "chain_count": 4,
+      "last_seen": "2026-02-20T02:17:30.441555",
+      "chain_count": 5,
       "sources": [
         "Source 78c9945a42691062_43",
         "78c9945a42691062_43, 7b77309cfd6630df_70, cfbe53872aafa7ad_157",
         "78c9945a42691062_43",
-        "Source 7 (catalyst), Source 10 (steps 4-5)"
+        "Source 7 (catalyst), Source 10 (steps 4-5)",
+        "Source 9"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -1948,23 +1952,25 @@
     },
     "usd_shortage": {
       "first_seen": "2026-02-14T06:54:16.208993",
-      "last_seen": "2026-02-14T07:24:48.819006",
-      "chain_count": 2,
+      "last_seen": "2026-02-20T02:17:30.441534",
+      "chain_count": 3,
       "sources": [
         "CoinDesk (cfbe53872aafa7ad_157) → Plan G Research (1ff0edc5cd7a3aeb_201) → NY Fed (f302d29e63075107_204)",
-        "Source 7 (catalyst), Source 10 (steps 2-3), Source 16 (steps 4-6)"
+        "Source 7 (catalyst), Source 10 (steps 2-3), Source 16 (steps 4-6)",
+        "Source 8 (all steps)"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "usd_repurchase": {
       "first_seen": "2026-02-14T06:54:16.208993",
-      "last_seen": "2026-02-14T07:24:48.819006",
-      "chain_count": 3,
+      "last_seen": "2026-02-20T02:17:30.441534",
+      "chain_count": 4,
       "sources": [
         "CoinDesk (cfbe53872aafa7ad_157) → Plan G Research (1ff0edc5cd7a3aeb_201) → NY Fed (f302d29e63075107_204)",
         "CoinDesk → Plan G Research → NY Fed",
-        "Source 7 (catalyst), Source 10 (steps 2-3), Source 16 (steps 4-6)"
+        "Source 7 (catalyst), Source 10 (steps 2-3), Source 16 (steps 4-6)",
+        "Source 8 (all steps)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -2057,13 +2063,14 @@
     },
     "usd_jpy": {
       "first_seen": "2026-02-14T06:54:16.209011",
-      "last_seen": "2026-02-14T07:24:48.819019",
-      "chain_count": 6,
+      "last_seen": "2026-02-20T02:17:30.441539",
+      "chain_count": 7,
       "sources": [
         "Plan G Research",
         "Source 10 (771b9b416d46347b_67)",
         "Source 7",
-        "Source 7 (step 1), Source 2 (steps 2-3)"
+        "Source 7 (step 1), Source 2 (steps 2-3)",
+        "Source 10 (all steps)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -2430,22 +2437,24 @@
     },
     "fx_vol_spill": {
       "first_seen": "2026-02-14T06:54:16.209084",
-      "last_seen": "2026-02-14T07:24:48.818993",
-      "chain_count": 2,
+      "last_seen": "2026-02-20T02:17:30.441539",
+      "chain_count": 3,
       "sources": [
         "5eb637a4c093a7b6_15 → 78c9945a42691062_43/407f42bd9bfc3d8a_453",
-        "Source 7 (step 1), Source 2 (steps 2-3)"
+        "Source 7 (step 1), Source 2 (steps 2-3)",
+        "Source 10 (all steps)"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "operational_signalling": {
       "first_seen": "2026-02-14T06:54:16.209084",
-      "last_seen": "2026-02-14T07:24:48.818993",
-      "chain_count": 2,
+      "last_seen": "2026-02-20T02:17:30.441539",
+      "chain_count": 3,
       "sources": [
         "5eb637a4c093a7b6_15 → 78c9945a42691062_43/407f42bd9bfc3d8a_453",
-        "Source 7 (step 1), Source 2 (steps 2-3)"
+        "Source 7 (step 1), Source 2 (steps 2-3)",
+        "Source 10 (all steps)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -2758,10 +2767,11 @@
     },
     "jpy_weakness": {
       "first_seen": "2026-02-14T07:24:48.818998",
-      "last_seen": "2026-02-14T07:24:48.818998",
-      "chain_count": 1,
+      "last_seen": "2026-02-20T02:17:30.441521",
+      "chain_count": 2,
       "sources": [
-        "Source 7 (step 1), Source 8 (steps 2-3)"
+        "Source 7 (step 1), Source 8 (steps 2-3)",
+        "Source 16 (all steps)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -3137,60 +3147,66 @@
     },
     "snap_election_called_by_takaichi_creates_political": {
       "first_seen": "2026-02-15T11:10:51.386948",
-      "last_seen": "2026-02-15T11:10:51.386948",
-      "chain_count": 1,
+      "last_seen": "2026-02-20T02:17:30.441488",
+      "chain_count": 2,
       "sources": [
-        "Bloomberg"
+        "Bloomberg",
+        "Source 3"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "japan_bond_market_experiences_violent_price_swings": {
       "first_seen": "2026-02-15T11:10:51.386948",
-      "last_seen": "2026-02-15T11:10:51.386948",
-      "chain_count": 1,
+      "last_seen": "2026-02-20T02:17:30.441488",
+      "chain_count": 2,
       "sources": [
-        "Bloomberg"
+        "Bloomberg",
+        "Source 3"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "yen_strengthens_and_becomes_more_expensive_to_borr": {
       "first_seen": "2026-02-15T11:10:51.386960",
-      "last_seen": "2026-02-15T11:10:51.386960",
-      "chain_count": 1,
+      "last_seen": "2026-02-20T02:17:30.441526",
+      "chain_count": 2,
       "sources": [
-        "Yahoo Finance"
+        "Yahoo Finance",
+        "Source 6 (steps 1-2), Source 1 (steps 2-3)"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "boj_signals_rate_hikes_and_raises_benchmark_rates": {
       "first_seen": "2026-02-15T11:10:51.386960",
-      "last_seen": "2026-02-15T11:10:51.386960",
-      "chain_count": 1,
+      "last_seen": "2026-02-20T02:17:30.441526",
+      "chain_count": 2,
       "sources": [
-        "Yahoo Finance"
+        "Yahoo Finance",
+        "Source 6 (steps 1-2), Source 1 (steps 2-3)"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "selling_pressure_emerges_in_risk_assets_including_": {
       "first_seen": "2026-02-15T11:10:51.386971",
-      "last_seen": "2026-02-15T11:10:51.386971",
-      "chain_count": 1,
+      "last_seen": "2026-02-20T02:17:30.441526",
+      "chain_count": 2,
       "sources": [
-        "Yahoo Finance"
+        "Yahoo Finance",
+        "Source 6 (steps 1-2), Source 1 (steps 2-3)"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "yen_carry_trade_unwinding_occurs_due_to_higher_boj": {
       "first_seen": "2026-02-15T11:10:51.386971",
-      "last_seen": "2026-02-15T11:10:51.386971",
-      "chain_count": 1,
+      "last_seen": "2026-02-20T02:17:30.441526",
+      "chain_count": 2,
       "sources": [
-        "Yahoo Finance"
+        "Yahoo Finance",
+        "Source 6 (steps 1-2), Source 1 (steps 2-3)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -3337,20 +3353,22 @@
     },
     "yen_weakens_against_dollar_as_markets_adjust_expec": {
       "first_seen": "2026-02-15T11:10:51.387059",
-      "last_seen": "2026-02-15T11:10:51.387059",
-      "chain_count": 1,
+      "last_seen": "2026-02-20T02:17:30.441558",
+      "chain_count": 2,
       "sources": [
-        "Yahoo Finance"
+        "Yahoo Finance",
+        "Source 17"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "boj_governor_ueda_signals_potential_operations_for": {
       "first_seen": "2026-02-15T11:10:51.387059",
-      "last_seen": "2026-02-15T11:10:51.387059",
-      "chain_count": 1,
+      "last_seen": "2026-02-20T02:17:30.441558",
+      "chain_count": 2,
       "sources": [
-        "Yahoo Finance"
+        "Yahoo Finance",
+        "Source 17"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -3377,30 +3395,33 @@
     },
     "yen_weakness_and_fiscal_stimulus_concerns": {
       "first_seen": "2026-02-15T11:10:51.387079",
-      "last_seen": "2026-02-15T11:10:51.387079",
-      "chain_count": 1,
+      "last_seen": "2026-02-20T02:17:30.441562",
+      "chain_count": 2,
       "sources": [
-        "Yahoo Finance"
+        "Yahoo Finance",
+        "Source 15"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "increased_pressure_on_jgb_yields_and_bond_market_v": {
       "first_seen": "2026-02-15T11:10:51.387079",
-      "last_seen": "2026-02-15T11:10:51.387079",
-      "chain_count": 1,
+      "last_seen": "2026-02-20T02:17:30.441562",
+      "chain_count": 2,
       "sources": [
-        "Yahoo Finance"
+        "Yahoo Finance",
+        "Source 15"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "political_uncertainty_and_yen_volatility_from_elec": {
       "first_seen": "2026-02-15T11:10:51.387089",
-      "last_seen": "2026-02-15T11:10:51.387089",
-      "chain_count": 1,
+      "last_seen": "2026-02-20T02:17:30.441510",
+      "chain_count": 2,
       "sources": [
-        "Yahoo Finance"
+        "Yahoo Finance",
+        "Source 2"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -3427,10 +3448,11 @@
     },
     "market_uncertainty_about_boj_policy_direction_and_": {
       "first_seen": "2026-02-15T11:10:51.387098",
-      "last_seen": "2026-02-15T11:10:51.387098",
-      "chain_count": 1,
+      "last_seen": "2026-02-20T02:17:30.441517",
+      "chain_count": 2,
       "sources": [
-        "Yahoo Finance"
+        "Yahoo Finance",
+        "Source 7"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -3454,7 +3476,4003 @@
       ],
       "is_anchor": false,
       "anchor_theme": null
+    },
+    "ai_agents_capability_expansion_to_perform_software": {
+      "first_seen": "2026-02-19T08:53:46.487537",
+      "last_seen": "2026-02-19T09:38:29.594487",
+      "chain_count": 3,
+      "sources": [
+        "Forbes",
+        "Source 2, Source 1",
+        "Source 5 (steps 1-2), Source 1 (step 2-3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "$300_billion_market_value_evaporated_from_saas_sec": {
+      "first_seen": "2026-02-19T08:53:46.487537",
+      "last_seen": "2026-02-19T08:53:46.487537",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "earnings_misses_from_major_saas_companies_(microso": {
+      "first_seen": "2026-02-19T08:53:46.487562",
+      "last_seen": "2026-02-19T08:53:46.487562",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "sector-wide_stock_price_collapse_and_continued_mar": {
+      "first_seen": "2026-02-19T08:53:46.487562",
+      "last_seen": "2026-02-19T08:53:46.487562",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "slowdown_in_cloud_growth_reported_in_earnings_(mic": {
+      "first_seen": "2026-02-19T08:53:46.487574",
+      "last_seen": "2026-02-19T08:53:46.487574",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "broader_tech_sector_sell-off_and_reassessment_of_s": {
+      "first_seen": "2026-02-19T08:53:46.487574",
+      "last_seen": "2026-02-19T08:53:46.487574",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "investor_revaluation_of_traditional_saas_companies": {
+      "first_seen": "2026-02-19T08:53:46.487583",
+      "last_seen": "2026-02-19T09:46:41.174279",
+      "chain_count": 5,
+      "sources": [
+        "Forbes",
+        "Source 6 (steps 1-2), Source 3 (step 2 outcome)",
+        "Source 6",
+        "Source 10 (steps 1-2), Source 13 (step 2-3)",
+        "Source 10 (steps 1-2), Source 8 (steps 3-4)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "goldman_sachs_projection_that_60%_of_software_econ": {
+      "first_seen": "2026-02-19T08:53:46.487583",
+      "last_seen": "2026-02-19T08:53:46.487583",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "weak_labor_market_signals_(rising_jobless_claims,_": {
+      "first_seen": "2026-02-19T08:53:46.487591",
+      "last_seen": "2026-02-19T08:53:46.487591",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "amplification_of_tech_sector_sell-off_and_broader_": {
+      "first_seen": "2026-02-19T08:53:46.487591",
+      "last_seen": "2026-02-19T08:53:46.487591",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_companies_adopted_'growth_at_all_costs'_menta": {
+      "first_seen": "2026-02-19T08:53:46.487599",
+      "last_seen": "2026-02-19T08:53:46.487599",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal / Gainsight"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "easy_access_to_venture_capital_and_cheap_public_ca": {
+      "first_seen": "2026-02-19T08:53:46.487599",
+      "last_seen": "2026-02-19T09:16:21.449528",
+      "chain_count": 2,
+      "sources": [
+        "Wall Street Journal / Gainsight",
+        "Source 9 (steps 1-2), Source 8 (steps 2-3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_multiples_contracted_and_investor_sentiment": {
+      "first_seen": "2026-02-19T08:53:46.487606",
+      "last_seen": "2026-02-19T09:16:21.449528",
+      "chain_count": 3,
+      "sources": [
+        "Wall Street Journal / Gainsight",
+        "Source 9",
+        "Source 9 (steps 1-2), Source 8 (steps 2-3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_companies_neglected_customer_outcomes_and_bus": {
+      "first_seen": "2026-02-19T08:53:46.487606",
+      "last_seen": "2026-02-19T09:02:30.355034",
+      "chain_count": 2,
+      "sources": [
+        "Wall Street Journal / Gainsight",
+        "Source 9"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_technology_can_automate_saas_human_interfaces_a": {
+      "first_seen": "2026-02-19T08:53:46.487613",
+      "last_seen": "2026-02-19T08:53:46.487613",
+      "chain_count": 1,
+      "sources": [
+        "Forbes Tech Council"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "legacy_saas_applications_face_competitive_displace": {
+      "first_seen": "2026-02-19T08:53:46.487613",
+      "last_seen": "2026-02-19T08:53:46.487613",
+      "chain_count": 1,
+      "sources": [
+        "Forbes Tech Council"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_conditions_tightened_with_increasing_challe": {
+      "first_seen": "2026-02-19T08:53:46.487620",
+      "last_seen": "2026-02-19T09:02:30.355037",
+      "chain_count": 2,
+      "sources": [
+        "Wall Street Journal / Gainsight",
+        "Source 10\n\n## Valuation Context (Pre-Meltdown Baseline)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_companies_face_pressure_to_demonstrate_durabl": {
+      "first_seen": "2026-02-19T08:53:46.487620",
+      "last_seen": "2026-02-19T09:02:30.355037",
+      "chain_count": 2,
+      "sources": [
+        "Wall Street Journal / Gainsight",
+        "Source 10\n\n## Valuation Context (Pre-Meltdown Baseline)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_companies_with_unproven_ai_strategies_face_va": {
+      "first_seen": "2026-02-19T08:53:46.487626",
+      "last_seen": "2026-02-19T09:02:30.355027",
+      "chain_count": 2,
+      "sources": [
+        "Forbes",
+        "Source 7\n\n## Macroeconomic Amplification"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_skepticism_about_ai_revenue_quality_and_tra": {
+      "first_seen": "2026-02-19T08:53:46.487626",
+      "last_seen": "2026-02-19T09:02:30.355027",
+      "chain_count": 2,
+      "sources": [
+        "Forbes",
+        "Source 7\n\n## Macroeconomic Amplification"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "anthropic_released_11_new_plug-ins_for_claude_cowo": {
+      "first_seen": "2026-02-19T08:53:46.487633",
+      "last_seen": "2026-02-19T08:53:46.487633",
+      "chain_count": 1,
+      "sources": [
+        "JPMorgan/Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "massive_sell-off_in_saas_stocks": {
+      "first_seen": "2026-02-19T08:53:46.487633",
+      "last_seen": "2026-02-19T08:53:46.487633",
+      "chain_count": 1,
+      "sources": [
+        "JPMorgan/Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_agents_expand_market_and_capture_disproportiona": {
+      "first_seen": "2026-02-19T08:53:46.487640",
+      "last_seen": "2026-02-19T08:53:46.487640",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "profit_shifts_away_from_legacy_saas_seat-based_mod": {
+      "first_seen": "2026-02-19T08:53:46.487640",
+      "last_seen": "2026-02-19T08:53:46.487640",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "$300_billion_in_market_value_evaporates_across_saa": {
+      "first_seen": "2026-02-19T08:53:46.487650",
+      "last_seen": "2026-02-19T08:53:46.487650",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "second-order_impact_of_ai_disruption_hitting_softw": {
+      "first_seen": "2026-02-19T08:53:46.487650",
+      "last_seen": "2026-02-19T08:53:46.487650",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "agentic_ai_tools_can_build_bespoke_software_soluti": {
+      "first_seen": "2026-02-19T08:53:46.487657",
+      "last_seen": "2026-02-19T08:53:46.487657",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_aggressively_reprices_entire_software_appli": {
+      "first_seen": "2026-02-19T08:53:46.487657",
+      "last_seen": "2026-02-19T08:53:46.487657",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "software_price/sales_ratio_declines_from_9x_(septe": {
+      "first_seen": "2026-02-19T08:53:46.487663",
+      "last_seen": "2026-02-19T08:53:46.487663",
+      "chain_count": 1,
+      "sources": [
+        "Goldman Sachs/Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "wall_street_forced_to_rethink_valuation_multiples_": {
+      "first_seen": "2026-02-19T08:53:46.487663",
+      "last_seen": "2026-02-19T09:38:29.594487",
+      "chain_count": 4,
+      "sources": [
+        "Goldman Sachs/Yahoo Finance",
+        "Source 3\n\n## AI Revenue Quality and Strategy Credibility",
+        "Source 8 (step 1), Source 6 (steps 2-3)",
+        "Source 5 (steps 1-2), Source 1 (step 2-3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "correction_start": {
+      "first_seen": "2026-02-19T08:56:06.236663",
+      "last_seen": "2026-02-19T08:56:06.236766",
+      "chain_count": 2,
+      "sources": [
+        "Source 1, Source 2",
+        "Source 2, Source 11"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "tech_exhaustion": {
+      "first_seen": "2026-02-19T08:56:06.236663",
+      "last_seen": "2026-02-19T08:56:06.236663",
+      "chain_count": 1,
+      "sources": [
+        "Source 1, Source 2"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_pressure": {
+      "first_seen": "2026-02-19T08:56:06.236706",
+      "last_seen": "2026-02-19T08:56:06.236706",
+      "chain_count": 1,
+      "sources": [
+        "Source 6"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "software_selloff": {
+      "first_seen": "2026-02-19T08:56:06.236706",
+      "last_seen": "2026-02-19T08:56:06.236706",
+      "chain_count": 1,
+      "sources": [
+        "Source 6"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "tech_sector_concerns": {
+      "first_seen": "2026-02-19T08:56:06.236717",
+      "last_seen": "2026-02-19T08:56:06.236717",
+      "chain_count": 1,
+      "sources": [
+        "Source 3"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "sector_rotation_away_tech": {
+      "first_seen": "2026-02-19T08:56:06.236717",
+      "last_seen": "2026-02-19T08:56:06.236717",
+      "chain_count": 1,
+      "sources": [
+        "Source 3"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "asset_price_bubble": {
+      "first_seen": "2026-02-19T08:56:06.236723",
+      "last_seen": "2026-02-19T08:56:06.236723",
+      "chain_count": 1,
+      "sources": [
+        "Source 17 (step 1), Source 9 (steps 2-3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "bond_yields_up": {
+      "first_seen": "2026-02-19T08:56:06.236723",
+      "last_seen": "2026-02-19T08:56:06.236723",
+      "chain_count": 1,
+      "sources": [
+        "Source 17 (step 1), Source 9 (steps 2-3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "cpi_inflation": {
+      "first_seen": "2026-02-19T08:56:06.236723",
+      "last_seen": "2026-02-19T08:56:06.236723",
+      "chain_count": 1,
+      "sources": [
+        "Source 17 (step 1), Source 9 (steps 2-3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "equity_correction": {
+      "first_seen": "2026-02-19T08:56:06.236723",
+      "last_seen": "2026-02-19T08:56:06.236723",
+      "chain_count": 1,
+      "sources": [
+        "Source 17 (step 1), Source 9 (steps 2-3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "mag_7_rapid_price_velocity_(192%_rise)": {
+      "first_seen": "2026-02-19T08:56:06.236730",
+      "last_seen": "2026-02-19T08:56:06.236730",
+      "chain_count": 1,
+      "sources": [
+        "Source 20 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "correction_trigger": {
+      "first_seen": "2026-02-19T08:56:06.236730",
+      "last_seen": "2026-02-19T08:56:06.236730",
+      "chain_count": 1,
+      "sources": [
+        "Source 20 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "bubble_late_stage": {
+      "first_seen": "2026-02-19T08:56:06.236730",
+      "last_seen": "2026-02-19T08:56:06.236730",
+      "chain_count": 1,
+      "sources": [
+        "Source 20 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "equity_concentration": {
+      "first_seen": "2026-02-19T08:56:06.236737",
+      "last_seen": "2026-02-19T08:56:06.236737",
+      "chain_count": 1,
+      "sources": [
+        "Source 17"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "tech_vulnerability": {
+      "first_seen": "2026-02-19T08:56:06.236737",
+      "last_seen": "2026-02-19T08:56:06.236737",
+      "chain_count": 1,
+      "sources": [
+        "Source 17"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "correction_amplified_in_concentrated_sectors": {
+      "first_seen": "2026-02-19T08:56:06.236737",
+      "last_seen": "2026-02-19T08:56:06.236737",
+      "chain_count": 1,
+      "sources": [
+        "Source 17"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "fiscal_retrenchment": {
+      "first_seen": "2026-02-19T08:56:06.236743",
+      "last_seen": "2026-02-19T08:56:06.236743",
+      "chain_count": 1,
+      "sources": [
+        "Source 19 (steps 1-4), Source 16 (steps 5-6)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "equity_rally_policy_driven": {
+      "first_seen": "2026-02-19T08:56:06.236743",
+      "last_seen": "2026-02-19T08:56:06.236743",
+      "chain_count": 1,
+      "sources": [
+        "Source 19 (steps 1-4), Source 16 (steps 5-6)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "fed_cut_pressure": {
+      "first_seen": "2026-02-19T08:56:06.236743",
+      "last_seen": "2026-02-19T08:56:06.236743",
+      "chain_count": 1,
+      "sources": [
+        "Source 19 (steps 1-4), Source 16 (steps 5-6)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "bubble_burst": {
+      "first_seen": "2026-02-19T08:56:06.236743",
+      "last_seen": "2026-02-19T08:56:06.236743",
+      "chain_count": 1,
+      "sources": [
+        "Source 19 (steps 1-4), Source 16 (steps 5-6)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_deterioration": {
+      "first_seen": "2026-02-19T08:56:06.236743",
+      "last_seen": "2026-02-19T08:56:06.236743",
+      "chain_count": 1,
+      "sources": [
+        "Source 19 (steps 1-4), Source 16 (steps 5-6)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "bubble_risk": {
+      "first_seen": "2026-02-19T08:56:06.236743",
+      "last_seen": "2026-02-19T08:56:06.236750",
+      "chain_count": 2,
+      "sources": [
+        "Source 19 (steps 1-4), Source 16 (steps 5-6)",
+        "Source 19 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "crypto_fund_inflows": {
+      "first_seen": "2026-02-19T08:56:06.236750",
+      "last_seen": "2026-02-19T08:56:06.236750",
+      "chain_count": 1,
+      "sources": [
+        "Source 19 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "correction_when_bond_yields_rise": {
+      "first_seen": "2026-02-19T08:56:06.236750",
+      "last_seen": "2026-02-19T08:56:06.236750",
+      "chain_count": 1,
+      "sources": [
+        "Source 19 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "risk_rally": {
+      "first_seen": "2026-02-19T08:56:06.236750",
+      "last_seen": "2026-02-19T08:56:06.236750",
+      "chain_count": 1,
+      "sources": [
+        "Source 19 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "nominal_gdp_boom": {
+      "first_seen": "2026-02-19T08:56:06.236756",
+      "last_seen": "2026-02-19T08:56:06.236756",
+      "chain_count": 1,
+      "sources": [
+        "Source 4 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "fiscal_pressure_on_fed": {
+      "first_seen": "2026-02-19T08:56:06.236756",
+      "last_seen": "2026-02-19T08:56:06.236756",
+      "chain_count": 1,
+      "sources": [
+        "Source 4 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "fed_rate_cut": {
+      "first_seen": "2026-02-19T08:56:06.236756",
+      "last_seen": "2026-02-19T08:56:06.236756",
+      "chain_count": 1,
+      "sources": [
+        "Source 4 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "risk_asset_bubble": {
+      "first_seen": "2026-02-19T08:56:06.236756",
+      "last_seen": "2026-02-19T08:56:06.236756",
+      "chain_count": 1,
+      "sources": [
+        "Source 4 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "downtrend_through_may": {
+      "first_seen": "2026-02-19T08:56:06.236766",
+      "last_seen": "2026-02-19T08:56:06.236766",
+      "chain_count": 1,
+      "sources": [
+        "Source 2, Source 11"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "short_term_upside": {
+      "first_seen": "2026-02-19T08:56:06.236766",
+      "last_seen": "2026-02-19T08:56:06.236766",
+      "chain_count": 1,
+      "sources": [
+        "Source 2, Source 11"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "seasonal_pattern:_strong_start_through_mid-april": {
+      "first_seen": "2026-02-19T08:56:06.236772",
+      "last_seen": "2026-02-19T08:56:06.236772",
+      "chain_count": 1,
+      "sources": [
+        "Source 12"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "'sell_in_may'_effect": {
+      "first_seen": "2026-02-19T08:56:06.236772",
+      "last_seen": "2026-02-19T08:56:06.236772",
+      "chain_count": 1,
+      "sources": [
+        "Source 12"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "seasonal_weakness": {
+      "first_seen": "2026-02-19T08:56:06.236772",
+      "last_seen": "2026-02-19T08:56:06.236772",
+      "chain_count": 1,
+      "sources": [
+        "Source 12"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "consolidation_period": {
+      "first_seen": "2026-02-19T08:56:06.236778",
+      "last_seen": "2026-02-19T08:56:06.236778",
+      "chain_count": 1,
+      "sources": [
+        "Source 13, Source 14"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "recovery_phase": {
+      "first_seen": "2026-02-19T08:56:06.236778",
+      "last_seen": "2026-02-19T08:56:06.236778",
+      "chain_count": 1,
+      "sources": [
+        "Source 13, Source 14"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "december_bottom": {
+      "first_seen": "2026-02-19T08:56:06.236778",
+      "last_seen": "2026-02-19T08:56:06.236778",
+      "chain_count": 1,
+      "sources": [
+        "Source 13, Source 14"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "real_rates_high": {
+      "first_seen": "2026-02-19T08:56:06.236784",
+      "last_seen": "2026-02-19T08:56:06.236784",
+      "chain_count": 1,
+      "sources": [
+        "Source 7"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "valuation_pressure": {
+      "first_seen": "2026-02-19T08:56:06.236784",
+      "last_seen": "2026-02-19T08:56:06.236784",
+      "chain_count": 1,
+      "sources": [
+        "Source 7"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "multiple_compression": {
+      "first_seen": "2026-02-19T08:56:06.236784",
+      "last_seen": "2026-02-19T08:56:06.236784",
+      "chain_count": 1,
+      "sources": [
+        "Source 7"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "elevated_correction_risk": {
+      "first_seen": "2026-02-19T08:56:06.236790",
+      "last_seen": "2026-02-19T08:56:06.236790",
+      "chain_count": 1,
+      "sources": [
+        "Source 5"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "growth_concentration": {
+      "first_seen": "2026-02-19T08:56:06.236790",
+      "last_seen": "2026-02-19T08:56:06.236790",
+      "chain_count": 1,
+      "sources": [
+        "Source 5"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "defensive_underweight": {
+      "first_seen": "2026-02-19T08:56:06.236790",
+      "last_seen": "2026-02-19T08:56:06.236790",
+      "chain_count": 1,
+      "sources": [
+        "Source 5"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "pre_crisis_signal": {
+      "first_seen": "2026-02-19T08:56:06.236795",
+      "last_seen": "2026-02-19T08:56:06.236795",
+      "chain_count": 1,
+      "sources": [
+        "Source 10 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "us_treasury_net_interest_payments": {
+      "first_seen": "2026-02-19T08:56:06.236795",
+      "last_seen": "2026-02-19T08:56:06.236795",
+      "chain_count": 1,
+      "sources": [
+        "Source 10 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "bond_market_risk": {
+      "first_seen": "2026-02-19T08:56:06.236795",
+      "last_seen": "2026-02-19T08:56:06.236795",
+      "chain_count": 1,
+      "sources": [
+        "Source 10 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "volatility_lows": {
+      "first_seen": "2026-02-19T08:56:06.236795",
+      "last_seen": "2026-02-19T08:56:06.236795",
+      "chain_count": 1,
+      "sources": [
+        "Source 10 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_bubble_sentiment": {
+      "first_seen": "2026-02-19T08:56:06.236803",
+      "last_seen": "2026-02-19T08:56:06.236803",
+      "chain_count": 1,
+      "sources": [
+        "Source 8"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "valuation_skepticism": {
+      "first_seen": "2026-02-19T08:56:06.236803",
+      "last_seen": "2026-02-19T08:56:06.236803",
+      "chain_count": 1,
+      "sources": [
+        "Source 8"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "competitive_threat": {
+      "first_seen": "2026-02-19T08:56:06.236803",
+      "last_seen": "2026-02-19T08:56:06.236803",
+      "chain_count": 1,
+      "sources": [
+        "Source 8"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "sector_selling": {
+      "first_seen": "2026-02-19T08:56:06.236809",
+      "last_seen": "2026-02-19T08:56:06.236809",
+      "chain_count": 1,
+      "sources": [
+        "Source 6"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "policy_headline_risk": {
+      "first_seen": "2026-02-19T08:56:06.236809",
+      "last_seen": "2026-02-19T08:56:06.236809",
+      "chain_count": 1,
+      "sources": [
+        "Source 6"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "broader_market_contagion": {
+      "first_seen": "2026-02-19T08:56:06.236809",
+      "last_seen": "2026-02-19T08:56:06.236809",
+      "chain_count": 1,
+      "sources": [
+        "Source 6"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "political_intervention": {
+      "first_seen": "2026-02-19T08:56:06.236815",
+      "last_seen": "2026-02-19T08:56:06.236815",
+      "chain_count": 1,
+      "sources": [
+        "Source 18 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "rally_extension": {
+      "first_seen": "2026-02-19T08:56:06.236815",
+      "last_seen": "2026-02-19T08:56:06.236815",
+      "chain_count": 1,
+      "sources": [
+        "Source 18 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "asset_collapse": {
+      "first_seen": "2026-02-19T08:56:06.236815",
+      "last_seen": "2026-02-19T08:56:06.236815",
+      "chain_count": 1,
+      "sources": [
+        "Source 18 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "asset_peak_before_pivot": {
+      "first_seen": "2026-02-19T08:56:06.236815",
+      "last_seen": "2026-02-19T08:56:06.236815",
+      "chain_count": 1,
+      "sources": [
+        "Source 18 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "$300_billion_market_value_evaporated_from_saas_sector_on_february_4,_2026": {
+      "first_seen": "2026-02-19T09:02:30.354983",
+      "last_seen": "2026-02-19T09:38:29.594487",
+      "chain_count": 2,
+      "sources": [
+        "Source 2, Source 1",
+        "Source 5 (steps 1-2), Source 1 (step 2-3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "massive_sell_off_in_saas_stocks": {
+      "first_seen": "2026-02-19T09:02:30.355005",
+      "last_seen": "2026-02-19T09:30:51.974581",
+      "chain_count": 3,
+      "sources": [
+        "Source 5\n\n## Multi-Hop: AI Disruption → Valuation Compression → Sector Collapse",
+        "Source 4",
+        "Source 11 (steps 1-2), Source 2 (step 3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "anthropic_released_11_new_plug-ins_for_claude_cowork_ai_tool_at_end_of_january_2026": {
+      "first_seen": "2026-02-19T09:02:30.355005",
+      "last_seen": "2026-02-19T09:02:30.355005",
+      "chain_count": 1,
+      "sources": [
+        "Source 5\n\n## Multi-Hop: AI Disruption → Valuation Compression → Sector Collapse"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "software_price/sales_ratio_declines_from_9x_(september_2025)_to_6x_(february_2026)": {
+      "first_seen": "2026-02-19T09:02:30.355012",
+      "last_seen": "2026-02-19T09:30:51.974592",
+      "chain_count": 5,
+      "sources": [
+        "Source 1 (steps 1-2), Source 3 (step 2)",
+        "Source 6 (steps 1-2), Source 3 (step 2 outcome)",
+        "Source 3\n\n## AI Revenue Quality and Strategy Credibility",
+        "Source 9 (steps 1-2), Source 6 (step 3)",
+        "Source 8 (step 1), Source 6 (steps 2-3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "second_order_impact_of_ai_disruption_hitting_softw": {
+      "first_seen": "2026-02-19T09:02:30.355012",
+      "last_seen": "2026-02-19T09:30:51.974577",
+      "chain_count": 3,
+      "sources": [
+        "Source 1 (steps 1-2), Source 3 (step 2)",
+        "Source 1",
+        "Source 5 (step 1), Source 4 (steps 2-3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "$300_billion_in_market_value_evaporates_across_saas,_data,_and_software-heavy_firms_in_february_2026": {
+      "first_seen": "2026-02-19T09:02:30.355012",
+      "last_seen": "2026-02-19T09:16:21.449498",
+      "chain_count": 2,
+      "sources": [
+        "Source 1 (steps 1-2), Source 3 (step 2)",
+        "Source 1"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "goldman_sachs_projection_that_60%_of_software_economics_will_shift_to_ai_agents_by_2030": {
+      "first_seen": "2026-02-19T09:02:30.355017",
+      "last_seen": "2026-02-19T09:46:41.174279",
+      "chain_count": 4,
+      "sources": [
+        "Source 6 (steps 1-2), Source 3 (step 2 outcome)",
+        "Source 6",
+        "Source 10 (steps 1-2), Source 13 (step 2-3)",
+        "Source 10 (steps 1-2), Source 8 (steps 3-4)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "earnings_misses_from_major_saas_companies_(microsoft,_servicenow,_sap)": {
+      "first_seen": "2026-02-19T09:02:30.355021",
+      "last_seen": "2026-02-19T09:30:51.974577",
+      "chain_count": 2,
+      "sources": [
+        "Source 4",
+        "Source 5 (step 1), Source 4 (steps 2-3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "sector_wide_stock_price_collapse_and_continued_mar": {
+      "first_seen": "2026-02-19T09:02:30.355021",
+      "last_seen": "2026-02-19T09:30:51.974577",
+      "chain_count": 2,
+      "sources": [
+        "Source 4",
+        "Source 5 (step 1), Source 4 (steps 2-3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "amplification_of_tech_sector_sell_off_and_broader_": {
+      "first_seen": "2026-02-19T09:02:30.355031",
+      "last_seen": "2026-02-19T09:02:30.355031",
+      "chain_count": 1,
+      "sources": [
+        "Source 8\n\n## Structural Business Model Vulnerabilities"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "weak_labor_market_signals_(rising_jobless_claims,_declining_job_openings,_layoff_announcements)": {
+      "first_seen": "2026-02-19T09:02:30.355031",
+      "last_seen": "2026-02-19T09:02:30.355031",
+      "chain_count": 1,
+      "sources": [
+        "Source 8\n\n## Structural Business Model Vulnerabilities"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "traditional_saas_business_model_valuations_become_": {
+      "first_seen": "2026-02-19T09:14:33.008305",
+      "last_seen": "2026-02-19T09:38:29.594514",
+      "chain_count": 4,
+      "sources": [
+        "Forbes",
+        "Source 7",
+        "Source 9 (steps 1-2), Source 6 (step 3)",
+        "Source 10 (steps 1-2), Source 13 (step 2-3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_agents_expanding_market_share_and_capturing_dis": {
+      "first_seen": "2026-02-19T09:14:33.008305",
+      "last_seen": "2026-02-19T09:30:51.974563",
+      "chain_count": 3,
+      "sources": [
+        "Forbes",
+        "Source 7",
+        "Source 9 (steps 1-2), Source 6 (step 3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "earnings_misses_and_revenue_guidance_cuts_across_s": {
+      "first_seen": "2026-02-19T09:14:33.008351",
+      "last_seen": "2026-02-19T09:25:10.707522",
+      "chain_count": 2,
+      "sources": [
+        "Forbes",
+        "Source 3"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "massive_sell-off_in_saas_stocks_with_$300_billion_": {
+      "first_seen": "2026-02-19T09:14:33.008351",
+      "last_seen": "2026-02-19T09:14:33.008351",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "slowdown_in_cloud_computing_growth_(aws_and_micros": {
+      "first_seen": "2026-02-19T09:14:33.008362",
+      "last_seen": "2026-02-19T09:14:33.008362",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "investor_sentiment_toward_software_stocks_plunges,": {
+      "first_seen": "2026-02-19T09:14:33.008362",
+      "last_seen": "2026-02-19T09:14:33.008362",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "outdated_valuation_assumptions_(predictable_revenu": {
+      "first_seen": "2026-02-19T09:14:33.008370",
+      "last_seen": "2026-02-19T09:14:33.008370",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_stocks_trading_at_valuations_disconnected_fro": {
+      "first_seen": "2026-02-19T09:14:33.008370",
+      "last_seen": "2026-02-19T09:46:41.174279",
+      "chain_count": 3,
+      "sources": [
+        "Forbes",
+        "Source 10",
+        "Source 10 (steps 1-2), Source 8 (steps 3-4)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "companies_miss_revenue_growth_targets,_leading_to_": {
+      "first_seen": "2026-02-19T09:14:33.008376",
+      "last_seen": "2026-02-19T09:14:33.008376",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "hidden_execution_gaps_and_operational_inefficienci": {
+      "first_seen": "2026-02-19T09:14:33.008376",
+      "last_seen": "2026-02-19T09:14:33.008376",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "high_valuation_multiples_and_growth_expectations_i": {
+      "first_seen": "2026-02-19T09:14:33.008383",
+      "last_seen": "2026-02-19T09:46:41.174298",
+      "chain_count": 4,
+      "sources": [
+        "Yahoo Finance",
+        "Source 8",
+        "Source 7 (steps 1-2), Source 12 (step 3)",
+        "Source 11 (steps 1-2), Source 12 (step 3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "sharp_share_price_declines_when_growth_slows_or_ma": {
+      "first_seen": "2026-02-19T09:14:33.008383",
+      "last_seen": "2026-02-19T09:46:41.174298",
+      "chain_count": 4,
+      "sources": [
+        "Yahoo Finance",
+        "Source 8",
+        "Source 7 (steps 1-2), Source 12 (step 3)",
+        "Source 11 (steps 1-2), Source 12 (step 3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "strong_revenue_growth_combined_with_margin_expansi": {
+      "first_seen": "2026-02-19T09:14:33.008389",
+      "last_seen": "2026-02-19T09:14:33.008389",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "justification_for_premium_valuation_multiples_desp": {
+      "first_seen": "2026-02-19T09:14:33.008389",
+      "last_seen": "2026-02-19T09:14:33.008389",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "information_technology_sector_market_cap_concentra": {
+      "first_seen": "2026-02-19T09:14:33.008396",
+      "last_seen": "2026-02-19T09:14:33.008396",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance Research"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_profit-taking_and_sector_rotation_in_late_2025": {
+      "first_seen": "2026-02-19T09:14:33.008396",
+      "last_seen": "2026-02-19T09:14:33.008396",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance Research"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "churn_in_non-focus_business_sectors_and_strategic_": {
+      "first_seen": "2026-02-19T09:14:33.008403",
+      "last_seen": "2026-02-19T09:14:33.008403",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "near-term_arr_decline_offset_by_mid-single-digit_g": {
+      "first_seen": "2026-02-19T09:14:33.008403",
+      "last_seen": "2026-02-19T09:14:33.008403",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "valuation_multiples_above_historical_tech_peer_ave": {
+      "first_seen": "2026-02-19T09:14:33.008409",
+      "last_seen": "2026-02-19T09:25:10.707552",
+      "chain_count": 2,
+      "sources": [
+        "Yahoo Finance",
+        "Source 11"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_confidence_in_growth_prospects_fluctuates,_": {
+      "first_seen": "2026-02-19T09:14:33.008409",
+      "last_seen": "2026-02-19T09:14:33.008409",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "investor_concerns_around_artificial_intelligence_a": {
+      "first_seen": "2026-02-19T09:14:33.008416",
+      "last_seen": "2026-02-19T09:14:33.008416",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "software_stocks_have_been_hit_hard_in_recent_month": {
+      "first_seen": "2026-02-19T09:14:33.008416",
+      "last_seen": "2026-02-19T09:14:33.008416",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_company_loan_defaults_estimated_to_potentiall": {
+      "first_seen": "2026-02-19T09:14:33.008422",
+      "last_seen": "2026-02-19T09:46:41.174308",
+      "chain_count": 3,
+      "sources": [
+        "Yahoo Finance",
+        "Source 14"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "bdc_etfs_with_high_saas_sector_exposure_face_eleva": {
+      "first_seen": "2026-02-19T09:14:33.008422",
+      "last_seen": "2026-02-19T09:46:41.174308",
+      "chain_count": 2,
+      "sources": [
+        "Yahoo Finance",
+        "Source 14"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "software_stock_valuations_compress_to_all-time_low": {
+      "first_seen": "2026-02-19T09:14:33.008427",
+      "last_seen": "2026-02-19T09:14:33.008427",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Zacks"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "broad_market_selloff_and_sector-wide_pessimism_in_": {
+      "first_seen": "2026-02-19T09:14:33.008427",
+      "last_seen": "2026-02-19T09:14:33.008427",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Zacks"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "periods_of_broad_pessimism_and_recent_software_cor": {
+      "first_seen": "2026-02-19T09:14:33.008432",
+      "last_seen": "2026-02-19T09:14:33.008432",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "high-quality_growth_stocks_become_buying_opportuni": {
+      "first_seen": "2026-02-19T09:14:33.008432",
+      "last_seen": "2026-02-19T09:14:33.008432",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "tech-focused_earnings_disappointments_and_wave_of_": {
+      "first_seen": "2026-02-19T09:14:33.008438",
+      "last_seen": "2026-02-19T09:14:33.008438",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "us_stock_market_indices_(dow,_nasdaq,_s&p_500)_sin": {
+      "first_seen": "2026-02-19T09:14:33.008438",
+      "last_seen": "2026-02-19T09:14:33.008438",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_companies_adopted_'growth_at_all_costs'_mentality,_neglecting_unit_economics_and_customer_value": {
+      "first_seen": "2026-02-19T09:16:21.449528",
+      "last_seen": "2026-02-19T09:16:21.449528",
+      "chain_count": 1,
+      "sources": [
+        "Source 9 (steps 1-2), Source 8 (steps 2-3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "sector_overvaluation": {
+      "first_seen": "2026-02-19T09:16:21.449533",
+      "last_seen": "2026-02-19T09:16:21.449533",
+      "chain_count": 1,
+      "sources": [
+        "Source 12"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "information_technology_pe": {
+      "first_seen": "2026-02-19T09:16:21.449533",
+      "last_seen": "2026-02-19T09:16:21.449533",
+      "chain_count": 1,
+      "sources": [
+        "Source 12"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ebitda_margin_guidance_lowered_from_prior_levels_t": {
+      "first_seen": "2026-02-19T09:23:03.513928",
+      "last_seen": "2026-02-19T09:23:03.513928",
+      "chain_count": 1,
+      "sources": [
+        "TECSYS INC Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "increased_r&d_and_marketing_spend_allocation": {
+      "first_seen": "2026-02-19T09:23:03.513928",
+      "last_seen": "2026-02-19T09:23:03.513928",
+      "chain_count": 1,
+      "sources": [
+        "TECSYS INC Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "cloud_contribution_billing_(ccb)_growth_slowed_to_": {
+      "first_seen": "2026-02-19T09:23:03.513947",
+      "last_seen": "2026-02-19T09:23:03.513947",
+      "chain_count": 1,
+      "sources": [
+        "SAP Q4 FY2025 Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "mix_shift_toward_large,_back-end_loaded_deals": {
+      "first_seen": "2026-02-19T09:23:03.513947",
+      "last_seen": "2026-02-19T09:23:03.513947",
+      "chain_count": 1,
+      "sources": [
+        "SAP Q4 FY2025 Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "salesforce_stock_price_declined_significantly_amid": {
+      "first_seen": "2026-02-19T09:23:03.513954",
+      "last_seen": "2026-02-19T09:23:03.513954",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance - Salesforce Analysis"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "analyst_price_target_reductions_in_late_2025_and_e": {
+      "first_seen": "2026-02-19T09:23:03.513954",
+      "last_seen": "2026-02-19T09:23:03.513954",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance - Salesforce Analysis"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_revenue_growth_deceleration_(20%-22%_guidance": {
+      "first_seen": "2026-02-19T09:23:03.513959",
+      "last_seen": "2026-02-19T09:23:03.513959",
+      "chain_count": 1,
+      "sources": [
+        "TECSYS INC Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "guidance_revision_signals_market_maturation_and_co": {
+      "first_seen": "2026-02-19T09:23:03.513959",
+      "last_seen": "2026-02-19T09:30:51.974585",
+      "chain_count": 2,
+      "sources": [
+        "TECSYS INC Earnings Call",
+        "Source 10 (steps 1-2), Source 8 (step 3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "successful_saas_transition_and_strong_data_securit": {
+      "first_seen": "2026-02-19T09:23:03.513962",
+      "last_seen": "2026-02-19T09:23:03.513962",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance - Varonis Systems Analysis"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "analyst_price_targets_increased_and_confidence_in_": {
+      "first_seen": "2026-02-19T09:23:03.513962",
+      "last_seen": "2026-02-19T09:23:03.513962",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance - Varonis Systems Analysis"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_demand_driving_hyperscaler_infrastructure_build": {
+      "first_seen": "2026-02-19T09:23:03.513966",
+      "last_seen": "2026-02-19T09:23:03.513966",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "massive_capex_commitments_by_cloud_providers_in_20": {
+      "first_seen": "2026-02-19T09:23:03.513966",
+      "last_seen": "2026-02-19T09:23:03.513966",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "companies_continued_infrastructure_investments_thr": {
+      "first_seen": "2026-02-19T09:23:03.513969",
+      "last_seen": "2026-02-19T09:23:03.513969",
+      "chain_count": 1,
+      "sources": [
+        "Zacks/Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "secular_growth_prospects_in_cloud/saas_despite_hig": {
+      "first_seen": "2026-02-19T09:23:03.513969",
+      "last_seen": "2026-02-19T09:23:03.513969",
+      "chain_count": 1,
+      "sources": [
+        "Zacks/Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "data_center_refresh_cycles_and_new_product_infrast": {
+      "first_seen": "2026-02-19T09:23:03.513973",
+      "last_seen": "2026-02-19T09:23:03.513973",
+      "chain_count": 1,
+      "sources": [
+        "Dropbox Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "higher_depreciation_and_margin_compression_in_saas": {
+      "first_seen": "2026-02-19T09:23:03.513973",
+      "last_seen": "2026-02-19T09:23:03.513973",
+      "chain_count": 1,
+      "sources": [
+        "Dropbox Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "divergent_growth_trajectories_in_saas_market_segme": {
+      "first_seen": "2026-02-19T09:23:03.513976",
+      "last_seen": "2026-02-19T09:23:03.513976",
+      "chain_count": 1,
+      "sources": [
+        "ISG Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "shift_from_managed_services_to_as-a-service_demand": {
+      "first_seen": "2026-02-19T09:23:03.513976",
+      "last_seen": "2026-02-19T09:23:03.513976",
+      "chain_count": 1,
+      "sources": [
+        "ISG Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "prior_heavy_network_hardware_orders_and_deployment": {
+      "first_seen": "2026-02-19T09:23:03.513980",
+      "last_seen": "2026-02-19T09:23:03.513980",
+      "chain_count": 1,
+      "sources": [
+        "Megaport Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "elevated_capex_as_percentage_of_revenue_requiring_": {
+      "first_seen": "2026-02-19T09:23:03.513980",
+      "last_seen": "2026-02-19T09:23:03.513980",
+      "chain_count": 1,
+      "sources": [
+        "Megaport Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "steepest_stock_market_decline_since_2020_with_$3.1": {
+      "first_seen": "2026-02-19T09:23:03.513984",
+      "last_seen": "2026-02-19T09:23:03.513984",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "u.s._market_volatility_and_tariff_uncertainty_(apr": {
+      "first_seen": "2026-02-19T09:23:03.513984",
+      "last_seen": "2026-02-19T09:23:03.513984",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "technology_sector_uncertainty_and_ai-related_volat": {
+      "first_seen": "2026-02-19T09:23:03.513987",
+      "last_seen": "2026-02-19T09:23:03.513987",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "broad_equity_market_rotation_away_from_growth_stoc": {
+      "first_seen": "2026-02-19T09:23:03.513987",
+      "last_seen": "2026-02-19T09:23:03.513987",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "reduced_consumer_spending_capacity_and_economic_de": {
+      "first_seen": "2026-02-19T09:23:03.513991",
+      "last_seen": "2026-02-19T09:23:03.513991",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "corporate_cost-cutting_and_workforce_reductions_(t": {
+      "first_seen": "2026-02-19T09:23:03.513991",
+      "last_seen": "2026-02-19T09:23:03.513991",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "institutional_capital_reallocation_toward_deal-mak": {
+      "first_seen": "2026-02-19T09:23:03.513994",
+      "last_seen": "2026-02-19T09:23:03.513994",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "investment_banking_revenue_surge_and_m&a_activity_": {
+      "first_seen": "2026-02-19T09:23:03.513994",
+      "last_seen": "2026-02-19T09:23:03.513994",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "valuation_multiple_compression_for_saas_companies_": {
+      "first_seen": "2026-02-19T09:23:03.513998",
+      "last_seen": "2026-02-19T09:23:03.513998",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "execution_risk_concerns_in_large_software_acquisit": {
+      "first_seen": "2026-02-19T09:23:03.513998",
+      "last_seen": "2026-02-19T09:23:03.513998",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "broad_market_decline_across_dow,_nasdaq,_and_s&p_5": {
+      "first_seen": "2026-02-19T09:23:03.514001",
+      "last_seen": "2026-02-19T09:23:03.514001",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "tech_sector_earnings_disappointments_and_valuation": {
+      "first_seen": "2026-02-19T09:23:03.514001",
+      "last_seen": "2026-02-19T09:38:29.594523",
+      "chain_count": 2,
+      "sources": [
+        "Yahoo Finance",
+        "Source 16"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "federal_reserve_leadership_uncertainty_(warsh_nomi": {
+      "first_seen": "2026-02-19T09:23:03.514005",
+      "last_seen": "2026-02-19T09:23:03.514005",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "stock_market_volatility_and_decline;_flight_from_r": {
+      "first_seen": "2026-02-19T09:23:03.514005",
+      "last_seen": "2026-02-19T09:23:03.514005",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "$250b_crash_across_risk_assets_including_crypto_an": {
+      "first_seen": "2026-02-19T09:23:03.514008",
+      "last_seen": "2026-02-19T09:23:03.514008",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "u.s._dollar_liquidity_contraction_from_macro_event": {
+      "first_seen": "2026-02-19T09:23:03.514008",
+      "last_seen": "2026-02-19T09:23:03.514008",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "downward_pressure_on_saas_index_valuations_and_sto": {
+      "first_seen": "2026-02-19T09:23:03.514011",
+      "last_seen": "2026-02-19T09:38:29.594519",
+      "chain_count": 3,
+      "sources": [
+        "Yahoo Finance",
+        "Source 10 (steps 1-2), Source 8 (step 3)",
+        "Source 9"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_company_valuation_compression_(high_growth_pr": {
+      "first_seen": "2026-02-19T09:23:03.514011",
+      "last_seen": "2026-02-19T09:23:03.514011",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "earnings_misses_and_sector-wide_valuation_pressure": {
+      "first_seen": "2026-02-19T09:23:03.514014",
+      "last_seen": "2026-02-19T09:23:03.514014",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "pharmaceutical_revenue_headwinds_(competitive_pres": {
+      "first_seen": "2026-02-19T09:23:03.514014",
+      "last_seen": "2026-02-19T09:23:03.514014",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "anthropic_released_11_new_plug-ins_for_claude_cowork_ai_tool_(end_of_january_2026)": {
+      "first_seen": "2026-02-19T09:25:10.707492",
+      "last_seen": "2026-02-19T09:25:10.707492",
+      "chain_count": 1,
+      "sources": [
+        "Source 4"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "massive_sell-off_in_saas_stocks_with_$300_billion_in_market_value_evaporating": {
+      "first_seen": "2026-02-19T09:25:10.707522",
+      "last_seen": "2026-02-19T09:25:10.707522",
+      "chain_count": 1,
+      "sources": [
+        "Source 3"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "slowdown_in_cloud_computing_growth_(aws_and_microsoft_cloud_growth_deceleration)": {
+      "first_seen": "2026-02-19T09:25:10.707530",
+      "last_seen": "2026-02-19T09:30:51.974581",
+      "chain_count": 2,
+      "sources": [
+        "Source 13",
+        "Source 11 (steps 1-2), Source 2 (step 3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "investor_sentiment_toward_software_stocks_plunges,_triggering_sector-wide_sell-off": {
+      "first_seen": "2026-02-19T09:25:10.707530",
+      "last_seen": "2026-02-19T09:25:10.707530",
+      "chain_count": 1,
+      "sources": [
+        "Source 13"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "outdated_valuation_assumptions_(predictable_revenue,_low_churn,_high_recovery_value)_no_longer_apply_to_saas_sector": {
+      "first_seen": "2026-02-19T09:25:10.707541",
+      "last_seen": "2026-02-19T09:46:41.174279",
+      "chain_count": 2,
+      "sources": [
+        "Source 10",
+        "Source 10 (steps 1-2), Source 8 (steps 3-4)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_confidence_in_growth_prospects_fluctuates,_reflected_in_volatile_stock_performance_and_mixed_analyst_ratings": {
+      "first_seen": "2026-02-19T09:25:10.707552",
+      "last_seen": "2026-02-19T09:25:10.707552",
+      "chain_count": 1,
+      "sources": [
+        "Source 11"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "broad_market_selloff_and_sector_wide_pessimism_in_": {
+      "first_seen": "2026-02-19T09:25:10.707557",
+      "last_seen": "2026-02-19T09:30:51.974595",
+      "chain_count": 2,
+      "sources": [
+        "Source 12",
+        "Source 12 (steps 1-2), Source 2 (step 3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "software_stock_valuations_compress_to_all_time_low": {
+      "first_seen": "2026-02-19T09:25:10.707557",
+      "last_seen": "2026-02-19T09:30:51.974595",
+      "chain_count": 3,
+      "sources": [
+        "Source 12",
+        "Source 7 (steps 1-2), Source 12 (step 3)",
+        "Source 12 (steps 1-2), Source 2 (step 3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "hyperscaler_ai_infrastructure_capex_acceleration_(": {
+      "first_seen": "2026-02-19T09:29:20.588905",
+      "last_seen": "2026-02-19T09:29:20.588905",
+      "chain_count": 1,
+      "sources": [
+        "Cisco Systems Q2 FY2026 Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "upstream_supplier_revenue_growth_in_networking/sil": {
+      "first_seen": "2026-02-19T09:29:20.588905",
+      "last_seen": "2026-02-19T09:29:20.588905",
+      "chain_count": 1,
+      "sources": [
+        "Cisco Systems Q2 FY2026 Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "enterprise_shift_from_saas_to_hardware-based_solut": {
+      "first_seen": "2026-02-19T09:29:20.588928",
+      "last_seen": "2026-02-19T09:29:20.588928",
+      "chain_count": 1,
+      "sources": [
+        "F5, Inc. Q1 FY2026 Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "hyperscaler_ai_workload_deployment_driving_hardwar": {
+      "first_seen": "2026-02-19T09:29:20.588928",
+      "last_seen": "2026-02-19T09:29:20.588928",
+      "chain_count": 1,
+      "sources": [
+        "F5, Inc. Q1 FY2026 Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "hyperscaler_ai_infrastructure_buildout_creating_ma": {
+      "first_seen": "2026-02-19T09:29:20.588939",
+      "last_seen": "2026-02-19T09:29:20.588939",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance - Climate Tech Investor Outlook 2026"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "acceleration_of_energy_storage_and_grid_decoupling": {
+      "first_seen": "2026-02-19T09:29:20.588939",
+      "last_seen": "2026-02-19T09:29:20.588939",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance - Climate Tech Investor Outlook 2026"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_models_accessing_and_aggregating_proprietary_da": {
+      "first_seen": "2026-02-19T09:29:20.588948",
+      "last_seen": "2026-02-19T09:29:20.588948",
+      "chain_count": 1,
+      "sources": [
+        "Forbes Tech Council"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "displacement_of_traditional_saas_seat-based_licens": {
+      "first_seen": "2026-02-19T09:29:20.588948",
+      "last_seen": "2026-02-19T09:29:20.588948",
+      "chain_count": 1,
+      "sources": [
+        "Forbes Tech Council"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "hyperscaler_ai_platform_expansion_enabling_multi-s": {
+      "first_seen": "2026-02-19T09:29:20.588956",
+      "last_seen": "2026-02-19T09:29:20.588956",
+      "chain_count": 1,
+      "sources": [
+        "Oracle Corporation Q2 FY2026 Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "increased_enterprise_adoption_of_ai-first_data_pla": {
+      "first_seen": "2026-02-19T09:29:20.588956",
+      "last_seen": "2026-02-19T09:29:20.588956",
+      "chain_count": 1,
+      "sources": [
+        "Oracle Corporation Q2 FY2026 Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "increased_demand_for_hardware-based_networking_and": {
+      "first_seen": "2026-02-19T09:29:20.588964",
+      "last_seen": "2026-02-19T09:29:20.588964",
+      "chain_count": 1,
+      "sources": [
+        "Cisco Q2 FY2026 Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "hyperscaler_ai_infrastructure_capex_acceleration": {
+      "first_seen": "2026-02-19T09:29:20.588964",
+      "last_seen": "2026-02-19T09:29:20.588964",
+      "chain_count": 1,
+      "sources": [
+        "Cisco Q2 FY2026 Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_and_hybrid_multi-cloud_adoption_driving_hardwar": {
+      "first_seen": "2026-02-19T09:29:20.588972",
+      "last_seen": "2026-02-19T09:29:20.588972",
+      "chain_count": 1,
+      "sources": [
+        "F5 Inc. Q1 FY2026 Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "shift_in_customer_purchasing_behavior_from_saas-on": {
+      "first_seen": "2026-02-19T09:29:20.588972",
+      "last_seen": "2026-02-19T09:29:20.588972",
+      "chain_count": 1,
+      "sources": [
+        "F5 Inc. Q1 FY2026 Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "forced_m&a_activity_and_portfolio_company_exits_by": {
+      "first_seen": "2026-02-19T09:29:20.588979",
+      "last_seen": "2026-02-19T09:29:20.588979",
+      "chain_count": 1,
+      "sources": [
+        "Morgan Stanley Q4 2025 Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "extended_portfolio_holding_periods_(6-9_years)_com": {
+      "first_seen": "2026-02-19T09:29:20.588979",
+      "last_seen": "2026-02-19T09:29:20.588979",
+      "chain_count": 1,
+      "sources": [
+        "Morgan Stanley Q4 2025 Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "hyperscaler_ai_compute_investment_creating_infrast": {
+      "first_seen": "2026-02-19T09:29:20.588985",
+      "last_seen": "2026-02-19T09:29:20.588985",
+      "chain_count": 1,
+      "sources": [
+        "Cisco Q2 FY2026 Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "enterprise_data_center_switching_demand_accelerate": {
+      "first_seen": "2026-02-19T09:29:20.588985",
+      "last_seen": "2026-02-19T09:29:20.588985",
+      "chain_count": 1,
+      "sources": [
+        "Cisco Q2 FY2026 Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_disruption_risk_uncertainty_in_portfolio_compan": {
+      "first_seen": "2026-02-19T09:29:20.588992",
+      "last_seen": "2026-02-19T09:29:20.588992",
+      "chain_count": 1,
+      "sources": [
+        "StepStone Group Q3 FY2026 Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "active_portfolio_management_and_selective_divestme": {
+      "first_seen": "2026-02-19T09:29:20.588992",
+      "last_seen": "2026-02-19T09:29:20.588992",
+      "chain_count": 1,
+      "sources": [
+        "StepStone Group Q3 FY2026 Earnings Call"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "capital_rotation_away_from_saas_stocks_despite_pos": {
+      "first_seen": "2026-02-19T09:29:20.588999",
+      "last_seen": "2026-02-19T09:29:20.588999",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Stocks in Translation"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai-driven_growth_expectations_in_chip_stocks_and_h": {
+      "first_seen": "2026-02-19T09:29:20.588999",
+      "last_seen": "2026-02-19T09:29:20.588999",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Stocks in Translation"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "intensified_investor_concerns_around_ai_and_large_": {
+      "first_seen": "2026-02-19T09:29:20.589005",
+      "last_seen": "2026-02-19T09:38:29.594508",
+      "chain_count": 2,
+      "sources": [
+        "Zacks Investment Ideas / Yahoo Finance",
+        "Source 4"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_index_drawdown_of_28%_from_october_2025_high,": {
+      "first_seen": "2026-02-19T09:29:20.589005",
+      "last_seen": "2026-02-19T09:29:20.589005",
+      "chain_count": 1,
+      "sources": [
+        "Zacks Investment Ideas / Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "bdc_sector_drawdown_hurts_nav_and_reduces_dividend": {
+      "first_seen": "2026-02-19T09:29:20.589012",
+      "last_seen": "2026-02-19T09:46:41.174310",
+      "chain_count": 2,
+      "sources": [
+        "Yahoo Finance",
+        "Source 15"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_company_loan_defaults_estimated_at_13%_annual": {
+      "first_seen": "2026-02-19T09:29:20.589012",
+      "last_seen": "2026-02-19T09:29:20.589012",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "weak_customer_commitment_and_low_net_revenue_reten": {
+      "first_seen": "2026-02-19T09:29:20.589018",
+      "last_seen": "2026-02-19T09:29:20.589018",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_companies_face_valuation_compression_and_unde": {
+      "first_seen": "2026-02-19T09:29:20.589018",
+      "last_seen": "2026-02-19T09:29:20.589018",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "institutional_analyst_reports_identifying_logical_": {
+      "first_seen": "2026-02-19T09:29:20.589024",
+      "last_seen": "2026-02-19T09:38:29.594526",
+      "chain_count": 2,
+      "sources": [
+        "Zacks Investment Ideas / Yahoo Finance",
+        "Source 11"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_repricing_creates_differentiation_between_o": {
+      "first_seen": "2026-02-19T09:29:20.589024",
+      "last_seen": "2026-02-19T09:38:29.594526",
+      "chain_count": 2,
+      "sources": [
+        "Zacks Investment Ideas / Yahoo Finance",
+        "Source 11"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "investor_sentiment_toward_software_stocks_plunges": {
+      "first_seen": "2026-02-19T09:30:51.974581",
+      "last_seen": "2026-02-19T09:30:51.974581",
+      "chain_count": 1,
+      "sources": [
+        "Source 11 (steps 1-2), Source 2 (step 3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_revenue_growth_deceleration_(20%-22%_guidance_vs._29%_prior_year)": {
+      "first_seen": "2026-02-19T09:30:51.974585",
+      "last_seen": "2026-02-19T09:30:51.974585",
+      "chain_count": 1,
+      "sources": [
+        "Source 10 (steps 1-2), Source 8 (step 3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_company_valuation_compression_(high_growth_priced_in,_slowing_growth_rates)": {
+      "first_seen": "2026-02-19T09:30:51.974592",
+      "last_seen": "2026-02-19T09:38:29.594519",
+      "chain_count": 2,
+      "sources": [
+        "Source 8 (step 1), Source 6 (steps 2-3)",
+        "Source 9"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "$300_billion_in_market_value_evaporates_across_saas,_data,_and_software-heavy_firms": {
+      "first_seen": "2026-02-19T09:30:51.974595",
+      "last_seen": "2026-02-19T09:30:51.974595",
+      "chain_count": 1,
+      "sources": [
+        "Source 12 (steps 1-2), Source 2 (step 3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_and_tech_stock_prices_decline_sharply": {
+      "first_seen": "2026-02-19T09:36:55.217296",
+      "last_seen": "2026-02-19T09:36:55.217296",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_disruption_fears_and_sector_rotation_away_from_": {
+      "first_seen": "2026-02-19T09:36:55.217296",
+      "last_seen": "2026-02-19T09:36:55.217296",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "hyperscaler/big-tech_ai_infrastructure_investment_": {
+      "first_seen": "2026-02-19T09:36:55.217319",
+      "last_seen": "2026-02-19T09:36:55.217319",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "semiconductor_suppliers_forecast_higher_sales_grow": {
+      "first_seen": "2026-02-19T09:36:55.217319",
+      "last_seen": "2026-02-19T09:36:55.217319",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "earnings_guidance_misses_and_results_falling_short": {
+      "first_seen": "2026-02-19T09:36:55.217335",
+      "last_seen": "2026-02-19T09:36:55.217335",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_company_stock_prices_decline_immediately": {
+      "first_seen": "2026-02-19T09:36:55.217335",
+      "last_seen": "2026-02-19T09:36:55.217335",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "prolonged_tech_stock_underperformance_relative_to_": {
+      "first_seen": "2026-02-19T09:36:55.217344",
+      "last_seen": "2026-02-19T09:36:55.217344",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "institutional_investors_(e.g.,_berkshire_hathaway)": {
+      "first_seen": "2026-02-19T09:36:55.217344",
+      "last_seen": "2026-02-19T09:36:55.217344",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "supply_chain_disruptions_and_bumpy_customer_orders": {
+      "first_seen": "2026-02-19T09:36:55.217351",
+      "last_seen": "2026-02-19T09:36:55.217351",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "semiconductor_suppliers_cut_sales_forecasts_and_de": {
+      "first_seen": "2026-02-19T09:36:55.217351",
+      "last_seen": "2026-02-19T09:36:55.217351",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "software_stocks_hit_hard_with_significant_drawdown": {
+      "first_seen": "2026-02-19T09:36:55.217359",
+      "last_seen": "2026-02-19T09:36:55.217359",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "intensified_investor_concerns_around_artificial_in": {
+      "first_seen": "2026-02-19T09:36:55.217359",
+      "last_seen": "2026-02-19T09:36:55.217359",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "s&p_500_software_index_declined_~28%_from_october_": {
+      "first_seen": "2026-02-19T09:36:55.217366",
+      "last_seen": "2026-02-19T09:36:55.217366",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Stocktwits"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "long-only_investors_shift_capital_away_from_softwa": {
+      "first_seen": "2026-02-19T09:36:55.217366",
+      "last_seen": "2026-02-19T09:36:55.217366",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Stocktwits"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "bdc_etfs_with_software_sector_exposure_face_elevat": {
+      "first_seen": "2026-02-19T09:36:55.217372",
+      "last_seen": "2026-02-19T09:36:55.217372",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "stock_prices_continue_to_decline_despite_positive_": {
+      "first_seen": "2026-02-19T09:36:55.217380",
+      "last_seen": "2026-02-19T09:36:55.217380",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Stocktwits"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "strong_ai_implementation_and_top-line_revenue_grow": {
+      "first_seen": "2026-02-19T09:36:55.217380",
+      "last_seen": "2026-02-19T09:36:55.217380",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Stocktwits"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "broad_pessimism_and_correction_in_software_sector_": {
+      "first_seen": "2026-02-19T09:36:55.217386",
+      "last_seen": "2026-02-19T09:36:55.217386",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "high-quality_saas_stocks_trade_at_historically_low": {
+      "first_seen": "2026-02-19T09:36:55.217386",
+      "last_seen": "2026-02-19T09:36:55.217386",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_index_drawdown_of_28%_from_october_2025_high,_with_valuation_compression_across_sector": {
+      "first_seen": "2026-02-19T09:38:29.594508",
+      "last_seen": "2026-02-19T09:38:29.594508",
+      "chain_count": 1,
+      "sources": [
+        "Source 4"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "broad_market_decline_across_dow,_nasdaq,_and_s&p_500": {
+      "first_seen": "2026-02-19T09:38:29.594523",
+      "last_seen": "2026-02-19T09:38:29.594523",
+      "chain_count": 1,
+      "sources": [
+        "Source 16"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_agents_automating_white-collar_work_and_softwar": {
+      "first_seen": "2026-02-19T09:45:03.258591",
+      "last_seen": "2026-02-19T09:45:03.258591",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_stock_sell-off_and_market_panic_in_february_2": {
+      "first_seen": "2026-02-19T09:45:03.258591",
+      "last_seen": "2026-02-19T09:45:03.258591",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "warren_buffett_accumulates_record_$381.6b_cash_pos": {
+      "first_seen": "2026-02-19T09:45:03.258610",
+      "last_seen": "2026-02-19T09:45:03.258610",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "tech_and_software_stock_underperformance_vs_s&p_50": {
+      "first_seen": "2026-02-19T09:45:03.258610",
+      "last_seen": "2026-02-19T09:45:03.258610",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "hubspot_(hubs)_shares_fall_7.2%": {
+      "first_seen": "2026-02-19T09:45:03.258617",
+      "last_seen": "2026-02-19T09:45:03.258617",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "openai_announcement_of_internal_software_capabilit": {
+      "first_seen": "2026-02-19T09:45:03.258617",
+      "last_seen": "2026-02-19T09:45:03.258617",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai-driven_alternatives_and_accessible_ai_tools_ent": {
+      "first_seen": "2026-02-19T09:45:03.258621",
+      "last_seen": "2026-02-19T09:45:03.258621",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "unity_software_loses_competitive_edge_and_struggle": {
+      "first_seen": "2026-02-19T09:45:03.258621",
+      "last_seen": "2026-02-19T09:45:03.258621",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "broad_market_crash_across_long-duration_assets_inc": {
+      "first_seen": "2026-02-19T09:45:03.258625",
+      "last_seen": "2026-02-19T09:45:03.258625",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "contraction_of_u.s._dollar_liquidity_from_macro_ev": {
+      "first_seen": "2026-02-19T09:45:03.258625",
+      "last_seen": "2026-02-19T09:45:03.258625",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "enables_agentic_ai_systems_that_can_replace_saas_a": {
+      "first_seen": "2026-02-19T09:45:03.258629",
+      "last_seen": "2026-02-19T09:45:03.258629",
+      "chain_count": 1,
+      "sources": [
+        "Forbes/Moor Insights"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "hyperscaler_capex_expansion_for_ai_infrastructure": {
+      "first_seen": "2026-02-19T09:45:03.258629",
+      "last_seen": "2026-02-19T09:45:03.258629",
+      "chain_count": 1,
+      "sources": [
+        "Forbes/Moor Insights"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_agents_holding_entire_saas_business_logic_in_me": {
+      "first_seen": "2026-02-19T09:45:03.258633",
+      "last_seen": "2026-02-19T09:45:03.258633",
+      "chain_count": 1,
+      "sources": [
+        "Forbes Tech Council"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "legacy_saas_applications_become_economically_unvia": {
+      "first_seen": "2026-02-19T09:45:03.258633",
+      "last_seen": "2026-02-19T09:45:03.258633",
+      "chain_count": 1,
+      "sources": [
+        "Forbes Tech Council"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "internally_inconsistent_market_valuations_create_l": {
+      "first_seen": "2026-02-19T09:45:03.258637",
+      "last_seen": "2026-02-19T09:45:03.258637",
+      "chain_count": 1,
+      "sources": [
+        "Bank of America / Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_pricing_saas_disruption_while_simultaneousl": {
+      "first_seen": "2026-02-19T09:45:03.258637",
+      "last_seen": "2026-02-19T09:45:03.258637",
+      "chain_count": 1,
+      "sources": [
+        "Bank of America / Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "continued_demand_for_compute_power_and_physical_in": {
+      "first_seen": "2026-02-19T09:45:03.258641",
+      "last_seen": "2026-02-19T09:45:03.258641",
+      "chain_count": 1,
+      "sources": [
+        "Bank of America / Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "sustained_hyperscaler_ai_capex_for_training_and_in": {
+      "first_seen": "2026-02-19T09:45:03.258641",
+      "last_seen": "2026-02-19T09:45:03.258641",
+      "chain_count": 1,
+      "sources": [
+        "Bank of America / Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "shift_from_saas-only_consumption_models_to_hybrid_": {
+      "first_seen": "2026-02-19T09:45:03.258644",
+      "last_seen": "2026-02-19T09:45:03.258644",
+      "chain_count": 1,
+      "sources": [
+        "F5 Networks Q1 FY2026 Earnings"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_infrastructure_capex_driving_demand_for_high-pe": {
+      "first_seen": "2026-02-19T09:45:03.258644",
+      "last_seen": "2026-02-19T09:45:03.258644",
+      "chain_count": 1,
+      "sources": [
+        "F5 Networks Q1 FY2026 Earnings"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "inflated_saas_valuations_disconnected_from_fundame": {
+      "first_seen": "2026-02-19T09:45:03.258648",
+      "last_seen": "2026-02-19T09:45:03.258648",
+      "chain_count": 1,
+      "sources": [
+        "Goldman Sachs / Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "massive_ai_infrastructure_spending_by_hyperscalers": {
+      "first_seen": "2026-02-19T09:45:03.258648",
+      "last_seen": "2026-02-19T09:45:03.258648",
+      "chain_count": 1,
+      "sources": [
+        "Goldman Sachs / Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_pricing_disconnect_and_valuation_skepticism": {
+      "first_seen": "2026-02-19T09:45:03.258652",
+      "last_seen": "2026-02-19T09:45:03.258652",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "analyst_reports_identifying_logical_inconsistencie": {
+      "first_seen": "2026-02-19T09:45:03.258652",
+      "last_seen": "2026-02-19T09:45:03.258652",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "technology_sector_rout_and_ai-related_valuation_co": {
+      "first_seen": "2026-02-19T09:45:03.258655",
+      "last_seen": "2026-02-19T09:45:03.258655",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ipo_postponements_and_slashed_valuations_across_sa": {
+      "first_seen": "2026-02-19T09:45:03.258655",
+      "last_seen": "2026-02-19T09:45:03.258655",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "reduced_saas_adoption_and_lower_customer_lifetime_": {
+      "first_seen": "2026-02-19T09:45:03.258658",
+      "last_seen": "2026-02-19T09:45:03.258658",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "consumer_spending_squeeze_and_shift_toward_cheaper": {
+      "first_seen": "2026-02-19T09:45:03.258658",
+      "last_seen": "2026-02-19T09:45:03.258658",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "transition_of_saas_companies_toward_pure-play_mode": {
+      "first_seen": "2026-02-19T09:45:03.258662",
+      "last_seen": "2026-02-19T09:45:03.258662",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "potential_valuation_multiple_expansion_and_bullish": {
+      "first_seen": "2026-02-19T09:45:03.258662",
+      "last_seen": "2026-02-19T09:45:03.258662",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "s&p_500_software_index_declined_~28%_from_october_2025_high": {
+      "first_seen": "2026-02-19T09:46:41.174298",
+      "last_seen": "2026-02-19T09:46:41.174304",
+      "chain_count": 2,
+      "sources": [
+        "Source 11 (steps 1-2), Source 12 (step 3)",
+        "Source 12"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "long_only_investors_shift_capital_away_from_softwa": {
+      "first_seen": "2026-02-19T09:46:41.174304",
+      "last_seen": "2026-02-19T09:46:41.174304",
+      "chain_count": 1,
+      "sources": [
+        "Source 12"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_company_loan_defaults_estimated_at_13%_annually,_combined_with_high_leverage_in_bdc_portfolios": {
+      "first_seen": "2026-02-19T09:46:41.174310",
+      "last_seen": "2026-02-19T09:46:41.174310",
+      "chain_count": 1,
+      "sources": [
+        "Source 15"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_holds_rates_at_0.75%_while_signaling_continued": {
+      "first_seen": "2026-02-20T02:14:12.504827",
+      "last_seen": "2026-02-20T02:14:12.504827",
+      "chain_count": 1,
+      "sources": [
+        "BeInCrypto via Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "risk_of_sudden_unwinding_of_yen_carry_trades_incre": {
+      "first_seen": "2026-02-20T02:14:12.504827",
+      "last_seen": "2026-02-20T02:14:12.504827",
+      "chain_count": 1,
+      "sources": [
+        "BeInCrypto via Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "upcoming_february_2026_election_creates_uncertaint": {
+      "first_seen": "2026-02-20T02:14:12.504851",
+      "last_seen": "2026-02-20T02:14:12.504851",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "japan's_long-term_government_bond_yields_surge_to_": {
+      "first_seen": "2026-02-20T02:14:12.504851",
+      "last_seen": "2026-02-20T02:14:12.504851",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_turbulence_and_volatility_risk_increases_si": {
+      "first_seen": "2026-02-20T02:14:12.504862",
+      "last_seen": "2026-02-20T02:14:12.504862",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "short_yen_positions_reach_decade_highs_amid_weak_y": {
+      "first_seen": "2026-02-20T02:14:12.504862",
+      "last_seen": "2026-02-20T02:14:12.504862",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "global_debt_markets_face_destabilization_risk;_dol": {
+      "first_seen": "2026-02-20T02:14:12.504871",
+      "last_seen": "2026-02-20T02:14:12.504871",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "boj_forced_to_sell_us_treasuries_to_acquire_dollar": {
+      "first_seen": "2026-02-20T02:14:12.504871",
+      "last_seen": "2026-02-20T02:14:12.504871",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "august_2024_boj_rate_hike_speculation_triggered_ye": {
+      "first_seen": "2026-02-20T02:14:12.504879",
+      "last_seen": "2026-02-20T02:14:12.504879",
+      "chain_count": 1,
+      "sources": [
+        "BeInCrypto via Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "bitcoin_dropped_sharply_as_liquidity_evaporated_fr": {
+      "first_seen": "2026-02-20T02:14:12.504879",
+      "last_seen": "2026-02-20T02:14:12.504879",
+      "chain_count": 1,
+      "sources": [
+        "BeInCrypto via Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_hyperscaler_capex_expansion_requiring_massive_i": {
+      "first_seen": "2026-02-20T02:14:12.504886",
+      "last_seen": "2026-02-20T02:14:12.504886",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "increased_demand_for_investment-grade_bond_financi": {
+      "first_seen": "2026-02-20T02:14:12.504886",
+      "last_seen": "2026-02-20T02:14:12.504886",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "data_centers_struggle_to_secure_sufficient_electri": {
+      "first_seen": "2026-02-20T02:14:12.504894",
+      "last_seen": "2026-02-20T02:14:12.504894",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "hyperscaler_data_center_expansion_in_japan_creatin": {
+      "first_seen": "2026-02-20T02:14:12.504894",
+      "last_seen": "2026-02-20T02:14:12.504894",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_recovery_and_positive_sentiment_in_tech_sto": {
+      "first_seen": "2026-02-20T02:14:12.504901",
+      "last_seen": "2026-02-20T02:14:12.504901",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance Canada"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "us_mega-cap_tech_capex_announcements_($650b+_for_2": {
+      "first_seen": "2026-02-20T02:14:12.504901",
+      "last_seen": "2026-02-20T02:14:12.504901",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance Canada"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_demand_surge_driving_capital_expenditure_requir": {
+      "first_seen": "2026-02-20T02:14:12.504908",
+      "last_seen": "2026-02-20T02:14:12.504908",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "japanese_suppliers_face_pressure_to_commit_additio": {
+      "first_seen": "2026-02-20T02:14:12.504908",
+      "last_seen": "2026-02-20T02:14:12.504908",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ntt's_higher-than-expected_sales_promotion_costs_a": {
+      "first_seen": "2026-02-20T02:14:12.504915",
+      "last_seen": "2026-02-20T02:14:12.504915",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / NTT Earnings"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "downward_revision_of_full-year_earnings_forecast_d": {
+      "first_seen": "2026-02-20T02:14:12.504915",
+      "last_seen": "2026-02-20T02:14:12.504915",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / NTT Earnings"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "stock_market_plunges_with_$6_trillion_in_wealth_va": {
+      "first_seen": "2026-02-20T02:14:12.504922",
+      "last_seen": "2026-02-20T02:14:12.504922",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "trump_administration_announces_massive_tariffs_on_": {
+      "first_seen": "2026-02-20T02:14:12.504922",
+      "last_seen": "2026-02-20T02:14:12.504922",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "u.s._chip-export_limits_imposed_on_advanced_semico": {
+      "first_seen": "2026-02-20T02:14:12.504929",
+      "last_seen": "2026-02-20T02:14:12.504929",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "flagship_semiconductor_stocks_become_biggest_loser": {
+      "first_seen": "2026-02-20T02:14:12.504929",
+      "last_seen": "2026-02-20T02:14:12.504929",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "hedge_fund_performance_reaches_best_levels_in_over": {
+      "first_seen": "2026-02-20T02:14:12.504936",
+      "last_seen": "2026-02-20T02:14:12.504936",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "tariff-induced_economic_uncertainty_and_market_vol": {
+      "first_seen": "2026-02-20T02:14:12.504936",
+      "last_seen": "2026-02-20T02:14:12.504936",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "u.s._dollar_weakens_rapidly,_hitting_fresh_lows_ag": {
+      "first_seen": "2026-02-20T02:14:12.504942",
+      "last_seen": "2026-02-20T02:14:12.504942",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "yen_strengthens_(moves_from_146.99_to_141.88_range": {
+      "first_seen": "2026-02-20T02:14:12.504942",
+      "last_seen": "2026-02-20T02:14:12.504942",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "tsmc_announces_record_$56_billion_capex_spending_f": {
+      "first_seen": "2026-02-20T02:14:12.504949",
+      "last_seen": "2026-02-20T02:14:12.504949",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "semiconductor_stocks_rally;_s&p_500,_dow,_nasdaq_r": {
+      "first_seen": "2026-02-20T02:14:12.504949",
+      "last_seen": "2026-02-20T02:14:12.504949",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "unwinding_of_yen_carry_trades": {
+      "first_seen": "2026-02-20T02:14:12.504955",
+      "last_seen": "2026-02-20T02:14:12.504962",
+      "chain_count": 2,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "yen_appreciation": {
+      "first_seen": "2026-02-20T02:14:12.504955",
+      "last_seen": "2026-02-20T02:14:12.504955",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "equity_market_losses_and_volatility": {
+      "first_seen": "2026-02-20T02:14:12.504962",
+      "last_seen": "2026-02-20T02:14:12.504962",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "yen_carry_trade_unwinding": {
+      "first_seen": "2026-02-20T02:14:12.504968",
+      "last_seen": "2026-02-20T02:14:12.504968",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "bond_yield_declines_and_flight-to-safety_behavior": {
+      "first_seen": "2026-02-20T02:14:12.504968",
+      "last_seen": "2026-02-20T02:14:12.504968",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "increased_volatility_and_unpredictable_price_swing": {
+      "first_seen": "2026-02-20T02:14:12.504975",
+      "last_seen": "2026-02-20T02:14:12.504975",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "japan_snap_election_uncertainty_(called_by_pm_taka": {
+      "first_seen": "2026-02-20T02:14:12.504975",
+      "last_seen": "2026-02-20T02:14:12.504975",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "tech_sector_momentum_trade_unwinding": {
+      "first_seen": "2026-02-20T02:14:12.504981",
+      "last_seen": "2026-02-20T02:14:12.504981",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "rotation_out_of_tech_into_small_caps_and_value_pla": {
+      "first_seen": "2026-02-20T02:14:12.504981",
+      "last_seen": "2026-02-20T02:14:12.504981",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "safe_haven_flows_into_yen_and_flattening_pressure_": {
+      "first_seen": "2026-02-20T02:17:30.441510",
+      "last_seen": "2026-02-20T02:17:30.441510",
+      "chain_count": 1,
+      "sources": [
+        "Source 2"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "takaichi's_electoral_mandate_and_fiscal_policy_signals": {
+      "first_seen": "2026-02-20T02:17:30.441517",
+      "last_seen": "2026-02-20T02:17:30.441517",
+      "chain_count": 1,
+      "sources": [
+        "Source 7"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "real_assets_demand": {
+      "first_seen": "2026-02-20T02:17:30.441521",
+      "last_seen": "2026-02-20T02:17:30.441521",
+      "chain_count": 1,
+      "sources": [
+        "Source 16 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "real_rates": {
+      "first_seen": "2026-02-20T02:17:30.441521",
+      "last_seen": "2026-02-20T02:17:30.441521",
+      "chain_count": 1,
+      "sources": [
+        "Source 16 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "fiscal_expansion": {
+      "first_seen": "2026-02-20T02:17:30.441521",
+      "last_seen": "2026-02-20T02:17:30.441521",
+      "chain_count": 1,
+      "sources": [
+        "Source 16 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "jgb_nominal_rate": {
+      "first_seen": "2026-02-20T02:17:30.441521",
+      "last_seen": "2026-02-20T02:17:30.441521",
+      "chain_count": 1,
+      "sources": [
+        "Source 16 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "global_liquidity_source_dries_up,_affecting_bitcoin_and_leveraged_positions_worldwide": {
+      "first_seen": "2026-02-20T02:17:30.441530",
+      "last_seen": "2026-02-20T02:17:30.441530",
+      "chain_count": 1,
+      "sources": [
+        "Source 4"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "decades_long_ultra_low_boj_rates_end_with_rate_hik": {
+      "first_seen": "2026-02-20T02:17:30.441530",
+      "last_seen": "2026-02-20T02:17:30.441530",
+      "chain_count": 1,
+      "sources": [
+        "Source 4"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "usd/jpy_violent_reversal_159": {
+      "first_seen": "2026-02-20T02:17:30.441539",
+      "last_seen": "2026-02-20T02:17:30.441539",
+      "chain_count": 1,
+      "sources": [
+        "Source 10 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "govt_response_elevated": {
+      "first_seen": "2026-02-20T02:17:30.441539",
+      "last_seen": "2026-02-20T02:17:30.441539",
+      "chain_count": 1,
+      "sources": [
+        "Source 10 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "pm_verbal_warning": {
+      "first_seen": "2026-02-20T02:17:30.441539",
+      "last_seen": "2026-02-20T02:17:30.441539",
+      "chain_count": 1,
+      "sources": [
+        "Source 10 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "systematic_strategies_peak": {
+      "first_seen": "2026-02-20T02:17:30.441544",
+      "last_seen": "2026-02-20T02:17:30.441544",
+      "chain_count": 1,
+      "sources": [
+        "Source 13 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "downside_hedging": {
+      "first_seen": "2026-02-20T02:17:30.441544",
+      "last_seen": "2026-02-20T02:17:30.441544",
+      "chain_count": 1,
+      "sources": [
+        "Source 13 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "momentum_reversal": {
+      "first_seen": "2026-02-20T02:17:30.441544",
+      "last_seen": "2026-02-20T02:17:30.441544",
+      "chain_count": 1,
+      "sources": [
+        "Source 13 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "volatility_spike": {
+      "first_seen": "2026-02-20T02:17:30.441544",
+      "last_seen": "2026-02-20T02:17:30.441544",
+      "chain_count": 1,
+      "sources": [
+        "Source 13 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "tailwind": {
+      "first_seen": "2026-02-20T02:17:30.441544",
+      "last_seen": "2026-02-20T02:17:30.441544",
+      "chain_count": 1,
+      "sources": [
+        "Source 13 (all steps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "contraction_of_u.s._dollar_liquidity_from_macro_events": {
+      "first_seen": "2026-02-20T02:17:30.441548",
+      "last_seen": "2026-02-20T02:17:30.441548",
+      "chain_count": 1,
+      "sources": [
+        "Source 11"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "broad_market_crash_across_long_duration_assets_inc": {
+      "first_seen": "2026-02-20T02:17:30.441548",
+      "last_seen": "2026-02-20T02:17:30.441548",
+      "chain_count": 1,
+      "sources": [
+        "Source 11"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "u.s._dollar_liquidity_contraction_from_macro_events": {
+      "first_seen": "2026-02-20T02:17:30.441552",
+      "last_seen": "2026-02-20T02:17:30.441552",
+      "chain_count": 1,
+      "sources": [
+        "Source 12"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "$250b_crash_across_risk_assets_including_crypto_and_equities": {
+      "first_seen": "2026-02-20T02:17:30.441552",
+      "last_seen": "2026-02-20T02:17:30.441552",
+      "chain_count": 1,
+      "sources": [
+        "Source 12"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_revolution_and_high_valuations_similar_to_late_": {
+      "first_seen": "2026-02-20T02:22:51.819658",
+      "last_seen": "2026-02-20T02:22:51.819658",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Motley Fool"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "stock_market_crash_risk_in_2026": {
+      "first_seen": "2026-02-20T02:22:51.819658",
+      "last_seen": "2026-02-20T02:22:51.819658",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Motley Fool"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "elevated_risk_of_market_correction_or_crash": {
+      "first_seen": "2026-02-20T02:22:51.819684",
+      "last_seen": "2026-02-20T02:22:51.819684",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Motley Fool"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "cape_ratio_at_39.85,_only_second_time_in_153_years": {
+      "first_seen": "2026-02-20T02:22:51.819684",
+      "last_seen": "2026-02-20T02:22:51.819684",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Motley Fool"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "stock_market_decline_and_investor_fear": {
+      "first_seen": "2026-02-20T02:22:51.819693",
+      "last_seen": "2026-02-20T02:22:51.819693",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Motley Fool"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "trump_administration_tariffs_implementation": {
+      "first_seen": "2026-02-20T02:22:51.819693",
+      "last_seen": "2026-02-20T02:22:51.819693",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Motley Fool"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "midterm_election_year_political_uncertainty": {
+      "first_seen": "2026-02-20T02:22:51.819700",
+      "last_seen": "2026-02-20T02:22:51.819700",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Motley Fool"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "reduced_s&p_500_returns_(average_4.6%_vs_historica": {
+      "first_seen": "2026-02-20T02:22:51.819700",
+      "last_seen": "2026-02-20T02:22:51.819700",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Motley Fool"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "investor_panic_and_market_volatility_triggers": {
+      "first_seen": "2026-02-20T02:22:51.819705",
+      "last_seen": "2026-02-20T02:22:51.819705",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Motley Fool"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "capital_flight_from_volatile_stocks_to_steady,_pre": {
+      "first_seen": "2026-02-20T02:22:51.819705",
+      "last_seen": "2026-02-20T02:22:51.819705",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Motley Fool"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "big_tech_hyperscalers_(microsoft,_alphabet,_amazon": {
+      "first_seen": "2026-02-20T02:22:51.819711",
+      "last_seen": "2026-02-20T02:22:51.819711",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg/Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "investor_hesitance_and_stock_selling_despite_stron": {
+      "first_seen": "2026-02-20T02:22:51.819711",
+      "last_seen": "2026-02-20T02:22:51.819711",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg/Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_pricing_may_not_reflect_the_true_financial_": {
+      "first_seen": "2026-02-20T02:22:51.819716",
+      "last_seen": "2026-02-20T02:22:51.819716",
+      "chain_count": 1,
+      "sources": [
+        "JPMorgan/Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "hyperscalers_fund_only_2%_of_ai_capex_through_net_": {
+      "first_seen": "2026-02-20T02:22:51.819716",
+      "last_seen": "2026-02-20T02:22:51.819716",
+      "chain_count": 1,
+      "sources": [
+        "JPMorgan/Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "alphabet_doubles_2026_capex_to_$175-185b_(from_$91": {
+      "first_seen": "2026-02-20T02:22:51.819721",
+      "last_seen": "2026-02-20T02:22:51.819721",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "stock_price_declines_despite_google_services_reven": {
+      "first_seen": "2026-02-20T02:22:51.819721",
+      "last_seen": "2026-02-20T02:22:51.819721",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "capital_rotates_from_ai/software_stocks_to_traditi": {
+      "first_seen": "2026-02-20T02:22:51.819726",
+      "last_seen": "2026-02-20T02:22:51.819726",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "big_tech_massive_ai_capex_spending_on_data_centers": {
+      "first_seen": "2026-02-20T02:22:51.819726",
+      "last_seen": "2026-02-20T02:22:51.819726",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "unprecedented_ai_infrastructure_capex_surge_create": {
+      "first_seen": "2026-02-20T02:22:51.819730",
+      "last_seen": "2026-02-20T02:22:51.819730",
+      "chain_count": 1,
+      "sources": [
+        "Motley Fool/Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "vertiv_holdings_(infrastructure_provider)_experien": {
+      "first_seen": "2026-02-20T02:22:51.819730",
+      "last_seen": "2026-02-20T02:22:51.819730",
+      "chain_count": 1,
+      "sources": [
+        "Motley Fool/Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "continued_earnings_growth_and_equity_market_suppor": {
+      "first_seen": "2026-02-20T02:22:51.819735",
+      "last_seen": "2026-02-20T02:22:51.819735",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "massive_ai_capital_expenditure_by_hyperscalers_and": {
+      "first_seen": "2026-02-20T02:22:51.819735",
+      "last_seen": "2026-02-20T02:22:51.819735",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_investment_cycle_continuation_and_earnings_stre": {
+      "first_seen": "2026-02-20T02:22:51.819740",
+      "last_seen": "2026-02-20T02:22:51.819740",
+      "chain_count": 1,
+      "sources": [
+        "Morgan Stanley / Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "morgan_stanley_and_jpmorgan_forecast_s&p_500_reach": {
+      "first_seen": "2026-02-20T02:22:51.819740",
+      "last_seen": "2026-02-20T02:22:51.819740",
+      "chain_count": 1,
+      "sources": [
+        "Morgan Stanley / Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "analyst_consensus_on_ai_tailwinds_and_policy_suppo": {
+      "first_seen": "2026-02-20T02:22:51.819745",
+      "last_seen": "2026-02-20T02:22:51.819745",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Market Analysts"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "contrarian_bearish_calls_(marc_chaikin_65%_bear_ma": {
+      "first_seen": "2026-02-20T02:22:51.819745",
+      "last_seen": "2026-02-20T02:22:51.819745",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Market Analysts"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "goldman_sachs_and_morgan_stanley_raise_price_targe": {
+      "first_seen": "2026-02-20T02:22:51.819752",
+      "last_seen": "2026-02-20T02:22:51.819752",
+      "chain_count": 1,
+      "sources": [
+        "Goldman Sachs / Morgan Stanley / Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "implied_fair_values_reset_upward_(amat:_$248→$398,": {
+      "first_seen": "2026-02-20T02:22:51.819752",
+      "last_seen": "2026-02-20T02:22:51.819752",
+      "chain_count": 1,
+      "sources": [
+        "Goldman Sachs / Morgan Stanley / Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "institutional_contradiction:_low_recession_probabi": {
+      "first_seen": "2026-02-20T02:22:51.819758",
+      "last_seen": "2026-02-20T02:22:51.819758",
+      "chain_count": 1,
+      "sources": [
+        "Goldman Sachs"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "goldman_sachs_puts_us_recession_odds_at_only_25%_w": {
+      "first_seen": "2026-02-20T02:22:51.819758",
+      "last_seen": "2026-02-20T02:22:51.819758",
+      "chain_count": 1,
+      "sources": [
+        "Goldman Sachs"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "s&p_500_declined_19%_from_its_high_within_five_tra": {
+      "first_seen": "2026-02-20T02:22:51.819761",
+      "last_seen": "2026-02-20T02:22:51.819761",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Motley Fool"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "trump_tariff_announcement_(april_2,_'liberation_da": {
+      "first_seen": "2026-02-20T02:22:51.819761",
+      "last_seen": "2026-02-20T02:22:51.819761",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Motley Fool"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "historical_precedent_indicates_s&p_500_will_declin": {
+      "first_seen": "2026-02-20T02:22:51.819765",
+      "last_seen": "2026-02-20T02:22:51.819765",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Motley Fool"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "s&p_500_cape_ratio_reached_39.9_in_december_(valua": {
+      "first_seen": "2026-02-20T02:22:51.819765",
+      "last_seen": "2026-02-20T02:22:51.819765",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Motley Fool"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "tariff_exemption_granted_to_automakers_(one-month_": {
+      "first_seen": "2026-02-20T02:22:51.819769",
+      "last_seen": "2026-02-20T02:22:51.819769",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "u.s._stocks_rebounded_with_s&p_500_and_dow_rising_": {
+      "first_seen": "2026-02-20T02:22:51.819769",
+      "last_seen": "2026-02-20T02:22:51.819769",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "historical_precedent_suggests_potential_rebound_in": {
+      "first_seen": "2026-02-20T02:22:51.819773",
+      "last_seen": "2026-02-20T02:22:51.819773",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "crypto_fear_and_greed_index_plunged_to_historic_lo": {
+      "first_seen": "2026-02-20T02:22:51.819773",
+      "last_seen": "2026-02-20T02:22:51.819773",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "financial_stress_on_households_(4.8%_of_401(k)_par": {
+      "first_seen": "2026-02-20T02:22:51.819776",
+      "last_seen": "2026-02-20T02:22:51.819776",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "investors'_worry_over_growth_brings_'recession_tra": {
+      "first_seen": "2026-02-20T02:22:51.819776",
+      "last_seen": "2026-02-20T02:22:51.819776",
+      "chain_count": 1,
+      "sources": [
+        "Wall Street Journal"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "forced_covering": {
+      "first_seen": "2026-02-20T02:26:13.348848",
+      "last_seen": "2026-02-20T02:26:13.348848",
+      "chain_count": 1,
+      "sources": [
+        "Source 1 (steps 1-2), Source 3 (steps 1-2)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "short_squeeze_risk": {
+      "first_seen": "2026-02-20T02:26:13.348848",
+      "last_seen": "2026-02-20T02:26:13.348848",
+      "chain_count": 1,
+      "sources": [
+        "Source 1 (steps 1-2), Source 3 (steps 1-2)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "short_interest": {
+      "first_seen": "2026-02-20T02:26:13.348848",
+      "last_seen": "2026-02-20T02:26:13.348848",
+      "chain_count": 1,
+      "sources": [
+        "Source 1 (steps 1-2), Source 3 (steps 1-2)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "volatility_squeeze_risk": {
+      "first_seen": "2026-02-20T02:26:13.348863",
+      "last_seen": "2026-02-20T02:26:13.348863",
+      "chain_count": 1,
+      "sources": [
+        "Source 2, Source 7"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "crowded_short_vol": {
+      "first_seen": "2026-02-20T02:26:13.348863",
+      "last_seen": "2026-02-20T02:26:13.348863",
+      "chain_count": 1,
+      "sources": [
+        "Source 2, Source 7"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "amplified_moves_on_volatility_spikes": {
+      "first_seen": "2026-02-20T02:26:13.348863",
+      "last_seen": "2026-02-20T02:26:13.348863",
+      "chain_count": 1,
+      "sources": [
+        "Source 2, Source 7"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_turbulence_and_volatility": {
+      "first_seen": "2026-02-20T02:26:13.348868",
+      "last_seen": "2026-02-20T02:26:13.348868",
+      "chain_count": 1,
+      "sources": [
+        "Source 6 (yen carry trade precedent), Source 5 (equity market impact)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "systemic_vulnerability": {
+      "first_seen": "2026-02-20T02:26:13.348868",
+      "last_seen": "2026-02-20T02:26:13.348868",
+      "chain_count": 1,
+      "sources": [
+        "Source 6 (yen carry trade precedent), Source 5 (equity market impact)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "cascading_liquidations": {
+      "first_seen": "2026-02-20T02:26:13.348868",
+      "last_seen": "2026-02-20T02:26:13.348868",
+      "chain_count": 1,
+      "sources": [
+        "Source 6 (yen carry trade precedent), Source 5 (equity market impact)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "crowded_positioning": {
+      "first_seen": "2026-02-20T02:26:13.348868",
+      "last_seen": "2026-02-20T02:26:13.348868",
+      "chain_count": 1,
+      "sources": [
+        "Source 6 (yen carry trade precedent), Source 5 (equity market impact)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "crowding_index": {
+      "first_seen": "2026-02-20T02:26:13.348874",
+      "last_seen": "2026-02-20T02:26:13.348874",
+      "chain_count": 1,
+      "sources": [
+        "Source 12"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "correlated_liquidations": {
+      "first_seen": "2026-02-20T02:26:13.348874",
+      "last_seen": "2026-02-20T02:26:13.348874",
+      "chain_count": 1,
+      "sources": [
+        "Source 12"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "portfolio_density": {
+      "first_seen": "2026-02-20T02:26:13.348874",
+      "last_seen": "2026-02-20T02:26:13.348874",
+      "chain_count": 1,
+      "sources": [
+        "Source 12"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "mean-reversion_and_equity_weakness": {
+      "first_seen": "2026-02-20T02:26:13.348877",
+      "last_seen": "2026-02-20T02:26:13.348877",
+      "chain_count": 1,
+      "sources": [
+        "Source 8"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "investor_long_exposure": {
+      "first_seen": "2026-02-20T02:26:13.348877",
+      "last_seen": "2026-02-20T02:26:13.348877",
+      "chain_count": 1,
+      "sources": [
+        "Source 8"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "s&p_500_underperformance_over_1-3_months": {
+      "first_seen": "2026-02-20T02:26:13.348877",
+      "last_seen": "2026-02-20T02:26:13.348877",
+      "chain_count": 1,
+      "sources": [
+        "Source 8"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "mass_liquidation": {
+      "first_seen": "2026-02-20T02:26:13.348880",
+      "last_seen": "2026-02-20T02:26:13.348880",
+      "chain_count": 1,
+      "sources": [
+        "Source 9"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "liquidity_squeeze": {
+      "first_seen": "2026-02-20T02:26:13.348880",
+      "last_seen": "2026-02-20T02:26:13.348880",
+      "chain_count": 1,
+      "sources": [
+        "Source 9"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "basis_trade_size": {
+      "first_seen": "2026-02-20T02:26:13.348880",
+      "last_seen": "2026-02-20T02:26:13.348880",
+      "chain_count": 1,
+      "sources": [
+        "Source 9"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "dealer_and_funding_stress": {
+      "first_seen": "2026-02-20T02:26:13.348880",
+      "last_seen": "2026-02-20T02:26:13.348880",
+      "chain_count": 1,
+      "sources": [
+        "Source 9"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "cta_positioning": {
+      "first_seen": "2026-02-20T02:26:13.348883",
+      "last_seen": "2026-02-20T02:26:13.348883",
+      "chain_count": 1,
+      "sources": [
+        "Source 4"
+      ],
+      "is_anchor": true,
+      "anchor_theme": "positioning"
+    },
+    "forced_buying_drives_usd_rally": {
+      "first_seen": "2026-02-20T02:26:13.348883",
+      "last_seen": "2026-02-20T02:26:13.348883",
+      "chain_count": 1,
+      "sources": [
+        "Source 4"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "usd_short_squeeze": {
+      "first_seen": "2026-02-20T02:26:13.348883",
+      "last_seen": "2026-02-20T02:26:13.348883",
+      "chain_count": 1,
+      "sources": [
+        "Source 4"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "low_volatility_regime": {
+      "first_seen": "2026-02-20T02:26:13.348887",
+      "last_seen": "2026-02-20T02:26:13.348887",
+      "chain_count": 1,
+      "sources": [
+        "Source 11"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "hedge_capitulation": {
+      "first_seen": "2026-02-20T02:26:13.348887",
+      "last_seen": "2026-02-20T02:26:13.348887",
+      "chain_count": 1,
+      "sources": [
+        "Source 11"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "vix_suppression": {
+      "first_seen": "2026-02-20T02:26:13.348887",
+      "last_seen": "2026-02-20T02:26:13.348887",
+      "chain_count": 1,
+      "sources": [
+        "Source 11"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "vix_hedging_demand": {
+      "first_seen": "2026-02-20T02:26:13.348887",
+      "last_seen": "2026-02-20T02:26:13.348887",
+      "chain_count": 1,
+      "sources": [
+        "Source 11"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
     }
   },
-  "last_updated": "2026-02-15T11:10:51.387182"
+  "last_updated": "2026-02-20T02:26:13.348914"
 }

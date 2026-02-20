@@ -533,4 +533,6 @@ Use the HISTORICAL PRECEDENT ANALYSIS section (if present) to ground evidence in
 Do NOT produce belief-space scenarios (BULLISH 60% vs BEARISH 40%).
 Instead, produce independent tracks that each stand on their own evidence.
 
-Pay special attention to TRIGGERED patterns and historical analogs — these provide the strongest evidence basis."""
+Pay special attention to TRIGGERED patterns and historical analogs — these provide the strongest evidence basis.
+
+IMPORTANT: In your synthesis, include ALL specific quantitative data from the retrieved context — dollar amounts ($XB lost), valuation multiples (P/S, P/E compression ratios), index drawdowns (% from peak), and named institutional sources. These concrete numbers are critical for trader decision-making."""
