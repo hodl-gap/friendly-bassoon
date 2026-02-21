@@ -935,7 +935,8 @@ def fill_gaps_with_web_chains(
                 query=search_q,
                 topic=topic,
                 min_tier=min_tier,
-                verify_quotes=True
+                verify_quotes=True,
+                extraction_focus=dim_query.get("reasoning", "")
             )
             search_count += 1
 
@@ -1688,11 +1689,11 @@ def detect_and_fill_gaps(
         # Focus on what upstream CAUSES are missing, not downstream effects
         # Chains explain what happened but not the investment/structural forces behind it
         missing_desc = (
-            "Existing chains explain direct triggers but are missing: "
-            "(1) upstream investment by the DISRUPTORS — e.g. hyperscaler/big-tech CAPEX and "
-            "infrastructure spending that enabled or amplified the disruption, "
-            "(2) institutional contradictions — named analyst reports calling out logical "
-            "inconsistencies in market pricing"
+            "Existing chains cover direct triggers but may be missing: "
+            "(1) structural/upstream forces — capital flows, policy decisions, or market "
+            "structure shifts that enabled or amplified this event, "
+            "(2) institutional contradictions — named analyst or research reports with "
+            "opposing views on the consensus narrative"
         )
 
         injected_gap = {

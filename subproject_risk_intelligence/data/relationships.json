@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "last_updated": "2026-02-20T02:26:13.342718",
-    "total_relationships": 246
+    "last_updated": "2026-02-21T05:02:38.716131",
+    "total_relationships": 264
   },
   "relationships": [
     {
@@ -6224,9 +6224,9 @@
       "source_attribution": "Source 2, Source 1",
       "id": "rel_f471665a",
       "discovered_at": "2026-02-19T09:02:15.157688",
-      "validation_count": 5,
+      "validation_count": 8,
       "relationship_type": "neutral",
-      "confidence": 0.7251449999999998,
+      "confidence": 0.7133647349999999,
       "trigger_conditions": [
         {
           "variable": "saas_sector_valuation",
@@ -6243,7 +6243,7 @@
           "timeframe_days": 7
         }
       ],
-      "last_validated": "2026-02-19T09:46:33.748260"
+      "last_validated": "2026-02-20T15:11:13.576404"
     },
     {
       "logic_chain": {
@@ -6263,9 +6263,9 @@
       "source_attribution": "Source 5\n\n## Multi-Hop: AI Disruption → Valuation Compression → Sector Collapse",
       "id": "rel_c21235bb",
       "discovered_at": "2026-02-19T09:02:16.800843",
-      "validation_count": 4,
+      "validation_count": 6,
       "relationship_type": "positive",
-      "confidence": 0.7273499999999998,
+      "confidence": 0.7026014999999999,
       "trigger_conditions": [
         {
           "variable": "saas_stocks",
@@ -6282,7 +6282,7 @@
           "timeframe_days": 7
         }
       ],
-      "last_validated": "2026-02-19T09:46:33.748394"
+      "last_validated": "2026-02-20T15:11:13.576604"
     },
     {
       "logic_chain": {
@@ -6392,9 +6392,9 @@
       "source_attribution": "Source 4",
       "id": "rel_39db0baf",
       "discovered_at": "2026-02-19T09:02:21.821430",
-      "validation_count": 5,
+      "validation_count": 9,
       "relationship_type": "neutral",
-      "confidence": 0.7251449999999998,
+      "confidence": 0.7153553144999999,
       "trigger_conditions": [
         {
           "variable": "saas_sector_earnings",
@@ -6411,7 +6411,7 @@
           "timeframe_days": 7
         }
       ],
-      "last_validated": "2026-02-19T09:46:35.277688"
+      "last_validated": "2026-02-21T05:02:35.756876"
     },
     {
       "logic_chain": {
@@ -6431,9 +6431,9 @@
       "source_attribution": "Source 3\n\n## AI Revenue Quality and Strategy Credibility",
       "id": "rel_5114878a",
       "discovered_at": "2026-02-19T09:02:23.291104",
-      "validation_count": 5,
+      "validation_count": 7,
       "relationship_type": "negative",
-      "confidence": 0.7251449999999998,
+      "confidence": 0.7225210499999998,
       "trigger_conditions": [
         {
           "variable": "software_price_sales_ratio",
@@ -6450,7 +6450,7 @@
           "timeframe_days": 150
         }
       ],
-      "last_validated": "2026-02-19T09:46:33.748660"
+      "last_validated": "2026-02-21T05:02:35.757044"
     },
     {
       "logic_chain": {
@@ -6624,9 +6624,9 @@
       "source_attribution": "Source 1",
       "id": "rel_5ab5b99a",
       "discovered_at": "2026-02-19T09:16:15.812985",
-      "validation_count": 4,
+      "validation_count": 8,
       "relationship_type": "positive",
-      "confidence": 0.7131399999999999,
+      "confidence": 0.7124729139999999,
       "trigger_conditions": [
         {
           "variable": "sp500",
@@ -6643,7 +6643,7 @@
           "timeframe_days": 7
         }
       ],
-      "last_validated": "2026-02-19T09:46:35.277864"
+      "last_validated": "2026-02-21T05:02:35.757235"
     },
     {
       "logic_chain": {
@@ -6824,9 +6824,9 @@
       "source_attribution": "Source 3",
       "id": "rel_c11bce8c",
       "discovered_at": "2026-02-19T09:25:00.496003",
-      "validation_count": 4,
+      "validation_count": 8,
       "relationship_type": "negative",
-      "confidence": 0.72,
+      "confidence": 0.71412,
       "trigger_conditions": [
         {
           "variable": "saas_earnings_misses",
@@ -6843,7 +6843,7 @@
           "timeframe_days": 7
         }
       ],
-      "last_validated": "2026-02-19T09:46:35.277779"
+      "last_validated": "2026-02-21T05:02:35.756962"
     },
     {
       "logic_chain": {
@@ -6940,9 +6940,9 @@
       "source_attribution": "Source 10",
       "id": "rel_c5c63205",
       "discovered_at": "2026-02-19T09:25:05.003374",
-      "validation_count": 1,
+      "validation_count": 3,
       "relationship_type": "positive",
-      "confidence": 0.72,
+      "confidence": 0.6990000000000001,
       "trigger_conditions": [
         {
           "variable": "saas_sector_valuation_multiple",
@@ -6958,7 +6958,8 @@
           "condition_direction": "above",
           "timeframe_days": 7
         }
-      ]
+      ],
+      "last_validated": "2026-02-20T15:11:16.742855"
     },
     {
       "logic_chain": {
@@ -6978,9 +6979,9 @@
       "source_attribution": "Source 8",
       "id": "rel_117a14a0",
       "discovered_at": "2026-02-19T09:25:06.609780",
-      "validation_count": 2,
+      "validation_count": 4,
       "relationship_type": "negative",
-      "confidence": 0.72,
+      "confidence": 0.6990000000000001,
       "trigger_conditions": [
         {
           "variable": "growth_expectations",
@@ -6997,7 +6998,7 @@
           "timeframe_days": 7
         }
       ],
-      "last_validated": "2026-02-19T09:38:25.240133"
+      "last_validated": "2026-02-20T15:11:19.853708"
     },
     {
       "logic_chain": {
@@ -7056,9 +7057,9 @@
       "source_attribution": "Source 12",
       "id": "rel_24de73bd",
       "discovered_at": "2026-02-19T09:25:09.254186",
-      "validation_count": 3,
+      "validation_count": 4,
       "relationship_type": "negative",
-      "confidence": 0.72,
+      "confidence": 0.738,
       "trigger_conditions": [
         {
           "variable": "vix",
@@ -7075,7 +7076,7 @@
           "timeframe_days": 7
         }
       ],
-      "last_validated": "2026-02-19T09:46:33.748790"
+      "last_validated": "2026-02-20T14:45:28.102940"
     },
     {
       "logic_chain": {
@@ -7455,9 +7456,9 @@
       "source_attribution": "Source 4",
       "id": "rel_811c0aeb",
       "discovered_at": "2026-02-19T09:38:22.028760",
-      "validation_count": 2,
+      "validation_count": 5,
       "relationship_type": "negative",
-      "confidence": 0.72,
+      "confidence": 0.7053,
       "trigger_conditions": [
         {
           "variable": "vix",
@@ -7474,7 +7475,7 @@
           "timeframe_days": 7
         }
       ],
-      "last_validated": "2026-02-19T09:46:33.748535"
+      "last_validated": "2026-02-21T05:02:34.532633"
     },
     {
       "logic_chain": {
@@ -7615,9 +7616,9 @@
       "source_attribution": "Source 11",
       "id": "rel_695c7dee",
       "discovered_at": "2026-02-19T09:38:28.182770",
-      "validation_count": 1,
+      "validation_count": 2,
       "relationship_type": "negative",
-      "confidence": 0.72,
+      "confidence": 0.6990000000000001,
       "trigger_conditions": [
         {
           "variable": "vix",
@@ -7633,7 +7634,8 @@
           "condition_direction": "decrease",
           "timeframe_days": 7
         }
-      ]
+      ],
+      "last_validated": "2026-02-20T15:11:21.079167"
     },
     {
       "logic_chain": {
@@ -8854,6 +8856,729 @@
           "condition_type": "percentage_change",
           "condition_value": 25,
           "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "AI agents automating white-collar work and software licensing needs",
+            "cause_normalized": "ai_agents_automating_white_collar_work_and_softwar",
+            "effect": "SaaS stock sell-off and market panic in February 2026",
+            "effect_normalized": "saas_stock_sell-off_and_market_panic_in_february_2026",
+            "mechanism": "Market fear that AI will reduce demand for software licenses as businesses no longer need to buy licenses for human employees, creating existential threat to SaaS business models"
+          }
+        ],
+        "chain_summary": "ai_agents_automating_white_collar_work_and_softwar -> saas_stock_sell-off_and_market_panic_in_february_2026"
+      },
+      "terminal_effect": "saas_stock_sell-off_and_market_panic_in_february_2026",
+      "mechanism": "Market fear that AI will reduce demand for software licenses as businesses no longer need to buy licenses for human employees, creating existential threat to SaaS business models",
+      "source_attribution": "Source 7",
+      "id": "rel_c543d6a2",
+      "discovered_at": "2026-02-20T09:23:21.058194",
+      "validation_count": 3,
+      "relationship_type": "neutral",
+      "confidence": 0.7116,
+      "trigger_conditions": [
+        {
+          "variable": "saas_stock_valuations",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "ai_adoption_sentiment_index",
+          "condition_type": "absolute_threshold",
+          "condition_value": 70,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ],
+      "last_validated": "2026-02-20T15:11:13.576521"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Intensified investor concerns around artificial intelligence and large language models",
+            "cause_normalized": "intensified_investor_concerns_around_artificial_in",
+            "effect": "Software stocks hit hard with significant drawdowns",
+            "effect_normalized": "software_stocks_hit_hard_with_significant_drawdown",
+            "mechanism": "Market reassessment of SaaS business models and growth prospects in light of AI disruption concerns, leading to broad-based selling pressure across the sector"
+          }
+        ],
+        "chain_summary": "intensified_investor_concerns_around_artificial_in -> software_stocks_hit_hard_with_significant_drawdown"
+      },
+      "terminal_effect": "software_stocks_hit_hard_with_significant_drawdown",
+      "mechanism": "Market reassessment of SaaS business models and growth prospects in light of AI disruption concerns, leading to broad-based selling pressure across the sector",
+      "source_attribution": "Source 11",
+      "id": "rel_6b302278",
+      "discovered_at": "2026-02-20T09:23:23.574194",
+      "validation_count": 2,
+      "relationship_type": "negative",
+      "confidence": 0.738,
+      "trigger_conditions": [
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 25,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 6,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ],
+      "last_validated": "2026-02-20T14:45:29.545578"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "AI disruption fears and sector rotation away from tech/software stocks",
+            "cause_normalized": "ai_disruption_fears_and_sector_rotation_away_from_",
+            "effect": "SaaS and tech stock prices decline sharply",
+            "effect_normalized": "saas_and_tech_stock_prices_decline_sharply",
+            "mechanism": "Market participants sell tech positions due to concerns about AI-driven business model disruption, triggering a sector-wide rout"
+          }
+        ],
+        "chain_summary": "ai_disruption_fears_and_sector_rotation_away_from_ -> saas_and_tech_stock_prices_decline_sharply"
+      },
+      "terminal_effect": "saas_and_tech_stock_prices_decline_sharply",
+      "mechanism": "Market participants sell tech positions due to concerns about AI-driven business model disruption, triggering a sector-wide rout",
+      "source_attribution": "Source 12",
+      "id": "rel_3a51b0bf",
+      "discovered_at": "2026-02-20T09:23:24.850373",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 5,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "AI disruption fears and concerns that AI agents can automate software tasks",
+            "cause_normalized": "ai_disruption_fears_and_concerns_that_ai_agents_ca",
+            "effect": "SaaS stock selloff and market meltdown termed 'SaaSpocalypse'",
+            "effect_normalized": "saas_stock_selloff_and_market_meltdown_termed_'saaspocalypse'",
+            "mechanism": "Fear-driven narrative that AI can write code, automate workflows, and replace SaaS platforms, causing investors to panic-sell software stocks"
+          }
+        ],
+        "chain_summary": "ai_disruption_fears_and_concerns_that_ai_agents_ca -> saas_stock_selloff_and_market_meltdown_termed_'saaspocalypse'"
+      },
+      "terminal_effect": "saas_stock_selloff_and_market_meltdown_termed_'saaspocalypse'",
+      "mechanism": "Fear-driven narrative that AI can write code, automate workflows, and replace SaaS platforms, causing investors to panic-sell software stocks",
+      "source_attribution": "Source 6",
+      "id": "rel_071ce1f0",
+      "discovered_at": "2026-02-20T14:45:19.998771",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.78,
+      "trigger_conditions": [
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 25,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 6,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Goldman Sachs projection that 60% of software economics will shift to AI agents by 2030",
+            "cause_normalized": "goldman_sachs_projection_that_60%_of_software_economics_will_shift_to_ai_agents_by_2030",
+            "effect": "Investor revaluation of traditional SaaS companies and compression of valuation multiples",
+            "effect_normalized": "investor_revaluation_of_traditional_saas_companies",
+            "mechanism": "Forward-looking research showing structural shift in profit pools away from legacy SaaS seats toward agentic systems → investors reassess long-term viability of traditional subscription models → panic selling and negative sentiment drive down stock prices, reducing valuation multiples even for high-quality companies"
+          },
+          {
+            "cause": "Investor revaluation of traditional SaaS companies and compression of valuation multiples",
+            "cause_normalized": "investor_revaluation_of_traditional_saas_companies",
+            "effect": "Software stock valuations compress to all-time low multiples",
+            "effect_normalized": "software_stock_valuations_compress_to_all_time_low",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "goldman_sachs_projection_that_60%_of_software_economics_will_shift_to_ai_agents_by_2030 -> investor_revaluation_of_traditional_saas_companies -> software_stock_valuations_compress_to_all_time_low"
+      },
+      "terminal_effect": "software_stock_valuations_compress_to_all_time_low",
+      "mechanism": "Forward-looking research showing structural shift in profit pools away from legacy SaaS seats toward agentic systems → investors reassess long-term viability of traditional subscription models → panic selling and negative sentiment drive down stock prices, reducing valuation multiples even for high-quality companies",
+      "source_attribution": "Source 8 (steps 1-2), Source 11 (step 3)",
+      "id": "rel_e3b109be",
+      "discovered_at": "2026-02-20T14:45:21.361832",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.78,
+      "trigger_conditions": [
+        {
+          "variable": "software_sector_sentiment",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "saas_valuation_multiple",
+          "condition_type": "percentage_change",
+          "condition_value": 10,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Intensified investor concerns around AI and large language models disrupting SaaS business models",
+            "cause_normalized": "intensified_investor_concerns_around_ai_and_large_",
+            "effect": "SaaS index drawdown of 28% from October 2025 high, with valuation compression across sector",
+            "effect_normalized": "saas_index_drawdown_of_28%_from_october_2025_high,_with_valuation_compression_across_sector",
+            "mechanism": "Market reprices SaaS companies downward due to perceived threat from AI-native competitors and uncertainty about LLM impact on traditional software moats → broad-based selling pressure compresses valuations → panic selling drives multiples to historic lows"
+          },
+          {
+            "cause": "SaaS index drawdown of 28% from October 2025 high, with valuation compression across sector",
+            "cause_normalized": "saas_index_drawdown_of_28%_from_october_2025_high,_with_valuation_compression_across_sector",
+            "effect": "Software stock valuations compress to all-time low multiples",
+            "effect_normalized": "software_stock_valuations_compress_to_all_time_low",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "intensified_investor_concerns_around_ai_and_large_ -> saas_index_drawdown_of_28%_from_october_2025_high,_with_valuation_compression_across_sector -> software_stock_valuations_compress_to_all_time_low"
+      },
+      "terminal_effect": "software_stock_valuations_compress_to_all_time_low",
+      "mechanism": "Market reprices SaaS companies downward due to perceived threat from AI-native competitors and uncertainty about LLM impact on traditional software moats → broad-based selling pressure compresses valuations → panic selling drives multiples to historic lows",
+      "source_attribution": "Source 9 (steps 1-2), Source 11 (step 3)",
+      "id": "rel_bda566b1",
+      "discovered_at": "2026-02-20T14:45:22.826730",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.78,
+      "trigger_conditions": [
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 25,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "saas_index",
+          "condition_type": "percentage_change",
+          "condition_value": 28,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Earnings misses and slowdown in cloud growth reported by major tech companies",
+            "cause_normalized": "earnings_misses_and_slowdown_in_cloud_growth_repor",
+            "effect": "Broad tech and software stock rout accelerates",
+            "effect_normalized": "broad_tech_and_software_stock_rout_accelerates",
+            "mechanism": "Microsoft stock plunged due to slowdown in cloud growth; Amazon AWS performance and Alphabet's big AI spending plans assessed as earnings triggers for continued selling"
+          }
+        ],
+        "chain_summary": "earnings_misses_and_slowdown_in_cloud_growth_repor -> broad_tech_and_software_stock_rout_accelerates"
+      },
+      "terminal_effect": "broad_tech_and_software_stock_rout_accelerates",
+      "mechanism": "Microsoft stock plunged due to slowdown in cloud growth; Amazon AWS performance and Alphabet's big AI spending plans assessed as earnings triggers for continued selling",
+      "source_attribution": "Source 7",
+      "id": "rel_403d47fe",
+      "discovered_at": "2026-02-20T14:45:24.408729",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.78,
+      "trigger_conditions": [
+        {
+          "variable": "earnings_misses_and_slowdown_in_cloud_growth",
+          "condition_type": "absolute_threshold",
+          "condition_value": 2,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "tech_stock_volatility",
+          "condition_type": "percentage_change",
+          "condition_value": 8,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Analyst price target reductions in late 2025 and early 2026 combined with trader panic selling ('get me out' style)",
+            "cause_normalized": "analyst_price_target_reductions_in_late_2025_and_early_2026_combined_with_trader_panic_selling_('get_me_out'_style)",
+            "effect": "$300 billion in market value evaporated across SaaS sector in single trading session (Feb 4, 2026)",
+            "effect_normalized": "$300_billion_in_market_value_evaporated_across_saas_sector_in_single_trading_session_(feb_4,_2026)",
+            "mechanism": "Analyst downgrades trigger institutional and retail selling cascades; three-week losing streak with 15% January decline creates momentum-driven capitulation → massive single-day value destruction → indiscriminate selling continues across entire sector"
+          },
+          {
+            "cause": "$300 billion in market value evaporated across SaaS sector in single trading session (Feb 4, 2026)",
+            "cause_normalized": "$300_billion_in_market_value_evaporated_across_saas_sector_in_single_trading_session_(feb_4,_2026)",
+            "effect": "Sector-wide stock price collapse and continued market sell-off",
+            "effect_normalized": "sector_wide_stock_price_collapse_and_continued_mar",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "analyst_price_target_reductions_in_late_2025_and_early_2026_combined_with_trader_panic_selling_('get_me_out'_style) -> $300_billion_in_market_value_evaporated_across_saas_sector_in_single_trading_session_(feb_4,_2026) -> sector_wide_stock_price_collapse_and_continued_mar"
+      },
+      "terminal_effect": "sector_wide_stock_price_collapse_and_continued_mar",
+      "mechanism": "Analyst downgrades trigger institutional and retail selling cascades; three-week losing streak with 15% January decline creates momentum-driven capitulation → massive single-day value destruction → indiscriminate selling continues across entire sector",
+      "source_attribution": "Source 5 (steps 1-2), Source 2 (step 3)",
+      "id": "rel_1324e47d",
+      "discovered_at": "2026-02-20T14:45:25.882332",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.78,
+      "trigger_conditions": [
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 21
+        },
+        {
+          "variable": "vix",
+          "condition_type": "absolute_threshold",
+          "condition_value": 40,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Earnings misses and reduced profit guidance (e.g., Molina Healthcare profit forecast less than half expectations)",
+            "cause_normalized": "earnings_misses_and_reduced_profit_guidance_(e.g.,_molina_healthcare_profit_forecast_less_than_half_expectations)",
+            "effect": "Broad market selloff escalates into sector-wide stampede",
+            "effect_normalized": "broad_market_selloff_escalates_into_sector_wide_st",
+            "mechanism": "Individual company guidance misses trigger loss of confidence in sector earnings quality, causing cascading sell orders across related equities"
+          }
+        ],
+        "chain_summary": "earnings_misses_and_reduced_profit_guidance_(e.g.,_molina_healthcare_profit_forecast_less_than_half_expectations) -> broad_market_selloff_escalates_into_sector_wide_st"
+      },
+      "terminal_effect": "broad_market_selloff_escalates_into_sector_wide_st",
+      "mechanism": "Individual company guidance misses trigger loss of confidence in sector earnings quality, causing cascading sell orders across related equities",
+      "source_attribution": "Source 12",
+      "id": "rel_cf6cad21",
+      "discovered_at": "2026-02-20T14:45:28.103952",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.78,
+      "trigger_conditions": [
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 25,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 5,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Earnings reports from Microsoft, ServiceNow, and SAP released at end of January",
+            "cause_normalized": "earnings_reports_from_microsoft,_servicenow,_and_sap_released_at_end_of_january",
+            "effect": "Acceleration of SaaS stock sell-off, including 31% loss in Figma stock",
+            "effect_normalized": "acceleration_of_saas_stock_sell-off,_including_31%_loss_in_figma_stock",
+            "mechanism": "Earnings reports that were 'less than perfect' triggered immediate market reassessment of SaaS valuations and growth prospects"
+          }
+        ],
+        "chain_summary": "earnings_reports_from_microsoft,_servicenow,_and_sap_released_at_end_of_january -> acceleration_of_saas_stock_sell-off,_including_31%_loss_in_figma_stock"
+      },
+      "terminal_effect": "acceleration_of_saas_stock_sell-off,_including_31%_loss_in_figma_stock",
+      "mechanism": "Earnings reports that were 'less than perfect' triggered immediate market reassessment of SaaS valuations and growth prospects",
+      "source_attribution": "Source 10",
+      "id": "rel_97363d53",
+      "discovered_at": "2026-02-20T15:11:13.576711",
+      "validation_count": 2,
+      "relationship_type": "neutral",
+      "confidence": 0.6709999999999999,
+      "trigger_conditions": [
+        {
+          "variable": "saas_stock_valuations",
+          "condition_type": "percentage_change",
+          "condition_value": 10,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "figma_stock",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ],
+      "last_validated": "2026-02-21T05:02:35.756790"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Goldman Sachs projection that 60% of software economics will flow through agentic systems by 2030",
+            "cause_normalized": "goldman_sachs_projection_that_60%_of_software_economics_will_flow_through_agentic_systems_by_2030",
+            "effect": "Market repricing of entire SaaS sector based on structural displacement of legacy business models",
+            "effect_normalized": "market_repricing_of_entire_saas_sector_based_on_st",
+            "mechanism": "Analyst research establishing credible long-term threat to SaaS profit pools shifts investor expectations from growth to obsolescence, triggering preemptive sell-offs"
+          }
+        ],
+        "chain_summary": "goldman_sachs_projection_that_60%_of_software_economics_will_flow_through_agentic_systems_by_2030 -> market_repricing_of_entire_saas_sector_based_on_st"
+      },
+      "terminal_effect": "market_repricing_of_entire_saas_sector_based_on_st",
+      "mechanism": "Analyst research establishing credible long-term threat to SaaS profit pools shifts investor expectations from growth to obsolescence, triggering preemptive sell-offs",
+      "source_attribution": "Source 2",
+      "id": "rel_6c53bbc5",
+      "discovered_at": "2026-02-20T15:11:15.336436",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.65,
+      "trigger_conditions": [
+        {
+          "variable": "saas_sector_valuation",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "saas_sector_pe_multiple",
+          "condition_type": "absolute_threshold",
+          "condition_value": 25,
+          "condition_direction": "below",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Decade-long capital allocation based on SaaS assumptions (predictable revenue, low churn, high recovery value)",
+            "cause_normalized": "decade_long_capital_allocation_based_on_saas_assum",
+            "effect": "Indiscriminate compression of SaaS valuations affecting both strong and weak companies equally",
+            "effect_normalized": "indiscriminate_compression_of_saas_valuations_affe",
+            "mechanism": "Market structure shift: as AI agents expand, profit pool shifts from interface-based SaaS to execution-based agentic systems, invalidating the foundational investment thesis that drove capital into the sector"
+          }
+        ],
+        "chain_summary": "decade_long_capital_allocation_based_on_saas_assum -> indiscriminate_compression_of_saas_valuations_affe"
+      },
+      "terminal_effect": "indiscriminate_compression_of_saas_valuations_affe",
+      "mechanism": "Market structure shift: as AI agents expand, profit pool shifts from interface-based SaaS to execution-based agentic systems, invalidating the foundational investment thesis that drove capital into the sector",
+      "source_attribution": "Source 8",
+      "id": "rel_76435f50",
+      "discovered_at": "2026-02-20T15:11:16.742971",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.65,
+      "trigger_conditions": [
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 8,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "vix",
+          "condition_type": "absolute_threshold",
+          "condition_value": 35,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Analyst price target reductions in late 2025 and early 2026 combined with trader panic selling ('get me out' style)",
+            "cause_normalized": "analyst_price_target_reductions_in_late_2025_and_early_2026_combined_with_trader_panic_selling_('get_me_out'_style)",
+            "effect": "$300 billion in market value evaporated across SaaS sector in single trading session (Feb 4, 2026)",
+            "effect_normalized": "$300_billion_in_market_value_evaporated_across_saas_sector_in_single_trading_session_(feb_4,_2026)",
+            "mechanism": "Analyst downgrades trigger institutional and retail selling cascades; three-week losing streak with 15% January decline creates momentum-driven capitulation"
+          }
+        ],
+        "chain_summary": "analyst_price_target_reductions_in_late_2025_and_early_2026_combined_with_trader_panic_selling_('get_me_out'_style) -> $300_billion_in_market_value_evaporated_across_saas_sector_in_single_trading_session_(feb_4,_2026)"
+      },
+      "terminal_effect": "$300_billion_in_market_value_evaporated_across_saas_sector_in_single_trading_session_(feb_4,_2026)",
+      "mechanism": "Analyst downgrades trigger institutional and retail selling cascades; three-week losing streak with 15% January decline creates momentum-driven capitulation",
+      "source_attribution": "Source 12",
+      "id": "rel_ebdc660a",
+      "discovered_at": "2026-02-20T15:11:18.516594",
+      "validation_count": 2,
+      "relationship_type": "negative",
+      "confidence": 0.6709999999999999,
+      "trigger_conditions": [
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 25,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 5,
+          "condition_direction": "decrease",
+          "timeframe_days": 21
+        }
+      ],
+      "last_validated": "2026-02-21T05:02:35.757151"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Indiscriminate market compression treating all SaaS companies equally despite differentiated competitive positions",
+            "cause_normalized": "indiscriminate_market_compression_treating_all_saa",
+            "effect": "Structurally strong SaaS firms with deep data integrations and cloud infrastructure trade at valuations disconnected from business fundamentals",
+            "effect_normalized": "structurally_strong_saas_firms_with_deep_data_inte",
+            "mechanism": "Panic selling and sector-wide repricing creates mispricing where companies with genuine structural advantages become undervalued relative to actual performance"
+          }
+        ],
+        "chain_summary": "indiscriminate_market_compression_treating_all_saa -> structurally_strong_saas_firms_with_deep_data_inte"
+      },
+      "terminal_effect": "structurally_strong_saas_firms_with_deep_data_inte",
+      "mechanism": "Panic selling and sector-wide repricing creates mispricing where companies with genuine structural advantages become undervalued relative to actual performance",
+      "source_attribution": "Source 14",
+      "id": "rel_fe052bde",
+      "discovered_at": "2026-02-20T15:11:19.854166",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.65,
+      "trigger_conditions": [
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 25,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 6,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "AI agents demonstrated capability to perform enterprise software functions",
+            "cause_normalized": "ai_agents_demonstrated_capability_to_perform_enter",
+            "effect": "Market realization that AI could replace multiple SaaS subscriptions",
+            "effect_normalized": "market_realization_that_ai_could_replace_multiple_",
+            "mechanism": "AI agents autonomously execute tasks (drafting legal documents, running financial models, managing customer relationships) previously requiring dedicated SaaS tools → companies lose justification for maintaining multiple software subscriptions, reducing SaaS revenue streams → massive sell-off as investors reprice based on threatened revenue model"
+          },
+          {
+            "cause": "Market realization that AI could replace multiple SaaS subscriptions",
+            "cause_normalized": "market_realization_that_ai_could_replace_multiple_",
+            "effect": "$300 billion market value evaporated from SaaS sector on February 4, 2026",
+            "effect_normalized": "$300_billion_market_value_evaporated_from_saas_sector_on_february_4,_2026",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "ai_agents_demonstrated_capability_to_perform_enter -> market_realization_that_ai_could_replace_multiple_ -> $300_billion_market_value_evaporated_from_saas_sector_on_february_4,_2026"
+      },
+      "terminal_effect": "$300_billion_market_value_evaporated_from_saas_sector_on_february_4,_2026",
+      "mechanism": "AI agents autonomously execute tasks (drafting legal documents, running financial models, managing customer relationships) previously requiring dedicated SaaS tools → companies lose justification for maintaining multiple software subscriptions, reducing SaaS revenue streams → massive sell-off as investors reprice based on threatened revenue model",
+      "source_attribution": "Source 10 (steps 1-2), Source 9 (step 2)",
+      "id": "rel_bce32a80",
+      "discovered_at": "2026-02-21T05:02:33.069786",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "saas_sector_valuation",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "ai_agent_capability_index",
+          "condition_type": "absolute_threshold",
+          "condition_value": 75,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Massive capital inflows into SaaS over the past decade were based on assumptions of predictable revenue and low churn",
+            "cause_normalized": "massive_capital_inflows_into_saas_over_the_past_de",
+            "effect": "Market repricing when AI agents threatened to shift profit pools away from traditional SaaS seats toward agentic systems",
+            "effect_normalized": "market_repricing_when_ai_agents_threatened_to_shif",
+            "mechanism": "Structural shift in software economics—from interface-based recurring revenue to execution-based agentic systems—invalidated the investment thesis that justified prior valuations"
+          }
+        ],
+        "chain_summary": "massive_capital_inflows_into_saas_over_the_past_de -> market_repricing_when_ai_agents_threatened_to_shif"
+      },
+      "terminal_effect": "market_repricing_when_ai_agents_threatened_to_shif",
+      "mechanism": "Structural shift in software economics—from interface-based recurring revenue to execution-based agentic systems—invalidated the investment thesis that justified prior valuations",
+      "source_attribution": "Source 6",
+      "id": "rel_850d0db3",
+      "discovered_at": "2026-02-21T05:02:34.533217",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "sp500",
+          "condition_type": "percentage_change",
+          "condition_value": 10,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "vix",
+          "condition_type": "absolute_threshold",
+          "condition_value": 35,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "S&P 500 software index declined from October 2025 high",
+            "cause_normalized": "s&p_500_software_index_declined_from_october_2025_high",
+            "effect": "28% drawdown in software sector valuations",
+            "effect_normalized": "28%_drawdown_in_software_sector_valuations",
+            "mechanism": "Broad-based selloff in software stocks as investors rotated capital to alternative sectors → Portfolio rebalancing and risk management in response to severe drawdowns; investors rotate to alternative tech sectors perceived as less impacted by AI disruption"
+          },
+          {
+            "cause": "28% drawdown in software sector valuations",
+            "cause_normalized": "28%_drawdown_in_software_sector_valuations",
+            "effect": "Long-only investors shift capital away from software to chip stocks and memory makers",
+            "effect_normalized": "long_only_investors_shift_capital_away_from_softwa",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "s&p_500_software_index_declined_from_october_2025_high -> 28%_drawdown_in_software_sector_valuations -> long_only_investors_shift_capital_away_from_softwa"
+      },
+      "terminal_effect": "long_only_investors_shift_capital_away_from_softwa",
+      "mechanism": "Broad-based selloff in software stocks as investors rotated capital to alternative sectors → Portfolio rebalancing and risk management in response to severe drawdowns; investors rotate to alternative tech sectors perceived as less impacted by AI disruption",
+      "source_attribution": "Source 13 (steps 1-2), Source 15 (steps 2-3)",
+      "id": "rel_df886001",
+      "discovered_at": "2026-02-21T05:02:35.757360",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "s&p_500_software_index",
+          "condition_type": "percentage_change",
+          "condition_value": 10,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "s&p_500_software_index",
+          "condition_type": "absolute_threshold",
+          "condition_value": 28,
+          "condition_direction": "below",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Broad market volatility with dollar strengthening and index wavering in mid-February 2026",
+            "cause_normalized": "broad_market_volatility_with_dollar_strengthening_",
+            "effect": "SaaS and software sector experiencing drawdown alongside broader market stress",
+            "effect_normalized": "saas_and_software_sector_experiencing_drawdown_alo",
+            "mechanism": "Macro headwinds including currency strength and index weakness create risk-off environment that disproportionately impacts high-valuation growth stocks like SaaS"
+          }
+        ],
+        "chain_summary": "broad_market_volatility_with_dollar_strengthening_ -> saas_and_software_sector_experiencing_drawdown_alo"
+      },
+      "terminal_effect": "saas_and_software_sector_experiencing_drawdown_alo",
+      "mechanism": "Macro headwinds including currency strength and index weakness create risk-off environment that disproportionately impacts high-valuation growth stocks like SaaS",
+      "source_attribution": "Source 14",
+      "id": "rel_962c7cd2",
+      "discovered_at": "2026-02-21T05:02:37.090454",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "dxy",
+          "condition_type": "percentage_change",
+          "condition_value": 2,
+          "condition_direction": "increase",
           "timeframe_days": 7
         }
       ]

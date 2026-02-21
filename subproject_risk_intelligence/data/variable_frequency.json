@@ -3541,24 +3541,26 @@
     },
     "investor_revaluation_of_traditional_saas_companies": {
       "first_seen": "2026-02-19T08:53:46.487583",
-      "last_seen": "2026-02-19T09:46:41.174279",
-      "chain_count": 5,
+      "last_seen": "2026-02-20T14:45:29.577308",
+      "chain_count": 6,
       "sources": [
         "Forbes",
         "Source 6 (steps 1-2), Source 3 (step 2 outcome)",
         "Source 6",
         "Source 10 (steps 1-2), Source 13 (step 2-3)",
-        "Source 10 (steps 1-2), Source 8 (steps 3-4)"
+        "Source 10 (steps 1-2), Source 8 (steps 3-4)",
+        "Source 8 (steps 1-2), Source 11 (step 3)"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "goldman_sachs_projection_that_60%_of_software_econ": {
       "first_seen": "2026-02-19T08:53:46.487583",
-      "last_seen": "2026-02-19T08:53:46.487583",
-      "chain_count": 1,
+      "last_seen": "2026-02-20T14:43:51.650888",
+      "chain_count": 2,
       "sources": [
-        "Forbes"
+        "Forbes",
+        "Goldman Sachs (via Forbes)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -4368,11 +4370,12 @@
     },
     "$300_billion_market_value_evaporated_from_saas_sector_on_february_4,_2026": {
       "first_seen": "2026-02-19T09:02:30.354983",
-      "last_seen": "2026-02-19T09:38:29.594487",
-      "chain_count": 2,
+      "last_seen": "2026-02-21T05:02:38.735274",
+      "chain_count": 3,
       "sources": [
         "Source 2, Source 1",
-        "Source 5 (steps 1-2), Source 1 (step 2-3)"
+        "Source 5 (steps 1-2), Source 1 (step 2-3)",
+        "Source 10 (steps 1-2), Source 9 (step 2)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -4438,13 +4441,14 @@
     },
     "goldman_sachs_projection_that_60%_of_software_economics_will_shift_to_ai_agents_by_2030": {
       "first_seen": "2026-02-19T09:02:30.355017",
-      "last_seen": "2026-02-19T09:46:41.174279",
-      "chain_count": 4,
+      "last_seen": "2026-02-20T14:45:29.577308",
+      "chain_count": 5,
       "sources": [
         "Source 6 (steps 1-2), Source 3 (step 2 outcome)",
         "Source 6",
         "Source 10 (steps 1-2), Source 13 (step 2-3)",
-        "Source 10 (steps 1-2), Source 8 (steps 3-4)"
+        "Source 10 (steps 1-2), Source 8 (steps 3-4)",
+        "Source 8 (steps 1-2), Source 11 (step 3)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -4462,11 +4466,12 @@
     },
     "sector_wide_stock_price_collapse_and_continued_mar": {
       "first_seen": "2026-02-19T09:02:30.355021",
-      "last_seen": "2026-02-19T09:30:51.974577",
-      "chain_count": 2,
+      "last_seen": "2026-02-20T14:45:29.577322",
+      "chain_count": 3,
       "sources": [
         "Source 4",
-        "Source 5 (step 1), Source 4 (steps 2-3)"
+        "Source 5 (step 1), Source 4 (steps 2-3)",
+        "Source 5 (steps 1-2), Source 2 (step 3)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -4708,20 +4713,23 @@
     },
     "investor_concerns_around_artificial_intelligence_a": {
       "first_seen": "2026-02-19T09:14:33.008416",
-      "last_seen": "2026-02-19T09:14:33.008416",
-      "chain_count": 1,
+      "last_seen": "2026-02-20T14:43:51.650936",
+      "chain_count": 3,
       "sources": [
-        "Yahoo Finance"
+        "Yahoo Finance",
+        "Zacks Investment Ideas / Yahoo Finance",
+        "Yahoo Finance / Zacks Investment Ideas"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "software_stocks_have_been_hit_hard_in_recent_month": {
       "first_seen": "2026-02-19T09:14:33.008416",
-      "last_seen": "2026-02-19T09:14:33.008416",
-      "chain_count": 1,
+      "last_seen": "2026-02-20T06:57:27.182118",
+      "chain_count": 2,
       "sources": [
-        "Yahoo Finance"
+        "Yahoo Finance",
+        "Zacks Investment Ideas / Yahoo Finance"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -4890,10 +4898,11 @@
     },
     "analyst_price_target_reductions_in_late_2025_and_e": {
       "first_seen": "2026-02-19T09:23:03.513954",
-      "last_seen": "2026-02-19T09:23:03.513954",
-      "chain_count": 1,
+      "last_seen": "2026-02-20T09:21:32.855018",
+      "chain_count": 2,
       "sources": [
-        "Yahoo Finance - Salesforce Analysis"
+        "Yahoo Finance - Salesforce Analysis",
+        "Forbes"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -5317,12 +5326,14 @@
     },
     "software_stock_valuations_compress_to_all_time_low": {
       "first_seen": "2026-02-19T09:25:10.707557",
-      "last_seen": "2026-02-19T09:30:51.974595",
-      "chain_count": 3,
+      "last_seen": "2026-02-20T14:45:29.577313",
+      "chain_count": 5,
       "sources": [
         "Source 12",
         "Source 7 (steps 1-2), Source 12 (step 3)",
-        "Source 12 (steps 1-2), Source 2 (step 3)"
+        "Source 12 (steps 1-2), Source 2 (step 3)",
+        "Source 8 (steps 1-2), Source 11 (step 3)",
+        "Source 9 (steps 1-2), Source 11 (step 3)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -5549,11 +5560,12 @@
     },
     "intensified_investor_concerns_around_ai_and_large_": {
       "first_seen": "2026-02-19T09:29:20.589005",
-      "last_seen": "2026-02-19T09:38:29.594508",
-      "chain_count": 2,
+      "last_seen": "2026-02-20T14:45:29.577313",
+      "chain_count": 4,
       "sources": [
         "Zacks Investment Ideas / Yahoo Finance",
-        "Source 4"
+        "Source 4",
+        "Source 9 (steps 1-2), Source 11 (step 3)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -5581,8 +5593,8 @@
     },
     "saas_company_loan_defaults_estimated_at_13%_annual": {
       "first_seen": "2026-02-19T09:29:20.589012",
-      "last_seen": "2026-02-19T09:29:20.589012",
-      "chain_count": 1,
+      "last_seen": "2026-02-20T09:21:32.855064",
+      "chain_count": 3,
       "sources": [
         "Yahoo Finance"
       ],
@@ -5674,20 +5686,22 @@
     },
     "saas_and_tech_stock_prices_decline_sharply": {
       "first_seen": "2026-02-19T09:36:55.217296",
-      "last_seen": "2026-02-19T09:36:55.217296",
-      "chain_count": 1,
+      "last_seen": "2026-02-20T09:23:26.107931",
+      "chain_count": 2,
       "sources": [
-        "Yahoo Finance"
+        "Yahoo Finance",
+        "Source 12"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "ai_disruption_fears_and_sector_rotation_away_from_": {
       "first_seen": "2026-02-19T09:36:55.217296",
-      "last_seen": "2026-02-19T09:36:55.217296",
-      "chain_count": 1,
+      "last_seen": "2026-02-20T09:23:26.107931",
+      "chain_count": 2,
       "sources": [
-        "Yahoo Finance"
+        "Yahoo Finance",
+        "Source 12"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -5774,20 +5788,23 @@
     },
     "software_stocks_hit_hard_with_significant_drawdown": {
       "first_seen": "2026-02-19T09:36:55.217359",
-      "last_seen": "2026-02-19T09:36:55.217359",
-      "chain_count": 1,
+      "last_seen": "2026-02-20T09:23:26.107926",
+      "chain_count": 2,
       "sources": [
-        "Yahoo Finance"
+        "Yahoo Finance",
+        "Source 11"
       ],
       "is_anchor": false,
       "anchor_theme": null
     },
     "intensified_investor_concerns_around_artificial_in": {
       "first_seen": "2026-02-19T09:36:55.217359",
-      "last_seen": "2026-02-19T09:36:55.217359",
-      "chain_count": 1,
+      "last_seen": "2026-02-20T15:09:49.069428",
+      "chain_count": 3,
       "sources": [
-        "Yahoo Finance"
+        "Yahoo Finance",
+        "Source 11",
+        "Zacks Investment Ideas / Yahoo Finance"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -5864,10 +5881,11 @@
     },
     "saas_index_drawdown_of_28%_from_october_2025_high,_with_valuation_compression_across_sector": {
       "first_seen": "2026-02-19T09:38:29.594508",
-      "last_seen": "2026-02-19T09:38:29.594508",
-      "chain_count": 1,
+      "last_seen": "2026-02-20T14:45:29.577313",
+      "chain_count": 2,
       "sources": [
-        "Source 4"
+        "Source 4",
+        "Source 9 (steps 1-2), Source 11 (step 3)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -6195,10 +6213,11 @@
     },
     "long_only_investors_shift_capital_away_from_softwa": {
       "first_seen": "2026-02-19T09:46:41.174304",
-      "last_seen": "2026-02-19T09:46:41.174304",
-      "chain_count": 1,
+      "last_seen": "2026-02-21T05:02:38.735296",
+      "chain_count": 2,
       "sources": [
-        "Source 12"
+        "Source 12",
+        "Source 13 (steps 1-2), Source 15 (steps 2-3)"
       ],
       "is_anchor": false,
       "anchor_theme": null
@@ -7472,7 +7491,2349 @@
       ],
       "is_anchor": false,
       "anchor_theme": null
+    },
+    "ai_disruption_fears_and_concerns_that_ai_agents_ca": {
+      "first_seen": "2026-02-20T06:57:27.181995",
+      "last_seen": "2026-02-20T14:45:29.577289",
+      "chain_count": 2,
+      "sources": [
+        "Yahoo Finance / Market on Close",
+        "Source 6"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_stock_selloff_and_market_meltdown_termed_'saa": {
+      "first_seen": "2026-02-20T06:57:27.181995",
+      "last_seen": "2026-02-20T06:57:27.181995",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Market on Close"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "earnings_misses_and_slowdown_in_cloud_growth_repor": {
+      "first_seen": "2026-02-20T06:57:27.182019",
+      "last_seen": "2026-02-20T14:45:29.577317",
+      "chain_count": 2,
+      "sources": [
+        "Yahoo Finance",
+        "Source 7"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "broad_tech_and_software_stock_rout_accelerates": {
+      "first_seen": "2026-02-20T06:57:27.182019",
+      "last_seen": "2026-02-20T14:45:29.577317",
+      "chain_count": 2,
+      "sources": [
+        "Yahoo Finance",
+        "Source 7"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "steep_nine-month_decline_in_software_stock_valuati": {
+      "first_seen": "2026-02-20T06:57:27.182030",
+      "last_seen": "2026-02-20T06:57:27.182030",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance Canada"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "reassessment_of_software_terminal_value_and_shorte": {
+      "first_seen": "2026-02-20T06:57:27.182030",
+      "last_seen": "2026-02-20T06:57:27.182030",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance Canada"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "continued_tech_sector_sell-off_and_investor_uncert": {
+      "first_seen": "2026-02-20T06:57:27.182039",
+      "last_seen": "2026-02-20T06:57:27.182039",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "labor_market_weakness_signals_(rising_jobless_clai": {
+      "first_seen": "2026-02-20T06:57:27.182039",
+      "last_seen": "2026-02-20T06:57:27.182039",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_conditions_align_with_anticipated_crash_sce": {
+      "first_seen": "2026-02-20T06:57:27.182047",
+      "last_seen": "2026-02-20T06:57:27.182047",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "structural_capital_flow_shift:_buffett's_massive_c": {
+      "first_seen": "2026-02-20T06:57:27.182047",
+      "last_seen": "2026-02-20T06:57:27.182047",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "2024_baas_(banking-as-a-service)_platform_failures": {
+      "first_seen": "2026-02-20T06:57:27.182055",
+      "last_seen": "2026-02-20T06:57:27.182055",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "venture_capital_exhibits_increased_caution_toward_": {
+      "first_seen": "2026-02-20T06:57:27.182055",
+      "last_seen": "2026-02-20T06:57:27.182055",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_buyers_experience_decision_paralysis_and_redu": {
+      "first_seen": "2026-02-20T06:57:27.182062",
+      "last_seen": "2026-02-20T06:57:27.182062",
+      "chain_count": 1,
+      "sources": [
+        "Forbes Business Council"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "rapid_product_evolution_and_increasing_technical_c": {
+      "first_seen": "2026-02-20T06:57:27.182062",
+      "last_seen": "2026-02-20T06:57:27.182062",
+      "chain_count": 1,
+      "sources": [
+        "Forbes Business Council"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "venture_capital_becomes_substantially_more_cautiou": {
+      "first_seen": "2026-02-20T06:57:27.182068",
+      "last_seen": "2026-02-20T06:57:27.182068",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "high-profile_bankruptcies_in_asset-light_hospitali": {
+      "first_seen": "2026-02-20T06:57:27.182068",
+      "last_seen": "2026-02-20T06:57:27.182068",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "escalation_of_due_diligence_standards_across_ventu": {
+      "first_seen": "2026-02-20T06:57:27.182075",
+      "last_seen": "2026-02-20T06:57:27.182075",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "climate_tech_and_other_saas-adjacent_sectors_exper": {
+      "first_seen": "2026-02-20T06:57:27.182075",
+      "last_seen": "2026-02-20T06:57:27.182075",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "concentration_of_venture_capital_flows_toward_ai-n": {
+      "first_seen": "2026-02-20T06:57:27.182081",
+      "last_seen": "2026-02-20T06:57:27.182081",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "traditional_saas_vendors_and_incremental_software_": {
+      "first_seen": "2026-02-20T06:57:27.182081",
+      "last_seen": "2026-02-20T06:57:27.182081",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "broader_saas_industry_valuation_multiple_contracti": {
+      "first_seen": "2026-02-20T06:57:27.182088",
+      "last_seen": "2026-02-20T06:57:27.182088",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "individual_saas_companies_trading_at_outsized_valu": {
+      "first_seen": "2026-02-20T06:57:27.182088",
+      "last_seen": "2026-02-20T06:57:27.182088",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "analyst_upgrades_and_fair_value_estimate_revisions": {
+      "first_seen": "2026-02-20T06:57:27.182094",
+      "last_seen": "2026-02-20T06:57:27.182094",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "stock_price_decline_(20%_ytd_for_fis)_following_an": {
+      "first_seen": "2026-02-20T06:57:27.182094",
+      "last_seen": "2026-02-20T06:57:27.182094",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "hype_and_market_sentiment_around_ai-driven_saas_co": {
+      "first_seen": "2026-02-20T06:57:27.182100",
+      "last_seen": "2026-02-20T06:57:27.182100",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "stock_valuations_become_disconnected_from_reasonab": {
+      "first_seen": "2026-02-20T06:57:27.182100",
+      "last_seen": "2026-02-20T06:57:27.182100",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "stock_price_remains_soft_despite_growth_potential": {
+      "first_seen": "2026-02-20T06:57:27.182106",
+      "last_seen": "2026-02-20T06:57:27.182106",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "execution_risk_and_delayed_business_transformation": {
+      "first_seen": "2026-02-20T06:57:27.182106",
+      "last_seen": "2026-02-20T06:57:27.182106",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_signals_selective_repricing_of_saas_valuati": {
+      "first_seen": "2026-02-20T06:57:27.182112",
+      "last_seen": "2026-02-20T06:57:27.182112",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "divergence_between_growth_rates_and_valuation_mult": {
+      "first_seen": "2026-02-20T06:57:27.182112",
+      "last_seen": "2026-02-20T06:57:27.182112",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "software_stocks_experiencing_steep_decline_over_ni": {
+      "first_seen": "2026-02-20T06:57:27.182125",
+      "last_seen": "2026-02-20T06:57:27.182125",
+      "chain_count": 1,
+      "sources": [
+        "Motley Fool Canada / Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "terminal_value_of_software_businesses_expected_to_": {
+      "first_seen": "2026-02-20T06:57:27.182125",
+      "last_seen": "2026-02-20T06:57:27.182125",
+      "chain_count": 1,
+      "sources": [
+        "Motley Fool Canada / Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "enghouse_systems_revenue_declined_and_experienced_": {
+      "first_seen": "2026-02-20T06:57:27.182131",
+      "last_seen": "2026-02-20T06:57:27.182131",
+      "chain_count": 1,
+      "sources": [
+        "Motley Fool Canada / Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "stock_down_almost_80%_from_all-time_high_despite_m": {
+      "first_seen": "2026-02-20T06:57:27.182131",
+      "last_seen": "2026-02-20T06:57:27.182131",
+      "chain_count": 1,
+      "sources": [
+        "Motley Fool Canada / Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "software_company_average_billings_growth_underwhel": {
+      "first_seen": "2026-02-20T06:57:27.182137",
+      "last_seen": "2026-02-20T06:57:27.182137",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "stock_identified_as_facing_trouble_and_recommended": {
+      "first_seen": "2026-02-20T06:57:27.182137",
+      "last_seen": "2026-02-20T06:57:27.182137",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "broad_market_volatility_with_dollar_strengthening_": {
+      "first_seen": "2026-02-20T06:57:27.182143",
+      "last_seen": "2026-02-21T05:02:38.735301",
+      "chain_count": 2,
+      "sources": [
+        "Wall Street Journal",
+        "Source 14"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_and_software_sector_experiencing_drawdown_alo": {
+      "first_seen": "2026-02-20T06:57:27.182143",
+      "last_seen": "2026-02-21T05:02:38.735301",
+      "chain_count": 2,
+      "sources": [
+        "Wall Street Journal",
+        "Source 14"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "67%_of_s&p_500_software_companies_beat_revenue_exp": {
+      "first_seen": "2026-02-20T09:14:06.861713",
+      "last_seen": "2026-02-20T09:14:06.861713",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "traders_dump_software_stocks_despite_earnings_beat": {
+      "first_seen": "2026-02-20T09:14:06.861713",
+      "last_seen": "2026-02-20T09:14:06.861713",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "sentiment_escalates_from_bearish_to_doomsday,_trig": {
+      "first_seen": "2026-02-20T09:14:06.861736",
+      "last_seen": "2026-02-20T09:14:06.861736",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_fears_erupt_regarding_saas_business_model_disru": {
+      "first_seen": "2026-02-20T09:14:06.861736",
+      "last_seen": "2026-02-20T09:14:06.861736",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "concerns_that_ai_will_make_saas_workflows_and_busi": {
+      "first_seen": "2026-02-20T09:14:06.861747",
+      "last_seen": "2026-02-20T09:14:06.861747",
+      "chain_count": 1,
+      "sources": [
+        "Bank of America"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "s&p_500_software_and_services_index_drops_4.6%,_lo": {
+      "first_seen": "2026-02-20T09:14:06.861747",
+      "last_seen": "2026-02-20T09:14:06.861747",
+      "chain_count": 1,
+      "sources": [
+        "Bank of America"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "belief_that_customers_could_develop_in-house_ai_so": {
+      "first_seen": "2026-02-20T09:14:06.861756",
+      "last_seen": "2026-02-20T09:14:06.861756",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_stocks_face_sustained_selling_pressure_as_inv": {
+      "first_seen": "2026-02-20T09:14:06.861756",
+      "last_seen": "2026-02-20T09:14:06.861756",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "disconnect_between_what_enterprise_software_ceos_c": {
+      "first_seen": "2026-02-20T09:14:06.861764",
+      "last_seen": "2026-02-20T09:14:06.861764",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Futurum Research"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "institutional_contradiction:_analyst_disagreement_": {
+      "first_seen": "2026-02-20T09:14:06.861764",
+      "last_seen": "2026-02-20T09:14:06.861764",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Futurum Research"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "escalation_of_due_diligence_standards_in_venture_c": {
+      "first_seen": "2026-02-20T09:14:06.861772",
+      "last_seen": "2026-02-20T09:21:32.855021",
+      "chain_count": 2,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "reduced_funding_velocity_and_increased_scrutiny_of": {
+      "first_seen": "2026-02-20T09:14:06.861772",
+      "last_seen": "2026-02-20T09:21:32.855021",
+      "chain_count": 2,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_companies_face_pressure_to_demonstrate_unit_e": {
+      "first_seen": "2026-02-20T09:14:06.861778",
+      "last_seen": "2026-02-20T09:14:06.861778",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "shift_toward_profitability-focused_investment_thes": {
+      "first_seen": "2026-02-20T09:14:06.861778",
+      "last_seen": "2026-02-20T09:14:06.861778",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "investor_caution_following_high-profile_bankruptci": {
+      "first_seen": "2026-02-20T09:14:06.861785",
+      "last_seen": "2026-02-20T09:14:06.861785",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "increased_selectivity_in_funding_decisions_and_hig": {
+      "first_seen": "2026-02-20T09:14:06.861785",
+      "last_seen": "2026-02-20T09:14:06.861785",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "record_fundraising_and_capital_formation_in_privat": {
+      "first_seen": "2026-02-20T09:14:06.861791",
+      "last_seen": "2026-02-20T09:21:32.855032",
+      "chain_count": 2,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "capital_concentration_among_established_players_an": {
+      "first_seen": "2026-02-20T09:14:06.861791",
+      "last_seen": "2026-02-20T09:14:06.861791",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "geographic_concentration_of_venture_capital_toward": {
+      "first_seen": "2026-02-20T09:14:06.861797",
+      "last_seen": "2026-02-20T09:14:06.861797",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "reduced_capital_availability_for_emerging_saas_com": {
+      "first_seen": "2026-02-20T09:14:06.861797",
+      "last_seen": "2026-02-20T09:14:06.861797",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "microsoft_stock_weakness_presents_buying_opportuni": {
+      "first_seen": "2026-02-20T09:14:06.861804",
+      "last_seen": "2026-02-20T09:14:06.861804",
+      "chain_count": 1,
+      "sources": [
+        "Piper Sandler (Analyst: Fitzsimmons)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_demand_exceeds_supply_in_cloud_infrastructure,_": {
+      "first_seen": "2026-02-20T09:14:06.861804",
+      "last_seen": "2026-02-20T09:14:06.861804",
+      "chain_count": 1,
+      "sources": [
+        "Piper Sandler (Analyst: Fitzsimmons)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "reverse_operating_leverage_creates_disproportionat": {
+      "first_seen": "2026-02-20T09:14:06.861811",
+      "last_seen": "2026-02-20T09:14:06.861811",
+      "chain_count": 1,
+      "sources": [
+        "The Wealth Dynasty Report (Substack)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "customer_maturity_and_workflow_internalization_at_": {
+      "first_seen": "2026-02-20T09:14:06.861811",
+      "last_seen": "2026-02-20T09:14:06.861811",
+      "chain_count": 1,
+      "sources": [
+        "The Wealth Dynasty Report (Substack)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "varonis_systems_acquires_alltrue.ai_and_issues_202": {
+      "first_seen": "2026-02-20T09:14:06.861818",
+      "last_seen": "2026-02-20T09:14:06.861818",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "stock_rises_13.2%_as_market_recognizes_expanded_ai": {
+      "first_seen": "2026-02-20T09:14:06.861818",
+      "last_seen": "2026-02-20T09:14:06.861818",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "bill_holdings_processes_~$300_billion_annually_(1%": {
+      "first_seen": "2026-02-20T09:14:06.861824",
+      "last_seen": "2026-02-20T09:14:06.861824",
+      "chain_count": 1,
+      "sources": [
+        "Value Investing Subreddit (danieljapps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "stock_presents_compelling_re-rating_opportunity_wi": {
+      "first_seen": "2026-02-20T09:14:06.861824",
+      "last_seen": "2026-02-20T09:14:06.861824",
+      "chain_count": 1,
+      "sources": [
+        "Value Investing Subreddit (danieljapps)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "strong_risk-reward_opportunity_emerges_as_company_": {
+      "first_seen": "2026-02-20T09:14:06.861831",
+      "last_seen": "2026-02-20T09:14:06.861831",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ncino's_challenges_are_abating_while_it_enters_inf": {
+      "first_seen": "2026-02-20T09:14:06.861831",
+      "last_seen": "2026-02-20T09:14:06.861831",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "s&p_500_software_index_declined_28%_from_october_2": {
+      "first_seen": "2026-02-20T09:14:06.861837",
+      "last_seen": "2026-02-20T09:14:06.861837",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Stocks in Translation"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "investor_capital_rotation_away_from_software_stock": {
+      "first_seen": "2026-02-20T09:14:06.861837",
+      "last_seen": "2026-02-20T09:14:06.861837",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Stocks in Translation"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "bdc_etfs_with_software_sector_overweighting_experi": {
+      "first_seen": "2026-02-20T09:14:06.861843",
+      "last_seen": "2026-02-20T09:14:06.861843",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "reduced_income_generation_and_nav_compression_acro": {
+      "first_seen": "2026-02-20T09:14:06.861850",
+      "last_seen": "2026-02-20T09:14:06.861850",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "falling_base_interest_rates_combined_with_high_lev": {
+      "first_seen": "2026-02-20T09:14:06.861850",
+      "last_seen": "2026-02-20T09:14:06.861850",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "software_stocks_hit_hard_despite_historically_attr": {
+      "first_seen": "2026-02-20T09:14:06.861856",
+      "last_seen": "2026-02-20T09:14:06.861856",
+      "chain_count": 1,
+      "sources": [
+        "Zacks Investment Ideas / Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "broad_market_selloff_escalates_into_sector-wide_st": {
+      "first_seen": "2026-02-20T09:14:06.861862",
+      "last_seen": "2026-02-20T09:14:06.861862",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "earnings_misses_and_reduced_profit_guidance_(e.g.,": {
+      "first_seen": "2026-02-20T09:14:06.861862",
+      "last_seen": "2026-02-20T09:14:06.861862",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "enterprise_customers_question_need_for_multiple_sa": {
+      "first_seen": "2026-02-20T09:21:32.854983",
+      "last_seen": "2026-02-20T09:21:32.854983",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_agents_demonstrating_capability_to_automate_com": {
+      "first_seen": "2026-02-20T09:21:32.854983",
+      "last_seen": "2026-02-20T09:21:32.854983",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "institutional_capital_flows_shift_away_from_legacy": {
+      "first_seen": "2026-02-20T09:21:32.855001",
+      "last_seen": "2026-02-20T09:21:32.855001",
+      "chain_count": 1,
+      "sources": [
+        "Goldman Sachs / Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_realization_that_ai_agents_will_capture_dis": {
+      "first_seen": "2026-02-20T09:21:32.855001",
+      "last_seen": "2026-02-20T09:21:32.855001",
+      "chain_count": 1,
+      "sources": [
+        "Goldman Sachs / Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_revenue_growth_slows_and_falls_short_of_earni": {
+      "first_seen": "2026-02-20T09:21:32.855009",
+      "last_seen": "2026-02-20T09:21:32.855009",
+      "chain_count": 1,
+      "sources": [
+        "SaaStr / Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "82%_of_companies_reducing_number_of_saas_suppliers": {
+      "first_seen": "2026-02-20T09:21:32.855009",
+      "last_seen": "2026-02-20T09:21:32.855009",
+      "chain_count": 1,
+      "sources": [
+        "SaaStr / Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "indiscriminate_market_compression_treating_all_saa": {
+      "first_seen": "2026-02-20T09:21:32.855013",
+      "last_seen": "2026-02-20T15:11:21.106625",
+      "chain_count": 2,
+      "sources": [
+        "Forbes",
+        "Source 14"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "structurally_strong_saas_firms_with_deep_data_inte": {
+      "first_seen": "2026-02-20T09:21:32.855013",
+      "last_seen": "2026-02-20T15:11:21.106625",
+      "chain_count": 2,
+      "sources": [
+        "Forbes",
+        "Source 14"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "$300_billion_in_market_value_evaporated_across_saa": {
+      "first_seen": "2026-02-20T09:21:32.855018",
+      "last_seen": "2026-02-20T09:21:32.855018",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "reduced_capital_availability_for_unprofitable_saas": {
+      "first_seen": "2026-02-20T09:21:32.855025",
+      "last_seen": "2026-02-20T09:21:32.855025",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "shift_toward_disciplined_unit_economics_and_profit": {
+      "first_seen": "2026-02-20T09:21:32.855025",
+      "last_seen": "2026-02-20T09:21:32.855025",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "high-profile_bankruptcies_in_asset-light_business_": {
+      "first_seen": "2026-02-20T09:21:32.855029",
+      "last_seen": "2026-02-20T09:21:32.855029",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "increased_investor_caution_toward_similar_saas_and": {
+      "first_seen": "2026-02-20T09:21:32.855029",
+      "last_seen": "2026-02-20T09:21:32.855029",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "selective_capital_availability_favoring_proven_win": {
+      "first_seen": "2026-02-20T09:21:32.855032",
+      "last_seen": "2026-02-20T09:21:32.855032",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "investor_preference_for_ai-native_platforms_with_c": {
+      "first_seen": "2026-02-20T09:21:32.855036",
+      "last_seen": "2026-02-20T09:21:32.855036",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "reallocation_of_saas_funding_toward_ai-enabled_sol": {
+      "first_seen": "2026-02-20T09:21:32.855036",
+      "last_seen": "2026-02-20T09:21:32.855036",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_disruption_fears_accumulating_in_market_percept": {
+      "first_seen": "2026-02-20T09:21:32.855040",
+      "last_seen": "2026-02-20T09:21:32.855040",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "broad-based_trader_selling_across_entire_saas_sect": {
+      "first_seen": "2026-02-20T09:21:32.855040",
+      "last_seen": "2026-02-20T14:43:51.650915",
+      "chain_count": 2,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "analyst_price_target_reductions_despite_long-term_": {
+      "first_seen": "2026-02-20T09:21:32.855043",
+      "last_seen": "2026-02-20T15:09:49.069358",
+      "chain_count": 2,
+      "sources": [
+        "Yahoo Finance / Varonis Analysis",
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "weaker-than-anticipated_renewal_rates_in_legacy_on": {
+      "first_seen": "2026-02-20T09:21:32.855043",
+      "last_seen": "2026-02-20T15:09:49.069358",
+      "chain_count": 3,
+      "sources": [
+        "Yahoo Finance / Varonis Analysis",
+        "Truist/Susquehanna",
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "limited_visibility_into_near-term_saas_growth_dura": {
+      "first_seen": "2026-02-20T09:21:32.855047",
+      "last_seen": "2026-02-20T09:21:32.855047",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Thryv Holdings Analysis"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "analyst_downgrade_with_cautious_stance_on_valuatio": {
+      "first_seen": "2026-02-20T09:21:32.855047",
+      "last_seen": "2026-02-20T09:21:32.855047",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Thryv Holdings Analysis"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "institutional_skepticism_toward_software_stocks_ha": {
+      "first_seen": "2026-02-20T09:21:32.855050",
+      "last_seen": "2026-02-20T09:21:32.855050",
+      "chain_count": 1,
+      "sources": [
+        "Jefferies (Bloomberg reporting)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "deteriorating_relative_strength_in_software_sector": {
+      "first_seen": "2026-02-20T09:21:32.855050",
+      "last_seen": "2026-02-21T05:00:38.300495",
+      "chain_count": 3,
+      "sources": [
+        "Jefferies (Bloomberg reporting)",
+        "Jefferies (Bloomberg)",
+        "Jefferies / Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "fair_value_estimates_trimmed_significantly_(e.g.,_": {
+      "first_seen": "2026-02-20T09:21:32.855054",
+      "last_seen": "2026-02-20T09:21:32.855054",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Roper Technologies Analysis"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "slower_revenue_growth_assumptions_replacing_prior_": {
+      "first_seen": "2026-02-20T09:21:32.855054",
+      "last_seen": "2026-02-20T09:21:32.855054",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Roper Technologies Analysis"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "28%_drawdown_in_software_sector_by_february_2026": {
+      "first_seen": "2026-02-20T09:21:32.855057",
+      "last_seen": "2026-02-20T09:21:32.855057",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "s&p_500_software_index_declined_from_october_2025_": {
+      "first_seen": "2026-02-20T09:21:32.855057",
+      "last_seen": "2026-02-21T05:00:38.300439",
+      "chain_count": 3,
+      "sources": [
+        "Yahoo Finance",
+        "Yahoo Finance / Stocks in Translation"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "continued_stock_price_decline_despite_positive_ear": {
+      "first_seen": "2026-02-20T09:21:32.855060",
+      "last_seen": "2026-02-20T09:21:32.855060",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_implementation_announcements_without_correspond": {
+      "first_seen": "2026-02-20T09:21:32.855060",
+      "last_seen": "2026-02-20T09:21:32.855060",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "bdc_etfs_with_software_sector_exposure_experience_": {
+      "first_seen": "2026-02-20T09:21:32.855064",
+      "last_seen": "2026-02-20T09:21:32.855064",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "valuation_compression_and_stock_price_declines_acr": {
+      "first_seen": "2026-02-20T09:21:32.855067",
+      "last_seen": "2026-02-20T09:21:32.855067",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance Canada"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "investor_concerns_about_terminal_value_shortening_": {
+      "first_seen": "2026-02-20T09:21:32.855067",
+      "last_seen": "2026-02-20T09:21:32.855067",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance Canada"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "long-only_investors_shift_portfolio_allocation_awa": {
+      "first_seen": "2026-02-20T09:21:32.855070",
+      "last_seen": "2026-02-20T09:21:32.855070",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "capital_rotation_from_software_to_semiconductor_an": {
+      "first_seen": "2026-02-20T09:21:32.855070",
+      "last_seen": "2026-02-20T09:21:32.855070",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_agents_automating_white_collar_work_and_softwar": {
+      "first_seen": "2026-02-20T09:23:26.107909",
+      "last_seen": "2026-02-20T09:23:26.107909",
+      "chain_count": 1,
+      "sources": [
+        "Source 7"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_stock_sell-off_and_market_panic_in_february_2026": {
+      "first_seen": "2026-02-20T09:23:26.107909",
+      "last_seen": "2026-02-20T09:23:26.107909",
+      "chain_count": 1,
+      "sources": [
+        "Source 7"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "acceleration_of_saas_stock_sell-off,_including_31%": {
+      "first_seen": "2026-02-20T14:43:51.650855",
+      "last_seen": "2026-02-20T14:43:51.650855",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "earnings_reports_from_microsoft,_servicenow,_and_s": {
+      "first_seen": "2026-02-20T14:43:51.650855",
+      "last_seen": "2026-02-20T14:43:51.650855",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_agents_demonstrating_capability_to_replace_mult": {
+      "first_seen": "2026-02-20T14:43:51.650876",
+      "last_seen": "2026-02-20T14:43:51.650876",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "$300_billion_market_value_evaporated_across_saas_s": {
+      "first_seen": "2026-02-20T14:43:51.650876",
+      "last_seen": "2026-02-20T14:43:51.650876",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "decade-long_capital_allocation_based_on_saas_assum": {
+      "first_seen": "2026-02-20T14:43:51.650884",
+      "last_seen": "2026-02-20T14:43:51.650884",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "indiscriminate_compression_of_saas_valuations_affe": {
+      "first_seen": "2026-02-20T14:43:51.650884",
+      "last_seen": "2026-02-20T15:11:21.106619",
+      "chain_count": 2,
+      "sources": [
+        "Forbes",
+        "Source 8"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_repricing_of_entire_saas_sector_based_on_st": {
+      "first_seen": "2026-02-20T14:43:51.650888",
+      "last_seen": "2026-02-20T15:11:21.106614",
+      "chain_count": 2,
+      "sources": [
+        "Goldman Sachs (via Forbes)",
+        "Source 2"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "stampede-like_market_behavior_amplifying_losses_be": {
+      "first_seen": "2026-02-20T14:43:51.650893",
+      "last_seen": "2026-02-20T14:43:51.650893",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "falling_stock_prices_creating_psychological_urgenc": {
+      "first_seen": "2026-02-20T14:43:51.650893",
+      "last_seen": "2026-02-20T14:43:51.650893",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "selective_funding_concentration_in_proven_business": {
+      "first_seen": "2026-02-20T14:43:51.650897",
+      "last_seen": "2026-02-20T14:43:51.650897",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "venture_capital_pullback_and_increased_due_diligen": {
+      "first_seen": "2026-02-20T14:43:51.650897",
+      "last_seen": "2026-02-20T14:43:51.650897",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "record_fundraising_and_capital_accumulation_by_ins": {
+      "first_seen": "2026-02-20T14:43:51.650901",
+      "last_seen": "2026-02-20T14:43:51.650901",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "continued_venture_capital_availability_despite_pul": {
+      "first_seen": "2026-02-20T14:43:51.650901",
+      "last_seen": "2026-02-20T14:43:51.650901",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "reallocation_of_venture_capital_from_traditional_s": {
+      "first_seen": "2026-02-20T14:43:51.650904",
+      "last_seen": "2026-02-20T14:43:51.650904",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "shift_in_vc_investment_thesis_toward_ai-native_pla": {
+      "first_seen": "2026-02-20T14:43:51.650904",
+      "last_seen": "2026-02-20T14:43:51.650904",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "escalation_of_due_diligence_standards_across_all_s": {
+      "first_seen": "2026-02-20T14:43:51.650908",
+      "last_seen": "2026-02-20T14:43:51.650908",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "climate_tech_sector_remaining_relatively_shielded_": {
+      "first_seen": "2026-02-20T14:43:51.650908",
+      "last_seen": "2026-02-20T14:43:51.650908",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "continued_structural_dependence_on_venture_capital": {
+      "first_seen": "2026-02-20T14:43:51.650911",
+      "last_seen": "2026-02-20T14:43:51.650911",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "persistent_venture-first_startup_culture_despite_p": {
+      "first_seen": "2026-02-20T14:43:51.650911",
+      "last_seen": "2026-02-20T14:43:51.650911",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_disruption_fears_accumulating_in_market_narrati": {
+      "first_seen": "2026-02-20T14:43:51.650915",
+      "last_seen": "2026-02-20T14:43:51.650915",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "institutional_bearish_positioning_labeled_'saaspoc": {
+      "first_seen": "2026-02-20T14:43:51.650919",
+      "last_seen": "2026-02-20T14:43:51.650919",
+      "chain_count": 1,
+      "sources": [
+        "Jefferies"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "jefferies_equity_desk_identified_deteriorating_rel": {
+      "first_seen": "2026-02-20T14:43:51.650919",
+      "last_seen": "2026-02-20T14:43:51.650919",
+      "chain_count": 1,
+      "sources": [
+        "Jefferies"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "analyst_consensus_shifted_from_confidence_in_saas_": {
+      "first_seen": "2026-02-20T14:43:51.650922",
+      "last_seen": "2026-02-20T14:43:51.650922",
+      "chain_count": 1,
+      "sources": [
+        "William Blair"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "william_blair_downgraded_thryv_from_'outperform'_t": {
+      "first_seen": "2026-02-20T14:43:51.650922",
+      "last_seen": "2026-02-20T14:43:51.650922",
+      "chain_count": 1,
+      "sources": [
+        "William Blair"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "susquehanna_and_truist_reduced_price_targets_despi": {
+      "first_seen": "2026-02-20T14:43:51.650926",
+      "last_seen": "2026-02-20T14:43:51.650926",
+      "chain_count": 1,
+      "sources": [
+        "Truist/Susquehanna"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "discount_rate_increased_and_valuation_support_erod": {
+      "first_seen": "2026-02-20T14:43:51.650929",
+      "last_seen": "2026-02-20T14:43:51.650929",
+      "chain_count": 1,
+      "sources": [
+        "Simply Wall St/Analyst consensus"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "analyst_downgrade_citing_limited_near-term_visibil": {
+      "first_seen": "2026-02-20T14:43:51.650929",
+      "last_seen": "2026-02-20T14:43:51.650929",
+      "chain_count": 1,
+      "sources": [
+        "Simply Wall St/Analyst consensus"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "28%_drawdown_in_software_sector_valuations": {
+      "first_seen": "2026-02-20T14:43:51.650933",
+      "last_seen": "2026-02-21T05:02:38.735296",
+      "chain_count": 2,
+      "sources": [
+        "Yahoo Finance / Stocks in Translation",
+        "Source 13 (steps 1-2), Source 15 (steps 2-3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "software_stocks_hit_hard_in_recent_months_with_val": {
+      "first_seen": "2026-02-20T14:43:51.650936",
+      "last_seen": "2026-02-20T14:43:51.650936",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Zacks Investment Ideas"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_implementation_by_major_saas_players_(e.g.,_sho": {
+      "first_seen": "2026-02-20T14:43:51.650939",
+      "last_seen": "2026-02-20T14:43:51.650939",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Stocks in Translation"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "stock_still_declines_despite_positive_earnings_and": {
+      "first_seen": "2026-02-20T14:43:51.650939",
+      "last_seen": "2026-02-20T14:43:51.650939",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Stocks in Translation"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "long-only_investors_shifting_capital_away_from_sof": {
+      "first_seen": "2026-02-20T14:43:51.650943",
+      "last_seen": "2026-02-20T14:43:51.650943",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Stocks in Translation"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "sustained_selling_pressure_in_saas_index_and_indiv": {
+      "first_seen": "2026-02-20T14:43:51.650943",
+      "last_seen": "2026-02-20T14:43:51.650943",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Stocks in Translation"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "software_sector_valuation_compression_and_'broad_p": {
+      "first_seen": "2026-02-20T14:43:51.650946",
+      "last_seen": "2026-02-20T14:43:51.650946",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Zacks Investment Ideas"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "software_stocks_trading_at_historically_low_multip": {
+      "first_seen": "2026-02-20T14:43:51.650946",
+      "last_seen": "2026-02-20T14:43:51.650946",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Zacks Investment Ideas"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_stock_selloff_and_market_meltdown_termed_'saaspocalypse'": {
+      "first_seen": "2026-02-20T14:45:29.577289",
+      "last_seen": "2026-02-20T14:45:29.577289",
+      "chain_count": 1,
+      "sources": [
+        "Source 6"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "$300_billion_in_market_value_evaporated_across_saas_sector_in_single_trading_session_(feb_4,_2026)": {
+      "first_seen": "2026-02-20T14:45:29.577322",
+      "last_seen": "2026-02-20T15:11:21.106622",
+      "chain_count": 2,
+      "sources": [
+        "Source 5 (steps 1-2), Source 2 (step 3)",
+        "Source 12"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "analyst_price_target_reductions_in_late_2025_and_early_2026_combined_with_trader_panic_selling_('get_me_out'_style)": {
+      "first_seen": "2026-02-20T14:45:29.577322",
+      "last_seen": "2026-02-20T15:11:21.106622",
+      "chain_count": 2,
+      "sources": [
+        "Source 5 (steps 1-2), Source 2 (step 3)",
+        "Source 12"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "broad_market_selloff_escalates_into_sector_wide_st": {
+      "first_seen": "2026-02-20T14:45:29.577326",
+      "last_seen": "2026-02-20T14:45:29.577326",
+      "chain_count": 1,
+      "sources": [
+        "Source 12"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "earnings_misses_and_reduced_profit_guidance_(e.g.,_molina_healthcare_profit_forecast_less_than_half_expectations)": {
+      "first_seen": "2026-02-20T14:45:29.577326",
+      "last_seen": "2026-02-20T14:45:29.577326",
+      "chain_count": 1,
+      "sources": [
+        "Source 12"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_realization_that_ai_could_replace_multiple_": {
+      "first_seen": "2026-02-20T15:09:49.069061",
+      "last_seen": "2026-02-21T05:02:38.735274",
+      "chain_count": 2,
+      "sources": [
+        "Forbes",
+        "Source 10 (steps 1-2), Source 9 (step 2)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_agents_demonstrated_capability_to_perform_enter": {
+      "first_seen": "2026-02-20T15:09:49.069061",
+      "last_seen": "2026-02-21T05:02:38.735274",
+      "chain_count": 2,
+      "sources": [
+        "Forbes",
+        "Source 10 (steps 1-2), Source 9 (step 2)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "traders_shifted_perception_that_saas_companies_wou": {
+      "first_seen": "2026-02-20T15:09:49.069142",
+      "last_seen": "2026-02-20T15:09:49.069142",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "deepseek_lowered_ai_infrastructure_costs,_making_a": {
+      "first_seen": "2026-02-20T15:09:49.069142",
+      "last_seen": "2026-02-20T15:09:49.069142",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_revenue_growth_slowed_and_fell_short_of_earni": {
+      "first_seen": "2026-02-20T15:09:49.069176",
+      "last_seen": "2026-02-20T15:09:49.069176",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "cfos_began_cutting_saas_tools_with_lower_roi_as_co": {
+      "first_seen": "2026-02-20T15:09:49.069176",
+      "last_seen": "2026-02-20T15:09:49.069176",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "massive_capital_inflows_into_saas_over_the_past_de": {
+      "first_seen": "2026-02-20T15:09:49.069199",
+      "last_seen": "2026-02-21T05:02:38.735291",
+      "chain_count": 2,
+      "sources": [
+        "Forbes",
+        "Source 6"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_repricing_when_ai_agents_threatened_to_shif": {
+      "first_seen": "2026-02-20T15:09:49.069199",
+      "last_seen": "2026-02-21T05:02:38.735291",
+      "chain_count": 2,
+      "sources": [
+        "Forbes",
+        "Source 6"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "high-quality_saas_companies_with_structural_advant": {
+      "first_seen": "2026-02-20T15:09:49.069218",
+      "last_seen": "2026-02-20T15:09:49.069218",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "analyst_uncertainty_about_ai's_impact_on_saas_comb": {
+      "first_seen": "2026-02-20T15:09:49.069218",
+      "last_seen": "2026-02-20T15:09:49.069218",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "shortage_of_ipo_liquidity_events_since_2022": {
+      "first_seen": "2026-02-20T15:09:49.069237",
+      "last_seen": "2026-02-20T15:09:49.069237",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "limited_partners_(lps)_have_not_received_returns,_": {
+      "first_seen": "2026-02-20T15:09:49.069237",
+      "last_seen": "2026-02-20T15:09:49.069237",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "venture_capital_funding_pullback_across_sectors_in": {
+      "first_seen": "2026-02-20T15:09:49.069255",
+      "last_seen": "2026-02-20T15:09:49.069255",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "global_vc_fundraising_market_tracking_worst_year_s": {
+      "first_seen": "2026-02-20T15:09:49.069255",
+      "last_seen": "2026-02-20T15:09:49.069255",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "high-profile_hospitality_company_bankruptcies_and_": {
+      "first_seen": "2026-02-20T15:09:49.069273",
+      "last_seen": "2026-02-20T15:09:49.069273",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "investors_become_substantially_more_cautious_about": {
+      "first_seen": "2026-02-20T15:09:49.069273",
+      "last_seen": "2026-02-20T15:09:49.069273",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "capital_allocation_becomes_bifurcated,_with_ai_rec": {
+      "first_seen": "2026-02-20T15:09:49.069292",
+      "last_seen": "2026-02-20T15:09:49.069292",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "concentration_of_mega-rounds_in_ai_with_early-stag": {
+      "first_seen": "2026-02-20T15:09:49.069292",
+      "last_seen": "2026-02-20T15:09:49.069292",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "institutional_contradiction:_lp_expectations_for_a": {
+      "first_seen": "2026-02-20T15:09:49.069310",
+      "last_seen": "2026-02-20T15:09:49.069310",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "lps_forced_to_rethink_manager_selection_and_portfo": {
+      "first_seen": "2026-02-20T15:09:49.069310",
+      "last_seen": "2026-02-20T15:09:49.069310",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "widespread_trader_selling_of_saas_stocks_despite_e": {
+      "first_seen": "2026-02-20T15:09:49.069341",
+      "last_seen": "2026-02-20T15:09:49.069341",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg via Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_disruption_fears_and_long-term_prospect_concern": {
+      "first_seen": "2026-02-20T15:09:49.069341",
+      "last_seen": "2026-02-20T15:09:49.069341",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg via Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "challenging_growth_dynamics_in_saas_segment_during": {
+      "first_seen": "2026-02-20T15:09:49.069377",
+      "last_seen": "2026-02-20T15:09:49.069377",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "william_blair_downgrade_from_'outperform'_to_'mark": {
+      "first_seen": "2026-02-20T15:09:49.069377",
+      "last_seen": "2026-02-20T15:09:49.069377",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "limited_visibility_into_near-term_growth_and_busin": {
+      "first_seen": "2026-02-20T15:09:49.069394",
+      "last_seen": "2026-02-20T15:09:49.069394",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "increased_discount_rate_and_downgrade_reinforcing_": {
+      "first_seen": "2026-02-20T15:09:49.069394",
+      "last_seen": "2026-02-20T15:09:49.069394",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "extended_timeline_required_to_repair_sector_sentim": {
+      "first_seen": "2026-02-20T15:09:49.069411",
+      "last_seen": "2026-02-20T15:09:49.069411",
+      "chain_count": 1,
+      "sources": [
+        "Jefferies (Bloomberg)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "software_stocks_hit_hard_in_recent_months_with_sig": {
+      "first_seen": "2026-02-20T15:09:49.069428",
+      "last_seen": "2026-02-20T15:09:49.069428",
+      "chain_count": 1,
+      "sources": [
+        "Zacks Investment Ideas / Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "bdc_etfs_experience_-23%_drawdown_over_past_few_mo": {
+      "first_seen": "2026-02-20T15:09:49.069444",
+      "last_seen": "2026-02-20T15:09:49.069444",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "private_credit_default_risks_emerging_in_2026": {
+      "first_seen": "2026-02-20T15:09:49.069444",
+      "last_seen": "2026-02-20T15:09:49.069444",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "individual_stock_plunges_33%,_triggering_broader_m": {
+      "first_seen": "2026-02-20T15:09:49.069461",
+      "last_seen": "2026-02-20T15:09:49.069461",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "earnings_forecast_significantly_below_wall_street_": {
+      "first_seen": "2026-02-20T15:09:49.069461",
+      "last_seen": "2026-02-20T15:09:49.069461",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "downward_pressure_on_bitcoin_persists_through_year": {
+      "first_seen": "2026-02-20T15:09:49.069478",
+      "last_seen": "2026-02-20T15:09:49.069478",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "bitcoin_trading_as_leveraged_software_equity_rathe": {
+      "first_seen": "2026-02-20T15:09:49.069478",
+      "last_seen": "2026-02-20T15:09:49.069478",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "valuation_compression_across_software_sector_(some": {
+      "first_seen": "2026-02-20T15:09:49.069495",
+      "last_seen": "2026-02-20T15:09:49.069495",
+      "chain_count": 1,
+      "sources": [
+        "Zacks Investment Ideas / Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "structural_repricing_of_growth_expectations_create": {
+      "first_seen": "2026-02-20T15:09:49.069495",
+      "last_seen": "2026-02-20T15:09:49.069495",
+      "chain_count": 1,
+      "sources": [
+        "Zacks Investment Ideas / Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "earnings_reports_from_microsoft,_servicenow,_and_sap_released_at_end_of_january": {
+      "first_seen": "2026-02-20T15:11:21.106597",
+      "last_seen": "2026-02-20T15:11:21.106597",
+      "chain_count": 1,
+      "sources": [
+        "Source 10"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "acceleration_of_saas_stock_sell-off,_including_31%_loss_in_figma_stock": {
+      "first_seen": "2026-02-20T15:11:21.106597",
+      "last_seen": "2026-02-20T15:11:21.106597",
+      "chain_count": 1,
+      "sources": [
+        "Source 10"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "goldman_sachs_projection_that_60%_of_software_economics_will_flow_through_agentic_systems_by_2030": {
+      "first_seen": "2026-02-20T15:11:21.106614",
+      "last_seen": "2026-02-20T15:11:21.106614",
+      "chain_count": 1,
+      "sources": [
+        "Source 2"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "decade_long_capital_allocation_based_on_saas_assum": {
+      "first_seen": "2026-02-20T15:11:21.106619",
+      "last_seen": "2026-02-20T15:11:21.106619",
+      "chain_count": 1,
+      "sources": [
+        "Source 8"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "global_software_stock_selloff_enters_second_day_wi": {
+      "first_seen": "2026-02-21T05:00:38.300137",
+      "last_seen": "2026-02-21T05:00:38.300137",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "anthropic_announcement_regarding_ai_disruption_to_": {
+      "first_seen": "2026-02-21T05:00:38.300137",
+      "last_seen": "2026-02-21T05:00:38.300137",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "industry_titans_fell_double_digits_despite_meeting": {
+      "first_seen": "2026-02-21T05:00:38.300205",
+      "last_seen": "2026-02-21T05:00:38.300205",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Motley Fool"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "major_software_companies_(microsoft,_servicenow,_s": {
+      "first_seen": "2026-02-21T05:00:38.300205",
+      "last_seen": "2026-02-21T05:00:38.300205",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Motley Fool"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "deteriorating_relative_strength_in_software_stocks": {
+      "first_seen": "2026-02-21T05:00:38.300231",
+      "last_seen": "2026-02-21T05:00:38.300231",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg / Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "bearish_sentiment_among_institutional_traders_esca": {
+      "first_seen": "2026-02-21T05:00:38.300231",
+      "last_seen": "2026-02-21T05:00:38.300231",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg / Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "internally_inconsistent_valuation_logic_driving_ir": {
+      "first_seen": "2026-02-21T05:00:38.300251",
+      "last_seen": "2026-02-21T05:00:38.300251",
+      "chain_count": 1,
+      "sources": [
+        "Bank of America"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_pricing_in_two_mutually_exclusive_ai_scenar": {
+      "first_seen": "2026-02-21T05:00:38.300251",
+      "last_seen": "2026-02-21T05:00:38.300251",
+      "chain_count": 1,
+      "sources": [
+        "Bank of America"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "valuation_multiples_collapse_despite_companies_bea": {
+      "first_seen": "2026-02-21T05:00:38.300267",
+      "last_seen": "2026-02-21T05:00:38.300267",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance Canada"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "terminal_value_compression_thesis:_belief_that_saa": {
+      "first_seen": "2026-02-21T05:00:38.300267",
+      "last_seen": "2026-02-21T05:00:38.300267",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance Canada"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "increased_interest_expenses_for_corporations,_slow": {
+      "first_seen": "2026-02-21T05:00:38.300282",
+      "last_seen": "2026-02-21T05:00:38.300282",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "federal_reserve_raises_interest_rates": {
+      "first_seen": "2026-02-21T05:00:38.300282",
+      "last_seen": "2026-02-21T05:00:38.300282",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "fed_signals_potential_rate_hikes_in_2026_(reversin": {
+      "first_seen": "2026-02-21T05:00:38.300298",
+      "last_seen": "2026-02-21T05:00:38.300298",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "investor_disappointment_and_shift_in_market_expect": {
+      "first_seen": "2026-02-21T05:00:38.300298",
+      "last_seen": "2026-02-21T05:00:38.300298",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "fed_lowers_policy_rates_by_75_basis_points_(normal": {
+      "first_seen": "2026-02-21T05:00:38.300312",
+      "last_seen": "2026-02-21T05:00:38.300312",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "stabilization_of_labor_market_and_downward_trend_i": {
+      "first_seen": "2026-02-21T05:00:38.300312",
+      "last_seen": "2026-02-21T05:00:38.300312",
+      "chain_count": 1,
+      "sources": [
+        "Forbes"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "growth_stocks_and_tech_sector_remain_resilient_des": {
+      "first_seen": "2026-02-21T05:00:38.300339",
+      "last_seen": "2026-02-21T05:00:38.300339",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "ai_investment_capital_expenditure_boom_continues_d": {
+      "first_seen": "2026-02-21T05:00:38.300339",
+      "last_seen": "2026-02-21T05:00:38.300339",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "institutional_contradiction:_bca_research_warns_of": {
+      "first_seen": "2026-02-21T05:00:38.300354",
+      "last_seen": "2026-02-21T05:00:38.300354",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "market_consensus_remains_bullish_despite_recession": {
+      "first_seen": "2026-02-21T05:00:38.300354",
+      "last_seen": "2026-02-21T05:00:38.300354",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "investor_wariness_of_unprofitable_companies_and_sa": {
+      "first_seen": "2026-02-21T05:00:38.300369",
+      "last_seen": "2026-02-21T05:00:38.300369",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / SoundHound AI Bull Case"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "rising_interest_rates_and_spac_market_collapse": {
+      "first_seen": "2026-02-21T05:00:38.300369",
+      "last_seen": "2026-02-21T05:00:38.300369",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / SoundHound AI Bull Case"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "excessive_cash_burn_and_mounting_losses_at_unprofi": {
+      "first_seen": "2026-02-21T05:00:38.300384",
+      "last_seen": "2026-02-21T05:00:38.300384",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Stefan Waldhauser (Named Analyst)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "unsustainable_valuation_driven_by_ai_hype_becomes_": {
+      "first_seen": "2026-02-21T05:00:38.300384",
+      "last_seen": "2026-02-21T05:00:38.300384",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Stefan Waldhauser (Named Analyst)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "increased_perceived_risk_and_higher_discount_rates": {
+      "first_seen": "2026-02-21T05:00:38.300398",
+      "last_seen": "2026-02-21T05:00:38.300398",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Simply Wall St"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "fair_value_estimates_decline_despite_operational_i": {
+      "first_seen": "2026-02-21T05:00:38.300398",
+      "last_seen": "2026-02-21T05:00:38.300398",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Simply Wall St"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "limited_near-term_visibility_and_cautious_analyst_": {
+      "first_seen": "2026-02-21T05:00:38.300411",
+      "last_seen": "2026-02-21T05:00:38.300411",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Simply Wall St"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "downgrade_reinforces_bearish_sentiment_on_valuatio": {
+      "first_seen": "2026-02-21T05:00:38.300411",
+      "last_seen": "2026-02-21T05:00:38.300411",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Simply Wall St"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "neutral_rating_maintained_despite_competitive_stre": {
+      "first_seen": "2026-02-21T05:00:38.300425",
+      "last_seen": "2026-02-21T05:00:38.300425",
+      "chain_count": 1,
+      "sources": [
+        "JPMorgan (Named Analyst Firm)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "current_valuation_limits_near-term_return_potentia": {
+      "first_seen": "2026-02-21T05:00:38.300425",
+      "last_seen": "2026-02-21T05:00:38.300425",
+      "chain_count": 1,
+      "sources": [
+        "JPMorgan (Named Analyst Firm)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "saas_index_drawdown_of_approximately_28%": {
+      "first_seen": "2026-02-21T05:00:38.300439",
+      "last_seen": "2026-02-21T05:00:38.300439",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Stocks in Translation"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "intensified_investor_concerns_about_ai_and_llm_imp": {
+      "first_seen": "2026-02-21T05:00:38.300454",
+      "last_seen": "2026-02-21T05:00:38.300454",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg / Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "widespread_trader_dumping_of_software_stocks_acros": {
+      "first_seen": "2026-02-21T05:00:38.300454",
+      "last_seen": "2026-02-21T05:00:38.300454",
+      "chain_count": 1,
+      "sources": [
+        "Bloomberg / Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "capital_reallocation_from_software_to_chip/hardwar": {
+      "first_seen": "2026-02-21T05:00:38.300467",
+      "last_seen": "2026-02-21T05:00:38.300467",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Stocks in Translation"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "accelerated_relative_weakness_in_software_sector_p": {
+      "first_seen": "2026-02-21T05:00:38.300467",
+      "last_seen": "2026-02-21T05:00:38.300467",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance / Stocks in Translation"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "individual_saas_stock_underperformance_relative_to": {
+      "first_seen": "2026-02-21T05:00:38.300482",
+      "last_seen": "2026-02-21T05:00:38.300482",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "servicetitan_stock_price_decline_of_39.5%_year-ove": {
+      "first_seen": "2026-02-21T05:00:38.300482",
+      "last_seen": "2026-02-21T05:00:38.300482",
+      "chain_count": 1,
+      "sources": [
+        "Yahoo Finance"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "extended_drawdown_period_requiring_long_recovery_t": {
+      "first_seen": "2026-02-21T05:00:38.300495",
+      "last_seen": "2026-02-21T05:00:38.300495",
+      "chain_count": 1,
+      "sources": [
+        "Jefferies / Bloomberg"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
+    },
+    "s&p_500_software_index_declined_from_october_2025_high": {
+      "first_seen": "2026-02-21T05:02:38.735296",
+      "last_seen": "2026-02-21T05:02:38.735296",
+      "chain_count": 1,
+      "sources": [
+        "Source 13 (steps 1-2), Source 15 (steps 2-3)"
+      ],
+      "is_anchor": false,
+      "anchor_theme": null
     }
   },
-  "last_updated": "2026-02-20T02:26:13.348914"
+  "last_updated": "2026-02-21T05:02:38.735334"
 }

@@ -254,7 +254,8 @@ class WebSearchAdapter:
         extract_type: str,
         gap_category: str = None,
         missing_description: str = None,
-        topic: str = None
+        topic: str = None,
+        extraction_focus: str = None
     ) -> Dict[str, Any]:
         """
         Extract structured data from search results using Haiku.
@@ -292,11 +293,12 @@ class WebSearchAdapter:
             )
         elif extract_type == "logic_chains":
             prompt_template = EXTRACT_LOGIC_CHAINS_PROMPT
+            focus_suffix = f"\n\nEXTRACTION FOCUS: Prioritize chains related to: {extraction_focus}" if extraction_focus else ""
             user_prompt = prompt_template.format(
                 query=query,
                 topic=topic or query,
                 search_results=search_results
-            )
+            ) + focus_suffix
         else:
             raise ValueError(f"Unknown extract_type: {extract_type}")
 
@@ -487,7 +489,8 @@ class WebSearchAdapter:
         query: str,
         topic: str,
         min_tier: int = 2,
-        verify_quotes: bool = True
+        verify_quotes: bool = True,
+        extraction_focus: str = None
     ) -> Dict[str, Any]:
         """
         Search trusted sources and extract logic chains.
@@ -556,7 +559,8 @@ class WebSearchAdapter:
             query,
             formatted_results,
             extract_type="logic_chains",
-            topic=topic
+            topic=topic,
+            extraction_focus=extraction_focus
         )
 
         chains = extracted.get("chains", [])

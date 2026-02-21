@@ -2,7 +2,7 @@
   "metadata": {
     "created_at": "2026-02-19T08:55:37.892743",
     "last_checked": null,
-    "total_predictions": 45
+    "total_predictions": 65
   },
   "predictions": [
     {
@@ -1585,6 +1585,686 @@
           "variable": "BTC weekly close",
           "condition": "Above $70,000",
           "meaning": "Technical reversal confirmed"
+        }
+      ],
+      "status": "pending",
+      "outcome": null
+    },
+    {
+      "prediction_id": "a7ba9b860a536cd25f629251871db1f0",
+      "created_at": "2026-02-20",
+      "query": "What caused the SaaS meltdown in Feb 2026?",
+      "asset_class": "btc",
+      "track_title": "Tech Sector Contagion: SaaS Meltdown Spillover to Risk Assets",
+      "direction": "bearish",
+      "magnitude_min": -30.0,
+      "magnitude_max": -15.0,
+      "time_horizon_days": 60,
+      "check_date": "2026-04-21",
+      "confidence": 0.72,
+      "causal_mechanism": "saas_meltdown_$300B_evaporation → tech_sector_risk_off → nasdaq_weakness → crypto_correlation_selloff → btc_pressure",
+      "related_chain_ids": [],
+      "monitoring_variables": [
+        {
+          "variable": "IGV Software Index",
+          "condition": "Further decline below current -16.3% monthly drawdown",
+          "meaning": "Continued SaaS contagion spreading to broader tech"
+        },
+        {
+          "variable": "NASDAQ correlation to BTC",
+          "condition": "30-day correlation > 0.7",
+          "meaning": "Confirms risk-on/risk-off linkage active"
+        },
+        {
+          "variable": "VIX",
+          "condition": "Sustained above 25",
+          "meaning": "Elevated fear driving cross-asset deleveraging"
+        }
+      ],
+      "status": "pending",
+      "outcome": null
+    },
+    {
+      "prediction_id": "dfc92505290af7e460cac6751ac6d0bc",
+      "created_at": "2026-02-20",
+      "query": "What caused the SaaS meltdown in Feb 2026?",
+      "asset_class": "btc",
+      "track_title": "AI Disruption Narrative: Digital Gold Hedge Against Tech Obsolescence",
+      "direction": "bullish",
+      "magnitude_min": 20.0,
+      "magnitude_max": 50.0,
+      "time_horizon_days": 135,
+      "check_date": "2026-07-05",
+      "confidence": 0.55,
+      "causal_mechanism": "ai_agents_disrupting_software_business_models → investor_flight_from_tech_equities → search_for_non_correlated_assets → btc_as_digital_gold_narrative → btc_inflows",
+      "related_chain_ids": [],
+      "monitoring_variables": [
+        {
+          "variable": "Stablecoin inflows to exchanges",
+          "condition": "Weekly inflows > $2B sustained",
+          "meaning": "Capital rotating from equities to crypto"
+        },
+        {
+          "variable": "BTC-NASDAQ correlation",
+          "condition": "30-day correlation < 0.3",
+          "meaning": "Decoupling confirms safe haven narrative"
+        },
+        {
+          "variable": "Gold price",
+          "condition": "Gold rallying alongside BTC",
+          "meaning": "Confirms flight-to-safety thesis"
+        }
+      ],
+      "status": "pending",
+      "outcome": null
+    },
+    {
+      "prediction_id": "07977767e06d269e7d31066c1d4fe556",
+      "created_at": "2026-02-20",
+      "query": "What caused the SaaS meltdown in Feb 2026?",
+      "asset_class": "btc",
+      "track_title": "Credit Stress Transmission: SaaS Loan Defaults to Broader Risk Repricing",
+      "direction": "bearish",
+      "magnitude_min": -40.0,
+      "magnitude_max": -20.0,
+      "time_horizon_days": 75,
+      "check_date": "2026-05-06",
+      "confidence": 0.58,
+      "causal_mechanism": "saas_loan_defaults_13%_annually → bdc_nav_drawdowns → credit_market_stress → risk_premium_expansion → crypto_deleveraging",
+      "related_chain_ids": [],
+      "monitoring_variables": [
+        {
+          "variable": "BDC ETF NAV performance",
+          "condition": "NAV declines > 10% from current levels",
+          "meaning": "Credit stress intensifying"
+        },
+        {
+          "variable": "High yield spreads",
+          "condition": "HY spreads widen > 200bps",
+          "meaning": "Credit risk repricing accelerating"
+        },
+        {
+          "variable": "SaaS loan default rate",
+          "condition": "Defaults exceed 13% estimate",
+          "meaning": "Credit stress worse than expected"
+        }
+      ],
+      "status": "pending",
+      "outcome": null
+    },
+    {
+      "prediction_id": "01e8e781637728b65068b0564949a222",
+      "created_at": "2026-02-20",
+      "query": "What caused the SaaS meltdown in Feb 2026?",
+      "asset_class": "btc",
+      "track_title": "Valuation Reset Completion: Software Capitulation Creates Risk-On Rotation",
+      "direction": "bullish",
+      "magnitude_min": 30.0,
+      "magnitude_max": 80.0,
+      "time_horizon_days": 270,
+      "check_date": "2026-11-17",
+      "confidence": 0.62,
+      "causal_mechanism": "saas_p/s_compression_9x_to_6x → 40%_stocks_at_historic_lows → capitulation_exhaustion → sector_rotation_reversal → risk_appetite_recovery → btc_rally",
+      "related_chain_ids": [],
+      "monitoring_variables": [
+        {
+          "variable": "Software P/S ratio",
+          "condition": "Stabilization at 6x or below for 4+ weeks",
+          "meaning": "Valuation floor established"
+        },
+        {
+          "variable": "IGV relative strength vs SPY",
+          "condition": "Relative strength turning positive",
+          "meaning": "Sector rotation reversing"
+        },
+        {
+          "variable": "Salesforce valuation",
+          "condition": "Trading at <15x forward earnings",
+          "meaning": "Bellwether at capitulation levels"
+        }
+      ],
+      "status": "pending",
+      "outcome": null
+    },
+    {
+      "prediction_id": "5704139fa57f481217bba706977cd535",
+      "created_at": "2026-02-20",
+      "query": "What caused the SaaS meltdown in Feb 2026?",
+      "asset_class": "btc",
+      "track_title": "Institutional Capital Reallocation: Software-to-Semis-to-Crypto Pipeline",
+      "direction": "bullish",
+      "magnitude_min": 15.0,
+      "magnitude_max": 40.0,
+      "time_horizon_days": 180,
+      "check_date": "2026-08-19",
+      "confidence": 0.48,
+      "causal_mechanism": "capital_rotation_software_to_semiconductors → soxx_outperformance → ai_infrastructure_narrative → crypto_as_ai_adjacent_play → btc_institutional_inflows",
+      "related_chain_ids": [],
+      "monitoring_variables": [
+        {
+          "variable": "SOXX performance",
+          "condition": "Continued outperformance vs IGV (currently +3.2% vs -16.3% monthly)",
+          "meaning": "Capital rotation to AI infrastructure active"
+        },
+        {
+          "variable": "NVDA price action",
+          "condition": "New highs above $200",
+          "meaning": "AI infrastructure narrative strengthening"
+        },
+        {
+          "variable": "Crypto ETF flows",
+          "condition": "Weekly inflows > $500M sustained",
+          "meaning": "Institutional rotation reaching crypto"
+        }
+      ],
+      "status": "pending",
+      "outcome": null
+    },
+    {
+      "prediction_id": "363679600b4bb2b593a78efcd70bcead",
+      "created_at": "2026-02-20",
+      "query": "What caused the SaaS meltdown in Feb 2026?",
+      "asset_class": "btc",
+      "track_title": "Tech Sector Contagion to Crypto Risk Assets",
+      "direction": "bearish",
+      "magnitude_min": -30.0,
+      "magnitude_max": -15.0,
+      "time_horizon_days": 60,
+      "check_date": "2026-04-21",
+      "confidence": 0.72,
+      "causal_mechanism": "SaaS_meltdown_$300B_evaporation → tech_sector_risk_off → institutional_portfolio_deleveraging → crypto_correlation_selloff → BTC_downside",
+      "related_chain_ids": [],
+      "monitoring_variables": [
+        {
+          "variable": "IGV Software Index",
+          "condition": "Further decline below $75 (currently $81.88, down 17.1% 1m)",
+          "meaning": "Confirms continued tech sector stress spreading to crypto"
+        },
+        {
+          "variable": "VIX",
+          "condition": "Sustained above 25 (currently 21.14)",
+          "meaning": "Elevated volatility signals broader risk-off extending to crypto"
+        },
+        {
+          "variable": "BTC-NASDAQ correlation",
+          "condition": "Correlation > 0.7 on 30-day rolling basis",
+          "meaning": "Confirms crypto trading as tech proxy during stress"
+        }
+      ],
+      "status": "pending",
+      "outcome": null
+    },
+    {
+      "prediction_id": "c1b4bcee80e5826b8dceefaf6fb9ad89",
+      "created_at": "2026-02-20",
+      "query": "What caused the SaaS meltdown in Feb 2026?",
+      "asset_class": "btc",
+      "track_title": "AI Disruption Narrative Spillover to Crypto Infrastructure",
+      "direction": "neutral-to-bullish relative",
+      "magnitude_min": 3.0,
+      "magnitude_max": 8.0,
+      "time_horizon_days": 90,
+      "check_date": "2026-05-21",
+      "confidence": 0.58,
+      "causal_mechanism": "AI_agents_replacing_software_functions → market_questions_all_tech_business_models → crypto_infrastructure_projects_repriced → altcoin_selloff → BTC_relative_strength",
+      "related_chain_ids": [],
+      "monitoring_variables": [
+        {
+          "variable": "BTC dominance",
+          "condition": "Rise above 55% from current ~52%",
+          "meaning": "Confirms flight-to-quality within crypto"
+        },
+        {
+          "variable": "AI-related crypto tokens",
+          "condition": "Underperformance vs BTC by >20%",
+          "meaning": "AI disruption narrative spreading to crypto sector"
+        },
+        {
+          "variable": "Goldman Sachs 60% agentic systems projection",
+          "condition": "Analyst coverage extends to blockchain/crypto infrastructure",
+          "meaning": "Disruption thesis expanding to crypto"
+        }
+      ],
+      "status": "pending",
+      "outcome": null
+    },
+    {
+      "prediction_id": "0a55b81091deee9e96fa4fc518c80a77",
+      "created_at": "2026-02-20",
+      "query": "What caused the SaaS meltdown in Feb 2026?",
+      "asset_class": "btc",
+      "track_title": "Institutional Capital Rotation Creates Crypto Opportunity",
+      "direction": "bullish",
+      "magnitude_min": 20.0,
+      "magnitude_max": 50.0,
+      "time_horizon_days": 135,
+      "check_date": "2026-07-05",
+      "confidence": 0.55,
+      "causal_mechanism": "SaaS_valuation_compression_to_all_time_lows → institutional_capital_seeking_alternative_growth → crypto_as_uncorrelated_asset_class → BTC_inflows",
+      "related_chain_ids": [],
+      "monitoring_variables": [
+        {
+          "variable": "BTC ETF flows",
+          "condition": "Net inflows >$500M/week sustained",
+          "meaning": "Institutional rotation into crypto confirmed"
+        },
+        {
+          "variable": "ServiceNow valuation (24.5x forward P/E, all-time low)",
+          "condition": "SaaS multiples stabilize or compress further",
+          "meaning": "Capital seeking exits from software sector"
+        },
+        {
+          "variable": "GCM Grosvenor alternative allocation",
+          "condition": "Crypto allocation increase from $10.7B 2025 fundraise",
+          "meaning": "Institutional alternatives capital flowing to crypto"
+        }
+      ],
+      "status": "pending",
+      "outcome": null
+    },
+    {
+      "prediction_id": "935407b70b9d97d005c8e6cb3e21cb21",
+      "created_at": "2026-02-20",
+      "query": "What caused the SaaS meltdown in Feb 2026?",
+      "asset_class": "btc",
+      "track_title": "Liquidity Conditions Dominate Sector-Specific Narratives",
+      "direction": "neutral-to-bullish",
+      "magnitude_min": -10.0,
+      "magnitude_max": 15.0,
+      "time_horizon_days": 60,
+      "check_date": "2026-04-21",
+      "confidence": 0.78,
+      "causal_mechanism": "Fed_balance_sheet_stable_$6.61T → bank_reserves_adequate_$2.94T → funding_conditions_supportive → BTC_floor_established → sector_rotation_noise_absorbed",
+      "related_chain_ids": [],
+      "monitoring_variables": [
+        {
+          "variable": "Bank Reserves",
+          "condition": "Sustained above $2.8T (currently $2.94T)",
+          "meaning": "Liquidity floor supports risk assets including BTC"
+        },
+        {
+          "variable": "TGA",
+          "condition": "Drawdown from $913B current level",
+          "meaning": "Liquidity injection would support BTC"
+        },
+        {
+          "variable": "Fed Funds Rate",
+          "condition": "Further cuts from 3.64% current",
+          "meaning": "Easing cycle supports risk asset valuations"
+        }
+      ],
+      "status": "pending",
+      "outcome": null
+    },
+    {
+      "prediction_id": "8463563af82b6f2ab415b0a3110f1337",
+      "created_at": "2026-02-20",
+      "query": "What caused the SaaS meltdown in Feb 2026?",
+      "asset_class": "btc",
+      "track_title": "Momentum Capitulation Creates Buying Opportunity",
+      "direction": "bullish",
+      "magnitude_min": 25.0,
+      "magnitude_max": 60.0,
+      "time_horizon_days": 180,
+      "check_date": "2026-08-19",
+      "confidence": 0.65,
+      "causal_mechanism": "SaaS_panic_selling_'get_me_out'_style → momentum_driven_capitulation_overshoots_fundamentals → mean_reversion_across_risk_assets → BTC_recovery_with_tech",
+      "related_chain_ids": [],
+      "monitoring_variables": [
+        {
+          "variable": "IGV Software Index",
+          "condition": "Stabilization after 30% decline from peak",
+          "meaning": "Capitulation complete, mean reversion begins"
+        },
+        {
+          "variable": "Analyst downgrades",
+          "condition": "Downgrade cycle exhaustion (William Blair, Truist, Susquehanna already cut)",
+          "meaning": "Negative catalyst absorption complete"
+        },
+        {
+          "variable": "SaaS earnings reports",
+          "condition": "Actual earnings vs. fear-driven expectations (most companies hadn't reported during selloff)",
+          "meaning": "Fundamental reality check vs. narrative"
+        }
+      ],
+      "status": "pending",
+      "outcome": null
+    },
+    {
+      "prediction_id": "40f48e7579975b298677508f87c0fb14",
+      "created_at": "2026-02-20",
+      "query": "What caused the SaaS meltdown in Feb 2026?",
+      "asset_class": "btc",
+      "track_title": "Tech Sector Contagion: Software-to-Crypto Correlation Transmission",
+      "direction": "bearish",
+      "magnitude_min": -30.0,
+      "magnitude_max": -15.0,
+      "time_horizon_days": 60,
+      "check_date": "2026-04-21",
+      "confidence": 0.65,
+      "causal_mechanism": "saas_meltdown → software_sector_panic → risk_off_sentiment → correlated_asset_selloff → btc_drawdown",
+      "related_chain_ids": [],
+      "monitoring_variables": [
+        {
+          "variable": "IGV Software ETF",
+          "condition": "Further decline >10% from current levels",
+          "meaning": "Confirms continued software sector stress transmission to correlated assets"
+        },
+        {
+          "variable": "BTC-IGV 30-day correlation",
+          "condition": "Correlation >0.7",
+          "meaning": "Confirms Bitcoin behaving as leveraged software proxy"
+        },
+        {
+          "variable": "Crypto fund flows",
+          "condition": "Net outflows >$500M weekly",
+          "meaning": "Institutional deleveraging spreading to crypto"
+        }
+      ],
+      "status": "pending",
+      "outcome": null
+    },
+    {
+      "prediction_id": "9ac473b50e6e40d5598d293965fc92f7",
+      "created_at": "2026-02-20",
+      "query": "What caused the SaaS meltdown in Feb 2026?",
+      "asset_class": "btc",
+      "track_title": "Venture Capital Liquidity Crunch: Reduced Crypto Ecosystem Funding",
+      "direction": "bearish",
+      "magnitude_min": -20.0,
+      "magnitude_max": -10.0,
+      "time_horizon_days": 135,
+      "check_date": "2026-07-05",
+      "confidence": 0.55,
+      "causal_mechanism": "saas_meltdown → lp_returns_evaporate → vc_fundraising_collapse → crypto_startup_funding_drought → ecosystem_growth_slowdown → btc_demand_reduction",
+      "related_chain_ids": [],
+      "monitoring_variables": [
+        {
+          "variable": "Crypto VC quarterly funding",
+          "condition": "Decline >30% QoQ",
+          "meaning": "Confirms capital drought spreading to crypto ecosystem"
+        },
+        {
+          "variable": "IPO pipeline activity",
+          "condition": "Continued freeze in tech IPOs",
+          "meaning": "LP distributions remain blocked, constraining new fund formation"
+        },
+        {
+          "variable": "Crypto startup runway metrics",
+          "condition": "Median runway <12 months",
+          "meaning": "Ecosystem stress intensifying"
+        }
+      ],
+      "status": "pending",
+      "outcome": null
+    },
+    {
+      "prediction_id": "065c971315b7d2614b939964b3ff03be",
+      "created_at": "2026-02-20",
+      "query": "What caused the SaaS meltdown in Feb 2026?",
+      "asset_class": "btc",
+      "track_title": "AI Infrastructure Cost Deflation: Bullish for Crypto Mining Economics",
+      "direction": "bullish",
+      "magnitude_min": 10.0,
+      "magnitude_max": 25.0,
+      "time_horizon_days": 270,
+      "check_date": "2026-11-17",
+      "confidence": 0.45,
+      "causal_mechanism": "deepseek_ai_cost_reduction → compute_cost_deflation → mining_profitability_improvement → hash_rate_expansion → network_security_increase → btc_fundamental_support",
+      "related_chain_ids": [],
+      "monitoring_variables": [
+        {
+          "variable": "Bitcoin hash rate",
+          "condition": "Increase >15% from current levels",
+          "meaning": "Miners responding to improved economics"
+        },
+        {
+          "variable": "Mining profitability index",
+          "condition": "Sustained improvement >20%",
+          "meaning": "Cost deflation translating to operational benefits"
+        },
+        {
+          "variable": "AI compute pricing",
+          "condition": "Continued decline in inference costs",
+          "meaning": "Structural cost deflation persisting"
+        }
+      ],
+      "status": "pending",
+      "outcome": null
+    },
+    {
+      "prediction_id": "33d0ace759b26ce0a4e4d90dc91ac118",
+      "created_at": "2026-02-20",
+      "query": "What caused the SaaS meltdown in Feb 2026?",
+      "asset_class": "btc",
+      "track_title": "Flight from Traditional Tech: Bitcoin as Alternative Growth Allocation",
+      "direction": "bullish",
+      "magnitude_min": 20.0,
+      "magnitude_max": 50.0,
+      "time_horizon_days": 270,
+      "check_date": "2026-11-17",
+      "confidence": 0.4,
+      "causal_mechanism": "saas_valuation_collapse → institutional_tech_allocation_reduction → alternative_growth_asset_search → btc_as_tech_proxy_reallocation → btc_inflows",
+      "related_chain_ids": [],
+      "monitoring_variables": [
+        {
+          "variable": "Institutional crypto allocation surveys",
+          "condition": "Increase in planned BTC allocation >5%",
+          "meaning": "Capital rotation from traditional tech to crypto underway"
+        },
+        {
+          "variable": "BTC ETF flows",
+          "condition": "Sustained net inflows >$200M weekly",
+          "meaning": "Institutional reallocation materializing"
+        },
+        {
+          "variable": "SaaS valuation multiples",
+          "condition": "Continued compression below 20x forward earnings",
+          "meaning": "Traditional tech remaining uninvestable, pushing capital elsewhere"
+        }
+      ],
+      "status": "pending",
+      "outcome": null
+    },
+    {
+      "prediction_id": "d64df217560f6c9fbb1fffcb1bc19153",
+      "created_at": "2026-02-20",
+      "query": "What caused the SaaS meltdown in Feb 2026?",
+      "asset_class": "btc",
+      "track_title": "Credit Contagion Risk: BDC Defaults Triggering Broader Deleveraging",
+      "direction": "bearish",
+      "magnitude_min": -40.0,
+      "magnitude_max": -20.0,
+      "time_horizon_days": 60,
+      "check_date": "2026-04-21",
+      "confidence": 0.5,
+      "causal_mechanism": "private_credit_defaults → bdc_etf_drawdown → credit_market_stress → risk_asset_liquidation → btc_forced_selling",
+      "related_chain_ids": [],
+      "monitoring_variables": [
+        {
+          "variable": "High yield credit spreads",
+          "condition": "Spread widening >100bps",
+          "meaning": "Credit stress intensifying"
+        },
+        {
+          "variable": "BDC ETF flows",
+          "condition": "Continued outflows >$1B monthly",
+          "meaning": "Private credit stress persisting"
+        },
+        {
+          "variable": "VIX",
+          "condition": "Sustained >30",
+          "meaning": "Broad risk-off environment confirmed"
+        }
+      ],
+      "status": "pending",
+      "outcome": null
+    },
+    {
+      "prediction_id": "ade76533371dcfb7f2f9ed03c728bb16",
+      "created_at": "2026-02-21",
+      "query": "What caused the SaaS meltdown in Feb 2026?",
+      "asset_class": "btc",
+      "track_title": "Tech Sector Contagion to Risk Assets",
+      "direction": "bearish",
+      "magnitude_min": -30.0,
+      "magnitude_max": -15.0,
+      "time_horizon_days": 17,
+      "check_date": "2026-03-10",
+      "confidence": 0.72,
+      "causal_mechanism": "saas_meltdown_$300B_evaporation → tech_sector_risk_off → correlation_spike_across_risk_assets → btc_drawdown_as_high_beta_tech_proxy",
+      "related_chain_ids": [],
+      "monitoring_variables": [
+        {
+          "variable": "IGV Software Index",
+          "condition": "Further decline >5% from current levels (already -30% from Sept peak)",
+          "meaning": "Confirms continued tech sector stress spreading to broader risk assets"
+        },
+        {
+          "variable": "BTC-Nasdaq 30-day correlation",
+          "condition": "Correlation >0.7",
+          "meaning": "Confirms BTC trading as high-beta tech proxy during stress"
+        },
+        {
+          "variable": "VIX",
+          "condition": ">30",
+          "meaning": "Broad risk-off environment amplifying cross-asset contagion"
+        }
+      ],
+      "status": "pending",
+      "outcome": null
+    },
+    {
+      "prediction_id": "4d620e88e14af35ebd7801eaf988cfd9",
+      "created_at": "2026-02-21",
+      "query": "What caused the SaaS meltdown in Feb 2026?",
+      "asset_class": "btc",
+      "track_title": "Fed Policy Reversal Impact on Growth Assets",
+      "direction": "bearish",
+      "magnitude_min": -35.0,
+      "magnitude_max": -20.0,
+      "time_horizon_days": 60,
+      "check_date": "2026-04-22",
+      "confidence": 0.68,
+      "causal_mechanism": "fed_rate_hike_signals_jan_2026_fomc → higher_discount_rates → growth_asset_repricing → btc_as_zero_yield_asset_pressured",
+      "related_chain_ids": [],
+      "monitoring_variables": [
+        {
+          "variable": "Fed Funds Futures",
+          "condition": "Pricing in rate hikes vs current 3.64% level",
+          "meaning": "Confirms market expectations shifting hawkish"
+        },
+        {
+          "variable": "US10Y Yield",
+          "condition": ">4.5% (currently 4.08%)",
+          "meaning": "Rising yields compress growth asset valuations including BTC"
+        },
+        {
+          "variable": "FOMC Statement Language",
+          "condition": "Removal of 'patient' or 'data-dependent' language",
+          "meaning": "Signals imminent policy tightening"
+        }
+      ],
+      "status": "pending",
+      "outcome": null
+    },
+    {
+      "prediction_id": "615dfb10990c3fb1ca2ed1b3c1521c18",
+      "created_at": "2026-02-21",
+      "query": "What caused the SaaS meltdown in Feb 2026?",
+      "asset_class": "btc",
+      "track_title": "Capital Rotation from Tech to Hard Assets",
+      "direction": "bullish",
+      "magnitude_min": 15.0,
+      "magnitude_max": 40.0,
+      "time_horizon_days": 135,
+      "check_date": "2026-07-06",
+      "confidence": 0.55,
+      "causal_mechanism": "saas_terminal_value_compression → capital_rotation_from_software_to_chips/hardware → spillover_rotation_to_btc_as_digital_hard_asset",
+      "related_chain_ids": [],
+      "monitoring_variables": [
+        {
+          "variable": "BTC Dominance",
+          "condition": ">55%",
+          "meaning": "Capital rotating into BTC from altcoins/risk assets"
+        },
+        {
+          "variable": "Stablecoin Inflows to Exchanges",
+          "condition": ">$2B weekly inflows",
+          "meaning": "Sidelined capital preparing to deploy into crypto"
+        },
+        {
+          "variable": "Gold/BTC Correlation",
+          "condition": ">0.5 for 30 days",
+          "meaning": "BTC trading as hard asset rather than tech proxy"
+        }
+      ],
+      "status": "pending",
+      "outcome": null
+    },
+    {
+      "prediction_id": "19177e5b8654041d28555787b23c1c27",
+      "created_at": "2026-02-21",
+      "query": "What caused the SaaS meltdown in Feb 2026?",
+      "asset_class": "btc",
+      "track_title": "Liquidity Conditions Buffer",
+      "direction": "neutral-to-supportive",
+      "magnitude_min": null,
+      "magnitude_max": null,
+      "time_horizon_days": 30,
+      "check_date": "2026-03-23",
+      "confidence": 0.7,
+      "causal_mechanism": "bank_reserves_$2.94T_elevated → fed_balance_sheet_stable_$6.61T → ample_system_liquidity → btc_downside_cushioned",
+      "related_chain_ids": [],
+      "monitoring_variables": [
+        {
+          "variable": "Bank Reserves",
+          "condition": "<$2.5T",
+          "meaning": "Liquidity buffer eroding, increases BTC downside risk"
+        },
+        {
+          "variable": "TGA Balance",
+          "condition": ">$1T sustained",
+          "meaning": "Treasury draining liquidity from system"
+        },
+        {
+          "variable": "SOFR-Fed Funds Spread",
+          "condition": ">25bp",
+          "meaning": "Funding stress emerging despite headline liquidity"
+        }
+      ],
+      "status": "pending",
+      "outcome": null
+    },
+    {
+      "prediction_id": "71cf2165bc9936dc2177d798fb290dcc",
+      "created_at": "2026-02-21",
+      "query": "What caused the SaaS meltdown in Feb 2026?",
+      "asset_class": "btc",
+      "track_title": "AI Disruption Narrative Spillover to Crypto",
+      "direction": "bullish relative to altcoins",
+      "magnitude_min": null,
+      "magnitude_max": null,
+      "time_horizon_days": 135,
+      "check_date": "2026-07-06",
+      "confidence": 0.5,
+      "causal_mechanism": "ai_agents_replace_saas_workflows → market_reprices_software_terminal_values → narrative_extends_to_crypto_utility_tokens → btc_benefits_as_non_disruptable_store_of_value",
+      "related_chain_ids": [],
+      "monitoring_variables": [
+        {
+          "variable": "AI Token Index Performance",
+          "condition": "Underperforms BTC by >20%",
+          "meaning": "AI disruption narrative hitting crypto utility tokens"
+        },
+        {
+          "variable": "BTC Dominance",
+          "condition": ">58%",
+          "meaning": "Flight to quality within crypto"
+        },
+        {
+          "variable": "Institutional BTC Flows",
+          "condition": "Net positive while altcoin flows negative",
+          "meaning": "Institutional preference for BTC as safe haven"
         }
       ],
       "status": "pending",

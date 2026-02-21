@@ -565,11 +565,17 @@ async def process_batches_parallel(all_batches, channel_name):
 def process_batches_parallel_sync(all_batches, channel_name):
     """
     Synchronous wrapper for process_batches_parallel.
-    Uses asyncio.run() which safely creates and manages its own event loop.
-
-    This avoids event loop conflicts when called from background processes
-    or other async contexts.
+    Detects whether an event loop is already running and handles accordingly.
     """
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    if loop and loop.is_running():
+        # Already inside an async context (e.g. called from orchestrator's asyncio.run)
+        import nest_asyncio
+        nest_asyncio.apply()
     return asyncio.run(process_batches_parallel(all_batches, channel_name))
 
 

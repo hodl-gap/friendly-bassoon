@@ -77,6 +77,32 @@ Daily monitoring (cron)
 
 Python, LangGraph, Pinecone, Claude/OpenAI APIs, Yahoo Finance, FRED API, Tavily
 
+## Known Issues
+
+### 1. Categorization Drops Institutional Research (FIXED 2026-02-20)
+
+**Problem**: The `categorization_prompts.py` LLM categorizer misclassified forwarded institutional research (e.g., `[GS]` tagged analysis about hyperscaler CAPEX) as `event_announcement` instead of `data_opinion`. Since only `data_opinion` and `interview_meeting` get extracted and embedded, critical research content was silently dropped from the pipeline.
+
+**Root cause**: The `event_announcement` description ("Company events, seminars, promotional content") was vague enough that the LLM stretched "promotional content" to include forwarded research notes with institutional tags.
+
+**Fix applied**: Added clarifying notes to both `event_announcement` ("forwarded institutional research is NOT event_announcement") and `data_opinion` ("forwarded/summarized institutional research tagged [GS], [BofA], [JPM] etc. WITH interpretation is data_opinion").
+
+**Impact**: The GS analysis about AI hyperscaler CAPEX revisions, FCF pressure, and Mag7 underperformance was lost. After fix, it's correctly categorized and extracted.
+
+### 2. Cross-Language Retrieval Gap (OPEN)
+
+**Problem**: Korean-language chunks in Pinecone don't get retrieved by English-language queries even when semantically relevant. Example: a Korean GS research summary about "AI Hyperscaler 기업들의 Capex 추정치" (AI Hyperscaler CAPEX estimates) has low cosine similarity with English queries like "SaaS meltdown February 2026."
+
+**Impact**: Even after fixing categorization and embedding the CAPEX chunk, the retriever didn't pull it because the connection (CAPEX concern → tech valuation pressure → SaaS selloff) requires multi-hop reasoning, not just embedding similarity.
+
+**Potential fix**: TBD — chain tension detection was attempted but doesn't help here because the CAPEX overspending narrative is entirely absent from retrieved chains (tension detection requires both sides to already be present).
+
+## TODO
+
+- [ ] Ingest wider date range from globaletfi (Jan 27 - Feb 10) for earnings season coverage
+- [ ] Ingest additional Telegram channels for broader sell-side research coverage
+- [ ] Evaluate whether extracted metadata (English) should be concatenated with raw text (Korean) before embedding to improve cross-language retrieval
+
 ## Archive Folder
 
 The `archive/` folder contains resolved evaluation documents and historical analysis files.
