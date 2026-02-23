@@ -208,6 +208,12 @@ IMPORTANT for precedents:
 - If a source says "similar to 2008, 2020, and 2022", extract each as its own chain
 - Only include precedents that meaningfully existed in the source — do NOT fabricate
 
+Example: If a source about put/call ratio mentions Sept 2022, March 2020, and Nov 2022, return 3 separate precedent chains:
+  {{"cause": "September 2022 PCR surge to 99th percentile", "effect": "Dow rallied 20% starting one week later", "chain_type": "precedent", ...}}
+  {{"cause": "March 2020 pandemic shock PCR spike above 1.00", "effect": "PCR exceeded 1.00 for first time in 5 years amid COVID crash", "chain_type": "precedent", ...}}
+  {{"cause": "November 2022 PCR record 1.46 (7.4 std devs above mean)", "effect": "Unprecedented repeated pessimism spikes over 5 weeks", "chain_type": "precedent", ...}}
+Do NOT collapse these into one generic "high PCR historically leads to rallies" mechanism chain.
+
 Return JSON with this structure:
 
 {{

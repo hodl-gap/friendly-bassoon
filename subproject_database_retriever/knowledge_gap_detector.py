@@ -1688,8 +1688,12 @@ def merge_web_chains_with_db_chains(
 
         if pair_key not in seen_pairs and cause and effect:
             seen_pairs.add(pair_key)
+            # Normalize source_name → source for canonical schema compatibility
+            normalized = {**chain}
+            if "source_name" in normalized and "source" not in normalized:
+                normalized["source"] = normalized["source_name"]
             merged.append({
-                **chain,
+                **normalized,
                 "source_type": "web",
                 "confidence_weight": chain.get("confidence_weight", web_weight)
             })

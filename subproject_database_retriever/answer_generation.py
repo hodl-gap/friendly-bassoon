@@ -1295,7 +1295,7 @@ def regenerate_synthesis(query: str, original_synthesis: str, web_chains: list, 
     web_chains_lines = []
     for i, chain in enumerate(web_chains, 1):
         summary = chain.get("chain_summary", "")
-        source = chain.get("source", "Unknown")
+        source = chain.get("source_name", chain.get("source", "Unknown"))
         source_type = chain.get("source_type", "web")
         weight = chain.get("confidence_weight", 0.7)
         steps = chain.get("steps", [])
