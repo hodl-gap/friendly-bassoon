@@ -393,8 +393,22 @@ When `topic_not_covered` gap is detected, generates multiple factor-focused quer
 # Generates:
 #   - "SaaS AI disruption software stocks"
 #   - "hyperscaler CAPEX ROI concerns 2026"
-#   - "AI investment contradictions analyst"
+#   - "BCA Research Goldman Sachs AI capex alternative view"
 ```
+
+**Web Chain Query Angles** (`query_processing.py: expand_for_web_chain_extraction()`):
+| # | Angle | Purpose |
+|---|-------|---------|
+| 1 | Direct trigger/catalyst | What event or announcement caused this |
+| 2 | Structural enabler | Capital flows, policy decisions, market structure shifts |
+| 3 | Alternative interpretation / regime-shift thesis | Named analyst/firm reading same data with different forward-looking conclusion |
+| 4 | Quantitative impact | Dollar amounts, percentage moves, index levels |
+
+**Resynthesis Prompt Rules** (`answer_generation_prompts.py: RESYNTHESIS_PROMPT`):
+After gap filling, Sonnet integrates web chains with original synthesis. Key rules:
+- Rules 1-7: Preserve original, integrate new chains, flag contradictions, weight DB (1.0) > web (0.7)
+- **Rule 8 (Chain completeness)**: Verify full A→B→C chains. Common missing intermediate steps: real rates (nominal - inflation), yield curve dynamics (term premium, bear steepening), trade balance, fiscal deficit
+- **Rule 9 (Regime-shift consideration)**: If web chains contain credible opposing views from named institutions, present as competing scenario. Do NOT force contrarian if no evidence supports one
 
 **Configuration (`config.py`)**:
 ```python

@@ -102,6 +102,8 @@ Python, LangGraph, Pinecone, Claude/OpenAI APIs, Yahoo Finance, FRED API, Tavily
 - [ ] Ingest wider date range from globaletfi (Jan 27 - Feb 10) for earnings season coverage
 - [ ] Ingest additional Telegram channels for broader sell-side research coverage
 - [ ] Evaluate whether extracted metadata (English) should be concatenated with raw text (Korean) before embedding to improve cross-language retrieval
+- [x] Add condensed summary output alongside the full insight report. Generated mechanically from structured track data in `format_insight()` — no extra LLM call. Appended after the full report.
+- [x] Add chain completeness (Rule 8) and regime-shift consideration (Rule 9) to resynthesis prompt. Rewrite web chain angle #3 for alternative interpretations. Validated: Case 4 16→18/20, Case 6 12→14/16.
 
 ## Archive Folder
 
