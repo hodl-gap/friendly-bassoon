@@ -156,7 +156,10 @@ def build_tool_handlers(agent_state: DataGroundingAgentState) -> dict:
         }
 
     def handle_fetch_variable_data(variable_name: str, source: str = "auto") -> dict:
-        from .current_data_fetcher import resolve_variable, fetch_fred_with_history, fetch_yahoo_with_history
+        from .current_data_fetcher import (
+            resolve_variable, fetch_fred_with_history, fetch_yahoo_with_history,
+            calculate_changes, MONTHLY_FRED_SERIES, MONTHLY_LOOKBACK_DAYS, DEFAULT_LOOKBACK_DAYS,
+        )
 
         resolved = resolve_variable(variable_name)
         if not resolved:
@@ -165,27 +168,33 @@ def build_tool_handlers(agent_state: DataGroundingAgentState) -> dict:
 
         series_id = resolved["series_id"]
         data_source = resolved["source"]
+        # Use extended lookback for monthly FRED series (GDP, CPI, etc.)
+        lookback = MONTHLY_LOOKBACK_DAYS if series_id in MONTHLY_FRED_SERIES else DEFAULT_LOOKBACK_DAYS
 
         try:
-            if data_source == "fred":
-                data = fetch_fred_with_history(series_id)
+            if data_source.upper() == "FRED":
+                data = fetch_fred_with_history(series_id, lookback)
             else:
-                data = fetch_yahoo_with_history(series_id)
+                data = fetch_yahoo_with_history(series_id, lookback)
 
             if data and data.get("value") is not None:
-                agent_state.current_values[variable_name] = {
-                    "value": data["value"],
-                    "date": data.get("date", ""),
-                    "source": data_source,
-                    "series_id": series_id,
-                    "history": data.get("history", []),
-                }
+                history = data.pop("history", [])
+                changes = calculate_changes(history)
+                data["changes"] = changes
+                agent_state.current_values[variable_name] = data
+
+                change_str = ""
+                if changes.get("change_1w"):
+                    c = changes["change_1w"]
+                    change_str = f" ({c['direction']}{abs(c['percentage']):.1f}% 1w)"
+
                 return {
                     "variable": variable_name,
                     "value": data["value"],
                     "date": data.get("date", ""),
                     "source": data_source,
                     "series_id": series_id,
+                    "change_1w": change_str,
                 }
             else:
                 agent_state.fetch_errors.append(variable_name)

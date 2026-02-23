@@ -22,11 +22,10 @@ from dotenv import load_dotenv
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from shared.variable_resolver import resolve_variable as _resolve_variable
-from . import config
 
-# RiskImpactState imported lazily inside fetch_current_data() to allow
+# config and RiskImpactState imported lazily inside fetch_current_data() to allow
 # standalone imports of utility functions (resolve_variable, fetch_*_with_history)
-# from outside the package context
+# from outside the package context (e.g., database_retriever's fill_gaps_with_data)
 
 # Load environment
 load_dotenv(Path(__file__).parent.parent / ".env")
@@ -55,6 +54,11 @@ ADDITIONAL_FRED_SERIES = {
     "ig_corporate_yield": "BAMLC0A4CBBBEY",   # ICE BofA BBB Corporate Yield
     "hy_corporate_yield": "BAMLH0A0HYM2EY",   # ICE BofA US High Yield Effective Yield
     "m2": "M2SL",                               # M2 Money Supply
+    "job_vacancies": "JTSJOL",                   # JOLTS Job Openings
+    "unemployment": "UNRATE",                    # Unemployment Rate
+    "cpi": "CPIAUCSL",                           # CPI All Urban Consumers
+    "gdp": "GDP",                                # Gross Domestic Product
+    "nonfarm_payrolls": "PAYEMS",                # Total Nonfarm Payrolls
 }
 
 # FRED series that are released monthly (need extended lookback for change calculations)
@@ -63,6 +67,11 @@ MONTHLY_FRED_SERIES = {
     "TOTRESNS",    # Total Reserves - monthly
     "FEDFUNDS",    # Fed Funds Rate - monthly
     "M2SL",        # M2 Money Supply - monthly
+    "JTSJOL",      # JOLTS Job Openings - monthly
+    "UNRATE",      # Unemployment Rate - monthly
+    "CPIAUCSL",    # CPI - monthly
+    "GDP",         # GDP - quarterly
+    "PAYEMS",      # Nonfarm Payrolls - monthly
 }
 
 # Default lookback days (45 for daily/weekly, 120 for monthly)
@@ -406,7 +415,8 @@ def fetch_current_data(state: "RiskImpactState") -> "RiskImpactState":
     - btc_price: Current BTC price
     - fetch_errors: List of failed variables
     """
-    # Lazy import to allow standalone imports from outside package context
+    # Lazy imports to allow standalone imports from outside package context
+    from . import config
     from .states import RiskImpactState  # noqa: F401
 
     variables = state.get("extracted_variables", [])

@@ -69,7 +69,10 @@ def run_synthesis_phase(state: RiskImpactState, asset_class: str) -> RiskImpactS
     Step 3: If gaps found, one more Opus call with gap feedback
     Step 4: Return (possibly patched) output
     """
+    from shared.debug_logger import debug_log, debug_log_node
+
     asset_name = get_asset_config(asset_class)["name"]
+    debug_log_node("synthesis_phase", "ENTER", f"asset={asset_class} ({asset_name})")
     print(f"\n[Synthesis Phase] Starting self-checked synthesis for {asset_name}...")
 
     # Step 1: Initial analysis (reuses existing _analyze_insight)
@@ -96,17 +99,21 @@ def run_synthesis_phase(state: RiskImpactState, asset_class: str) -> RiskImpactS
         insight_output_text=insight_text,
     )
 
+    debug_log("SYNTHESIS_VERIFICATION_PROMPT", verification_prompt)
+
     verification_result = call_claude_sonnet(
         [{"role": "user", "content": verification_prompt}],
         temperature=0.1,
         max_tokens=800,
     )
 
+    debug_log("SYNTHESIS_VERIFICATION_RESULT", verification_result)
     print(f"[Synthesis Phase] Verification result:\n{verification_result[:500]}")
 
     # Step 3: Check if gaps were found
     if "NO_GAPS" in verification_result.upper():
         print("[Synthesis Phase] Verification passed — no gaps found")
+        debug_log_node("synthesis_phase", "EXIT", "verification=PASSED (no gaps)")
         return state
 
     # Step 4: Patch — re-run analysis with gap feedback appended
@@ -135,7 +142,7 @@ def run_synthesis_phase(state: RiskImpactState, asset_class: str) -> RiskImpactS
             tool_choice={"type": "tool", "name": "output_insight"},
             model=model_short,
             temperature=0.3,
-            max_tokens=6000,
+            max_tokens=8192,
             system=INSIGHT_SYSTEM_PROMPT,
         )
 
@@ -171,8 +178,10 @@ def run_synthesis_phase(state: RiskImpactState, asset_class: str) -> RiskImpactS
             state["risk_factors"] = parsed.get("key_uncertainties", [])
 
         print(f"[Synthesis Phase] Patch applied — {len(tracks)} tracks")
+        debug_log_node("synthesis_phase", "EXIT", f"verification=GAPS_FOUND, patched={len(tracks)} tracks")
 
     except Exception as e:
         print(f"[Synthesis Phase] Patch failed ({e}), keeping original")
+        debug_log_node("synthesis_phase", "EXIT", f"verification=GAPS_FOUND, patch_failed={e}")
 
     return state

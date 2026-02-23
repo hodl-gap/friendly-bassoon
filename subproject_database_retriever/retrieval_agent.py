@@ -26,6 +26,8 @@ def run_retrieval_agent(query: str, image_path: str = None) -> dict:
 
     Returns: dict compatible with RetrieverState (same fields as run_retrieval).
     """
+    from shared.debug_logger import debug_log_node
+    debug_log_node("retrieval_agent", "ENTER", f"query={query[:100]}")
     print(f"\n[Retrieval Agent] Starting agentic retrieval for: {query[:100]}...")
 
     # Initialize mutable state
@@ -50,6 +52,7 @@ def run_retrieval_agent(query: str, image_path: str = None) -> dict:
         max_iterations=retrieval_max_iterations(),
         temperature=0.2,
         max_tokens=4000,
+        phase_label="Retrieval",
     )
 
     print(f"\n[Retrieval Agent] Completed: {loop_result['exit_reason']} "
@@ -62,6 +65,12 @@ def run_retrieval_agent(query: str, image_path: str = None) -> dict:
         tool_handlers["generate_synthesis"]()
 
     # Build return state compatible with RetrieverState
+    debug_log_node("retrieval_agent", "EXIT", (
+        f"exit_reason={loop_result['exit_reason']}, "
+        f"iterations={loop_result['iterations']}, "
+        f"chunks={len(agent_state.chunks)}, "
+        f"chains={len(agent_state.logic_chains)}"
+    ))
     return {
         "query": query,
         "answer": agent_state.answer,

@@ -375,9 +375,22 @@ def _analyze_insight(state: RiskImpactState, asset_class: str = "btc") -> RiskIm
             tool_choice={"type": "tool", "name": "output_insight"},
             model=model_short,
             temperature=0.3,
-            max_tokens=6000,
+            max_tokens=8192,
             system=INSIGHT_SYSTEM_PROMPT,
         )
+
+        # Retry with higher limit if truncated
+        if getattr(response, "stop_reason", None) == "max_tokens":
+            print("[Impact Analysis] Response truncated at 8192 tokens, retrying with 12000...")
+            response = call_claude_with_tools(
+                messages=[{"role": "user", "content": prompt}],
+                tools=[insight_tool],
+                tool_choice={"type": "tool", "name": "output_insight"},
+                model=model_short,
+                temperature=0.3,
+                max_tokens=12000,
+                system=INSIGHT_SYSTEM_PROMPT,
+            )
 
         print("\n[Impact Analysis] Raw LLM Response (insight):")
         print("-" * 40)

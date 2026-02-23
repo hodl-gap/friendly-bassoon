@@ -29,10 +29,13 @@ def run_historical_context_agent(state: RiskImpactState) -> RiskImpactState:
     Returns: Updated state with historical_analogs, historical_analogs_text,
              regime_characterization_text, etc.
     """
+    from shared.debug_logger import debug_log_node
+
     if not config.ENABLE_HISTORICAL_EVENT_DETECTION:
         state["historical_event_data"] = {}
         return state
 
+    debug_log_node("historical_context_agent", "ENTER", f"query={state.get('query', '')[:100]}")
     print("\n[Historical Context Agent] Starting agentic historical analysis...")
 
     agent_state = HistoricalAgentState(state)
@@ -63,6 +66,7 @@ def run_historical_context_agent(state: RiskImpactState) -> RiskImpactState:
         max_iterations=historical_max_iterations(),
         temperature=0.2,
         max_tokens=4000,
+        phase_label="HistoricalContext",
     )
 
     print(f"\n[Historical Context Agent] Completed: {loop_result['exit_reason']} "
@@ -114,4 +118,9 @@ def run_historical_context_agent(state: RiskImpactState) -> RiskImpactState:
     print(f"[Historical Context Agent] Analogs: {analog_count}, "
           f"Regime: {'yes' if agent_state.regime_characterization_text else 'no'}")
 
+    debug_log_node("historical_context_agent", "EXIT", (
+        f"analogs={analog_count}, "
+        f"regime={'yes' if agent_state.regime_characterization_text else 'no'}, "
+        f"exit_reason={loop_result['exit_reason']}"
+    ))
     return state

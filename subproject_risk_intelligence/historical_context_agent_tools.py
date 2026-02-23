@@ -306,7 +306,7 @@ def build_tool_handlers(agent_state: HistoricalAgentState) -> dict:
         data_source = resolved["source"]
 
         try:
-            if data_source == "fred":
+            if data_source.upper() == "FRED":
                 data = fetch_fred_with_history(series_id)
             else:
                 data = fetch_yahoo_with_history(series_id)

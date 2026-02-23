@@ -27,6 +27,8 @@ def run_data_grounding_agent(state: RiskImpactState) -> RiskImpactState:
 
     Returns: Updated state with current_values, validated_patterns, etc.
     """
+    from shared.debug_logger import debug_log_node
+    debug_log_node("data_grounding_agent", "ENTER", f"query={state.get('query', '')[:100]}")
     print("\n[Data Grounding Agent] Starting agentic data grounding...")
 
     agent_state = DataGroundingAgentState(state)
@@ -55,6 +57,7 @@ def run_data_grounding_agent(state: RiskImpactState) -> RiskImpactState:
         max_iterations=data_grounding_max_iterations(),
         temperature=0.2,
         max_tokens=4000,
+        phase_label="DataGrounding",
     )
 
     print(f"\n[Data Grounding Agent] Completed: {loop_result['exit_reason']} "
@@ -75,6 +78,40 @@ def run_data_grounding_agent(state: RiskImpactState) -> RiskImpactState:
         result = fetch_current_data(temp_state)
         agent_state.current_values = result.get("current_values", {})
 
+    # Ensure always_include_variable is fetched + compute derived metrics
+    from .asset_configs import get_asset_config
+    from .current_data_fetcher import (
+        resolve_variable, fetch_fred_with_history, fetch_yahoo_with_history,
+        calculate_changes, compute_derived_metrics,
+        MONTHLY_FRED_SERIES, MONTHLY_LOOKBACK_DAYS, DEFAULT_LOOKBACK_DAYS,
+    )
+
+    asset_class = state.get("asset_class", "btc")
+    cfg = get_asset_config(asset_class)
+    primary_var = cfg["always_include_variable"]
+
+    if primary_var not in agent_state.current_values:
+        print(f"[Data Grounding Agent] Fetching always_include_variable: {primary_var}")
+        resolved = resolve_variable(primary_var)
+        if resolved:
+            series_id = resolved["series_id"]
+            data_source = resolved["source"]
+            lookback = MONTHLY_LOOKBACK_DAYS if series_id in MONTHLY_FRED_SERIES else DEFAULT_LOOKBACK_DAYS
+            if data_source.upper() == "FRED":
+                data = fetch_fred_with_history(series_id, lookback)
+            else:
+                data = fetch_yahoo_with_history(series_id, lookback)
+            if data and data.get("value") is not None:
+                history = data.pop("history", [])
+                data["changes"] = calculate_changes(history)
+                agent_state.current_values[primary_var] = data
+
+    # Compute derived metrics from fetched data
+    derived = compute_derived_metrics(agent_state.current_values)
+    if derived:
+        print(f"[Data Grounding Agent] Computed {len(derived)} derived metrics")
+        agent_state.current_values.update(derived)
+
     # Update state with gathered data
     state["extracted_variables"] = agent_state.extracted_variables
     state["current_values"] = agent_state.current_values
@@ -83,10 +120,6 @@ def run_data_grounding_agent(state: RiskImpactState) -> RiskImpactState:
     state["fetch_errors"] = agent_state.fetch_errors
 
     # Set asset_price for the target asset class
-    from .asset_configs import get_asset_config
-    asset_class = state.get("asset_class", "btc")
-    cfg = get_asset_config(asset_class)
-    primary_var = cfg["always_include_variable"]
     if primary_var in agent_state.current_values:
         state["asset_price"] = agent_state.current_values[primary_var].get("value")
     if "btc" in agent_state.current_values:
@@ -96,4 +129,10 @@ def run_data_grounding_agent(state: RiskImpactState) -> RiskImpactState:
           f"Values: {len(agent_state.current_values)}, "
           f"Patterns: {len(agent_state.validated_patterns)}")
 
+    debug_log_node("data_grounding_agent", "EXIT", (
+        f"variables={len(agent_state.extracted_variables)}, "
+        f"values={len(agent_state.current_values)}, "
+        f"patterns={len(agent_state.validated_patterns)}, "
+        f"exit_reason={loop_result['exit_reason']}"
+    ))
     return state

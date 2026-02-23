@@ -7,6 +7,7 @@ append tool_result, continue. If exit tool called, return its input.
 
 import json
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -24,6 +25,7 @@ def run_agent_loop(
     max_iterations: int = 10,
     temperature: float = 0.2,
     max_tokens: int = 4000,
+    phase_label: str = "Agent",
 ) -> dict:
     """
     Generic ReAct agent loop.
@@ -38,6 +40,7 @@ def run_agent_loop(
         max_iterations: Maximum loop iterations
         temperature: Model temperature
         max_tokens: Max tokens per response
+        phase_label: Label for this phase in debug logs (e.g., "Retrieval", "DataGrounding")
 
     Returns:
         {
@@ -47,11 +50,26 @@ def run_agent_loop(
             "exit_reason": "exit_tool" | "max_iterations" | "text_response"
         }
     """
+    from shared.debug_logger import debug_log, debug_log_node
+
+    tag = f"AGENT_LOOP[{phase_label}]"
+
+    debug_log(f"{tag} START", (
+        f"Phase: {phase_label}\n"
+        f"Model: {model}\n"
+        f"Max iterations: {max_iterations}\n"
+        f"Exit tool: {exit_tool_name}\n"
+        f"Tools available: {[t['name'] for t in tools]}\n"
+        f"Initial message:\n{initial_message}"
+    ))
+
     messages = [{"role": "user", "content": initial_message}]
     tool_call_log = []
+    loop_start = time.time()
 
     for iteration in range(1, max_iterations + 1):
         print(f"\n[Agent Loop] Iteration {iteration}/{max_iterations}")
+        debug_log(f"{tag} ITERATION {iteration}/{max_iterations}", f"Starting iteration {iteration}")
 
         response = call_claude_with_tools(
             messages=messages,
@@ -70,10 +88,12 @@ def run_agent_loop(
         if text_blocks:
             for tb in text_blocks:
                 print(f"[Agent Loop] Agent: {tb.text[:300]}...")
+                debug_log(f"{tag} AGENT_TEXT iter={iteration}", tb.text)
 
         if not tool_use_blocks:
             # No tool calls — agent responded with text only
             print("[Agent Loop] Agent responded with text only (no tool calls)")
+            debug_log(f"{tag} EXIT text_response", f"Agent produced text-only response at iteration {iteration}")
             return {
                 "result": {"text": " ".join(tb.text for tb in text_blocks)},
                 "iterations": iteration,
@@ -109,10 +129,21 @@ def run_agent_loop(
 
             input_preview = json.dumps(tool_input, default=str)[:200]
             print(f"[Agent Loop] Tool call: {tool_name}({input_preview})")
+            debug_log(f"{tag} TOOL_CALL iter={iteration} tool={tool_name}", (
+                f"Tool: {tool_name}\n"
+                f"Input: {json.dumps(tool_input, default=str, indent=2)}"
+            ))
 
             # Check if this is the exit tool
             if tool_name == exit_tool_name:
+                elapsed = time.time() - loop_start
                 print(f"[Agent Loop] Exit tool called after {iteration} iterations")
+                debug_log(f"{tag} EXIT exit_tool", (
+                    f"Exit tool '{exit_tool_name}' called at iteration {iteration}\n"
+                    f"Total tool calls: {len(tool_call_log) + 1}\n"
+                    f"Elapsed: {elapsed:.1f}s\n"
+                    f"Exit input: {json.dumps(tool_input, default=str, indent=2)}"
+                ))
                 tool_call_log.append({
                     "tool": tool_name,
                     "input": tool_input,
@@ -146,6 +177,10 @@ def run_agent_loop(
 
             result_preview = result_str[:200] + "..." if len(result_str) > 200 else result_str
             print(f"[Agent Loop] Result: {result_preview}")
+            debug_log(f"{tag} TOOL_RESULT iter={iteration} tool={tool_name}", (
+                f"Tool: {tool_name}\n"
+                f"Result ({len(result_str)} chars):\n{result_str}"
+            ))
 
             tool_call_log.append({
                 "tool": tool_name,
@@ -173,7 +208,13 @@ def run_agent_loop(
         messages.append({"role": "user", "content": tool_results})
 
     # Max iterations reached
+    elapsed = time.time() - loop_start
     print(f"[Agent Loop] Max iterations ({max_iterations}) reached")
+    debug_log(f"{tag} EXIT max_iterations", (
+        f"Hit max iterations ({max_iterations})\n"
+        f"Total tool calls: {len(tool_call_log)}\n"
+        f"Elapsed: {elapsed:.1f}s"
+    ))
     return {
         "result": {},
         "iterations": max_iterations,
