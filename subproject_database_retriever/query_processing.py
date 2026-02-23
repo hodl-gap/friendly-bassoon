@@ -248,7 +248,7 @@ These queries will be used to search the web for logic chains (cause → effect 
 ## Required Angle Coverage (generate 4 queries, one per angle)
 1. Direct trigger/catalyst — what specific event, data release, or announcement caused this
 2. Structural enabler — what capital flows, policy decisions, regulatory changes, or market structure shifts enabled or amplified the forces behind this event
-3. Counterargument or contradiction — opposing analyst views, bearish/bullish disagreements, or named institutions with a different thesis
+3. Alternative interpretation or regime-shift thesis — a named analyst or research firm (e.g., BCA Research, Bridgewater, Goldman Sachs) that reads the SAME data with a different forward-looking conclusion about how dynamics will evolve
 4. Quantitative impact — specific dollar amounts, percentage moves, index levels, drawdowns
 
 Topic to cover: {combined_topic}

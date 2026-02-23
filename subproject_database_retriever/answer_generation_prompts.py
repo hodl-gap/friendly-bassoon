@@ -273,5 +273,7 @@ Rules:
 5. **Flag contradictions** if new information contradicts original conclusions
 6. **Weight appropriately**: Database-sourced chains (weight 1.0) are more authoritative than web-sourced chains (weight 0.7)
 7. Keep the same output format as the original synthesis (consensus conclusions + key variables)
+8. **Check chain completeness**: For each causal conclusion, verify the full chain is articulated (A → B → C, not just A → C). Common missing intermediate steps: real rates (nominal minus inflation), yield curve dynamics (term premium, bear steepening vs flattening), trade balance effects, fiscal deficit implications. If data for intermediate steps exists in the new information, spell out the full chain.
+9. **Consider regime-shift interpretations**: If the data supports a clear directional conclusion, also check whether any web-sourced chains suggest a structural change or regime shift that could alter the trajectory. If credible opposing views from named institutions exist in the new information, present them as a competing scenario alongside the main conclusion. Do NOT force a contrarian view if no evidence supports one.
 
 Output the updated synthesis directly. Do not include meta-commentary about what changed."""
