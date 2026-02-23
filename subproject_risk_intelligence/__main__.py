@@ -57,8 +57,8 @@ def main():
     )
     parser.add_argument(
         "--asset",
-        default="btc",
-        help="Asset classes to analyze, comma-separated (e.g., 'btc', 'equity', 'btc,equity')"
+        default="equity",
+        help="Asset classes to analyze, comma-separated (e.g., 'equity', 'btc', 'btc,equity')"
     )
     parser.add_argument(
         "--mode",
@@ -66,8 +66,17 @@ def main():
         default="insight",
         help="Output mode: 'insight' (multi-track reasoning, default) or 'belief_space' (legacy scenarios)"
     )
+    parser.add_argument(
+        "--hybrid",
+        action="store_true",
+        help="Enable hybrid agentic pipeline"
+    )
 
     args = parser.parse_args()
+
+    if args.hybrid:
+        import os
+        os.environ["USE_HYBRID_PIPELINE"] = "true"
 
     # Handle missing query
     if not args.query:
@@ -89,10 +98,11 @@ def main():
 
     # Run analysis with debug logging
     with RunLogger(query=args.query):
-        if len(assets) == 1 and assets[0] == "btc":
-            # Backwards-compatible single-asset path
+        if len(assets) == 1:
+            # Single-asset path
             result = run_impact_analysis(
                 args.query,
+                asset_class=assets[0],
                 output_json=args.json,
                 skip_data_fetch=args.skip_data,
                 skip_chain_store=args.skip_chains,

@@ -741,36 +741,49 @@ def prepare_shared_context(
     if ENABLE_SNAPSHOTS:
         snapshot_state("retrieve_context", state, "out")
 
-    # Step 2: Variable extraction and data fetching
+    # Step 2-5: Variable extraction, data fetching, claim validation, pattern validation
     if not skip_data_fetch:
-        if use_integrated_pipeline:
-            state = _run_integrated_pipeline(state)
-        else:
-            state = extract_variables(state)
+        from shared.feature_flags import is_agentic_data_grounding
+        if is_agentic_data_grounding():
+            from .data_grounding_agent import run_data_grounding_agent
+            state = run_data_grounding_agent(state)
             if ENABLE_SNAPSHOTS:
-                snapshot_state("extract_variables", state, "out")
-            if state.get("extracted_variables"):
-                state = fetch_current_data(state)
+                snapshot_state("data_grounding_agent", state, "out")
+        else:
+            if use_integrated_pipeline:
+                state = _run_integrated_pipeline(state)
+            else:
+                state = extract_variables(state)
                 if ENABLE_SNAPSHOTS:
-                    snapshot_state("fetch_current_data", state, "out")
+                    snapshot_state("extract_variables", state, "out")
+                if state.get("extracted_variables"):
+                    state = fetch_current_data(state)
+                    if ENABLE_SNAPSHOTS:
+                        snapshot_state("fetch_current_data", state, "out")
 
-    # Step 2.5: Validate claims from synthesis using data_collection pipeline
-    if not skip_data_fetch and config.ENABLE_CLAIM_VALIDATION:
-        state = validate_claims(state)
-        if ENABLE_SNAPSHOTS:
-            snapshot_state("validate_claims", state, "out")
+            # Step 2.5: Validate claims from synthesis using data_collection pipeline
+            if config.ENABLE_CLAIM_VALIDATION:
+                state = validate_claims(state)
+                if ENABLE_SNAPSHOTS:
+                    snapshot_state("validate_claims", state, "out")
 
-    # Step 3: Validate research patterns against current data
-    if not skip_data_fetch:
-        state = validate_patterns(state)
-        if ENABLE_SNAPSHOTS:
-            snapshot_state("validate_patterns", state, "out")
+            # Step 3: Validate research patterns against current data
+            state = validate_patterns(state)
+            if ENABLE_SNAPSHOTS:
+                snapshot_state("validate_patterns", state, "out")
 
     # Step 4: Historical event data enrichment
     if not skip_data_fetch:
-        state = enrich_with_historical_event(state)
-        if ENABLE_SNAPSHOTS:
-            snapshot_state("enrich_historical_event", state, "out")
+        from shared.feature_flags import is_agentic_historical
+        if is_agentic_historical():
+            from .historical_context_agent import run_historical_context_agent
+            state = run_historical_context_agent(state)
+            if ENABLE_SNAPSHOTS:
+                snapshot_state("historical_context_agent", state, "out")
+        else:
+            state = enrich_with_historical_event(state)
+            if ENABLE_SNAPSHOTS:
+                snapshot_state("enrich_historical_event", state, "out")
 
     return state
 
@@ -847,7 +860,12 @@ def run_asset_impact(
             snapshot_state(f"characterize_regime_{asset_class}", state, "out")
 
     # Run impact analysis with asset-specific prompt
-    state = analyze_impact(state, asset_class=asset_class)
+    from shared.feature_flags import is_synthesis_self_check
+    if is_synthesis_self_check():
+        from .synthesis_phase import run_synthesis_phase
+        state = run_synthesis_phase(state, asset_class)
+    else:
+        state = analyze_impact(state, asset_class=asset_class)
     if ENABLE_SNAPSHOTS:
         snapshot_state(f"analyze_impact_{asset_class}", state, "out")
 

@@ -30,7 +30,12 @@ subproject_database_retriever/
 ├── {other}_prompts.py           # Prompts for each workflow
 ├── states.py                    # LangGraph state definitions
 ├── config.py                    # Configuration management
-└── utils/                       # Utility functions
+├── utils/                       # Utility functions
+│
+│   # Hybrid agentic pipeline files (NOT TESTED — 2026-02-23):
+├── retrieval_agent.py           # Phase 1: Agentic retrieval orchestrator (ReAct loop)
+├── retrieval_agent_tools.py     # Phase 1: Tool schemas + handlers (6 tools incl. coverage checker)
+└── retrieval_agent_prompts.py   # Phase 1: System prompt + coverage assessment prompt
 ```
 
 ### Main File Structure (`retrieval_orchestrator.py`)
@@ -459,6 +464,43 @@ After gap filling and resynthesis, verified web chains are persisted to Pinecone
 |----------|------|---------|
 | `persist_web_chains()` | `web_chain_persistence.py` | Filter, embed, upsert web chains to Pinecone |
 | `persist_learning()` | `retrieval_orchestrator.py` | Graph node wrapping persistence + frequency tracking |
+
+### Agentic Retrieval — Phase 1 (NOT TESTED — 2026-02-23)
+
+**Status: Code-complete, NOT test-run. No case studies or tests executed yet.**
+
+When enabled, replaces the fixed LangGraph retrieval flow with an iterative ReAct agent that searches, assesses coverage, and iterates until material is sufficient.
+
+**Files**: `retrieval_agent.py`, `retrieval_agent_tools.py`, `retrieval_agent_prompts.py`
+
+**Flag**: `AGENT_RETRIEVAL=true` or `USE_HYBRID_PIPELINE=true`
+
+**Feature-flagged branch**: `retrieval_orchestrator.py` — 5-line branch at top of `run_retrieval()`:
+```python
+from shared.feature_flags import is_agentic_retrieval
+if is_agentic_retrieval() and not skip_gap_filling:
+    from retrieval_agent import run_retrieval_agent
+    return run_retrieval_agent(query, image_path=image_path)
+```
+
+**Tools** (6 total):
+| Tool | Wraps | Purpose |
+|------|-------|---------|
+| `search_pinecone` | `vector_search.search_single_query()` | Vector DB search with optional reranking |
+| `extract_web_chains` | `knowledge_gap_detector.fill_gaps_with_web_chains()` | Multi-angle web chain extraction |
+| `web_search` | `_get_web_search_adapter()` + `_search_and_evaluate()` | Tavily web search for factual gaps |
+| `generate_synthesis` | `answer_generation.generate_answer()` | 3-stage chain extraction + synthesis |
+| `assess_coverage` | NEW — Sonnet call with rubric-aware prompt | Rates material as COMPLETE/ADEQUATE/INSUFFICIENT |
+| `finish_retrieval` | Exit tool | Agent passes final state summary |
+
+**Coverage Checker**: Lightweight Sonnet call (~500 tokens) that acts as a rubric-aware quality gate. Rates gathered material as:
+- **COMPLETE**: ≥2 independent causal chains, counter-argument present, chains complete
+- **ADEQUATE**: ≥2 chains, most paths complete, minor gaps acceptable
+- **INSUFFICIENT**: <2 chains or major gaps — agent must search again with different angles
+
+**Max iterations**: 5 (configurable via `RETRIEVAL_MAX_ITER` env var)
+
+**Returns**: Dict compatible with `RetrieverState` (same fields as `run_retrieval()`).
 
 ### skip_gap_filling Parameter (NEW)
 

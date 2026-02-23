@@ -28,6 +28,7 @@ Research module for a macro-data oriented hedge fund. Traders query the system w
 
 ## Pipeline
 
+### Default (Sequential)
 ```
 Trader query
     → Database Retriever (RAG: query expansion → vector search → synthesis → gap detection/filling → persist learning)
@@ -39,6 +40,51 @@ Trader query
 Daily monitoring (cron)
     → Theme Refresh (per-theme anchor variable monitoring → active chain detection → regime assessment)
     → Morning Briefing (template-based summary of all theme states)
+```
+
+### Hybrid Agentic Pipeline (NOT TESTED — 2026-02-23)
+
+**Status: Code-complete, NOT test-run. No case studies or tests executed yet.**
+
+When enabled via `--hybrid` flag or individual env vars, key phases become agentic (iterative ReAct loops via `shared/agent_loop.py`). The old sequential pipeline remains intact and is the default. All changes are feature-flagged.
+
+```
+Trader query
+    → PHASE 1: RETRIEVAL AGENT (agentic, iterate until coverage adequate)
+        Tools: search_pinecone, extract_web_chains, web_search, generate_synthesis, assess_coverage, finish_retrieval
+        Flag: AGENT_RETRIEVAL=true
+    → PHASE 2: DATA GROUNDING AGENT (agentic, adaptive depth)
+        Tools: extract_variables, fetch_variable_data, validate_claim, validate_patterns, compute_derived, finish_grounding
+        Flag: AGENT_DATA_GROUNDING=true
+    → PHASE 3: HISTORICAL CONTEXT AGENT (agentic, adaptive analog count)
+        Tools: detect_analogs, fetch_analog_data, aggregate_analogs, characterize_regime, load_theme_chains, fetch_additional_data, finish_historical
+        Flag: AGENT_HISTORICAL=true
+    → PHASE 4: SYNTHESIS (Opus generate + Sonnet self-check + optional patch)
+        Flag: AGENT_SYNTHESIS_CHECK=true
+    → Structured output for trader consumption
+```
+
+**Feature Flags** (`shared/feature_flags.py`):
+| Flag | Default | Purpose |
+|------|---------|---------|
+| `USE_HYBRID_PIPELINE` | false | Master override — enables all agentic phases |
+| `AGENT_RETRIEVAL` | false | Phase 1: agentic retrieval with coverage checker |
+| `AGENT_DATA_GROUNDING` | false | Phase 2: agentic data grounding |
+| `AGENT_HISTORICAL` | false | Phase 3: agentic historical context |
+| `AGENT_SYNTHESIS_CHECK` | false | Phase 4: synthesis self-verification |
+| `RETRIEVAL_MAX_ITER` | 5 | Max iterations for retrieval agent |
+| `DATA_GROUNDING_MAX_ITER` | 4 | Max iterations for data grounding agent |
+| `HISTORICAL_MAX_ITER` | 4 | Max iterations for historical context agent |
+
+**CLI Usage**:
+```bash
+# Enable all agentic phases
+python run_case_study.py --case 4 --run 1 --hybrid
+python -m subproject_risk_intelligence --hybrid "query"
+
+# Enable individual phases
+AGENT_RETRIEVAL=true python run_case_study.py --case 4 --run 1
+AGENT_SYNTHESIS_CHECK=true python run_case_study.py --case 5 --run 1
 ```
 
 ## Subprojects
@@ -64,6 +110,8 @@ Daily monitoring (cron)
 | `theme_index.py` | Theme-organized chain index (assigns chains to themes via variable intersection) |
 | `variable_frequency.py` | Tracks variable appearance frequency across chains; promotion/demotion candidates |
 | `data/anchor_variables.json` | 25 curated anchor variables with verified data source mappings |
+| `agent_loop.py` | Generic ReAct loop runner for agentic phases (detect tool_use → execute handler → append result → loop) |
+| `feature_flags.py` | Centralized feature flags for hybrid pipeline (env var functions, not constants) |
 
 ## Scripts (`scripts/`)
 
@@ -115,6 +163,7 @@ Python, LangGraph, Pinecone, Claude/OpenAI APIs, Yahoo Finance, FRED API, Tavily
 - [ ] Evaluate whether extracted metadata (English) should be concatenated with raw text (Korean) before embedding to improve cross-language retrieval
 - [x] Add condensed summary output alongside the full insight report. Generated mechanically from structured track data in `format_insight()` — no extra LLM call. Appended after the full report.
 - [x] Add chain completeness (Rule 8) and regime-shift consideration (Rule 9) to resynthesis prompt. Rewrite web chain angle #3 for alternative interpretations. Validated: Case 4 16→18/20, Case 6 12→14/16.
+- [ ] **TEST hybrid agentic pipeline** — code-complete (13 new files, 4 modified files) but zero test runs executed. Run case studies 1-6 with `--hybrid` flag and compare rubric scores against baseline. (Added 2026-02-23)
 
 ## Archive Folder
 

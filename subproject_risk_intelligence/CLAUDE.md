@@ -70,6 +70,17 @@ subproject_risk_intelligence/
 |-- historical_data_fetcher.py       # Fetch historical data + metrics
 |-- historical_aggregator.py         # Multi-analog parallel fetch + aggregate statistics
 |-- theme_refresh.py                 # Daily theme monitoring + chain-specific trigger evaluation
+|-- regime_characterization.py       # Regime characterization (then vs now)
+|
+|-- # Hybrid agentic pipeline files (NOT TESTED — 2026-02-23):
+|-- synthesis_phase.py               # Phase 4: Opus generate + Sonnet verify + optional patch
+|-- synthesis_prompts.py             # Verification prompt for synthesis self-check
+|-- data_grounding_agent.py          # Phase 2: Agentic data grounding orchestrator
+|-- data_grounding_agent_tools.py    # Phase 2: Tool schemas + handlers (6 tools)
+|-- data_grounding_agent_prompts.py  # Phase 2: System prompt
+|-- historical_context_agent.py      # Phase 3: Agentic historical context orchestrator
+|-- historical_context_agent_tools.py # Phase 3: Tool schemas + handlers (7 tools)
+|-- historical_context_agent_prompts.py # Phase 3: System prompt
 |
 |-- data/
 |   |-- relationships.json           # Persistent chain storage
@@ -86,7 +97,9 @@ shared/
 |-- snapshot.py                      # State capture for debugging
 |-- variable_resolver.py             # Variable -> data source lookup
 |-- theme_config.py                  # 6 macro themes with anchor variables
-+-- theme_index.py                   # Theme-organized chain index
+|-- theme_index.py                   # Theme-organized chain index
+|-- agent_loop.py                    # Generic ReAct loop runner for agentic phases
++-- feature_flags.py                 # Centralized feature flags for hybrid pipeline
 ```
 
 ### Workflow (Current)
@@ -459,6 +472,38 @@ ENABLE_REGIME_CHARACTERIZATION = True  # env: RISK_REGIME_CHAR
 | Convergence Detection | Done | Detect multi-cause convergence points in chain graph |
 | Sequential Reasoning | Done | Temporal ordering of tracks (sequence_position) for phased analysis |
 | Regime Characterization | Done | "Then vs Now" regime comparison via Haiku + tool_use |
+| Hybrid Agentic Pipeline | **NOT TESTED** | Agentic data grounding (Phase 2), historical context (Phase 3), synthesis self-check (Phase 4). Code-complete, zero test runs. See below. |
+
+## Hybrid Agentic Pipeline (NOT TESTED — 2026-02-23)
+
+**Status: Code-complete, NOT test-run. No case studies or tests executed yet.**
+
+Feature-flagged agentic replacements for sequential pipeline phases. Old pipeline remains default.
+
+### Phase 2: Agentic Data Grounding (`data_grounding_agent.py`)
+Replaces the sequential extract_variables → fetch_data → validate flow. Agent iteratively extracts variables, fetches data, validates claims, and computes derived metrics. Max 4 iterations via Sonnet.
+
+**Tools**: `extract_variables`, `fetch_variable_data`, `validate_claim`, `validate_patterns`, `compute_derived`, `finish_grounding`
+
+**Flag**: `AGENT_DATA_GROUNDING=true` or `USE_HYBRID_PIPELINE=true`
+
+**Feature-flagged branch**: `insight_orchestrator.py` — replaces steps 2-5 (extract_variables through validate_patterns) in `prepare_shared_context()`.
+
+### Phase 3: Agentic Historical Context (`historical_context_agent.py`)
+Replaces `enrich_with_historical_event()` + `characterize_regime()`. Agent detects analogs, fetches market data, aggregates statistics, characterizes regime, and can discover preconditions worth checking in current data. Max 4 iterations via Sonnet.
+
+**Tools**: `detect_analogs`, `fetch_analog_data`, `aggregate_analogs`, `characterize_regime`, `load_theme_chains`, `fetch_additional_data`, `finish_historical`
+
+**Flag**: `AGENT_HISTORICAL=true` or `USE_HYBRID_PIPELINE=true`
+
+**Feature-flagged branch**: `insight_orchestrator.py` — replaces historical enrichment + regime characterization in `prepare_shared_context()`.
+
+### Phase 4: Synthesis Self-Check (`synthesis_phase.py`)
+Not an agentic loop. Adds verification step after `analyze_impact()`: Sonnet checks if all evidence was addressed, and if gaps found, Opus re-generates with feedback appended.
+
+**Flag**: `AGENT_SYNTHESIS_CHECK=true` or `USE_HYBRID_PIPELINE=true`
+
+**Feature-flagged branch**: `insight_orchestrator.py` — replaces `analyze_impact()` in `run_asset_impact()`.
 
 ## Theme-Organized Chains
 

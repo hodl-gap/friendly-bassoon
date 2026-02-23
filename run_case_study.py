@@ -30,24 +30,45 @@ load_dotenv(PROJECT_ROOT / ".env")
 CASE_STUDIES = {
     1: {
         "query": "What caused the SaaS meltdown in Feb 2026?",
-        "asset": "btc",
+        "asset": "equity",
         "rubric_file": "test_cases/01_saas_meltdown.md",
         "pass_threshold": 8,
         "total_points": 13,
     },
     2: {
         "query": "How does the February 2026 Japan snap election (Takaichi) affect risk assets and yen carry trades?",
-        "asset": "btc",
+        "asset": "equity",
         "rubric_file": "test_cases/02_japan_election.md",
         "pass_threshold": 11,
         "total_points": 18,
     },
     3: {
         "query": "Goldman Sachs Prime Book shows the biggest shorting on record for US single stocks (week of Jan 30 - Feb 5, 2026, Z-score ~+3). What are the historical precedents for record short positioning, and what outcomes followed for risk assets?",
-        "asset": "btc",
+        "asset": "equity",
         "rubric_file": "test_cases/03_record_shorting.md",
         "pass_threshold": 14,
         "total_points": 22,
+    },
+    4: {
+        "query": "The Supreme Court ruled Trump's IEEPA tariffs illegal on Feb 20, 2026. What is the impact on US equities?",
+        "asset": "equity",
+        "rubric_file": "test_cases/04_scotus_tariff.md",
+        "pass_threshold": 13,
+        "total_points": 20,
+    },
+    5: {
+        "query": "put ratio up up, what this mean?",
+        "asset": "equity",
+        "rubric_file": "test_cases/05_put_call_ratio.md",
+        "pass_threshold": 10,
+        "total_points": 16,
+    },
+    6: {
+        "query": "US job vacancies now equal unemployment for the first time since the pandemic. What does this mean for equities, bonds, and the dollar?",
+        "asset": "equity",
+        "rubric_file": "test_cases/06_labor_equilibrium.md",
+        "pass_threshold": 10,
+        "total_points": 16,
     },
 }
 
@@ -91,6 +112,7 @@ def run_case(case_num: int, run_num: int, asset: str = None, query_override: str
             from subproject_risk_intelligence.insight_orchestrator import run_impact_analysis
             result = run_impact_analysis(
                 query,
+                asset_class=asset,
                 output_json=False,
                 skip_data_fetch=False,
                 skip_chain_store=False,
@@ -134,12 +156,16 @@ def import_traceback():
 
 def main():
     parser = argparse.ArgumentParser(description="Run case study through full pipeline")
-    parser.add_argument("--case", type=int, default=1, help="Case study number (1, 2, or 3)")
+    parser.add_argument("--case", type=int, default=1, help="Case study number (1-6)")
     parser.add_argument("--run", type=int, default=1, help="Run number for logging")
     parser.add_argument("--asset", default=None, help="Asset class (default: from case config)")
     parser.add_argument("--query", default=None, help="Override query (for custom runs)")
+    parser.add_argument("--hybrid", action="store_true", help="Enable hybrid agentic pipeline")
 
     args = parser.parse_args()
+
+    if args.hybrid:
+        os.environ["USE_HYBRID_PIPELINE"] = "true"
     result, log_path = run_case(args.case, args.run, args.asset, args.query)
 
     print(f"\nRun complete. Log: {log_path}")

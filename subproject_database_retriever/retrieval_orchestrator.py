@@ -301,6 +301,12 @@ def run_retrieval(query: str, image_path: str = None, skip_gap_filling: bool = F
     Returns:
         Final state containing answer and retrieved context
     """
+    # Agentic retrieval path (feature-flagged)
+    from shared.feature_flags import is_agentic_retrieval
+    if is_agentic_retrieval() and not skip_gap_filling:
+        from retrieval_agent import run_retrieval_agent
+        return run_retrieval_agent(query, image_path=image_path)
+
     from shared.snapshot import start_run as _start_run
     if ENABLE_SNAPSHOTS:
         _start_run()
