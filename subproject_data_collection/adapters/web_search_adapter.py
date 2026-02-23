@@ -306,8 +306,8 @@ class WebSearchAdapter:
 
         print(f"[{self.source_name}] Extracting {extract_type} with Haiku...")
 
-        # Use higher token limit for logic_chains (more structured output)
-        max_tokens = 3000 if extract_type == "logic_chains" else 1500
+        # Use higher token limit for logic_chains (more structured output, up to 8 chains)
+        max_tokens = 4000 if extract_type == "logic_chains" else 1500
 
         try:
             response = call_claude_haiku(messages, temperature=0.0, max_tokens=max_tokens)

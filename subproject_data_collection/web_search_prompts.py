@@ -197,8 +197,16 @@ TOPIC: {topic}
 SEARCH RESULTS:
 {search_results}
 
-Extract logic chains that explain cause-and-effect relationships relevant to the topic.
-Each chain should trace a causal path (A causes B, which leads to C, etc.)
+Extract TWO types of chains:
+
+1. MECHANISM chains: Current cause-and-effect relationships (A causes B, which leads to C).
+2. PRECEDENT chains: Historical episodes where a similar pattern played out before. Each precedent should be a SEPARATE chain with the specific date/period and what happened.
+
+IMPORTANT for precedents:
+- Scan the sources for ALL historical episodes mentioned, not just the most detailed one
+- Each distinct historical episode = one separate precedent chain (e.g., 2001 crash, 2008 crisis, 2020 COVID are 3 chains, not 1)
+- If a source says "similar to 2008, 2020, and 2022", extract each as its own chain
+- Only include precedents that meaningfully existed in the source — do NOT fabricate
 
 Return JSON with this structure:
 
@@ -209,6 +217,7 @@ Return JSON with this structure:
             "effect": "The resulting outcome or impact",
             "mechanism": "How the cause leads to the effect (the why/how)",
             "polarity": "positive|negative|mixed",
+            "chain_type": "mechanism|precedent",
             "evidence_quote": "VERBATIM quote from source supporting this chain",
             "source_url": "URL where this chain was found",
             "source_name": "Name of the source (e.g., Goldman Sachs, Bloomberg)",
@@ -221,6 +230,8 @@ Return JSON with this structure:
 
 Rules:
 - Extract ONLY chains with clear cause-effect logic
+- chain_type: "mechanism" = current causal relationship, "precedent" = historical episode where similar pattern occurred
+- For precedent chains: put the date/period in the cause field (e.g., "September 2008 Lehman collapse")
 - polarity: "positive" = cause increases effect, "negative" = cause decreases effect, "mixed" = depends on conditions
 - evidence_quote MUST be a VERBATIM quote from the source (copy-paste exact text)
 - Keep evidence_quote SHORT (1-2 sentences max, under 200 characters) - just enough to prove the claim
@@ -229,6 +240,6 @@ Rules:
 - source_name should be the institution/publication name (e.g., "Goldman Sachs", "Bloomberg")
 - source_url should be the URL where this was found (keep it short if possible)
 - If no relevant chains found, return empty chains array
-- Maximum 5 chains per query
+- Maximum 5 mechanism chains + up to 3 precedent chains per query (8 total max)
 
 Return valid JSON only, no other text."""

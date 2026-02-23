@@ -1115,12 +1115,70 @@ def extract_readings_from_image(
         return []
 
 
+def _extract_dates_from_urls(search_results: List[Dict[str, Any]], indicator_name: str) -> List[Dict[str, Any]]:
+    """
+    Extract dates embedded in URLs of search results.
+
+    Financial news URLs almost always contain the publication date, which for
+    event-driven articles is close to the event date. This catches episodes
+    that Haiku can't extract from truncated/paywalled snippets.
+
+    Returns list of {date, value, label} dicts.
+    """
+    import re
+
+    url_dates = []
+    seen_year_months = set()
+
+    for r in search_results:
+        url = r.get("url", "")
+        title = r.get("title", "")
+        snippet = r.get("content", "") or r.get("snippet", "")
+
+        # Try YYYY/MM/DD or YYYY-MM-DD patterns in URL
+        match = re.search(r'(\d{4})[/-](\d{2})[/-](\d{2})', url)
+        if not match:
+            continue
+
+        year, month, day = match.groups()
+        year_int = int(year)
+
+        # Only consider plausible financial article dates (2000-2026)
+        if year_int < 2000 or year_int > 2026:
+            continue
+
+        date_str = f"{year}-{month}-{day}"
+        year_month = f"{year}-{month}"
+
+        # Deduplicate by year-month (don't want multiple entries from same period)
+        if year_month in seen_year_months:
+            continue
+        seen_year_months.add(year_month)
+
+        # Build label from title (truncate to keep it readable)
+        label = title[:80] if title else f"{indicator_name} episode"
+
+        url_dates.append({
+            "date": date_str,
+            "value": "extreme",
+            "label": label,
+            "source": "url_extracted"
+        })
+
+    return url_dates
+
+
 def discover_prior_extreme_dates(
     indicator_name: str,
     query_context: str = ""
 ) -> List[Dict[str, Any]]:
     """
     Discover prior dates when an indicator reached extreme levels via web search + LLM extraction.
+
+    Uses three layers:
+    1. LLM extraction from snippets (primary)
+    2. URL date parsing as fallback for paywalled/truncated content
+    3. Merge: URL-derived dates fill gaps that LLM missed
 
     Args:
         indicator_name: Name of the indicator (e.g., "VIX", "put/call ratio")
@@ -1159,13 +1217,19 @@ def discover_prior_extreme_dates(
     snippets_text = "\n".join(snippets_parts)
     print(f"[Historical Analog] Got {len(snippets_parts)} snippets, extracting dates via LLM...")
 
-    # Call LLM to extract dates
+    # Step 1: Extract dates from URLs (catches paywalled articles)
+    url_dates = _extract_dates_from_urls(search_results, indicator_name)
+    if url_dates:
+        print(f"[Historical Analog] Found {len(url_dates)} dates from URLs: {[d['date'] for d in url_dates]}")
+
+    # Step 2: LLM extraction from snippet text
     prompt = EXTRACT_EXTREME_DATES_PROMPT.format(
         indicator_name=indicator_name,
         snippets=snippets_text
     )
     messages = [{"role": "user", "content": prompt}]
 
+    llm_dates = []
     try:
         response = call_claude_haiku(messages, temperature=0.0, max_tokens=1000)
         print(f"[Historical Analog] LLM date extraction response:\n{response}")
@@ -1177,18 +1241,43 @@ def discover_prior_extreme_dates(
             json_str = json_str.split("```")[1].split("```")[0].strip()
 
         parsed = json.loads(json_str)
-        dates = parsed.get("dates", [])
+        llm_dates = parsed.get("dates", [])
         notes = parsed.get("notes", "")
 
         if notes:
             print(f"[Historical Analog] Date extraction notes: {notes}")
-        print(f"[Historical Analog] Extracted {len(dates)} extreme dates")
-
-        return dates
+        print(f"[Historical Analog] LLM extracted {len(llm_dates)} dates")
 
     except (json.JSONDecodeError, Exception) as e:
-        print(f"[Historical Analog] Date extraction failed: {e}")
-        return []
+        print(f"[Historical Analog] LLM date extraction failed: {e}")
+
+    # Step 3: Merge — URL dates fill gaps that LLM missed
+    # Build set of year-months already covered by LLM dates
+    llm_year_months = set()
+    for d in llm_dates:
+        date_str = d.get("date", "")
+        if len(date_str) >= 7:
+            llm_year_months.add(date_str[:7])  # "YYYY-MM"
+
+    merged = list(llm_dates)
+    added_from_urls = 0
+    for ud in url_dates:
+        date_str = ud.get("date", "")
+        year_month = date_str[:7] if len(date_str) >= 7 else ""
+        if year_month and year_month not in llm_year_months:
+            merged.append(ud)
+            llm_year_months.add(year_month)
+            added_from_urls += 1
+
+    if added_from_urls > 0:
+        print(f"[Historical Analog] Added {added_from_urls} URL-derived dates that LLM missed: "
+              f"{[d['date'] for d in merged if d.get('source') == 'url_extracted']}")
+
+    # Sort chronologically
+    merged.sort(key=lambda d: d.get("date", ""))
+
+    print(f"[Historical Analog] Total: {len(merged)} extreme dates (LLM={len(llm_dates)}, URL-derived={added_from_urls})")
+    return merged
 
 
 def run_event_study(
