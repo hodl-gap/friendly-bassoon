@@ -20,31 +20,26 @@ User Query
 │  Output: synthesis, logic_chains, confidence, gap enrichment         │
 └──────────────────────┬───────────────────────────────────────────────┘
                        │
-          ┌────────────┴────────────┐
-          ▼                         ▼
-┌──────────────────┐     ┌──────────────────────────────────────────┐
-│  VARIABLE MAPPER │     │  RISK INTELLIGENCE  (sequential)         │
-│  (LangGraph)     │     │                                          │
-│  extract ──►     │     │  retrieve ──► load_chains ──►            │
-│  normalize ──►   │     │  extract_vars ──► fetch_data ──►         │
-│  map_data_ids    │     │  validate_patterns ──► historical ──►    │
-│                  │     │  analyze_impact ──► store_chains          │
-│  Output: data    │     │                                          │
-│  source mappings │     │  Output: direction, confidence,          │
-└────────┬─────────┘     │  scenarios, rationale, risk factors      │
-         │               └──────────────────────────────────────────┘
-         ▼
-┌──────────────────┐
-│  DATA COLLECTION │
-│  (LangGraph)     │
-│  parse_claims    │
-│  ──► fetch_data  │
-│  ──► validate    │
-│  ──► format      │
-│                  │
-│  Output: claim   │
-│  validation      │
-└──────────────────┘
+                       ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│  RISK INTELLIGENCE  (sequential)                                     │
+│                                                                      │
+│  retrieve ──► load_chains ──► extract_vars ──► fetch_data ──►        │
+│  validate_claims* ──► validate_patterns ──► historical ──►           │
+│  analyze_impact ──► store_chains                                     │
+│                                                                      │
+│  * validate_claims calls DATA COLLECTION internally                  │
+│    (parse_claims ──► fetch_data ──► validate ──► format)             │
+│                                                                      │
+│  Output: direction, confidence, scenarios, rationale, risk factors   │
+└──────────────────────────────────────────────────────────────────────┘
+
+Note: VARIABLE MAPPER exists as standalone code (subproject_variable_mapper/)
+but is NOT invoked in the standard pipeline. Variable extraction is handled
+inline by Risk Intelligence's extract_variables step (LLM-based when
+USE_LLM_VARIABLE_EXTRACTION=True). The integrated pipeline
+(use_integrated_pipeline=True) can wire Variable Mapper → Data Collection
+as an alternative path, but this is not the default.
 ```
 
 **Shared module** (`shared/`) provides: canonical schemas, model config, variable resolver, integration wiring, run logger, and state snapshots. All subprojects import from `shared/` for consistent types and configuration.
@@ -376,7 +371,7 @@ After all 5 nodes, the `RetrieverState` returned by `run_retrieval(query)` conta
 
 ## 2. Risk Intelligence — Node-by-Node
 
-**Entry point**: `btc_impact_orchestrator.py` → `run_multi_asset_analysis(query, assets=["btc"])`
+**Entry point**: `insight_orchestrator.py` → `run_multi_asset_analysis(query, assets=["equity"])`
 **State**: `RiskImpactState`
 **Flow**: Sequential (no LangGraph). Two phases: shared context preparation, then per-asset analysis.
 
@@ -400,10 +395,10 @@ Loads historical logic chains organized by theme. Uses the asset's `relevant_the
 
 ### Step 3: `extract_variables`
 
-Parses logic chains and synthesis text to extract variable names for data fetching.
+Parses logic chains and synthesis text to extract variable names for data fetching. When `USE_LLM_VARIABLE_EXTRACTION=True` (default), supplements keyword extraction with LLM inference to capture logically implied variables.
 
 **File**: `variable_extraction.py`
-**LLM calls**: None (regex extraction from chain steps' `cause_normalized` and `effect_normalized`)
+**LLM calls**: 0-2× Haiku (when `USE_LLM_VARIABLE_EXTRACTION=True`: 1× query-frame identification + 1× synthesis extraction; falls back to regex-only when disabled)
 
 **Output to state**:
 ```json
@@ -807,5 +802,5 @@ From the SaaS meltdown run (312s, 17 LLM calls):
 | Database Retriever | `retrieval_orchestrator.py` → `run_retrieval()` | `RetrieverState` | LangGraph |
 | Variable Mapper | `variable_mapper_orchestrator.py` → `run_variable_mapper()` | `VariableMapperState` | LangGraph |
 | Data Collection | `data_collection_orchestrator.py` → `run_claim_validation()` | `DataCollectionState` | LangGraph |
-| Risk Intelligence | `btc_impact_orchestrator.py` → `run_multi_asset_analysis()` | `RiskImpactState` | Sequential |
+| Risk Intelligence | `insight_orchestrator.py` → `run_multi_asset_analysis()` | `RiskImpactState` | Sequential |
 | Shared | `shared/__init__.py` | — | — |

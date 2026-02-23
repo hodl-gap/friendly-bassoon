@@ -1129,7 +1129,7 @@ Use the submit_synthesis tool to submit your analysis with confidence metadata."
 
     try:
         response = client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-5-20250929",
             max_tokens=4000,
             temperature=0.3,
             tools=[synthesis_tool],
@@ -1140,7 +1140,7 @@ Use the submit_synthesis tool to submit your analysis with confidence metadata."
         # Log token usage
         try:
             from shared.run_logger import log_llm_call
-            log_llm_call("claude-sonnet-4-20250514", response.usage.input_tokens, response.usage.output_tokens)
+            log_llm_call("claude-sonnet-4-5-20250929", response.usage.input_tokens, response.usage.output_tokens)
         except Exception:
             pass
 

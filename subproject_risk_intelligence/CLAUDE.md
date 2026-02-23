@@ -120,6 +120,8 @@ query (CLI input)
             v
 +-------------------------+
 | 3. extract_variables    |  Parse chains/synthesis for variable names
+|                         |  Keyword extraction + LLM inference (USE_LLM_VARIABLE_EXTRACTION)
+|                         |  LLM calls: 0-2× Haiku (query-frame + synthesis extraction)
 |                         |  Output: [tga, bank_reserves, btc, sofr, ...]
 +-----------+-------------+
             |
