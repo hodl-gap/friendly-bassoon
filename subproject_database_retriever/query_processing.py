@@ -18,6 +18,7 @@ from query_processing_prompts import (
     QUERY_EXPANSION_PROMPT_SIMPLE,
     QUERY_EXPANSION_PROMPT_COMPLEX,
     QUERY_REFINEMENT_PROMPT,
+    WEB_CHAIN_EXPANSION_PROMPT,
 )
 from config import SIMPLE_QUERY_MAX_WORDS, SIMPLE_QUERY_DIMENSIONS, COMPLEX_QUERY_DIMENSIONS
 
@@ -233,32 +234,7 @@ def expand_for_web_chain_extraction(query: str, gap_description: str) -> list:
     combined_topic = f"{query}. Specifically missing: {gap_description}" if gap_description else query
 
     # Use the complex expansion prompt for multi-angle search
-    prompt = f"""You are a query expansion engine for web search on financial/economic topics.
-
-Your task: Generate 3-4 search queries that approach this topic from different angles.
-These queries will be used to search the web for logic chains (cause → effect relationships).
-
-## Guidelines
-- Each query should target a DIFFERENT ANGLE of the topic
-- Use concrete market terms: "equities", "stocks", "CAPEX", "valuation", etc.
-- Include relevant entities: company names, sectors, market terms
-- Keep queries SHORT and focused (5-8 words max) — fewer terms yield better search results
-- DO NOT include specific domain names like "Bitcoin" or "crypto" unless the topic requires it
-
-## Required Angle Coverage (generate 4 queries, one per angle)
-1. Direct trigger/catalyst — what specific event, data release, or announcement caused this
-2. Structural enabler — what capital flows, policy decisions, regulatory changes, or market structure shifts enabled or amplified the forces behind this event
-3. Alternative interpretation or regime-shift thesis — a named analyst or research firm (e.g., BCA Research, Bridgewater, Goldman Sachs) that reads the SAME data with a different forward-looking conclusion about how dynamics will evolve
-4. Quantitative impact — specific dollar amounts, percentage moves, index levels, drawdowns
-
-Topic to cover: {combined_topic}
-
-## Output Format
-DIMENSION: [short name for this angle]
-REASONING: [one sentence - why this angle matters]
-QUERY: [the search query]
-
-(repeat for each, 3-4 total)"""
+    prompt = WEB_CHAIN_EXPANSION_PROMPT.format(combined_topic=combined_topic)
 
     messages = [{"role": "user", "content": prompt}]
     response = call_claude_haiku(messages, temperature=0.3, max_tokens=800)

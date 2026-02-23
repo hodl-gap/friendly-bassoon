@@ -9,15 +9,13 @@ Implements two-stage retrieval: broad recall + LLM re-ranking for causal relevan
 import sys
 import re
 import json
-import os
 from pathlib import Path
 
 # Add parent directory for models import
 sys.path.append(str(Path(__file__).parent.parent))
 
 from pinecone import Pinecone
-from anthropic import Anthropic
-from models import call_openai_embedding, call_openai_embedding_batch, call_claude_haiku
+from models import call_openai_embedding, call_openai_embedding_batch, call_claude_haiku, call_claude_with_tools
 from states import RetrieverState
 from config import (
     PINECONE_API_KEY, PINECONE_INDEX_NAME, DEFAULT_TOP_K, SIMILARITY_THRESHOLD,
@@ -25,13 +23,7 @@ from config import (
     ORIGINAL_QUERY_TOP_N, USE_STRUCTURED_RERANK,
     FOLLOWUP_TOP_K, FOLLOWUP_THRESHOLD
 )
-from vector_search_prompts import RE_RANK_PROMPT, RE_RANK_SYSTEM_PROMPT
-
-# Initialize Anthropic client for structured output
-from dotenv import load_dotenv
-env_path = Path(__file__).parent.parent / '.env'
-load_dotenv(env_path)
-_anthropic_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+from vector_search_prompts import RE_RANK_PROMPT, RE_RANK_SYSTEM_PROMPT, STRUCTURED_RERANK_USER_PROMPT
 
 # Pinecone index singleton
 _pinecone_index = None
@@ -249,41 +241,18 @@ def rerank_with_structured_output(query: str, chunks_text: str, chunk_ids: list)
         }
     }
 
-    user_prompt = f"""Score each chunk for CAUSAL RELEVANCE to this query.
-
-**Query:** {query}
-
-**Scoring Guidelines (0.0-1.0):**
-- 0.9-1.0: Directly answers query with explicit causal logic (cause → effect → mechanism)
-- 0.7-0.8: Contains relevant causal mechanisms or specific thresholds
-- 0.5-0.6: Conceptually related but no direct causal link
-- 0.3-0.4: Tangentially related, surface-level overlap only
-- 0.0-0.2: Off-topic despite keyword match
-
-**Be STRICT:** High scores ONLY for chunks with actual causal reasoning.
-
-**Chunks to evaluate:**
-{chunks_text}
-
-Use the submit_rerank_scores tool to submit your scores for ALL chunks."""
+    user_prompt = STRUCTURED_RERANK_USER_PROMPT.format(query=query, chunks_text=chunks_text)
 
     try:
-        response = _anthropic_client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=4000,
-            temperature=0.0,
-            system=RE_RANK_SYSTEM_PROMPT,
+        response = call_claude_with_tools(
+            messages=[{"role": "user", "content": user_prompt}],
             tools=[rerank_tool],
             tool_choice={"type": "tool", "name": "submit_rerank_scores"},
-            messages=[{"role": "user", "content": user_prompt}]
+            model="haiku",
+            temperature=0.0,
+            max_tokens=4000,
+            system=RE_RANK_SYSTEM_PROMPT
         )
-
-        # Log token usage
-        try:
-            from shared.run_logger import log_llm_call
-            log_llm_call("claude-haiku-4-5-20251001", response.usage.input_tokens, response.usage.output_tokens)
-        except Exception:
-            pass
 
         # Extract tool use result
         scores = {}

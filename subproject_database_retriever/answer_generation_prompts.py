@@ -277,3 +277,34 @@ Rules:
 9. **Consider regime-shift interpretations**: If the data supports a clear directional conclusion, also check whether any web-sourced chains suggest a structural change or regime shift that could alter the trajectory. If credible opposing views from named institutions exist in the new information, present them as a competing scenario alongside the main conclusion. Do NOT force a contrarian view if no evidence supports one.
 
 Output the updated synthesis directly. Do not include meta-commentary about what changed."""
+
+
+# Structured synthesis prompt (used with tool_use for guaranteed JSON output)
+SYNTHESIS_STRUCTURED_PROMPT = """You are synthesizing logic chains to identify consensus patterns and key monitoring variables.
+
+Query: {query}
+
+Logic Chains:
+{chains}
+
+Instructions:
+
+## Part 1: Consensus Chains
+Identify where MULTIPLE chains converge on the same conclusion through different paths.
+- Look for different starting points that lead to the same end effect
+- These represent higher-conviction conclusions supported by multiple reasoning paths
+- Only include if 2+ chains support the same conclusion
+
+## Part 2: Key Variables to Monitor
+Extract specific, actionable variables/indicators mentioned across the chains.
+- Group by category (e.g., Liquidity, Labor Market, Positioning)
+- Include specific thresholds or levels if mentioned
+- Note which chains reference each variable
+
+## Confidence Scoring
+Score the overall confidence based on:
+- High (0.8+): 3+ paths from 2+ independent sources
+- Medium (0.5-0.8): 2 paths OR single source with strong logic
+- Low (<0.5): Single path, weak support, or contradictory evidence
+
+Use the submit_synthesis tool to submit your analysis with confidence metadata."""

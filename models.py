@@ -214,7 +214,7 @@ def call_gpt5_nano(messages, temperature=1.0, max_tokens=2000):
     return response.choices[0].message.content
 
 # =============================================================================
-# ANTHROPIC MODELS - Claude 4.5 Series (Latest - Nov 2025)
+# ANTHROPIC MODELS - Claude 4.6 Series (Latest - Feb 2026)
 # =============================================================================
 
 def _log_usage(model_id: str, usage):
@@ -234,7 +234,7 @@ def _log_usage(model_id: str, usage):
 
 def call_claude_opus(messages, temperature=0.7, max_tokens=8000):
     """
-    Call Claude Opus 4.5 (most powerful Claude model - released Nov 24, 2025)
+    Call Claude Opus 4.6 (most powerful Claude model)
 
     Capabilities:
     - Most advanced reasoning and analysis
@@ -242,21 +242,21 @@ def call_claude_opus(messages, temperature=0.7, max_tokens=8000):
     - Extended thinking capabilities
     - Best for: research, complex analysis, demanding tasks
 
-    Pricing: $15/1M input tokens, $75/1M output tokens
-    Model ID: claude-opus-4-5-20251101
+    Pricing: $5/1M input tokens, $25/1M output tokens
+    Model ID: claude-opus-4-6
     """
     response = anthropic_client.messages.create(
-        model="claude-opus-4-5-20251101",
+        model="claude-opus-4-6",
         messages=messages,
         temperature=temperature,
         max_tokens=max_tokens
     )
-    _log_usage("claude-opus-4-5-20251101", response.usage)
+    _log_usage("claude-opus-4-6", response.usage)
     return response.content[0].text
 
 def call_claude_sonnet(messages, temperature=0.7, max_tokens=8000):
     """
-    Call Claude Sonnet 4.5 (balanced performance - Oct 2025)
+    Call Claude Sonnet 4.6 (balanced performance)
 
     Capabilities:
     - Strong reasoning and analysis
@@ -264,20 +264,20 @@ def call_claude_sonnet(messages, temperature=0.7, max_tokens=8000):
     - Best for: most production tasks, extraction, analysis
 
     Pricing: $3/1M input tokens, $15/1M output tokens
-    Model ID: claude-sonnet-4-5-20250929
+    Model ID: claude-sonnet-4-6
     """
     response = anthropic_client.messages.create(
-        model="claude-sonnet-4-5-20250929",
+        model="claude-sonnet-4-6",
         messages=messages,
         temperature=temperature,
         max_tokens=max_tokens
     )
-    _log_usage("claude-sonnet-4-5-20250929", response.usage)
+    _log_usage("claude-sonnet-4-6", response.usage)
     return response.content[0].text
 
 def call_claude_haiku(messages, temperature=0.7, max_tokens=4000):
     """
-    Call Claude Haiku 4.5 (fast, cost-effective - Oct 2025)
+    Call Claude Haiku 4.5 (fast, cost-effective)
 
     Capabilities:
     - Fast responses
@@ -296,6 +296,61 @@ def call_claude_haiku(messages, temperature=0.7, max_tokens=4000):
     )
     _log_usage("claude-haiku-4-5-20251001", response.usage)
     return response.content[0].text
+
+
+def call_claude_with_tools(
+    messages,
+    tools,
+    tool_choice=None,
+    model="haiku",
+    temperature=0.0,
+    max_tokens=2000,
+    system=None
+):
+    """
+    Call Claude with tool_use for structured output.
+
+    Returns the full response object (not extracted text) so callers
+    can parse tool_use blocks with their existing logic.
+
+    Args:
+        messages: List of message dicts
+        tools: List of tool definition dicts
+        tool_choice: Tool choice dict (e.g., {"type": "tool", "name": "..."})
+        model: "haiku", "sonnet", or "opus"
+        temperature: Model temperature
+        max_tokens: Max tokens
+        system: Optional system prompt string
+
+    Returns:
+        Full Anthropic response object
+    """
+    model_map = {
+        "sonnet": "claude-sonnet-4-6",
+        "haiku": "claude-haiku-4-5-20251001",
+        "opus": "claude-opus-4-6",
+    }
+
+    if model not in model_map:
+        raise ValueError(f"Unknown model: {model}. Available: {list(model_map.keys())}")
+
+    model_id = model_map[model]
+
+    kwargs = {
+        "model": model_id,
+        "messages": messages,
+        "tools": tools,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+    }
+    if tool_choice is not None:
+        kwargs["tool_choice"] = tool_choice
+    if system is not None:
+        kwargs["system"] = system
+
+    response = anthropic_client.messages.create(**kwargs)
+    _log_usage(model_id, response.usage)
+    return response
 
 
 # =============================================================================
@@ -348,9 +403,9 @@ def call_claude_with_cache(
         print(f"Cache hits: {stats.get('cache_read_input_tokens', 0)}")
     """
     model_map = {
-        "sonnet": "claude-sonnet-4-5-20250929",
+        "sonnet": "claude-sonnet-4-6",
         "haiku": "claude-haiku-4-5-20251001",
-        "opus": "claude-opus-4-5-20251101",
+        "opus": "claude-opus-4-6",
     }
 
     if model not in model_map:
@@ -399,9 +454,9 @@ async def call_claude_with_cache_async(
         tuple: (response_text, cache_stats)
     """
     model_map = {
-        "sonnet": "claude-sonnet-4-5-20250929",
+        "sonnet": "claude-sonnet-4-6",
         "haiku": "claude-haiku-4-5-20251001",
-        "opus": "claude-opus-4-5-20251101",
+        "opus": "claude-opus-4-6",
     }
 
     if model not in model_map:
@@ -469,7 +524,7 @@ async def call_gpt5_mini_async(messages, temperature=1.0, max_tokens=4000):
 async def call_claude_opus_async(messages, temperature=0.7, max_tokens=8000):
     """Async version of call_claude_opus for parallel processing"""
     response = await async_anthropic_client.messages.create(
-        model="claude-opus-4-5-20251101",
+        model="claude-opus-4-6",
         messages=messages,
         temperature=temperature,
         max_tokens=max_tokens
@@ -479,7 +534,7 @@ async def call_claude_opus_async(messages, temperature=0.7, max_tokens=8000):
 async def call_claude_sonnet_async(messages, temperature=0.7, max_tokens=8000):
     """Async version of call_claude_sonnet for parallel processing"""
     response = await async_anthropic_client.messages.create(
-        model="claude-sonnet-4-5-20250929",
+        model="claude-sonnet-4-6",
         messages=messages,
         temperature=temperature,
         max_tokens=max_tokens

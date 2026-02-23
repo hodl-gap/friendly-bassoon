@@ -41,6 +41,7 @@ from .relationship_store import (
 from .historical_event_detector import detect_historical_gap, identify_instruments, get_date_range, detect_historical_analogs
 from .historical_data_fetcher import fetch_historical_event_data, compare_to_current
 from .historical_aggregator import fetch_multiple_analogs, aggregate_analogs, format_analogs_for_prompt
+from .regime_characterization import characterize_regime
 from .asset_configs import get_asset_config
 from .prediction_tracker import extract_predictions, log_predictions
 from shared.chain_graph import ChainGraph
@@ -369,6 +370,61 @@ def format_insight(state: RiskImpactState, as_json: bool = False, asset_class: s
 
     lines.append("=" * 60)
 
+    # Condensed summary
+    lines.append("")
+    lines.append("=" * 60)
+    lines.append(f"CONDENSED SUMMARY -- {asset_name.upper()}")
+    lines.append("=" * 60)
+    lines.append("")
+    for i, track in enumerate(tracks_sorted, 1):
+        title = track.get("title", f"Track {i}")
+        confidence = track.get("confidence", 0)
+        mechanism = track.get("causal_mechanism", "N/A")
+        evidence = track.get("historical_evidence", {})
+        implications = track.get("asset_implications", [])
+
+        # Line 1: title + confidence → mechanism
+        lines.append(f"TRACK {i} ({confidence*100:.0f}%): {title}")
+
+        # Line 2: mechanism (truncated if long)
+        mech_str = f"  {mechanism}"
+        if len(mech_str) > 120:
+            mech_str = mech_str[:117] + "..."
+        lines.append(mech_str)
+
+        # Line 3: precedent + asset implications
+        parts = []
+        precedent_count = evidence.get("precedent_count")
+        success_rate = evidence.get("success_rate")
+        if precedent_count and success_rate is not None:
+            parts.append(f"{precedent_count} precedents ({success_rate*100:.0f}% success)")
+        imp_strs = []
+        for imp in implications[:3]:
+            s = f"{imp.get('asset', '?')}: {imp.get('direction', '?')}"
+            mag = imp.get("magnitude_range", "")
+            if mag:
+                s += f" ({mag})"
+            imp_strs.append(s)
+        if imp_strs:
+            parts.append("; ".join(imp_strs))
+        if parts:
+            lines.append(f"  {'. '.join(parts)}.")
+        lines.append("")
+
+    if synthesis:
+        # One-sentence bottom line from synthesis (first sentence or truncated)
+        synth_clean = synthesis.replace("\n", " ").strip()
+        first_sentence_end = synth_clean.find(". ")
+        if first_sentence_end > 0 and first_sentence_end < 200:
+            bottom = synth_clean[:first_sentence_end + 1]
+        elif len(synth_clean) > 200:
+            bottom = synth_clean[:197] + "..."
+        else:
+            bottom = synth_clean
+        lines.append(f"BOTTOM LINE: {bottom}")
+
+    lines.append("=" * 60)
+
     return "\n".join(lines)
 
 
@@ -609,12 +665,22 @@ def validate_claims(state: RiskImpactState) -> RiskImpactState:
 
     try:
         import sys
-        # Ensure data_collection is importable
+        # Ensure data_collection's own modules (states.py) resolve before other subprojects.
+        # data_collection uses bare `from states import DataCollectionState` which collides
+        # with database_retriever's states.py if that's earlier on sys.path.
         dc_path = str(config.DATA_COLLECTION_DIR)
+        saved_states = sys.modules.pop("states", None)
         if dc_path not in sys.path:
-            sys.path.append(dc_path)
+            sys.path.insert(0, dc_path)
+        else:
+            sys.path.remove(dc_path)
+            sys.path.insert(0, dc_path)
 
         from subproject_data_collection.data_collection_orchestrator import run_claim_validation
+
+        # Restore previous states module so other subprojects aren't affected
+        if saved_states is not None:
+            sys.modules["states"] = saved_states
 
         result = run_claim_validation(synthesis_text=synthesis)
 
@@ -634,9 +700,13 @@ def validate_claims(state: RiskImpactState) -> RiskImpactState:
     except ImportError as e:
         print(f"[Claim Validation] data_collection not available: {e}")
         state["claim_validation_results"] = []
+        if saved_states is not None:
+            sys.modules["states"] = saved_states
     except Exception as e:
         print(f"[Claim Validation] Validation failed: {e}")
         state["claim_validation_results"] = []
+        if saved_states is not None:
+            sys.modules["states"] = saved_states
 
     return state
 
@@ -832,7 +902,7 @@ def run_multi_asset_analysis(
         Dict mapping asset_class -> result state
     """
     if assets is None:
-        assets = ["btc"]
+        assets = ["equity"]
 
     if ENABLE_SNAPSHOTS:
         _start_run()
@@ -890,6 +960,7 @@ def run_multi_asset_analysis(
 
 def run_impact_analysis(
     query: str,
+    asset_class: str = "equity",
     output_json: bool = False,
     skip_data_fetch: bool = False,
     skip_chain_store: bool = False,
@@ -898,10 +969,11 @@ def run_impact_analysis(
     output_mode: str = "insight"
 ) -> Dict[str, Any]:
     """
-    Single-asset entry point (defaults to BTC).
+    Single-asset entry point.
 
     Args:
         query: User's question about macro event impact
+        asset_class: Asset class to analyze (default: "equity")
         output_json: If True, return JSON-formatted output
         skip_data_fetch: If True, skip fetching current data (Phase 1 mode)
         skip_chain_store: If True, skip loading/storing logic chains (Phase 3)
@@ -915,7 +987,7 @@ def run_impact_analysis(
     """
     results = run_multi_asset_analysis(
         query,
-        assets=["btc"],
+        assets=[asset_class],
         output_json=output_json,
         skip_data_fetch=skip_data_fetch,
         skip_chain_store=skip_chain_store,
@@ -923,7 +995,7 @@ def run_impact_analysis(
         image_path=image_path,
         output_mode=output_mode
     )
-    return results["btc"]
+    return results[asset_class]
 
 
 # Backward-compatible alias
@@ -958,88 +1030,6 @@ def _build_condition_variables(extracted_variables: list) -> list:
             })
 
     return condition_vars
-
-
-def characterize_regime(state: RiskImpactState) -> RiskImpactState:
-    """Characterize current macro regime vs historical analogs (Gap 1)."""
-    current_values = state.get("current_values", {})
-    historical_analogs_text = state.get("historical_analogs_text", "")
-
-    if not current_values or not historical_analogs_text:
-        return state
-
-    current_values_text = format_current_values_for_prompt(current_values)
-
-    from .impact_analysis_prompts import REGIME_CHARACTERIZATION_PROMPT
-    prompt = REGIME_CHARACTERIZATION_PROMPT.format(
-        current_values_text=current_values_text,
-        historical_analogs_text=historical_analogs_text,
-    )
-
-    tool = {
-        "name": "output_regime",
-        "description": "Output regime characterization",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "regime_name": {"type": "string"},
-                "closest_analog": {"type": "string"},
-                "similarities": {"type": "array", "items": {"type": "string"}},
-                "differences": {"type": "array", "items": {"type": "string"}},
-                "summary": {"type": "string"}
-            },
-            "required": ["regime_name", "summary"]
-        }
-    }
-
-    try:
-        import anthropic
-        client = anthropic.Anthropic()
-        response = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=1500,
-            temperature=0.2,
-            messages=[{"role": "user", "content": prompt}],
-            tools=[tool],
-            tool_choice={"type": "tool", "name": "output_regime"}
-        )
-
-        try:
-            from shared.run_logger import log_llm_call
-            log_llm_call("claude-haiku-4-5-20251001", response.usage.input_tokens, response.usage.output_tokens)
-        except Exception:
-            pass
-
-        regime = None
-        for block in response.content:
-            if block.type == "tool_use" and block.name == "output_regime":
-                regime = block.input
-                break
-
-        if regime is None:
-            print("[Regime Characterization] No tool_use block found")
-            return state
-
-        text_lines = [f"**Current Regime**: {regime['regime_name']}"]
-        if regime.get("closest_analog"):
-            text_lines.append(f"**Closest Analog**: {regime['closest_analog']}")
-        if regime.get("similarities"):
-            text_lines.append("**Similarities**:")
-            for s in regime["similarities"]:
-                text_lines.append(f"  - {s}")
-        if regime.get("differences"):
-            text_lines.append("**Key Differences (this time is different)**:")
-            for d in regime["differences"]:
-                text_lines.append(f"  - {d}")
-        text_lines.append(f"\n{regime.get('summary', '')}")
-
-        state["regime_characterization_text"] = "\n".join(text_lines)
-        print(f"[Regime Characterization] Regime: {regime['regime_name']}")
-
-    except Exception as e:
-        print(f"[Regime Characterization] Failed: {e}")
-
-    return state
 
 
 def enrich_with_historical_event(state: RiskImpactState) -> RiskImpactState:

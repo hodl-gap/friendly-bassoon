@@ -73,9 +73,8 @@ def log_llm_call(model: str, input_tokens: int, output_tokens: int,
 
 # Pricing per 1M tokens (input, output)
 _PRICING = {
-    "claude-opus-4-5-20251101": (15.0, 75.0),
-    "claude-sonnet-4-5-20250929": (3.0, 15.0),
-    "claude-sonnet-4-20250514": (3.0, 15.0),
+    "claude-opus-4-6": (5.0, 25.0),
+    "claude-sonnet-4-6": (3.0, 15.0),
     "claude-haiku-4-5-20251001": (1.0, 5.0),
 }
 

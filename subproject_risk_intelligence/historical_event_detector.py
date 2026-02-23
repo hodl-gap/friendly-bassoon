@@ -12,7 +12,8 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
 
-import anthropic
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from models import call_claude_with_tools
 
 from .historical_event_prompts import (
     GAP_DETECTION_PROMPT,
@@ -89,22 +90,13 @@ def extract_analogs_from_context(
     )
 
     try:
-        client = anthropic.Anthropic()
-        response = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=800,
-            temperature=0.0,
+        response = call_claude_with_tools(
+            messages=[{"role": "user", "content": prompt}],
             tools=[CONTEXT_ANALOG_TOOL],
             tool_choice={"type": "tool", "name": "extract_context_analogs"},
-            messages=[{"role": "user", "content": prompt}]
+            model="haiku",
+            max_tokens=800,
         )
-
-        # Log token usage
-        try:
-            from shared.run_logger import log_llm_call
-            log_llm_call("claude-haiku-4-5-20251001", response.usage.input_tokens, response.usage.output_tokens)
-        except Exception:
-            pass
 
         result = None
         for block in response.content:
@@ -236,22 +228,13 @@ def detect_historical_gap(
     }
 
     try:
-        client = anthropic.Anthropic()
-        response = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=500,
-            temperature=0.0,
+        response = call_claude_with_tools(
+            messages=[{"role": "user", "content": prompt}],
             tools=[gap_detection_tool],
             tool_choice={"type": "tool", "name": "detect_gap"},
-            messages=[{"role": "user", "content": prompt}]
+            model="haiku",
+            max_tokens=500,
         )
-
-        # Log token usage
-        try:
-            from shared.run_logger import log_llm_call
-            log_llm_call("claude-haiku-4-5-20251001", response.usage.input_tokens, response.usage.output_tokens)
-        except Exception:
-            pass
 
         # Extract tool_use result from response
         result = None
@@ -388,22 +371,13 @@ def identify_instruments(
     }
 
     try:
-        client = anthropic.Anthropic()
-        response = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=500,
-            temperature=0.0,
+        response = call_claude_with_tools(
+            messages=[{"role": "user", "content": prompt}],
             tools=[instrument_mapping_tool],
             tool_choice={"type": "tool", "name": "identify_instruments"},
-            messages=[{"role": "user", "content": prompt}]
+            model="haiku",
+            max_tokens=500,
         )
-
-        # Log token usage
-        try:
-            from shared.run_logger import log_llm_call
-            log_llm_call("claude-haiku-4-5-20251001", response.usage.input_tokens, response.usage.output_tokens)
-        except Exception:
-            pass
 
         # Extract tool_use result from response
         result = None
@@ -532,22 +506,13 @@ def get_date_range(
     }
 
     try:
-        client = anthropic.Anthropic()
-        response = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=300,
-            temperature=0.0,
+        response = call_claude_with_tools(
+            messages=[{"role": "user", "content": prompt}],
             tools=[date_extraction_tool],
             tool_choice={"type": "tool", "name": "extract_dates"},
-            messages=[{"role": "user", "content": prompt}]
+            model="haiku",
+            max_tokens=300,
         )
-
-        # Log token usage
-        try:
-            from shared.run_logger import log_llm_call
-            log_llm_call("claude-haiku-4-5-20251001", response.usage.input_tokens, response.usage.output_tokens)
-        except Exception:
-            pass
 
         # Extract tool_use result from response
         result = None
@@ -729,22 +694,13 @@ def _detect_analogs_llm(
     )
 
     try:
-        client = anthropic.Anthropic()
-        response = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=1000,
-            temperature=0.0,
+        response = call_claude_with_tools(
+            messages=[{"role": "user", "content": prompt}],
             tools=[MULTI_ANALOG_TOOL],
             tool_choice={"type": "tool", "name": "detect_analogs"},
-            messages=[{"role": "user", "content": prompt}]
+            model="haiku",
+            max_tokens=1000,
         )
-
-        # Log token usage
-        try:
-            from shared.run_logger import log_llm_call
-            log_llm_call("claude-haiku-4-5-20251001", response.usage.input_tokens, response.usage.output_tokens)
-        except Exception:
-            pass
 
         # Extract tool_use result
         result = None

@@ -17,13 +17,12 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 
-import anthropic
-
 # Add parent for models
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from models import call_claude_haiku
+from models import call_claude_haiku, call_claude_with_tools
 
 from .states import RiskImpactState
+from .pattern_validator_prompts import PATTERN_EXTRACTION_PROMPT
 from .current_data_fetcher import (
     fetch_fred_with_history,
     fetch_yahoo_with_history,
@@ -82,74 +81,19 @@ PATTERN_EXTRACTION_TOOL = {
 }
 
 
-PATTERN_EXTRACTION_PROMPT = """Extract quantitative patterns/conditions from this research text that can be validated against current market data.
-
-Focus on patterns that have:
-1. A TRIGGER VARIABLE (e.g., TGA, BTC, SOFR)
-2. A CONDITION (e.g., "increases 200%", "hits new ATH", "above $900B", "drops below $50K")
-3. A TIMEFRAME (e.g., "over 3 months", "within 2 weeks", "in January")
-4. An EXPECTED EFFECT (e.g., "BTC drops", "risk assets rally")
-
-TEXT:
-{text}
-
-Return JSON array of patterns. Each pattern should have:
-- variable: the trigger variable (normalized: tga, btc, sofr, fed_balance_sheet, dxy, vix, etc.)
-- condition_type: one of "percentage_change", "absolute_threshold", "new_high", "new_low", "range_breakout"
-- condition_value: the threshold value (e.g., 200 for 200%, 900000 for $900B)
-- condition_direction: "increase", "decrease", or "above", "below", "equals"
-- timeframe_days: number of days for the condition (e.g., 90 for 3 months, 30 for 1 month)
-- expected_effect: brief description of what happens when triggered
-- original_text: the original text snippet this was extracted from
-
-Return ONLY valid JSON array. If no patterns found, return [].
-
-Example output:
-[
-  {{
-    "variable": "tga",
-    "condition_type": "percentage_change",
-    "condition_value": 200,
-    "condition_direction": "increase",
-    "timeframe_days": 90,
-    "expected_effect": "BTC crashes",
-    "original_text": "TGA increased 200% over 3 months, BTC crashed"
-  }},
-  {{
-    "variable": "tga",
-    "condition_type": "absolute_threshold",
-    "condition_value": 940000,
-    "condition_direction": "above",
-    "timeframe_days": null,
-    "expected_effect": "risk assets decline within 2 months",
-    "original_text": "TGA above $940B peak leads to risk asset decline"
-  }}
-]"""
-
-
 def _extract_patterns_tool_use(messages: List[Dict[str, str]]) -> List[Dict[str, Any]]:
     """
     Extract patterns using Anthropic tool_use for structured output.
 
     Returns list of pattern dicts, or raises on failure.
     """
-    client = anthropic.Anthropic()
-
-    response = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=2000,
-        temperature=0.0,
+    response = call_claude_with_tools(
         messages=messages,
         tools=[PATTERN_EXTRACTION_TOOL],
-        tool_choice={"type": "tool", "name": "output_patterns"}
+        tool_choice={"type": "tool", "name": "output_patterns"},
+        model="haiku",
+        max_tokens=2000,
     )
-
-    # Log token usage
-    try:
-        from shared.run_logger import log_llm_call
-        log_llm_call("claude-haiku-4-5-20251001", response.usage.input_tokens, response.usage.output_tokens)
-    except Exception:
-        pass
 
     for block in response.content:
         if block.type == "tool_use":

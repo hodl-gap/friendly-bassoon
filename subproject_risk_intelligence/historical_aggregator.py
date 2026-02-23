@@ -5,11 +5,14 @@ Fetches data for N historical analogs in parallel,
 aggregates statistics (direction, magnitude, timing).
 """
 
+import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 from typing import Dict, Any, List
 from statistics import median, mean
 
-import anthropic
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from models import call_claude_with_tools
 
 from .historical_event_detector import identify_instruments, get_date_range
 from .historical_data_fetcher import fetch_historical_event_data, compare_to_current, fetch_conditions_at_date
@@ -75,22 +78,13 @@ def validate_analog_mechanism(analog: Dict[str, Any], market_data: Dict[str, Any
     }
 
     try:
-        client = anthropic.Anthropic()
-        response = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=300,
-            temperature=0.0,
+        response = call_claude_with_tools(
+            messages=[{"role": "user", "content": prompt}],
             tools=[validation_tool],
             tool_choice={"type": "tool", "name": "validate_mechanism"},
-            messages=[{"role": "user", "content": prompt}]
+            model="haiku",
+            max_tokens=300,
         )
-
-        # Log token usage
-        try:
-            from shared.run_logger import log_llm_call
-            log_llm_call("claude-haiku-4-5-20251001", response.usage.input_tokens, response.usage.output_tokens)
-        except Exception:
-            pass
 
         for block in response.content:
             if block.type == "tool_use" and block.name == "validate_mechanism":

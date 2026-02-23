@@ -12,9 +12,9 @@ from pathlib import Path
 # Add parent directory for models import
 sys.path.append(str(Path(__file__).parent.parent))
 
-from models import call_claude_sonnet, call_claude_haiku
+from models import call_claude_sonnet, call_claude_haiku, call_claude_with_tools
 from states import RetrieverState
-from answer_generation_prompts import LOGIC_CHAIN_PROMPT, SYNTHESIS_PROMPT, CONTRADICTION_PROMPT, RESYNTHESIS_PROMPT
+from answer_generation_prompts import LOGIC_CHAIN_PROMPT, SYNTHESIS_PROMPT, CONTRADICTION_PROMPT, RESYNTHESIS_PROMPT, SYNTHESIS_STRUCTURED_PROMPT
 from config import (
     MAX_CHUNKS_FOR_ANSWER,
     SKIP_CONTRADICTION_FOR_DATA_LOOKUP,
@@ -1052,15 +1052,6 @@ def synthesize_chains_structured(query: str, chains: str) -> dict:
         - synthesis_text: The full synthesis response
         - confidence_metadata: Extracted confidence scores (guaranteed JSON)
     """
-    import os
-    from anthropic import Anthropic
-    from dotenv import load_dotenv
-
-    # Load API key
-    env_path = Path(__file__).parent.parent / '.env'
-    load_dotenv(env_path)
-    client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-
     # Define tool schema for structured output
     synthesis_tool = {
         "name": "submit_synthesis",
@@ -1098,51 +1089,17 @@ def synthesize_chains_structured(query: str, chains: str) -> dict:
         }
     }
 
-    user_prompt = f"""You are synthesizing logic chains to identify consensus patterns and key monitoring variables.
-
-Query: {query}
-
-Logic Chains:
-{chains}
-
-Instructions:
-
-## Part 1: Consensus Chains
-Identify where MULTIPLE chains converge on the same conclusion through different paths.
-- Look for different starting points that lead to the same end effect
-- These represent higher-conviction conclusions supported by multiple reasoning paths
-- Only include if 2+ chains support the same conclusion
-
-## Part 2: Key Variables to Monitor
-Extract specific, actionable variables/indicators mentioned across the chains.
-- Group by category (e.g., Liquidity, Labor Market, Positioning)
-- Include specific thresholds or levels if mentioned
-- Note which chains reference each variable
-
-## Confidence Scoring
-Score the overall confidence based on:
-- High (0.8+): 3+ paths from 2+ independent sources
-- Medium (0.5-0.8): 2 paths OR single source with strong logic
-- Low (<0.5): Single path, weak support, or contradictory evidence
-
-Use the submit_synthesis tool to submit your analysis with confidence metadata."""
+    user_prompt = SYNTHESIS_STRUCTURED_PROMPT.format(query=query, chains=chains)
 
     try:
-        response = client.messages.create(
-            model="claude-sonnet-4-5-20250929",
-            max_tokens=4000,
-            temperature=0.3,
+        response = call_claude_with_tools(
+            messages=[{"role": "user", "content": user_prompt}],
             tools=[synthesis_tool],
             tool_choice={"type": "tool", "name": "submit_synthesis"},
-            messages=[{"role": "user", "content": user_prompt}]
+            model="sonnet",
+            temperature=0.3,
+            max_tokens=4000
         )
-
-        # Log token usage
-        try:
-            from shared.run_logger import log_llm_call
-            log_llm_call("claude-sonnet-4-5-20250929", response.usage.input_tokens, response.usage.output_tokens)
-        except Exception:
-            pass
 
         # Extract tool use result
         for content_block in response.content:

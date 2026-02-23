@@ -77,6 +77,17 @@ Daily monitoring (cron)
 
 Python, LangGraph, Pinecone, Claude/OpenAI APIs, Yahoo Finance, FRED API, Tavily
 
+## Code Design Standards
+
+1. **Main file = orchestration only** — no business logic in orchestrator files; they wire components together
+2. **Prompts in separate files** — all LLM prompts live in `*_prompts.py` files, not inline
+3. **AI calls via parent's `models.py`** — centralized LLM call functions, not direct API calls in subprojects
+4. **Simple sequential workflow** — plain Python with ThreadPoolExecutor for parallelism, not LangGraph
+   - *Accepted deviation*: `database_retriever`, `data_collection`, and `variable_mapper` use LangGraph StateGraph. These are stable working pipelines where replacement is high-risk for no functional gain.
+5. **Dual-mode output** — always maintain both insight and belief_space paths
+6. **Follow established patterns** — new subprojects mirror existing ones in structure and conventions
+7. **Do not overcomplicate** — keep it minimal and focused
+
 ## Known Issues
 
 ### 1. Categorization Drops Institutional Research (FIXED 2026-02-20)

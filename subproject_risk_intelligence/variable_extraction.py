@@ -4,10 +4,13 @@ Variable Extraction Module
 Extracts normalized variables from retrieved logic chains and synthesis.
 """
 
+import sys
 import re
+from pathlib import Path
 from typing import List, Dict, Any, Set
 
-import anthropic
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from models import call_claude_with_tools
 
 from .states import RiskImpactState
 from .asset_configs import get_asset_config
@@ -72,8 +75,6 @@ def identify_analysis_variables(query: str) -> set:
     )
 
     try:
-        client = anthropic.Anthropic()
-
         analysis_frame_tool = {
             "name": "identify_variables",
             "description": "Return the key variables implied by this query.",
@@ -90,21 +91,13 @@ def identify_analysis_variables(query: str) -> set:
             }
         }
 
-        response = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=300,
-            temperature=0.0,
+        response = call_claude_with_tools(
+            messages=[{"role": "user", "content": prompt}],
             tools=[analysis_frame_tool],
             tool_choice={"type": "tool", "name": "identify_variables"},
-            messages=[{"role": "user", "content": prompt}]
+            model="haiku",
+            max_tokens=300,
         )
-
-        # Log token usage
-        try:
-            from shared.run_logger import log_llm_call
-            log_llm_call("claude-haiku-4-5-20251001", response.usage.input_tokens, response.usage.output_tokens)
-        except Exception:
-            pass
 
         for block in response.content:
             if block.type == "tool_use" and block.name == "identify_variables":
@@ -157,8 +150,6 @@ def extract_variables_llm(state) -> set:
     )
 
     try:
-        client = anthropic.Anthropic()
-
         variable_extraction_tool = {
             "name": "extract_variables",
             "description": "Return the list of variables relevant to this macro analysis.",
@@ -180,21 +171,13 @@ def extract_variables_llm(state) -> set:
             }
         }
 
-        response = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=500,
-            temperature=0.0,
+        response = call_claude_with_tools(
+            messages=[{"role": "user", "content": prompt}],
             tools=[variable_extraction_tool],
             tool_choice={"type": "tool", "name": "extract_variables"},
-            messages=[{"role": "user", "content": prompt}]
+            model="haiku",
+            max_tokens=500,
         )
-
-        # Log token usage
-        try:
-            from shared.run_logger import log_llm_call
-            log_llm_call("claude-haiku-4-5-20251001", response.usage.input_tokens, response.usage.output_tokens)
-        except Exception:
-            pass
 
         # Extract tool_use result
         result = None

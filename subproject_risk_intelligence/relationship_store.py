@@ -5,6 +5,7 @@ Manages persistent storage of discovered logic chains.
 Stores chains in data/relationships.json (per asset class).
 """
 
+import sys
 import json
 import re
 import hashlib
@@ -12,8 +13,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from models import call_claude_with_tools
+
 from .states import RiskImpactState
 from .asset_configs import get_asset_config
+from .relationship_store_prompts import TRIGGER_EXTRACTION_PROMPT
 from . import config
 
 
@@ -416,8 +421,6 @@ def extract_chain_triggers(chain: dict) -> list:
     Returns:
         List of trigger condition dicts, or empty list on failure
     """
-    import anthropic
-
     mechanism = chain.get("mechanism", "")
     steps = chain.get("logic_chain", {}).get("steps", [])
     summary = chain.get("logic_chain", {}).get("chain_summary", "")
@@ -430,40 +433,16 @@ def extract_chain_triggers(chain: dict) -> list:
     cause_norm = steps[0].get("cause_normalized", "") if steps else ""
     effect = steps[-1].get("effect", "") if steps else ""
 
-    prompt = f"""Given this macro logic chain, extract 1-2 trigger conditions that would activate it.
-
-Chain: {summary}
-Cause: {cause} (normalized: {cause_norm})
-Terminal effect: {effect}
-Mechanism: {mechanism}
-
-Consider the NORMAL volatility range for each variable:
-- VIX: 5% weekly change is routine, 20%+ is significant
-- DXY: 0.5% weekly change is routine, 2%+ is significant
-- us10y/us02y: 5bps weekly change is routine, 15bps+ is significant
-- TGA: 3% weekly change is routine, 10%+ is significant
-- BTC: 5% weekly change is routine, 15%+ is significant
-- Gold: 2% weekly change is routine, 5%+ is significant
-- S&P 500: 2% weekly change is routine, 5%+ is significant
-
-Extract trigger conditions that represent MEANINGFUL moves for the cause variable."""
+    prompt = TRIGGER_EXTRACTION_PROMPT.format(summary=summary, cause=cause, cause_norm=cause_norm, effect=effect, mechanism=mechanism)
 
     try:
-        client = anthropic.Anthropic()
-        response = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=500,
-            temperature=0.0,
+        response = call_claude_with_tools(
             messages=[{"role": "user", "content": prompt}],
             tools=[TRIGGER_EXTRACTION_TOOL],
             tool_choice={"type": "tool", "name": "output_triggers"},
+            model="haiku",
+            max_tokens=500,
         )
-
-        try:
-            from shared.run_logger import log_llm_call
-            log_llm_call("claude-haiku-4-5-20251001", response.usage.input_tokens, response.usage.output_tokens)
-        except Exception:
-            pass
 
         for block in response.content:
             if block.type == "tool_use" and block.name == "output_triggers":

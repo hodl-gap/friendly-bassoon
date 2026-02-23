@@ -6,11 +6,9 @@ import json
 from pathlib import Path
 from typing import Dict, Any, List
 
-import anthropic
-
 # Add parent to path for models import
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from models import call_claude_sonnet
+from models import call_claude_sonnet, call_claude_with_tools
 
 from .impact_analysis_prompts import (
     SYSTEM_PROMPT,
@@ -27,14 +25,11 @@ from .asset_configs import get_asset_config
 from .states import RiskImpactState
 from . import config
 
-# Anthropic client for tool_use calls
-_client = anthropic.Anthropic()
-
-# Map config model names to Anthropic model IDs
-_MODEL_ID_MAP = {
-    "claude_opus": "claude-opus-4-5-20251101",
-    "claude_sonnet": "claude-sonnet-4-5-20250929",
-    "claude_haiku": "claude-haiku-4-5-20251001",
+# Map config model names to call_claude_with_tools short names
+_MODEL_SHORT_NAME = {
+    "claude_opus": "opus",
+    "claude_sonnet": "sonnet",
+    "claude_haiku": "haiku",
 }
 
 def _get_impact_tool(asset_class: str = "btc") -> dict:
@@ -367,28 +362,22 @@ def _analyze_insight(state: RiskImpactState, asset_class: str = "btc") -> RiskIm
     data = _prepare_prompt_data(state, asset_class)
     prompt = get_insight_prompt(**data)
 
-    model_id = _MODEL_ID_MAP.get(config.ANALYSIS_MODEL, "claude-sonnet-4-5-20250929")
+    model_short = _MODEL_SHORT_NAME.get(config.ANALYSIS_MODEL, "sonnet")
     asset_name = get_asset_config(asset_class)["name"]
-    print(f"\n[Impact Analysis] Calling {config.ANALYSIS_MODEL} ({model_id}) for {asset_name} INSIGHT mode...")
+    print(f"\n[Impact Analysis] Calling {config.ANALYSIS_MODEL} ({model_short}) for {asset_name} INSIGHT mode...")
 
     insight_tool = _get_insight_tool(asset_class)
 
     try:
-        response = _client.messages.create(
-            model=model_id,
-            max_tokens=6000,
-            temperature=0.3,
-            system=INSIGHT_SYSTEM_PROMPT,
+        response = call_claude_with_tools(
             messages=[{"role": "user", "content": prompt}],
             tools=[insight_tool],
-            tool_choice={"type": "tool", "name": "output_insight"}
+            tool_choice={"type": "tool", "name": "output_insight"},
+            model=model_short,
+            temperature=0.3,
+            max_tokens=6000,
+            system=INSIGHT_SYSTEM_PROMPT,
         )
-
-        try:
-            from shared.run_logger import log_llm_call
-            log_llm_call(model_id, response.usage.input_tokens, response.usage.output_tokens)
-        except Exception:
-            pass
 
         print("\n[Impact Analysis] Raw LLM Response (insight):")
         print("-" * 40)
@@ -455,28 +444,22 @@ def _analyze_belief_space(state: RiskImpactState, asset_class: str = "btc") -> R
     data = _prepare_prompt_data(state, asset_class)
     prompt = get_impact_analysis_prompt(**data)
 
-    model_id = _MODEL_ID_MAP.get(config.ANALYSIS_MODEL, "claude-sonnet-4-5-20250929")
+    model_short = _MODEL_SHORT_NAME.get(config.ANALYSIS_MODEL, "sonnet")
     asset_name = get_asset_config(asset_class)["name"]
-    print(f"\n[Impact Analysis] Calling {config.ANALYSIS_MODEL} ({model_id}) for {asset_name} BELIEF_SPACE mode...")
+    print(f"\n[Impact Analysis] Calling {config.ANALYSIS_MODEL} ({model_short}) for {asset_name} BELIEF_SPACE mode...")
 
     impact_tool = _get_impact_tool(asset_class)
 
     try:
-        response = _client.messages.create(
-            model=model_id,
-            max_tokens=4000,
-            temperature=0.3,
-            system=BELIEF_SPACE_SYSTEM_PROMPT,
+        response = call_claude_with_tools(
             messages=[{"role": "user", "content": prompt}],
             tools=[impact_tool],
-            tool_choice={"type": "tool", "name": "output_impact_analysis"}
+            tool_choice={"type": "tool", "name": "output_impact_analysis"},
+            model=model_short,
+            temperature=0.3,
+            max_tokens=4000,
+            system=BELIEF_SPACE_SYSTEM_PROMPT,
         )
-
-        try:
-            from shared.run_logger import log_llm_call
-            log_llm_call(model_id, response.usage.input_tokens, response.usage.output_tokens)
-        except Exception:
-            pass
 
         print("\n[Impact Analysis] Raw LLM Response:")
         print("-" * 40)

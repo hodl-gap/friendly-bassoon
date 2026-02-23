@@ -44,3 +44,23 @@ Your job is to score how well each chunk helps answer the query with actual caus
 ```
 
 Return ONLY the JSON array, nothing else."""
+
+
+# Structured re-rank user prompt (used with tool_use for guaranteed JSON output)
+STRUCTURED_RERANK_USER_PROMPT = """Score each chunk for CAUSAL RELEVANCE to this query.
+
+**Query:** {query}
+
+**Scoring Guidelines (0.0-1.0):**
+- 0.9-1.0: Directly answers query with explicit causal logic (cause → effect → mechanism)
+- 0.7-0.8: Contains relevant causal mechanisms or specific thresholds
+- 0.5-0.6: Conceptually related but no direct causal link
+- 0.3-0.4: Tangentially related, surface-level overlap only
+- 0.0-0.2: Off-topic despite keyword match
+
+**Be STRICT:** High scores ONLY for chunks with actual causal reasoning.
+
+**Chunks to evaluate:**
+{chunks_text}
+
+Use the submit_rerank_scores tool to submit your scores for ALL chunks."""

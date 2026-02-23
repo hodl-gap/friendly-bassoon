@@ -12,24 +12,19 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
-import anthropic
-
 # Add parent directory for shared imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Lock to prevent concurrent sys.modules manipulation across threads
 _import_lock = threading.Lock()
 
-from models import call_claude_haiku, call_claude_sonnet
+from models import call_claude_haiku, call_claude_sonnet, call_claude_with_tools
 from knowledge_gap_prompts import (
     SYSTEM_PROMPT, GAP_DETECTION_PROMPT,
     EXTRACT_EXTREME_DATES_PROMPT, EXTRACT_READINGS_FROM_IMAGE_PROMPT,
     INTERPRET_EVENT_STUDY_PROMPT
 )
 from query_processing import expand_for_web_chain_extraction
-
-_client = anthropic.Anthropic()
-
 
 def format_chains_for_prompt(logic_chains: list) -> str:
     """Format logic chains for the gap detection prompt."""
@@ -194,22 +189,15 @@ Topic Coverage Analysis:
     }
 
     try:
-        # Primary approach: Anthropic tool_use for structured output
-        response = _client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=2000,
-            temperature=0.0,
+        # Primary approach: tool_use for structured output
+        response = call_claude_with_tools(
             messages=messages,
             tools=[gap_tool],
-            tool_choice={"type": "tool", "name": "output_gaps"}
+            tool_choice={"type": "tool", "name": "output_gaps"},
+            model="haiku",
+            temperature=0.0,
+            max_tokens=2000
         )
-
-        # Log token usage
-        try:
-            from shared.run_logger import log_llm_call
-            log_llm_call("claude-haiku-4-5-20251001", response.usage.input_tokens, response.usage.output_tokens)
-        except Exception:
-            pass
 
         # Extract tool_use result
         result = None
