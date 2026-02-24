@@ -4,7 +4,6 @@ Usage:
     python -m subproject_risk_intelligence "What is the impact of TGA drawdown on BTC?"
     python -m subproject_risk_intelligence --json "What is the impact of DXY strength on BTC?"
     python -m subproject_risk_intelligence --skip-data "Query without live data fetch"
-    python -m subproject_risk_intelligence --use-integrated "Test TGA impact"
     python -m subproject_risk_intelligence --asset equity "What caused the SaaS meltdown?"
     python -m subproject_risk_intelligence --asset btc,equity "What caused the SaaS meltdown?"
 """
@@ -47,11 +46,6 @@ def main():
         help="Skip loading/storing logic chains (disable Phase 3)"
     )
     parser.add_argument(
-        "--use-integrated",
-        action="store_true",
-        help="Use integrated Variable Mapper → Data Collection pipeline"
-    )
-    parser.add_argument(
         "--image",
         help="Path to indicator chart image (JPEG/PNG) for vision-based date extraction"
     )
@@ -60,23 +54,7 @@ def main():
         default="equity",
         help="Asset classes to analyze, comma-separated (e.g., 'equity', 'btc', 'btc,equity')"
     )
-    parser.add_argument(
-        "--mode",
-        choices=["insight", "belief_space"],
-        default="insight",
-        help="Output mode: 'insight' (multi-track reasoning, default) or 'belief_space' (legacy scenarios)"
-    )
-    parser.add_argument(
-        "--hybrid",
-        action="store_true",
-        help="Enable hybrid agentic pipeline"
-    )
-
     args = parser.parse_args()
-
-    if args.hybrid:
-        import os
-        os.environ["USE_HYBRID_PIPELINE"] = "true"
 
     # Handle missing query
     if not args.query:
@@ -106,9 +84,7 @@ def main():
                 output_json=args.json,
                 skip_data_fetch=args.skip_data,
                 skip_chain_store=args.skip_chains,
-                use_integrated_pipeline=args.use_integrated,
                 image_path=args.image,
-                output_mode=args.mode
             )
         else:
             result = run_multi_asset_analysis(
@@ -117,9 +93,7 @@ def main():
                 output_json=args.json,
                 skip_data_fetch=args.skip_data,
                 skip_chain_store=args.skip_chains,
-                use_integrated_pipeline=args.use_integrated,
                 image_path=args.image,
-                output_mode=args.mode
             )
 
     # Exit with appropriate code

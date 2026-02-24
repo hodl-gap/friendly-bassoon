@@ -424,26 +424,6 @@ def test_claim_validation_in_insight_prompt():
     print("PASSED: test_claim_validation_in_insight_prompt")
 
 
-def test_claim_validation_in_belief_space_prompt():
-    """Test that claim_validation_text appears in the belief space prompt."""
-    from subproject_risk_intelligence.impact_analysis_prompts import get_impact_analysis_prompt
-
-    prompt = get_impact_analysis_prompt(
-        query="test query",
-        retrieval_answer="test answer",
-        synthesis="test synthesis",
-        logic_chains=[],
-        confidence_metadata={},
-        claim_validation_text='## CLAIM VALIDATION (Data-Tested)\n- "test claim": REFUTED (p=0.42)',
-    )
-
-    assert "CLAIM VALIDATION" in prompt, "Claim validation should appear in belief space prompt"
-    assert "test claim" in prompt
-    print("  Claim validation present in belief space prompt: OK")
-
-    print("PASSED: test_claim_validation_in_belief_space_prompt")
-
-
 # ============================================================================
 # Config flags
 # ============================================================================
@@ -498,7 +478,6 @@ if __name__ == "__main__":
         test_claim_validation_formatting,
         test_claim_validation_empty,
         test_claim_validation_in_insight_prompt,
-        test_claim_validation_in_belief_space_prompt,
         test_state_has_claim_validation_field,
         # Gap 4
         test_trigger_fallback_to_5pct,

@@ -1,20 +1,16 @@
-"""Impact analysis module - LLM-based BTC impact assessment."""
+"""Impact analysis module - LLM-based insight generation."""
 
 import sys
-import re
 import json
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 # Add parent to path for models import
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from models import call_claude_sonnet, call_claude_with_tools
+from models import call_claude_with_tools
 
 from .impact_analysis_prompts import (
     SYSTEM_PROMPT,
-    BELIEF_SPACE_SYSTEM_PROMPT,
-    INSIGHT_SYSTEM_PROMPT,
-    get_impact_analysis_prompt,
     get_insight_prompt,
 )
 from .current_data_fetcher import format_current_values_for_prompt
@@ -31,60 +27,6 @@ _MODEL_SHORT_NAME = {
     "claude_sonnet": "sonnet",
     "claude_haiku": "haiku",
 }
-
-def _get_impact_tool(asset_class: str = "btc") -> dict:
-    """Get the tool definition for structured impact analysis output."""
-    cfg = get_asset_config(asset_class)
-    return {
-        "name": "output_impact_analysis",
-        "description": f"Output structured {cfg['name']} impact analysis with scenarios and belief space",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "scenarios": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "name": {"type": "string"},
-                            "direction": {"type": "string", "enum": ["BULLISH", "BEARISH", "NEUTRAL"]},
-                            "likelihood": {"type": "number", "description": "Likelihood as integer percentage 0-100 (e.g., 65 means 65%)"},
-                            "chain": {"type": "string"},
-                            "rationale": {"type": "string"}
-                        },
-                        "required": ["name", "direction", "likelihood", "chain"]
-                    }
-                },
-                "contradictions": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "thesis_a": {"type": "string"},
-                            "thesis_b": {"type": "string"},
-                            "implication": {"type": "string"}
-                        }
-                    }
-                },
-                "confidence": {
-                    "type": "object",
-                    "properties": {
-                        "score": {"type": "number"},
-                        "chain_count": {"type": "integer"},
-                        "source_diversity": {"type": "integer"},
-                        "strongest_chain": {"type": "string"}
-                    },
-                    "required": ["score"]
-                },
-                "time_horizon": {"type": "string"},
-                "decay_profile": {"type": "string"},
-                "rationale": {"type": "string"},
-                "risk_factors": {"type": "array", "items": {"type": "string"}}
-            },
-            "required": ["scenarios", "confidence", "time_horizon", "rationale", "risk_factors"]
-        }
-    }
-
 
 def _get_insight_tool(asset_class: str = "btc") -> dict:
     """Get the tool definition for structured insight output."""
@@ -202,83 +144,11 @@ def _parse_insight_tool_result(tool_input: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def _parse_tool_use_result(tool_input: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Convert tool_use input into the same structure that parse_impact_response produces.
-
-    This ensures backward compatibility with the rest of the pipeline.
-    """
-    result = {
-        "direction": "NEUTRAL",
-        "scenarios": [],
-        "belief_space": {},
-        "confidence": {},
-        "time_horizon": "unknown",
-        "decay_profile": "unknown",
-        "rationale": "",
-        "risk_factors": []
-    }
-
-    # Scenarios
-    scenarios = tool_input.get("scenarios", [])
-    parsed_scenarios = []
-    for s in scenarios:
-        scenario = {
-            "name": s.get("name", ""),
-            "direction": s.get("direction", "NEUTRAL"),
-            "polarity": s.get("direction", "NEUTRAL"),
-            "likelihood": s.get("likelihood", 0) / 100.0,
-            "chain": s.get("chain", ""),
-        }
-        if s.get("rationale"):
-            scenario["rationale"] = s["rationale"]
-        parsed_scenarios.append(scenario)
-    result["scenarios"] = parsed_scenarios
-
-    # Contradictions -> belief_space
-    contradictions = tool_input.get("contradictions", [])
-    result["belief_space"] = {
-        "contradictions": contradictions,
-        "narrative_count": len(parsed_scenarios),
-        "regime_uncertainty": (
-            "high" if len(parsed_scenarios) > 2
-            else "medium" if len(parsed_scenarios) == 2
-            else "low"
-        )
-    }
-
-    # Primary direction from highest likelihood scenario
-    if parsed_scenarios:
-        sorted_scenarios = sorted(parsed_scenarios, key=lambda s: s.get("likelihood", 0), reverse=True)
-        result["direction"] = sorted_scenarios[0].get("direction", "NEUTRAL")
-        result["belief_space"]["dominant_narrative"] = sorted_scenarios[0].get("name", "Unknown")
-
-    # Confidence
-    confidence_raw = tool_input.get("confidence", {})
-    result["confidence"] = {
-        k: v for k, v in confidence_raw.items() if v is not None
-    }
-
-    # Time horizon
-    result["time_horizon"] = tool_input.get("time_horizon", "unknown")
-
-    # Decay profile
-    result["decay_profile"] = tool_input.get("decay_profile", "unknown")
-
-    # Rationale
-    result["rationale"] = tool_input.get("rationale", "")
-
-    # Risk factors
-    result["risk_factors"] = tool_input.get("risk_factors", [])
-
-    return result
-
-
 def analyze_impact(state: RiskImpactState, asset_class: str = "btc") -> RiskImpactState:
     """
     Analyze the impact of a macro event using retrieved context.
 
-    Dispatches to insight mode or belief_space mode based on state["output_mode"].
+    Produces multi-track insight output with independent reasoning tracks.
 
     Args:
         state: Current state with retrieval results
@@ -287,11 +157,7 @@ def analyze_impact(state: RiskImpactState, asset_class: str = "btc") -> RiskImpa
     Returns:
         Updated state with analysis results
     """
-    output_mode = state.get("output_mode", "insight")
-    if output_mode == "insight":
-        return _analyze_insight(state, asset_class)
-    else:
-        return _analyze_belief_space(state, asset_class)
+    return _analyze_insight(state, asset_class)
 
 
 def _prepare_prompt_data(state: RiskImpactState, asset_class: str) -> dict:
@@ -358,11 +224,7 @@ def _prepare_prompt_data(state: RiskImpactState, asset_class: str) -> dict:
 
 
 def _analyze_insight(state: RiskImpactState, asset_class: str = "btc") -> RiskImpactState:
-    """
-    Insight mode: produces multi-track reasoning with independent evidence.
-
-    Falls back to belief_space mode on error.
-    """
+    """Produce multi-track reasoning with independent evidence."""
     data = _prepare_prompt_data(state, asset_class)
     prompt = get_insight_prompt(**data)
 
@@ -380,7 +242,7 @@ def _analyze_insight(state: RiskImpactState, asset_class: str = "btc") -> RiskIm
             model=model_short,
             temperature=0.3,
             max_tokens=8192,
-            system=INSIGHT_SYSTEM_PROMPT,
+            system=SYSTEM_PROMPT,
         )
 
         # Retry with higher limit if truncated
@@ -393,7 +255,7 @@ def _analyze_insight(state: RiskImpactState, asset_class: str = "btc") -> RiskIm
                 model=model_short,
                 temperature=0.3,
                 max_tokens=12000,
-                system=INSIGHT_SYSTEM_PROMPT,
+                system=SYSTEM_PROMPT,
             )
 
         print("\n[Impact Analysis] Raw LLM Response (insight):")
@@ -418,7 +280,6 @@ def _analyze_insight(state: RiskImpactState, asset_class: str = "btc") -> RiskIm
         parsed = _parse_insight_tool_result(tool_input)
 
         state["insight_output"] = parsed
-        state["output_mode"] = "insight"
 
         # Populate legacy fields from best track for backward compatibility
         tracks = parsed.get("tracks", [])
@@ -442,282 +303,8 @@ def _analyze_insight(state: RiskImpactState, asset_class: str = "btc") -> RiskIm
             state["rationale"] = parsed.get("synthesis", "")
             state["risk_factors"] = parsed.get("key_uncertainties", [])
 
-        state["decay_profile"] = "unknown"
-
         return state
 
     except Exception as e:
-        print(f"\n[Impact Analysis] Insight mode failed ({e}), falling back to belief_space mode...")
-        state["output_mode"] = "belief_space"
-        return _analyze_belief_space(state, asset_class)
-
-
-def _analyze_belief_space(state: RiskImpactState, asset_class: str = "btc") -> RiskImpactState:
-    """
-    Belief space mode: produces scenarios with contradictions (legacy).
-
-    Uses Anthropic tool_use for structured output. Falls back to regex parsing.
-    """
-    data = _prepare_prompt_data(state, asset_class)
-    prompt = get_impact_analysis_prompt(**data)
-
-    model_short = _MODEL_SHORT_NAME.get(config.ANALYSIS_MODEL, "sonnet")
-    asset_name = get_asset_config(asset_class)["name"]
-    print(f"\n[Impact Analysis] Calling {config.ANALYSIS_MODEL} ({model_short}) for {asset_name} BELIEF_SPACE mode...")
-
-    impact_tool = _get_impact_tool(asset_class)
-
-    try:
-        response = call_claude_with_tools(
-            messages=[{"role": "user", "content": prompt}],
-            tools=[impact_tool],
-            tool_choice={"type": "tool", "name": "output_impact_analysis"},
-            model=model_short,
-            temperature=0.3,
-            max_tokens=4000,
-            system=BELIEF_SPACE_SYSTEM_PROMPT,
-        )
-
-        print("\n[Impact Analysis] Raw LLM Response:")
-        print("-" * 40)
-        print(response)
-        print("-" * 40)
-
-        tool_input = None
-        for block in response.content:
-            if block.type == "tool_use" and block.name == "output_impact_analysis":
-                tool_input = block.input
-                break
-
-        if tool_input is None:
-            raise ValueError("No tool_use block found in response")
-
-        print("\n[Impact Analysis] Tool use input (structured):")
-        print("-" * 40)
-        print(json.dumps(tool_input, indent=2))
-        print("-" * 40)
-
-        parsed = _parse_tool_use_result(tool_input)
-
-    except Exception as e:
-        print(f"\n[Impact Analysis] tool_use failed ({e}), falling back to regex parsing...")
-
-        messages = [{"role": "user", "content": prompt}]
-        fallback_response = call_claude_sonnet(messages, temperature=0.3, max_tokens=2000)
-
-        print("\n[Impact Analysis] Fallback Raw LLM Response:")
-        print("-" * 40)
-        print(fallback_response)
-        print("-" * 40)
-
-        parsed = parse_impact_response(fallback_response)
-
-    state["scenarios"] = parsed.get("scenarios", [])
-    state["belief_space"] = parsed.get("belief_space", {})
-    state["direction"] = parsed.get("direction", "NEUTRAL")
-    state["confidence"] = parsed.get("confidence", {})
-    state["time_horizon"] = parsed.get("time_horizon", "unknown")
-    state["decay_profile"] = parsed.get("decay_profile", "unknown")
-    state["rationale"] = parsed.get("rationale", "")
-    state["risk_factors"] = parsed.get("risk_factors", [])
-    state["output_mode"] = "belief_space"
-
-    return state
-
-
-def parse_scenarios(response: str) -> List[Dict[str, Any]]:
-    """Parse all scenarios from the SCENARIOS section of the LLM response."""
-    scenarios = []
-
-    # Find the SCENARIOS section
-    scenarios_match = re.search(
-        r"SCENARIOS:\s*\n(.+?)(?=\nPRIMARY_DIRECTION:|\nCONTRADICTIONS:|\nDIRECTION:|\Z)",
-        response,
-        re.DOTALL | re.IGNORECASE
-    )
-
-    if not scenarios_match:
-        return scenarios
-
-    scenarios_text = scenarios_match.group(1)
-
-    # Split by "- Scenario" to get each scenario block
-    scenario_blocks = re.split(r"\n-\s*Scenario\s*", scenarios_text)
-
-    for block in scenario_blocks:
-        if not block.strip():
-            continue
-
-        scenario = {}
-
-        # Extract scenario name (first line or after letter like "A:")
-        # Handle various formats: "A: Name", "A - Name", just "Name"
-        first_line = block.strip().split('\n')[0].strip()
-        # Remove leading "- Scenario" prefix if present (edge case from split)
-        first_line = re.sub(r'^-?\s*Scenario\s*', '', first_line, flags=re.IGNORECASE)
-        # Parse "A: Name" or "A - Name" or just "Name"
-        name_match = re.match(r"([A-Z])[\s:.-]+(.+?)$", first_line.strip())
-        if name_match:
-            scenario["name"] = name_match.group(2).strip()
-        else:
-            scenario["name"] = first_line.strip()
-
-        # Extract Chain
-        chain_match = re.search(r"-\s*Chain:\s*(.+?)(?:\n|$)", block)
-        if chain_match:
-            scenario["chain"] = chain_match.group(1).strip()
-
-        # Extract Direction
-        dir_match = re.search(r"-\s*Direction:\s*(BULLISH|BEARISH|NEUTRAL)", block, re.IGNORECASE)
-        if dir_match:
-            scenario["direction"] = dir_match.group(1).upper()
-            scenario["polarity"] = dir_match.group(1).upper()
-
-        # Extract Likelihood
-        likelihood_match = re.search(r"-\s*Likelihood:\s*(\d+)%?\s*(?:based on\s*)?(.+)?(?:\n|$)", block, re.IGNORECASE)
-        if likelihood_match:
-            scenario["likelihood"] = int(likelihood_match.group(1)) / 100.0
-            if likelihood_match.group(2):
-                scenario["likelihood_basis"] = likelihood_match.group(2).strip()
-
-        # Extract Rationale if present
-        rationale_match = re.search(r"-\s*Rationale:\s*(.+?)(?:\n-|\n\n|$)", block, re.DOTALL)
-        if rationale_match:
-            scenario["rationale"] = rationale_match.group(1).strip()
-
-        if scenario.get("name") or scenario.get("chain"):
-            scenarios.append(scenario)
-
-    return scenarios
-
-
-def parse_contradictions(response: str) -> List[Dict[str, Any]]:
-    """Parse contradictions from the CONTRADICTIONS section."""
-    contradictions = []
-
-    # Find CONTRADICTIONS section
-    contra_match = re.search(
-        r"CONTRADICTIONS:\s*\n(.+?)(?=\nPRIMARY_DIRECTION:|\nCONFIDENCE:|\nTIME_HORIZON:|\Z)",
-        response,
-        re.DOTALL | re.IGNORECASE
-    )
-
-    if not contra_match:
-        return contradictions
-
-    contra_text = contra_match.group(1)
-
-    # Parse each contradiction block (marked by - or bullet)
-    contra_blocks = re.findall(
-        r"-\s*(.+?)(?=\n-|\n\n|$)",
-        contra_text,
-        re.DOTALL
-    )
-
-    for block in contra_blocks:
-        contradiction = {}
-
-        # Try to parse structured format: "Thesis A vs Thesis B"
-        vs_match = re.search(r"(.+?)\s+(?:vs\.?|versus)\s+(.+?)(?:\n|$)", block, re.IGNORECASE)
-        if vs_match:
-            contradiction["thesis_a"] = vs_match.group(1).strip()
-            contradiction["thesis_b"] = vs_match.group(2).strip()
-        else:
-            contradiction["description"] = block.strip()
-
-        # Extract implication if present
-        impl_match = re.search(r"(?:Implication|Result|Means):\s*(.+?)(?:\n|$)", block, re.IGNORECASE)
-        if impl_match:
-            contradiction["implication"] = impl_match.group(1).strip()
-
-        if contradiction:
-            contradictions.append(contradiction)
-
-    return contradictions
-
-
-def parse_impact_response(response: str) -> Dict[str, Any]:
-    """Parse the structured LLM response into components."""
-    result = {
-        "direction": "NEUTRAL",
-        "scenarios": [],
-        "belief_space": {},
-        "confidence": {},
-        "time_horizon": "unknown",
-        "decay_profile": "unknown",
-        "rationale": "",
-        "risk_factors": []
-    }
-
-    # Parse all scenarios (CRITICAL for belief-space output)
-    scenarios = parse_scenarios(response)
-    result["scenarios"] = scenarios
-
-    # Parse contradictions
-    contradictions = parse_contradictions(response)
-    result["belief_space"] = {
-        "contradictions": contradictions,
-        "narrative_count": len(scenarios),
-        "regime_uncertainty": "high" if len(scenarios) > 2 else "medium" if len(scenarios) == 2 else "low"
-    }
-
-    # Determine primary direction from highest likelihood scenario
-    if scenarios:
-        sorted_scenarios = sorted(scenarios, key=lambda s: s.get("likelihood", 0), reverse=True)
-        result["direction"] = sorted_scenarios[0].get("direction", "NEUTRAL")
-        result["belief_space"]["dominant_narrative"] = sorted_scenarios[0].get("name", "Unknown")
-    else:
-        # Fallback: Parse PRIMARY_DIRECTION (or DIRECTION for backward compatibility)
-        direction_match = re.search(r"PRIMARY_DIRECTION:\s*(BULLISH|BEARISH|NEUTRAL)", response, re.IGNORECASE)
-        if not direction_match:
-            direction_match = re.search(r"DIRECTION:\s*(BULLISH|BEARISH|NEUTRAL)", response, re.IGNORECASE)
-        if direction_match:
-            result["direction"] = direction_match.group(1).upper()
-
-    # Parse CONFIDENCE section
-    confidence = {}
-    score_match = re.search(r"score:\s*([\d.]+)", response, re.IGNORECASE)
-    if score_match:
-        try:
-            confidence["score"] = float(score_match.group(1))
-        except ValueError:
-            confidence["score"] = 0.5
-
-    chain_count_match = re.search(r"chain_count:\s*(\d+)", response, re.IGNORECASE)
-    if chain_count_match:
-        confidence["chain_count"] = int(chain_count_match.group(1))
-
-    source_div_match = re.search(r"source_diversity:\s*(\d+)", response, re.IGNORECASE)
-    if source_div_match:
-        confidence["source_diversity"] = int(source_div_match.group(1))
-
-    strongest_match = re.search(r"strongest_chain:\s*(.+?)(?:\n|$)", response, re.IGNORECASE)
-    if strongest_match:
-        confidence["strongest_chain"] = strongest_match.group(1).strip().strip('"\'')
-
-    result["confidence"] = confidence
-
-    # Parse TIME_HORIZON
-    horizon_match = re.search(r"TIME_HORIZON:\s*(intraday|days|weeks|months|regime_shift)", response, re.IGNORECASE)
-    if horizon_match:
-        result["time_horizon"] = horizon_match.group(1).lower()
-
-    # Parse DECAY_PROFILE
-    decay_match = re.search(r"DECAY_PROFILE:\s*(fast|medium|slow)", response, re.IGNORECASE)
-    if decay_match:
-        result["decay_profile"] = decay_match.group(1).lower()
-
-    # Parse RATIONALE
-    rationale_match = re.search(r"RATIONALE:\s*\n(.+?)(?=\nRISK_FACTORS:|\Z)", response, re.DOTALL | re.IGNORECASE)
-    if rationale_match:
-        result["rationale"] = rationale_match.group(1).strip()
-
-    # Parse RISK_FACTORS
-    risks_match = re.search(r"RISK_FACTORS:\s*\n(.+?)(?:\Z)", response, re.DOTALL | re.IGNORECASE)
-    if risks_match:
-        risks_text = risks_match.group(1)
-        # Extract bullet points
-        risks = re.findall(r"[-•]\s*(.+?)(?:\n|$)", risks_text)
-        result["risk_factors"] = [r.strip() for r in risks if r.strip()]
-
-    return result
+        print(f"\n[Impact Analysis] Insight analysis failed: {e}")
+        raise

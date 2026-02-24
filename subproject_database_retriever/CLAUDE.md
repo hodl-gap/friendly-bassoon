@@ -9,7 +9,7 @@ The entire project aims to produce an agentic research workflow. This subproject
 ## Technology Stack
 - **Vector Database**: Pinecone (queries the "research-papers" index built by database_manager)
 - **Embeddings**: OpenAI embeddings (text-embedding-3-large, 3072 dimensions)
-- **Framework**: LangGraph (workflow skeleton)
+- **Framework**: Agentic ReAct loops via `shared/agent_loop.py`
 - **AI Model Calls**: Via `models.py` in parent directory
 - **Environment**: `.env` file in project root folder (use `python-dotenv` to load)
 
@@ -473,15 +473,7 @@ When enabled, replaces the fixed LangGraph retrieval flow with an iterative ReAc
 
 **Files**: `retrieval_agent.py`, `retrieval_agent_tools.py`, `retrieval_agent_prompts.py`
 
-**Flag**: `AGENT_RETRIEVAL=true` or `USE_HYBRID_PIPELINE=true`
-
-**Feature-flagged branch**: `retrieval_orchestrator.py` — 5-line branch at top of `run_retrieval()`:
-```python
-from shared.feature_flags import is_agentic_retrieval
-if is_agentic_retrieval() and not skip_gap_filling:
-    from retrieval_agent import run_retrieval_agent
-    return run_retrieval_agent(query, image_path=image_path)
-```
+The agentic retrieval agent is the default path for all queries (except lightweight theme refresh which uses `skip_gap_filling=True`).
 
 **Tools** (6 total):
 | Tool | Wraps | Purpose |

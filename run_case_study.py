@@ -12,7 +12,6 @@ Usage:
 
 import argparse
 import sys
-import os
 import json
 from pathlib import Path
 from datetime import datetime
@@ -116,7 +115,6 @@ def run_case(case_num: int, run_num: int, asset: str = None, query_override: str
                 output_json=False,
                 skip_data_fetch=False,
                 skip_chain_store=False,
-                output_mode="insight"
             )
 
             debug_log_node("run_impact_analysis", "EXIT", f"direction={result.get('direction', 'N/A')}")
@@ -125,7 +123,6 @@ def run_case(case_num: int, run_num: int, asset: str = None, query_override: str
             debug_log("FINAL_RESULT_STATE", json.dumps({
                 "direction": result.get("direction"),
                 "confidence": result.get("confidence"),
-                "output_mode": result.get("output_mode"),
                 "insight_output": result.get("insight_output"),
                 "current_values_count": len(result.get("current_values", {})),
                 "logic_chains_count": len(result.get("logic_chains", [])),
@@ -160,12 +157,9 @@ def main():
     parser.add_argument("--run", type=int, default=1, help="Run number for logging")
     parser.add_argument("--asset", default=None, help="Asset class (default: from case config)")
     parser.add_argument("--query", default=None, help="Override query (for custom runs)")
-    parser.add_argument("--hybrid", action="store_true", help="Enable hybrid agentic pipeline")
 
     args = parser.parse_args()
 
-    if args.hybrid:
-        os.environ["USE_HYBRID_PIPELINE"] = "true"
     result, log_path = run_case(args.case, args.run, args.asset, args.query)
 
     print(f"\nRun complete. Log: {log_path}")

@@ -28,63 +28,34 @@ Research module for a macro-data oriented hedge fund. Traders query the system w
 
 ## Pipeline
 
-### Default (Sequential)
 ```
 Trader query
-    → Database Retriever (RAG: query expansion → vector search → synthesis → gap detection/filling → persist learning)
-    → Variable Mapper (logic chains → structured data queries)
-    → Data Collection (fetch market data from FRED/Yahoo/CoinGecko to validate claims)
-    → Risk Intelligence (theme-based chain loading → multi-asset directional assessment with macro regime context)
-    → Structured output for trader consumption
+    → PHASE 1: RETRIEVAL AGENT (agentic, iterate until coverage adequate)
+        Tools: search_pinecone, extract_web_chains, web_search, generate_synthesis, assess_coverage, finish_retrieval
+    → PHASE 2: DATA GROUNDING AGENT (agentic, adaptive depth)
+        Tools: extract_variables, fetch_variable_data, validate_claim, validate_patterns, compute_derived, finish_grounding
+    → PHASE 3: HISTORICAL CONTEXT AGENT (agentic, adaptive analog count)
+        Tools: detect_analogs, fetch_analog_data, aggregate_analogs, characterize_regime, load_theme_chains, fetch_additional_data, finish_historical
+    → PHASE 4: SYNTHESIS (Opus generate + Sonnet self-check + optional patch)
+    → Structured insight output for trader consumption
 
 Daily monitoring (cron)
     → Theme Refresh (per-theme anchor variable monitoring → active chain detection → regime assessment)
     → Morning Briefing (template-based summary of all theme states)
 ```
 
-### Hybrid Agentic Pipeline (Tested 2026-02-24)
-
-**Status: Tested on Cases 1, 2, 4. Consistent +3 rubric improvement over baseline (Case 1: 8→11/13, Case 2: 11→14/18, Case 4: 16→19/20). Three integration bugs found and fixed (commit b2151d1).**
-
-When enabled via `--hybrid` flag or individual env vars, key phases become agentic (iterative ReAct loops via `shared/agent_loop.py`). The old sequential pipeline remains intact and is the default. All changes are feature-flagged.
-
-```
-Trader query
-    → PHASE 1: RETRIEVAL AGENT (agentic, iterate until coverage adequate)
-        Tools: search_pinecone, extract_web_chains, web_search, generate_synthesis, assess_coverage, finish_retrieval
-        Flag: AGENT_RETRIEVAL=true
-    → PHASE 2: DATA GROUNDING AGENT (agentic, adaptive depth)
-        Tools: extract_variables, fetch_variable_data, validate_claim, validate_patterns, compute_derived, finish_grounding
-        Flag: AGENT_DATA_GROUNDING=true
-    → PHASE 3: HISTORICAL CONTEXT AGENT (agentic, adaptive analog count)
-        Tools: detect_analogs, fetch_analog_data, aggregate_analogs, characterize_regime, load_theme_chains, fetch_additional_data, finish_historical
-        Flag: AGENT_HISTORICAL=true
-    → PHASE 4: SYNTHESIS (Opus generate + Sonnet self-check + optional patch)
-        Flag: AGENT_SYNTHESIS_CHECK=true
-    → Structured output for trader consumption
-```
-
-**Feature Flags** (`shared/feature_flags.py`):
-| Flag | Default | Purpose |
-|------|---------|---------|
-| `USE_HYBRID_PIPELINE` | false | Master override — enables all agentic phases |
-| `AGENT_RETRIEVAL` | false | Phase 1: agentic retrieval with coverage checker |
-| `AGENT_DATA_GROUNDING` | false | Phase 2: agentic data grounding |
-| `AGENT_HISTORICAL` | false | Phase 3: agentic historical context |
-| `AGENT_SYNTHESIS_CHECK` | false | Phase 4: synthesis self-verification |
+**Iteration Limits** (`shared/feature_flags.py`):
+| Setting | Default | Purpose |
+|---------|---------|---------|
 | `RETRIEVAL_MAX_ITER` | 5 | Max iterations for retrieval agent |
 | `DATA_GROUNDING_MAX_ITER` | 4 | Max iterations for data grounding agent |
 | `HISTORICAL_MAX_ITER` | 4 | Max iterations for historical context agent |
 
 **CLI Usage**:
 ```bash
-# Enable all agentic phases
-python run_case_study.py --case 4 --run 1 --hybrid
-python -m subproject_risk_intelligence --hybrid "query"
-
-# Enable individual phases
-AGENT_RETRIEVAL=true python run_case_study.py --case 4 --run 1
-AGENT_SYNTHESIS_CHECK=true python run_case_study.py --case 5 --run 1
+python run_case_study.py --case 4 --run 1
+python -m subproject_risk_intelligence --asset equity "What caused the SaaS meltdown?"
+python -m subproject_risk_intelligence --asset btc,equity "Fed just cut rates 50bps"
 ```
 
 ## Subprojects
@@ -111,7 +82,7 @@ AGENT_SYNTHESIS_CHECK=true python run_case_study.py --case 5 --run 1
 | `variable_frequency.py` | Tracks variable appearance frequency across chains; promotion/demotion candidates |
 | `data/anchor_variables.json` | 25 curated anchor variables with verified data source mappings |
 | `agent_loop.py` | Generic ReAct loop runner for agentic phases (detect tool_use → execute handler → append result → loop) |
-| `feature_flags.py` | Centralized feature flags for hybrid pipeline (env var functions, not constants) |
+| `feature_flags.py` | Agentic pipeline iteration limits (configurable via env vars) |
 
 ## Scripts (`scripts/`)
 
@@ -130,11 +101,10 @@ Python, LangGraph, Pinecone, Claude/OpenAI APIs, Yahoo Finance, FRED API, Tavily
 1. **Main file = orchestration only** — no business logic in orchestrator files; they wire components together
 2. **Prompts in separate files** — all LLM prompts live in `*_prompts.py` files, not inline
 3. **AI calls via parent's `models.py`** — centralized LLM call functions, not direct API calls in subprojects
-4. **Simple sequential workflow** — plain Python with ThreadPoolExecutor for parallelism, not LangGraph
-   - *Accepted deviation*: `database_retriever`, `data_collection`, and `variable_mapper` use LangGraph StateGraph. These are stable working pipelines where replacement is high-risk for no functional gain.
-5. **Dual-mode output** — always maintain both insight and belief_space paths
-6. **Follow established patterns** — new subprojects mirror existing ones in structure and conventions
-7. **Do not overcomplicate** — keep it minimal and focused
+4. **Agentic pipeline** — ReAct loops via `shared/agent_loop.py` for retrieval, data grounding, historical context, and synthesis
+   - *Accepted deviation*: `data_collection` and `variable_mapper` use LangGraph StateGraph. These are stable working pipelines where replacement is high-risk for no functional gain.
+5. **Follow established patterns** — new subprojects mirror existing ones in structure and conventions
+6. **Do not overcomplicate** — keep it minimal and focused
 
 ## Known Issues
 
@@ -170,14 +140,11 @@ Running the pipeline repeatedly improves future analysis through these persisten
 | **Chain store → relationships.json** | `risk_intelligence/relationship_store.py` | `data/relationships.json` | `load_chains()`, `get_relevant_historical_chains()` | **Yes, weakly** (local only, not RAG-searchable) |
 | **Variable frequency tracking** | `shared/variable_frequency.py` | `data/variable_frequency.json` | Daily theme scan, relationship_store | Marginal |
 | **Regime state persistence** | `relationship_store.py` | `data/*_regime_state.json` | Next pipeline run (baseline context) | Marginal |
-| **Prediction ledger** | `risk_intelligence/prediction_tracker.py` | `data/prediction_ledger.json` | **Nothing — write-only** | **No (dead storage)** |
 | **Auto-discover variable IDs** | `variable_mapper/data_id_discovery.py` | `mappings/discovered_data_ids.json` | Variable resolver | One-shot (not compounding) |
 
 **Web chain persistence** is the only mechanism that expands the RAG retrieval corpus. When the retriever fills knowledge gaps via web search, extracted causal chains are embedded and upserted to Pinecone. Future queries on related topics benefit from these chains. Diverse queries compound — running the same query twice does not.
 
 **Relationship store** accumulates chains locally with semantic dedup (Jaccard similarity). Similar chains get `validation_count += 1` and blended confidence. These feed into the "macro regime context" section of the insight prompt, but are not searchable via the RAG retriever.
-
-**Prediction ledger** is infrastructure for future scoring but currently has no read-back path — nothing in the pipeline consumes it.
 
 ## TODO
 

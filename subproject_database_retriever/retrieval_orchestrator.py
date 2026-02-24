@@ -7,18 +7,13 @@ This file contains ONLY:
 3. Central router logic
 4. NO business logic or implementation details
 
-The retrieval layer now handles:
-- Query processing & expansion
-- Vector search
-- Answer generation (logic chains + synthesis)
-- Gap detection & filling (moved from BTC Intelligence)
-- Returns enriched context with merged DB + web chains
+The retrieval layer handles:
+- Agentic retrieval with coverage assessment (default)
+- Lightweight retrieval for theme refresh (skip_gap_filling=True)
 """
 
-from langgraph.graph import StateGraph, END
 from states import RetrieverState
 from config import (
-    MAX_ITERATIONS,
     ENABLE_GAP_DETECTION,
     ENABLE_GAP_FILLING,
     MAX_GAP_SEARCHES,
@@ -30,25 +25,6 @@ from shared.snapshot import snapshot_state, ENABLE_SNAPSHOTS
 from query_processing import process_query
 from vector_search import search_vectors
 from answer_generation import generate_answer, regenerate_synthesis
-
-
-def _wrap(name, func):
-    """Wrap a node function with snapshot capture."""
-    def wrapper(state):
-        if ENABLE_SNAPSHOTS:
-            snapshot_state(name, state, "in")
-        result = func(state)
-        if ENABLE_SNAPSHOTS:
-            snapshot_state(name, result, "out")
-        return result
-    return wrapper
-
-
-def route_after_retrieval(state: RetrieverState) -> str:
-    """Router: Decide whether to refine query or generate answer."""
-    if state.get("needs_refinement", False) and state.get("iteration_count", 0) < MAX_ITERATIONS:
-        return "refine"
-    return "generate"
 
 
 def detect_and_fill_gaps(state: RetrieverState) -> RetrieverState:
@@ -257,36 +233,21 @@ def _parse_logic_chains_from_answer(answer_text: str) -> list:
     return chains
 
 
-def build_graph() -> StateGraph:
-    """Build the LangGraph workflow."""
-    graph = StateGraph(RetrieverState)
+def _run_lightweight_retrieval(query: str) -> dict:
+    """Minimal retrieval for theme refresh: expand -> search -> synthesize. No gaps, no persistence."""
+    from vector_search import EXCLUDE_WEB_CHAINS_FILTER
 
-    # Add nodes (function modules) — wrapped for snapshot capture
-    graph.add_node("process_query", _wrap("process_query", process_query))
-    graph.add_node("search", _wrap("search", search_vectors))
-    graph.add_node("generate", _wrap("generate", generate_answer))
-    graph.add_node("fill_gaps", _wrap("fill_gaps", detect_and_fill_gaps))
-    graph.add_node("conditional_resynthesis", _wrap("conditional_resynthesis", conditional_resynthesis))
-    graph.add_node("persist_learning", _wrap("persist_learning", persist_learning))
-
-    # Define edges
-    graph.set_entry_point("process_query")
-    graph.add_edge("process_query", "search")
-    graph.add_conditional_edges(
-        "search",
-        route_after_retrieval,
-        {
-            "refine": "process_query",
-            "generate": "generate"
-        }
+    state = RetrieverState(
+        query=query,
+        iteration_count=0,
+        needs_refinement=False,
+        pinecone_filter=EXCLUDE_WEB_CHAINS_FILTER,
+        skip_gap_filling=True,
     )
-    # After generation: fill gaps → re-synthesize → persist learning → END
-    graph.add_edge("generate", "fill_gaps")
-    graph.add_edge("fill_gaps", "conditional_resynthesis")
-    graph.add_edge("conditional_resynthesis", "persist_learning")
-    graph.add_edge("persist_learning", END)
-
-    return graph.compile()
+    state = process_query(state)
+    state = search_vectors(state)
+    state = generate_answer(state)
+    return state
 
 
 def run_retrieval(query: str, image_path: str = None, skip_gap_filling: bool = False) -> dict:
@@ -296,40 +257,16 @@ def run_retrieval(query: str, image_path: str = None, skip_gap_filling: bool = F
     Args:
         query: User's question or search query
         image_path: Optional path to indicator chart image for vision-based extraction
-        skip_gap_filling: If True, skip gap detection and filling (used by theme refresh)
+        skip_gap_filling: If True, use lightweight retrieval (used by theme refresh)
 
     Returns:
         Final state containing answer and retrieved context
     """
-    # Agentic retrieval path (feature-flagged)
-    from shared.feature_flags import is_agentic_retrieval
-    if is_agentic_retrieval() and not skip_gap_filling:
-        from retrieval_agent import run_retrieval_agent
-        return run_retrieval_agent(query, image_path=image_path)
-
-    from shared.snapshot import start_run as _start_run
-    if ENABLE_SNAPSHOTS:
-        _start_run()
-
-    from vector_search import EXCLUDE_WEB_CHAINS_FILTER
-
-    graph = build_graph()
-
-    initial_state = RetrieverState(
-        query=query,
-        iteration_count=0,
-        needs_refinement=False,
-        pinecone_filter=EXCLUDE_WEB_CHAINS_FILTER
-    )
-
-    if image_path:
-        initial_state["image_path"] = image_path
-
     if skip_gap_filling:
-        initial_state["skip_gap_filling"] = True
+        return _run_lightweight_retrieval(query)
 
-    final_state = graph.invoke(initial_state)
-    return final_state
+    from retrieval_agent import run_retrieval_agent
+    return run_retrieval_agent(query, image_path=image_path)
 
 
 if __name__ == "__main__":

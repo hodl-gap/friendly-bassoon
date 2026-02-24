@@ -1,11 +1,10 @@
 """
 Insight Orchestrator - Main Entry Point
 
-Phase 1 (MVP): query → retrieve → analyze → output
-Phase 2: query → retrieve → extract_variables → fetch_data → analyze → output
-No LangGraph yet - simple sequential workflow.
+query → retrieve → agentic data grounding → agentic historical context
+     → synthesis with self-check → output
 
-Architecture: Risk Intelligence now receives ENRICHED context from retrieval layer.
+Architecture: Risk Intelligence receives ENRICHED context from retrieval layer.
 Gap detection and web chain extraction are handled by the retrieval layer.
 Risk Intelligence focuses on multi-asset impact analysis.
 """
@@ -18,32 +17,20 @@ from pathlib import Path
 from typing import Dict, Any, List
 
 # Add sibling subprojects to path
-# Note: retriever goes at index 0, data_collection appended at end to avoid shadowing states.py
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "subproject_database_retriever"))
-# data_collection path is added by current_data_fetcher when needed
 
 from .states import RiskImpactState
-from .impact_analysis import analyze_impact
-from .variable_extraction import extract_variables
-from .current_data_fetcher import fetch_current_data, format_current_values_for_prompt
+from .current_data_fetcher import format_current_values_for_prompt
 from shared.snapshot import snapshot_state, start_run as _start_run, ENABLE_SNAPSHOTS
-from .pattern_validator import validate_patterns, format_validated_patterns_for_prompt
 from .relationship_store import (
     load_chains,
     store_chains,
-    get_relevant_historical_chains,
-    format_historical_chains_for_prompt,
     load_regime_state,
     update_regime_from_analysis,
-    get_regime_context_for_prompt
 )
-from .historical_event_detector import detect_historical_gap, identify_instruments, get_date_range, detect_historical_analogs
-from .historical_data_fetcher import fetch_historical_event_data, compare_to_current
-from .historical_aggregator import fetch_multiple_analogs, aggregate_analogs, format_analogs_for_prompt
 from .regime_characterization import characterize_regime
 from .asset_configs import get_asset_config
-from .prediction_tracker import extract_predictions, log_predictions
 from shared.chain_graph import ChainGraph
 from . import config
 
@@ -435,190 +422,6 @@ def format_insight(state: RiskImpactState, as_json: bool = False, asset_class: s
     return "\n".join(lines)
 
 
-def format_output(state: RiskImpactState, as_json: bool = False, asset_class: str = "btc") -> str:
-    """Format the final output for display - Belief Space format."""
-
-    current_values = state.get("current_values", {})
-    topic_coverage = state.get("topic_coverage", {})
-    historical_event_data = state.get("historical_event_data", {})
-    scenarios = state.get("scenarios", [])
-    belief_space = state.get("belief_space", {})
-    asset_name = get_asset_config(asset_class)["name"]
-
-    if as_json:
-        output = {
-            # Asset class
-            "asset_class": asset_class,
-            # Belief Space Output (Primary)
-            "scenarios": scenarios,
-            "belief_space": belief_space,
-            # Legacy fields (backward compatibility)
-            "primary_direction": state.get("direction", "NEUTRAL"),
-            "direction": state.get("direction", "NEUTRAL"),
-            "confidence": state.get("confidence", {}),
-            "time_horizon": state.get("time_horizon", "unknown"),
-            "decay_profile": state.get("decay_profile", "unknown"),
-            "rationale": state.get("rationale", ""),
-            "risk_factors": state.get("risk_factors", []),
-            "current_values": current_values,
-            "asset_price": state.get("asset_price"),
-            "btc_price": state.get("btc_price"),
-            "topic_coverage": topic_coverage,
-            "historical_event_data": historical_event_data
-        }
-        return json.dumps(output, indent=2, default=str)
-
-    # Human-readable format - Belief Space
-    direction = state.get("direction", "NEUTRAL")
-    confidence = state.get("confidence", {})
-    time_horizon = state.get("time_horizon", "unknown")
-    decay_profile = state.get("decay_profile", "unknown")
-    rationale = state.get("rationale", "")
-    risk_factors = state.get("risk_factors", [])
-
-    conf_score = confidence.get("score", "N/A")
-    chain_count = confidence.get("chain_count", "N/A")
-    source_div = confidence.get("source_diversity", "N/A")
-    strongest = confidence.get("strongest_chain", "N/A")
-
-    lines = [
-        "=" * 60,
-        f"BELIEF SPACE ANALYSIS — {asset_name.upper()}",
-        "=" * 60,
-    ]
-
-    # Add extrapolation warning if topic mismatch detected
-    if topic_coverage.get("extrapolation_note"):
-        lines.extend([
-            "",
-            "⚠️  DATA SOURCE WARNING:",
-            f"    {topic_coverage['extrapolation_note']}",
-            f"    Query entities: {topic_coverage.get('query_entities', [])}",
-            f"    Found in chunks: {topic_coverage.get('found_entities', [])}",
-            "-" * 60,
-        ])
-
-    # Display all scenarios (the core belief space output)
-    if scenarios:
-        lines.append("")
-        lines.append("SCENARIOS (Market Belief Paths):")
-        lines.append("-" * 40)
-
-        # Sort by likelihood descending
-        sorted_scenarios = sorted(scenarios, key=lambda s: s.get("likelihood", 0), reverse=True)
-
-        for i, scenario in enumerate(sorted_scenarios, 1):
-            name = scenario.get("name", f"Scenario {i}")
-            direction_s = scenario.get("direction", "NEUTRAL")
-            likelihood = scenario.get("likelihood", 0)
-            chain = scenario.get("chain", "N/A")
-            likelihood_basis = scenario.get("likelihood_basis", "")
-
-            # Direction indicator
-            dir_symbol = "↑" if direction_s == "BULLISH" else "↓" if direction_s == "BEARISH" else "→"
-
-            lines.append("")
-            lines.append(f"  [{i}] {name}")
-            lines.append(f"      Direction: {direction_s} {dir_symbol}")
-            lines.append(f"      Likelihood: {likelihood*100:.0f}%{' - ' + likelihood_basis if likelihood_basis else ''}")
-            lines.append(f"      Chain: {chain}")
-
-            # Key data points if available
-            key_data = scenario.get("key_data_points", [])
-            if key_data:
-                lines.append(f"      Key Data: {', '.join(key_data)}")
-
-            # Rationale if available
-            scenario_rationale = scenario.get("rationale", "")
-            if scenario_rationale:
-                lines.append(f"      Rationale: {scenario_rationale[:150]}...")
-
-    # Display contradictions (critical for belief space)
-    contradictions = belief_space.get("contradictions", [])
-    if contradictions:
-        lines.append("")
-        lines.append("-" * 40)
-        lines.append("CONTRADICTIONS (Coexisting Beliefs):")
-
-        for contra in contradictions:
-            thesis_a = contra.get("thesis_a", "")
-            thesis_b = contra.get("thesis_b", "")
-            description = contra.get("description", "")
-            implication = contra.get("implication", "")
-
-            if thesis_a and thesis_b:
-                lines.append(f"  • \"{thesis_a}\" vs \"{thesis_b}\"")
-            elif description:
-                lines.append(f"  • {description}")
-
-            if implication:
-                lines.append(f"    → {implication}")
-
-    lines.append("")
-    lines.append("-" * 40)
-    lines.append("SUMMARY:")
-    lines.extend([
-        f"  Primary Direction: {direction}",
-        f"  Confidence: {conf_score} ({chain_count} chains, {source_div} sources)",
-        f"  Regime Uncertainty: {belief_space.get('regime_uncertainty', 'unknown')}",
-        f"  Time Horizon: {time_horizon} ({decay_profile} decay)",
-    ])
-
-    # Add current values section if available
-    if current_values:
-        lines.append("")
-        lines.append("CURRENT DATA:")
-        current_text = format_current_values_for_prompt(current_values)
-        for line in current_text.split("\n"):
-            lines.append(f"  {line}")
-
-    # Add historical event section if available
-    if historical_event_data.get("event_detected"):
-        lines.append("")
-        lines.append("-" * 60)
-        lines.append("HISTORICAL EVENT COMPARISON:")
-        lines.append(f"  Event: {historical_event_data.get('event_name', 'Unknown')}")
-        period = historical_event_data.get("period", {})
-        lines.append(f"  Period: {period.get('start', '?')} to {period.get('end', '?')}")
-
-        instruments = historical_event_data.get("instruments", {})
-        if instruments:
-            lines.append("  Market Impact:")
-            for name, data in instruments.items():
-                metrics = data.get("metrics", {})
-                change = metrics.get("peak_to_trough_pct", 0)
-                lines.append(f"    - {name}: {change:+.1f}%")
-
-        correlations = historical_event_data.get("correlations", {})
-        if correlations:
-            lines.append("  Correlations:")
-            for pair, corr in correlations.items():
-                lines.append(f"    - {pair.replace('_', ' ')}: {corr:.2f}")
-
-        comparisons = historical_event_data.get("comparison_to_current", {}).get("comparisons", {})
-        if comparisons:
-            lines.append("  Then vs Now:")
-            for name, comp in comparisons.items():
-                lines.append(f"    - {name}: {comp.get('note', '')}")
-
-    lines.extend([
-        "",
-        "RATIONALE:",
-        rationale,
-        "",
-        f"STRONGEST CHAIN: {strongest}",
-        "",
-        "RISK FACTORS:"
-    ])
-
-    for risk in risk_factors:
-        lines.append(f"  - {risk}")
-
-    lines.append("=" * 60)
-
-    return "\n".join(lines)
-
-
 def request_additional_context(state: RiskImpactState, topic: str) -> RiskImpactState:
     """
     Request additional context on a specific topic.
@@ -721,13 +524,11 @@ def validate_claims(state: RiskImpactState) -> RiskImpactState:
 def prepare_shared_context(
     query: str,
     skip_data_fetch: bool = False,
-    use_integrated_pipeline: bool = False,
     image_path: str = None,
     asset_class: str = "btc"
 ) -> RiskImpactState:
     """
-    Shared preparation: retrieval + variable extraction + data fetch +
-    pattern validation + historical enrichment.
+    Shared preparation: retrieval + agentic data grounding + agentic historical context.
 
     This is the expensive part (~$0.30, ~250s) that runs ONCE
     regardless of how many asset classes we analyze.
@@ -735,7 +536,6 @@ def prepare_shared_context(
     Args:
         query: User's question
         skip_data_fetch: If True, skip fetching current data
-        use_integrated_pipeline: If True, use shared/integration.py
         image_path: Optional path to indicator chart image
         asset_class: Primary asset for variable prioritization
 
@@ -748,49 +548,19 @@ def prepare_shared_context(
     if ENABLE_SNAPSHOTS:
         snapshot_state("retrieve_context", state, "out")
 
-    # Step 2-5: Variable extraction, data fetching, claim validation, pattern validation
+    # Step 2-5: Agentic data grounding (variable extraction, data fetching, claim validation, pattern validation)
     if not skip_data_fetch:
-        from shared.feature_flags import is_agentic_data_grounding
-        if is_agentic_data_grounding():
-            from .data_grounding_agent import run_data_grounding_agent
-            state = run_data_grounding_agent(state)
-            if ENABLE_SNAPSHOTS:
-                snapshot_state("data_grounding_agent", state, "out")
-        else:
-            if use_integrated_pipeline:
-                state = _run_integrated_pipeline(state)
-            else:
-                state = extract_variables(state)
-                if ENABLE_SNAPSHOTS:
-                    snapshot_state("extract_variables", state, "out")
-                if state.get("extracted_variables"):
-                    state = fetch_current_data(state)
-                    if ENABLE_SNAPSHOTS:
-                        snapshot_state("fetch_current_data", state, "out")
+        from .data_grounding_agent import run_data_grounding_agent
+        state = run_data_grounding_agent(state)
+        if ENABLE_SNAPSHOTS:
+            snapshot_state("data_grounding_agent", state, "out")
 
-            # Step 2.5: Validate claims from synthesis using data_collection pipeline
-            if config.ENABLE_CLAIM_VALIDATION:
-                state = validate_claims(state)
-                if ENABLE_SNAPSHOTS:
-                    snapshot_state("validate_claims", state, "out")
-
-            # Step 3: Validate research patterns against current data
-            state = validate_patterns(state)
-            if ENABLE_SNAPSHOTS:
-                snapshot_state("validate_patterns", state, "out")
-
-    # Step 4: Historical event data enrichment
+    # Step 6: Agentic historical context (analog detection, data fetch, aggregation, regime characterization)
     if not skip_data_fetch:
-        from shared.feature_flags import is_agentic_historical
-        if is_agentic_historical():
-            from .historical_context_agent import run_historical_context_agent
-            state = run_historical_context_agent(state)
-            if ENABLE_SNAPSHOTS:
-                snapshot_state("historical_context_agent", state, "out")
-        else:
-            state = enrich_with_historical_event(state)
-            if ENABLE_SNAPSHOTS:
-                snapshot_state("enrich_historical_event", state, "out")
+        from .historical_context_agent import run_historical_context_agent
+        state = run_historical_context_agent(state)
+        if ENABLE_SNAPSHOTS:
+            snapshot_state("historical_context_agent", state, "out")
 
     return state
 
@@ -866,25 +636,11 @@ def run_asset_impact(
         if ENABLE_SNAPSHOTS:
             snapshot_state(f"characterize_regime_{asset_class}", state, "out")
 
-    # Run impact analysis with asset-specific prompt
-    from shared.feature_flags import is_synthesis_self_check
-    if is_synthesis_self_check():
-        from .synthesis_phase import run_synthesis_phase
-        state = run_synthesis_phase(state, asset_class)
-    else:
-        state = analyze_impact(state, asset_class=asset_class)
+    # Run impact analysis with synthesis self-check
+    from .synthesis_phase import run_synthesis_phase
+    state = run_synthesis_phase(state, asset_class)
     if ENABLE_SNAPSHOTS:
         snapshot_state(f"analyze_impact_{asset_class}", state, "out")
-
-    # Prediction tracking (Gap 5)
-    if config.ENABLE_PREDICTION_TRACKING:
-        try:
-            predictions = extract_predictions(state, asset_class)
-            if predictions:
-                log_predictions(predictions)
-                print(f"[Prediction Tracker] Logged {len(predictions)} predictions")
-        except Exception as e:
-            print(f"[Prediction Tracker] Logging error: {e}")
 
     # Store asset-specific chains
     if not skip_chain_store:
@@ -903,9 +659,7 @@ def run_multi_asset_analysis(
     output_json: bool = False,
     skip_data_fetch: bool = False,
     skip_chain_store: bool = False,
-    use_integrated_pipeline: bool = False,
     image_path: str = None,
-    output_mode: str = "insight"
 ) -> Dict[str, Dict[str, Any]]:
     """
     Main entry point for multi-asset impact analysis.
@@ -919,9 +673,7 @@ def run_multi_asset_analysis(
         output_json: If True, format output as JSON
         skip_data_fetch: If True, skip fetching current data
         skip_chain_store: If True, skip chain loading/storage
-        use_integrated_pipeline: If True, use integrated pipeline
         image_path: Optional path to indicator chart image
-        output_mode: "insight" (default) or "belief_space"
 
     Returns:
         Dict mapping asset_class -> result state
@@ -941,12 +693,9 @@ def run_multi_asset_analysis(
     shared_state = prepare_shared_context(
         query,
         skip_data_fetch=skip_data_fetch,
-        use_integrated_pipeline=use_integrated_pipeline,
         image_path=image_path,
         asset_class=assets[0]
     )
-    shared_state["output_mode"] = output_mode
-
     # Phase B: Per-asset impact analysis (parallel if multiple)
     results = {}
     if len(assets) == 1:
@@ -974,10 +723,7 @@ def run_multi_asset_analysis(
             print(f"{'=' * 60}")
             print(f"Error: {result.get('error', 'Unknown')}")
             continue
-        if result.get("output_mode") == "insight":
-            output = format_insight(result, as_json=output_json, asset_class=asset)
-        else:
-            output = format_output(result, as_json=output_json, asset_class=asset)
+        output = format_insight(result, as_json=output_json, asset_class=asset)
         print("\n" + output)
 
     return results
@@ -989,9 +735,7 @@ def run_impact_analysis(
     output_json: bool = False,
     skip_data_fetch: bool = False,
     skip_chain_store: bool = False,
-    use_integrated_pipeline: bool = False,
     image_path: str = None,
-    output_mode: str = "insight"
 ) -> Dict[str, Any]:
     """
     Single-asset entry point.
@@ -1002,10 +746,7 @@ def run_impact_analysis(
         output_json: If True, return JSON-formatted output
         skip_data_fetch: If True, skip fetching current data (Phase 1 mode)
         skip_chain_store: If True, skip loading/storing logic chains (Phase 3)
-        use_integrated_pipeline: If True, use shared/integration.py for
-            Variable Mapper → Data Collection wiring instead of standalone fetching
         image_path: Optional path to indicator chart image for vision-based extraction
-        output_mode: "insight" (default) or "belief_space"
 
     Returns:
         Final state dict with analysis results
@@ -1016,319 +757,13 @@ def run_impact_analysis(
         output_json=output_json,
         skip_data_fetch=skip_data_fetch,
         skip_chain_store=skip_chain_store,
-        use_integrated_pipeline=use_integrated_pipeline,
         image_path=image_path,
-        output_mode=output_mode
     )
     return results[asset_class]
 
 
 # Backward-compatible alias
 run_btc_impact_analysis = run_impact_analysis
-
-
-def _build_condition_variables(extracted_variables: list) -> list:
-    """Build condition_variables list for fetch_conditions_at_date().
-
-    Resolves each extracted variable to its ticker and source using
-    the same resolution chain as current_data_fetcher.
-
-    Args:
-        extracted_variables: List of dicts [{"normalized": str, "source": str}]
-
-    Returns:
-        List of dicts [{"normalized": str, "ticker": str, "source": str}]
-    """
-    from .current_data_fetcher import resolve_variable
-
-    condition_vars = []
-    for var in extracted_variables:
-        normalized = var.get("normalized", "")
-        if not normalized:
-            continue
-        resolved = resolve_variable(normalized)
-        if resolved:
-            condition_vars.append({
-                "normalized": normalized,
-                "ticker": resolved["series_id"],
-                "source": resolved["source"]
-            })
-
-    return condition_vars
-
-
-def enrich_with_historical_event(state: RiskImpactState) -> RiskImpactState:
-    """
-    Step 5.5: Detect and fetch historical event data if needed.
-
-    Detects if the user query references a historical event not covered
-    by the retrieved research, and if so, fetches actual market data
-    for that event.
-
-    Updates state with:
-    - historical_event_data: Contains event details, instruments, metrics, correlations
-    """
-    if not config.ENABLE_HISTORICAL_EVENT_DETECTION:
-        state["historical_event_data"] = {}
-        return state
-
-    query = state.get("query", "")
-    synthesis = state.get("synthesis", "")
-    topic_coverage = state.get("topic_coverage", {})
-    logic_chains = state.get("logic_chains", [])
-
-    # Step 1: Detect historical event gap
-    print("\n[Historical Event] Checking for historical event gap...")
-    gap_result = detect_historical_gap(query, topic_coverage, synthesis)
-
-    if not gap_result.get("gap_detected"):
-        print(f"[Historical Event] No gap detected: {gap_result.get('reasoning', '')}")
-        state["historical_event_data"] = {"event_detected": False}
-        return state
-
-    event_description = gap_result.get("event_description", "Unknown event")
-    date_search_query = gap_result.get("date_search_query", "")
-
-    print(f"[Historical Event] Gap detected: {event_description}")
-
-    # Steps 2 & 3: Identify instruments and get date range in parallel
-    # These are independent LLM/web calls, so we run them concurrently
-    print("[Historical Event] Identifying instruments and determining date range (parallel)...")
-
-    def _get_date_range_wrapper():
-        if date_search_query:
-            return get_date_range(event_description, date_search_query)
-        else:
-            from .historical_event_detector import _fallback_date_range
-            return _fallback_date_range(event_description)
-
-    asset_class = state.get("asset_class", "btc")
-
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        instruments_future = executor.submit(
-            identify_instruments,
-            event_description=event_description,
-            query=query,
-            synthesis=synthesis,
-            logic_chains=logic_chains,
-            asset_class=asset_class
-        )
-        dates_future = executor.submit(_get_date_range_wrapper)
-        instruments = instruments_future.result()
-        date_range = dates_future.result()
-
-    print(f"[Historical Event] Instruments: {[i.get('ticker') for i in instruments]}")
-
-    print(f"[Historical Event] Period: {date_range.get('start_date')} to {date_range.get('end_date')} (confidence: {date_range.get('confidence')})")
-
-    # Step 4: Fetch historical data
-    print("[Historical Event] Fetching historical data...")
-    historical_data = fetch_historical_event_data(
-        instruments=instruments,
-        start_date=date_range.get("start_date"),
-        end_date=date_range.get("end_date")
-    )
-
-    # Step 5: Compare to current values
-    current_values = state.get("current_values", {})
-    if current_values and historical_data.get("instruments"):
-        comparison = compare_to_current(historical_data, current_values)
-    else:
-        comparison = {"comparisons": {}}
-
-    # Build historical event data
-    state["historical_event_data"] = {
-        "event_detected": True,
-        "event_name": event_description,
-        "period": {
-            "start": date_range.get("start_date"),
-            "end": date_range.get("end_date"),
-            "peak_date": date_range.get("peak_date"),
-            "date_confidence": date_range.get("confidence")
-        },
-        "instruments": historical_data.get("instruments", {}),
-        "correlations": historical_data.get("correlations", {}),
-        "comparison_to_current": comparison
-    }
-
-    instr_count = len(historical_data.get("instruments", {}))
-    print(f"[Historical Event] Fetched data for {instr_count} instruments")
-
-    # Multi-analog aggregation
-    if config.ENABLE_MULTI_ANALOG:
-        try:
-            analogs = detect_historical_analogs(
-                query, synthesis, logic_chains,
-                max_analogs=config.MAX_HISTORICAL_ANALOGS,
-                relevance_threshold=config.ANALOG_RELEVANCE_THRESHOLD
-            )
-            if analogs:
-                current_values = state.get("current_values", {})
-                target_asset_name = get_asset_config(asset_class)["name"]
-
-                # Build condition_variables from extracted variables for Then vs Now
-                condition_variables = _build_condition_variables(
-                    state.get("extracted_variables", [])
-                )
-
-                enriched = fetch_multiple_analogs(
-                    analogs, query, synthesis, logic_chains,
-                    current_values, asset_class,
-                    condition_variables=condition_variables
-                )
-                aggregated = aggregate_analogs(enriched, target_asset_name)
-                state["historical_analogs"] = {
-                    "enriched": enriched,
-                    "aggregated": aggregated
-                }
-                state["historical_analogs_text"] = format_analogs_for_prompt(
-                    aggregated,
-                    enriched_analogs=enriched,
-                    current_conditions=current_values
-                )
-        except Exception as e:
-            print(f"[Historical Analogs] Multi-analog enrichment failed: {e}")
-
-    return state
-
-
-def _run_integrated_pipeline(state: RiskImpactState) -> RiskImpactState:
-    """
-    Run the integrated Variable Mapper → Data Collection pipeline.
-
-    Uses shared/integration.py to:
-    1. Run Variable Mapper on synthesis text
-    2. Fetch data via appropriate adapters for each mapped variable
-
-    Args:
-        state: Current BTC impact state
-
-    Returns:
-        Updated state with extracted_variables, current_values, etc.
-    """
-    print("\n[Integrated] Running Mapper → Collection pipeline...")
-
-    try:
-        from shared.integration import map_and_fetch_variables
-
-        synthesis = state.get("synthesis", "")
-        logic_chains = state.get("logic_chains", [])
-
-        # Run integrated pipeline
-        result = map_and_fetch_variables(
-            synthesis=synthesis,
-            logic_chains=logic_chains,
-            temporal_context=None,  # Could pass data_temporal_summary if available
-            lookback_days=45
-        )
-
-        # Update state with results
-        mapped_vars = result.get("mapped_variables", [])
-        fetched_data = result.get("fetched_data", {})
-        unmapped = result.get("unmapped_variables", [])
-        errors = result.get("errors", [])
-
-        print(f"[Integrated] Mapped {len(mapped_vars)} variables")
-        print(f"[Integrated] Fetched data for {len(fetched_data)} variables")
-        if unmapped:
-            print(f"[Integrated] Unmapped: {unmapped}")
-        if errors:
-            print(f"[Integrated] Errors: {errors}")
-
-        # Convert to expected state format
-        state["extracted_variables"] = [
-            {"normalized": v["name"], "raw": v.get("raw_name", v["name"])}
-            for v in mapped_vars
-        ]
-
-        # Convert fetched_data to current_values format
-        current_values = {}
-        for var_name, data in fetched_data.items():
-            history = data.get("data", [])
-            if history:
-                latest = history[-1]
-                current_values[var_name] = {
-                    "value": latest[1],
-                    "date": latest[0],
-                    "source": data.get("source", ""),
-                    "series_id": data.get("series_id", ""),
-                    "changes": _calculate_changes(history)
-                }
-
-        state["current_values"] = current_values
-        state["fetch_errors"] = unmapped + [e for e in errors]
-
-        # Set asset_price for the target asset class
-        from .asset_configs import get_asset_config as _get_cfg
-        _cfg = _get_cfg(state.get("asset_class", "btc"))
-        _primary = _cfg["always_include_variable"]
-        if _primary in current_values:
-            state["asset_price"] = current_values[_primary]["value"]
-        # Backwards compat
-        if "btc" in current_values:
-            state["btc_price"] = current_values["btc"]["value"]
-
-    except ImportError as e:
-        print(f"[Integrated] Integration module not available: {e}")
-        # Fall back to original approach
-        state = extract_variables(state)
-        if state.get("extracted_variables"):
-            state = fetch_current_data(state)
-    except Exception as e:
-        print(f"[Integrated] Pipeline error: {e}")
-        # Fall back to original approach
-        state = extract_variables(state)
-        if state.get("extracted_variables"):
-            state = fetch_current_data(state)
-
-    return state
-
-
-def _calculate_changes(history: list) -> dict:
-    """Calculate period-over-period changes from history."""
-    if not history or len(history) < 2:
-        return {}
-
-    from datetime import datetime
-
-    latest_value = history[-1][1]
-    latest_date = datetime.strptime(history[-1][0], "%Y-%m-%d")
-
-    changes = {}
-
-    # Find value from ~1 week ago (5-9 days)
-    for date_str, value in reversed(history):
-        date = datetime.strptime(date_str, "%Y-%m-%d")
-        days_diff = (latest_date - date).days
-        if 5 <= days_diff <= 10:
-            if value != 0:
-                abs_change = latest_value - value
-                pct_change = (abs_change / value) * 100
-                direction = "↑" if abs_change > 0 else "↓" if abs_change < 0 else "→"
-                changes["change_1w"] = {
-                    "absolute": abs_change,
-                    "percentage": pct_change,
-                    "direction": direction
-                }
-            break
-
-    # Find value from ~1 month ago (25-35 days)
-    for date_str, value in reversed(history):
-        date = datetime.strptime(date_str, "%Y-%m-%d")
-        days_diff = (latest_date - date).days
-        if 25 <= days_diff <= 40:
-            if value != 0:
-                abs_change = latest_value - value
-                pct_change = (abs_change / value) * 100
-                direction = "↑" if abs_change > 0 else "↓" if abs_change < 0 else "→"
-                changes["change_1m"] = {
-                    "absolute": abs_change,
-                    "percentage": pct_change,
-                    "direction": direction
-                }
-            break
-
-    return changes
 
 
 if __name__ == "__main__":
