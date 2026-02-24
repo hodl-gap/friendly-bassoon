@@ -148,19 +148,43 @@ Python, LangGraph, Pinecone, Claude/OpenAI APIs, Yahoo Finance, FRED API, Tavily
 
 **Impact**: The GS analysis about AI hyperscaler CAPEX revisions, FCF pressure, and Mag7 underperformance was lost. After fix, it's correctly categorized and extracted.
 
-### 2. Cross-Language Retrieval Gap (OPEN)
+### 2. Hyperscaler CAPEX: Retrieval Agent Query Coverage Gap (OPEN)
 
-**Problem**: Korean-language chunks in Pinecone don't get retrieved by English-language queries even when semantically relevant. Example: a Korean GS research summary about "AI Hyperscaler 기업들의 Capex 추정치" (AI Hyperscaler CAPEX estimates) has low cosine similarity with English queries like "SaaS meltdown February 2026."
+**Problem**: The pipeline fails to build a "CAPEX overspending → value destruction" track for Case 1 SaaS meltdown, despite the bearish CAPEX interpretation existing in Pinecone.
 
-**Impact**: Even after fixing categorization and embedding the CAPEX chunk, the retriever didn't pull it because the connection (CAPEX concern → tech valuation pressure → SaaS selloff) requires multi-hop reasoning, not just embedding similarity.
+**Root cause**: The retrieval agent's 5 Pinecone queries were all SaaS/software-focused. None targeted CAPEX overspending. The bearish CAPEX chunk (Telegram #18329, 하나/GS, 2026-02-01, vector ID `8dacc3908d3d239b_0`) contains the exact framing needed (FCF pressure, ROI concerns, Mag7 underperformance) but was never queried for. Coverage assessor rated `ADEQUATE` without identifying CAPEX as a gap.
 
-**Potential fix**: TBD — chain tension detection was attempted but doesn't help here because the CAPEX overspending narrative is entirely absent from retrieved chains (tension detection requires both sides to already be present).
+**Previous misdiagnoses** (3 iterations): cross-language retrieval → Tavily query formulation → bearish interpretation absent from source material. All wrong — the chunk is ingested, correctly categorized (`data_opinion`), extracted with bearish logic chains, and embedded in Pinecone.
+
+**Why**: CAPEX overspending is a second-order amplifier (AI disruption → SaaS selloff → CAPEX fear compounds it). Initial queries naturally target the trigger, but the agent should search for compounding factors after initial retrieval.
+
+**Fix**: Retrieval agent prompt + coverage assessor. See `TODO_TEMPORAL_SENSITIVITY.md` §3 for full details.
+
+## Feedback Loops (Self-Learning Status)
+
+Running the pipeline repeatedly improves future analysis through these persistence mechanisms:
+
+| Mechanism | File | Writes To | Read Back By | Compounds? |
+|-----------|------|-----------|-------------|------------|
+| **Web chain → Pinecone** | `database_retriever/web_chain_persistence.py` | Pinecone vector DB | Retriever (vector search) | **Yes — primary learning loop** |
+| **Chain store → relationships.json** | `risk_intelligence/relationship_store.py` | `data/relationships.json` | `load_chains()`, `get_relevant_historical_chains()` | **Yes, weakly** (local only, not RAG-searchable) |
+| **Variable frequency tracking** | `shared/variable_frequency.py` | `data/variable_frequency.json` | Daily theme scan, relationship_store | Marginal |
+| **Regime state persistence** | `relationship_store.py` | `data/*_regime_state.json` | Next pipeline run (baseline context) | Marginal |
+| **Prediction ledger** | `risk_intelligence/prediction_tracker.py` | `data/prediction_ledger.json` | **Nothing — write-only** | **No (dead storage)** |
+| **Auto-discover variable IDs** | `variable_mapper/data_id_discovery.py` | `mappings/discovered_data_ids.json` | Variable resolver | One-shot (not compounding) |
+
+**Web chain persistence** is the only mechanism that expands the RAG retrieval corpus. When the retriever fills knowledge gaps via web search, extracted causal chains are embedded and upserted to Pinecone. Future queries on related topics benefit from these chains. Diverse queries compound — running the same query twice does not.
+
+**Relationship store** accumulates chains locally with semantic dedup (Jaccard similarity). Similar chains get `validation_count += 1` and blended confidence. These feed into the "macro regime context" section of the insight prompt, but are not searchable via the RAG retriever.
+
+**Prediction ledger** is infrastructure for future scoring but currently has no read-back path — nothing in the pipeline consumes it.
 
 ## TODO
 
 - [ ] Ingest wider date range from globaletfi (Jan 27 - Feb 10) for earnings season coverage
 - [ ] Ingest additional Telegram channels for broader sell-side research coverage
-- [ ] Evaluate whether extracted metadata (English) should be concatenated with raw text (Korean) before embedding to improve cross-language retrieval
+- [ ] Evaluate whether extracted metadata (English) should be concatenated with raw text (Korean) before embedding — low priority, CAPEX gap is about missing bearish interpretation in source material, not retrieval (see Known Issue #2)
+- [ ] **Implement true feedback loops** — The pipeline currently has weak self-learning (web chains to Pinecone, local chain accumulation). Need closed-loop mechanisms where pipeline outputs feed back to improve future pipeline inputs: scoring past predictions against actual outcomes, promoting validated local chains into the RAG corpus, and using downstream usage signals to improve upstream retrieval quality.
 - [x] Add condensed summary output alongside the full insight report. Generated mechanically from structured track data in `format_insight()` — no extra LLM call. Appended after the full report.
 - [x] Add chain completeness (Rule 8) and regime-shift consideration (Rule 9) to resynthesis prompt. Rewrite web chain angle #3 for alternative interpretations. Validated: Case 4 16→18/20, Case 6 12→14/16.
 - [x] **TEST hybrid agentic pipeline** — Tested Cases 1, 2, 4 with `--hybrid`. Results: +3 across all cases. Three bugs fixed: dict key mismatch in web chain handler, agent prompt too weak (kept searching after ADEQUATE), synthesis patch overwriting good output with empty result. (Added 2026-02-23, tested 2026-02-24)

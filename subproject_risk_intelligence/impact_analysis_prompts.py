@@ -535,4 +535,9 @@ Instead, produce independent tracks that each stand on their own evidence.
 
 Pay special attention to TRIGGERED patterns and historical analogs — these provide the strongest evidence basis.
 
+TEMPORAL DISCIPLINE: Separate causal tracks from forward projections.
+- **Causal tracks**: Only include events/mechanisms that occurred BEFORE or CONCURRENT with the queried event. These explain what caused it.
+- **Outlook section**: Forward projections, seasonal patterns, and predictions about what happens NEXT belong in the synthesis/outlook, NOT as causal tracks. A forecast made after the event is not a cause of the event.
+- If a piece of evidence is dated, use its date to determine whether it is a cause or a projection relative to the event in the query.
+
 IMPORTANT: In your synthesis, include ALL specific quantitative data from the retrieved context — dollar amounts ($XB lost), valuation multiples (P/S, P/E compression ratios), index drawdowns (% from peak), and named institutional sources. These concrete numbers are critical for trader decision-making."""

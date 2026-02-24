@@ -17,4 +17,6 @@ IMPORTANT RULES:
 - Fetch data for ALL extracted variables, not just a subset
 - Compute derived metrics after fetching raw data
 - Validate patterns against current data
-- Do NOT terminate early — fetch all relevant data before finishing"""
+- Do NOT terminate early — fetch all relevant data before finishing
+
+TEMPORAL VALIDATION: If the research chains cite evidence with a specific date that is weeks before the queried event (e.g., "Jan 8 sector rotation" for a late-Jan event), fetch current data for the relevant variables to check whether that signal PERSISTED to event time, reversed, or evolved. Stale dated evidence without follow-through weakens a causal track. Note the temporal status in your finish_grounding summary (e.g., "Jan 8 tech underperformance: still active as of late Jan" or "reversed by mid-Jan")."""

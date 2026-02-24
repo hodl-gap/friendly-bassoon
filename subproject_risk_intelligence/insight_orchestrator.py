@@ -261,6 +261,7 @@ def format_insight(state: RiskImpactState, as_json: bool = False, asset_class: s
             "output_mode": "insight",
             "tracks": tracks,
             "synthesis": synthesis,
+            "outlook": insight.get("outlook", ""),
             "key_uncertainties": uncertainties,
             "direction": state.get("direction", "NEUTRAL"),
             "confidence": state.get("confidence", {}),
@@ -353,6 +354,12 @@ def format_insight(state: RiskImpactState, as_json: bool = False, asset_class: s
         lines.append("")
         lines.append("SYNTHESIS:")
         lines.append(synthesis)
+
+    outlook = insight.get("outlook", "")
+    if outlook:
+        lines.append("")
+        lines.append("OUTLOOK (Forward Projections):")
+        lines.append(outlook)
 
     if uncertainties:
         lines.append("")

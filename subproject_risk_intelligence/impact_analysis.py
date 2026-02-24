@@ -160,9 +160,13 @@ def _get_insight_tool(asset_class: str = "btc") -> dict:
                     "type": "array",
                     "items": {"type": "string"}
                 },
+                "outlook": {
+                    "type": "string",
+                    "description": "Forward projections, seasonal patterns, and predictions about what happens next. Content that is temporally AFTER the queried event belongs here, not in causal tracks."
+                },
                 "synthesis": {
                     "type": "string",
-                    "description": "Narrative connecting the tracks"
+                    "description": "Narrative connecting the causal tracks"
                 }
             },
             "required": ["tracks", "synthesis"]
