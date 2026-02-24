@@ -104,7 +104,7 @@ def run_synthesis_phase(state: RiskImpactState, asset_class: str) -> RiskImpactS
     verification_result = call_claude_sonnet(
         [{"role": "user", "content": verification_prompt}],
         temperature=0.1,
-        max_tokens=800,
+        max_tokens=2000,
     )
 
     debug_log("SYNTHESIS_VERIFICATION_RESULT", verification_result)
@@ -118,6 +118,10 @@ def run_synthesis_phase(state: RiskImpactState, asset_class: str) -> RiskImpactS
 
     # Step 4: Patch — re-run analysis with gap feedback appended
     print("[Synthesis Phase] Gaps found, running patch synthesis...")
+
+    # Save original output in case patch fails or produces empty result
+    original_insight = state.get("insight_output", {})
+    original_track_count = len(original_insight.get("tracks", []))
 
     from models import call_claude_with_tools
     insight_tool = _get_insight_tool(asset_class)
@@ -146,6 +150,19 @@ def run_synthesis_phase(state: RiskImpactState, asset_class: str) -> RiskImpactS
             system=INSIGHT_SYSTEM_PROMPT,
         )
 
+        # Retry with higher limit if truncated
+        if getattr(response, "stop_reason", None) == "max_tokens":
+            print("[Synthesis Phase] Patch response truncated at 8192, retrying with 12000...")
+            response = call_claude_with_tools(
+                messages=[{"role": "user", "content": patched_prompt}],
+                tools=[insight_tool],
+                tool_choice={"type": "tool", "name": "output_insight"},
+                model=model_short,
+                temperature=0.3,
+                max_tokens=12000,
+                system=INSIGHT_SYSTEM_PROMPT,
+            )
+
         tool_input = None
         for block in response.content:
             if block.type == "tool_use" and block.name == "output_insight":
@@ -157,28 +174,34 @@ def run_synthesis_phase(state: RiskImpactState, asset_class: str) -> RiskImpactS
             return state
 
         parsed = _parse_insight_tool_result(tool_input)
+        patched_tracks = parsed.get("tracks", [])
+
+        # Guard: if patch produced fewer tracks than original, keep original
+        if not patched_tracks:
+            print(f"[Synthesis Phase] Patch produced 0 tracks (original had {original_track_count}), keeping original")
+            debug_log_node("synthesis_phase", "EXIT", f"verification=GAPS_FOUND, patch_empty, kept_original={original_track_count} tracks")
+            return state
+
         state["insight_output"] = parsed
         state["output_mode"] = "insight"
 
         # Update legacy fields from patched output
-        tracks = parsed.get("tracks", [])
-        if tracks:
-            best_track = max(tracks, key=lambda t: t.get("confidence", 0))
-            implications = best_track.get("asset_implications", [])
-            if implications:
-                direction = implications[0].get("direction", "NEUTRAL").upper()
-                if direction not in ("BULLISH", "BEARISH", "NEUTRAL"):
-                    direction = "NEUTRAL"
-                state["direction"] = direction
-            else:
-                state["direction"] = "NEUTRAL"
-            state["confidence"] = {"score": best_track.get("confidence", 0.5)}
-            state["time_horizon"] = best_track.get("time_horizon", "unknown")
-            state["rationale"] = parsed.get("synthesis", "")
-            state["risk_factors"] = parsed.get("key_uncertainties", [])
+        best_track = max(patched_tracks, key=lambda t: t.get("confidence", 0))
+        implications = best_track.get("asset_implications", [])
+        if implications:
+            direction = implications[0].get("direction", "NEUTRAL").upper()
+            if direction not in ("BULLISH", "BEARISH", "NEUTRAL"):
+                direction = "NEUTRAL"
+            state["direction"] = direction
+        else:
+            state["direction"] = "NEUTRAL"
+        state["confidence"] = {"score": best_track.get("confidence", 0.5)}
+        state["time_horizon"] = best_track.get("time_horizon", "unknown")
+        state["rationale"] = parsed.get("synthesis", "")
+        state["risk_factors"] = parsed.get("key_uncertainties", [])
 
-        print(f"[Synthesis Phase] Patch applied — {len(tracks)} tracks")
-        debug_log_node("synthesis_phase", "EXIT", f"verification=GAPS_FOUND, patched={len(tracks)} tracks")
+        print(f"[Synthesis Phase] Patch applied — {len(patched_tracks)} tracks")
+        debug_log_node("synthesis_phase", "EXIT", f"verification=GAPS_FOUND, patched={len(patched_tracks)} tracks")
 
     except Exception as e:
         print(f"[Synthesis Phase] Patch failed ({e}), keeping original")

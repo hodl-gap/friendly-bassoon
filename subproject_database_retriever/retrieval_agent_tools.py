@@ -245,7 +245,7 @@ def build_tool_handlers(agent_state: RetrievalAgentState) -> dict:
             confidence_weight=0.7,
         )
 
-        new_chains = result.get("web_chains", [])
+        new_chains = result.get("extracted_chains", [])
         agent_state.web_chains.extend(new_chains)
 
         chain_summaries = []

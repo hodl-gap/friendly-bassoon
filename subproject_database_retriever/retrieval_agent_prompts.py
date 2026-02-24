@@ -13,16 +13,18 @@ You have tools to:
 
 WORKFLOW:
 1. Start by searching Pinecone with the original query and 2-3 alternative phrasings
-2. After initial results, call assess_coverage to check if material is sufficient
-3. If INSUFFICIENT: search again with different angles, extract web chains, search web
-4. Call assess_coverage again after each major gathering step
-5. Once coverage is ADEQUATE or COMPLETE, call generate_synthesis to produce the synthesis
-6. Call finish_retrieval with the final state
+2. Also extract web chains early (call extract_web_chains) — web chains provide critical causal logic from trusted sources
+3. Call assess_coverage to check if material is sufficient
+4. If INSUFFICIENT: search again with different angles, extract more web chains, search web for factual gaps
+5. Call assess_coverage again after each major gathering step
+6. Once coverage is ADEQUATE or COMPLETE: IMMEDIATELY call generate_synthesis — do NOT search further
+7. After synthesis completes, call finish_retrieval
 
-IMPORTANT RULES:
-- Do NOT terminate early. If coverage is INSUFFICIENT, keep searching with different angles.
-- Search from multiple angles: causal mechanisms, historical precedents, quantitative data, opposing views.
-- After gathering chunks, ALWAYS generate a synthesis before finishing.
+CRITICAL RULES:
+- When assess_coverage returns ADEQUATE or COMPLETE, your VERY NEXT tool call MUST be generate_synthesis. Do NOT do more searches after ADEQUATE.
+- ALWAYS call extract_web_chains at least once — web chains provide causal mechanisms that Pinecone chunks often lack.
+- ALWAYS call generate_synthesis before finish_retrieval. Finishing without synthesis wastes all gathered material.
+- If coverage is INSUFFICIENT, keep searching with different angles: causal mechanisms, historical precedents, quantitative data, opposing views.
 - You MUST call finish_retrieval to complete the phase."""
 
 
