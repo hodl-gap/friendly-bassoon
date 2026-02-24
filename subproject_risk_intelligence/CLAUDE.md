@@ -72,7 +72,7 @@ subproject_risk_intelligence/
 |-- theme_refresh.py                 # Daily theme monitoring + chain-specific trigger evaluation
 |-- regime_characterization.py       # Regime characterization (then vs now)
 |
-|-- # Hybrid agentic pipeline files (NOT TESTED — 2026-02-23):
+|-- # Hybrid agentic pipeline files (tested 2026-02-24):
 |-- synthesis_phase.py               # Phase 4: Opus generate + Sonnet verify + optional patch
 |-- synthesis_prompts.py             # Verification prompt for synthesis self-check
 |-- data_grounding_agent.py          # Phase 2: Agentic data grounding orchestrator
@@ -472,11 +472,11 @@ ENABLE_REGIME_CHARACTERIZATION = True  # env: RISK_REGIME_CHAR
 | Convergence Detection | Done | Detect multi-cause convergence points in chain graph |
 | Sequential Reasoning | Done | Temporal ordering of tracks (sequence_position) for phased analysis |
 | Regime Characterization | Done | "Then vs Now" regime comparison via Haiku + tool_use |
-| Hybrid Agentic Pipeline | **NOT TESTED** | Agentic data grounding (Phase 2), historical context (Phase 3), synthesis self-check (Phase 4). Code-complete, zero test runs. See below. |
+| Hybrid Agentic Pipeline | **Tested** | Agentic data grounding (Phase 2), historical context (Phase 3), synthesis self-check (Phase 4). Tested Cases 1, 2, 4: consistent +3 rubric improvement. See below. |
 
-## Hybrid Agentic Pipeline (NOT TESTED — 2026-02-23)
+## Hybrid Agentic Pipeline (Tested 2026-02-24)
 
-**Status: Code-complete, NOT test-run. No case studies or tests executed yet.**
+**Status: Tested on Cases 1, 2, 4. Consistent +3 improvement (Case 1: 8→11/13, Case 2: 11→14/18, Case 4: 16→19/20). Three integration bugs fixed in commit b2151d1.**
 
 Feature-flagged agentic replacements for sequential pipeline phases. Old pipeline remains default.
 

@@ -42,9 +42,9 @@ Daily monitoring (cron)
     → Morning Briefing (template-based summary of all theme states)
 ```
 
-### Hybrid Agentic Pipeline (NOT TESTED — 2026-02-23)
+### Hybrid Agentic Pipeline (Tested 2026-02-24)
 
-**Status: Code-complete, NOT test-run. No case studies or tests executed yet.**
+**Status: Tested on Cases 1, 2, 4. Consistent +3 rubric improvement over baseline (Case 1: 8→11/13, Case 2: 11→14/18, Case 4: 16→19/20). Three integration bugs found and fixed (commit b2151d1).**
 
 When enabled via `--hybrid` flag or individual env vars, key phases become agentic (iterative ReAct loops via `shared/agent_loop.py`). The old sequential pipeline remains intact and is the default. All changes are feature-flagged.
 
@@ -163,7 +163,7 @@ Python, LangGraph, Pinecone, Claude/OpenAI APIs, Yahoo Finance, FRED API, Tavily
 - [ ] Evaluate whether extracted metadata (English) should be concatenated with raw text (Korean) before embedding to improve cross-language retrieval
 - [x] Add condensed summary output alongside the full insight report. Generated mechanically from structured track data in `format_insight()` — no extra LLM call. Appended after the full report.
 - [x] Add chain completeness (Rule 8) and regime-shift consideration (Rule 9) to resynthesis prompt. Rewrite web chain angle #3 for alternative interpretations. Validated: Case 4 16→18/20, Case 6 12→14/16.
-- [ ] **TEST hybrid agentic pipeline** — code-complete (13 new files, 4 modified files) but zero test runs executed. Run case studies 1-6 with `--hybrid` flag and compare rubric scores against baseline. (Added 2026-02-23)
+- [x] **TEST hybrid agentic pipeline** — Tested Cases 1, 2, 4 with `--hybrid`. Results: +3 across all cases. Three bugs fixed: dict key mismatch in web chain handler, agent prompt too weak (kept searching after ADEQUATE), synthesis patch overwriting good output with empty result. (Added 2026-02-23, tested 2026-02-24)
 
 ## Archive Folder
 

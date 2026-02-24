@@ -32,7 +32,7 @@ subproject_database_retriever/
 ├── config.py                    # Configuration management
 ├── utils/                       # Utility functions
 │
-│   # Hybrid agentic pipeline files (NOT TESTED — 2026-02-23):
+│   # Hybrid agentic pipeline files (tested 2026-02-24):
 ├── retrieval_agent.py           # Phase 1: Agentic retrieval orchestrator (ReAct loop)
 ├── retrieval_agent_tools.py     # Phase 1: Tool schemas + handlers (6 tools incl. coverage checker)
 └── retrieval_agent_prompts.py   # Phase 1: System prompt + coverage assessment prompt
@@ -465,9 +465,9 @@ After gap filling and resynthesis, verified web chains are persisted to Pinecone
 | `persist_web_chains()` | `web_chain_persistence.py` | Filter, embed, upsert web chains to Pinecone |
 | `persist_learning()` | `retrieval_orchestrator.py` | Graph node wrapping persistence + frequency tracking |
 
-### Agentic Retrieval — Phase 1 (NOT TESTED — 2026-02-23)
+### Agentic Retrieval — Phase 1 (Tested 2026-02-24)
 
-**Status: Code-complete, NOT test-run. No case studies or tests executed yet.**
+**Status: Tested on Cases 1, 2, 4. Two bugs fixed: dict key mismatch (`"web_chains"` → `"extracted_chains"` in handler) silently dropped all web chains, and agent prompt too weak (kept searching after ADEQUATE coverage instead of synthesizing). Fixed in commit b2151d1.**
 
 When enabled, replaces the fixed LangGraph retrieval flow with an iterative ReAct agent that searches, assesses coverage, and iterates until material is sufficient.
 
