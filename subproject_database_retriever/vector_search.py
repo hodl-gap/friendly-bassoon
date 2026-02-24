@@ -25,6 +25,10 @@ from config import (
 )
 from vector_search_prompts import RE_RANK_PROMPT, RE_RANK_SYSTEM_PROMPT, STRUCTURED_RERANK_USER_PROMPT
 
+# Pinecone metadata filters for separating web chains from TG/institutional chains
+EXCLUDE_WEB_CHAINS_FILTER = {"category": {"$ne": "web_chain"}}
+WEB_CHAINS_ONLY_FILTER = {"category": {"$eq": "web_chain"}}
+
 # Pinecone index singleton
 _pinecone_index = None
 
@@ -68,17 +72,23 @@ def search_vectors(state: RetrieverState) -> RetrieverState:
     all_matches = {}  # id -> chunk_data (deduplication)
     protected_ids = set()  # IDs protected from being overwritten
 
+    # Read optional Pinecone metadata filter from state
+    pinecone_filter = state.get("pinecone_filter")
+
     # Use broader threshold and higher top_k for Stage 1
     stage1_threshold = BROAD_SIMILARITY_THRESHOLD if ENABLE_LLM_RERANK else SIMILARITY_THRESHOLD
     stage1_top_k = BROAD_RETRIEVAL_TOP_K if ENABLE_LLM_RERANK else DEFAULT_TOP_K
 
     # Stage 1A: Get top-N from ORIGINAL query first (protected)
     original_embedding = query_embeddings[0]
-    original_results = index.query(
+    query_kwargs = dict(
         vector=original_embedding,
         top_k=stage1_top_k,
         include_metadata=True
     )
+    if pinecone_filter:
+        query_kwargs["filter"] = pinecone_filter
+    original_results = index.query(**query_kwargs)
 
     # Debug log full Pinecone results
     try:
@@ -108,11 +118,14 @@ def search_vectors(state: RetrieverState) -> RetrieverState:
 
     # Stage 1B: Add expanded query results (skip protected chunks)
     for i, embedding in enumerate(query_embeddings):
-        results = index.query(
+        query_kwargs = dict(
             vector=embedding,
             top_k=stage1_top_k,
             include_metadata=True
         )
+        if pinecone_filter:
+            query_kwargs["filter"] = pinecone_filter
+        results = index.query(**query_kwargs)
 
         for match in results.matches:
             if match.score >= stage1_threshold:
@@ -367,7 +380,8 @@ def parse_rerank_response(response: str) -> dict:
 def search_single_query(
     query_text: str,
     top_k: int = None,
-    threshold: float = None
+    threshold: float = None,
+    filter: dict = None
 ) -> list:
     """
     Simple single-query search for follow-up retrievals.
@@ -377,6 +391,7 @@ def search_single_query(
         query_text: The search query
         top_k: Number of results (default: FOLLOWUP_TOP_K)
         threshold: Similarity threshold (default: FOLLOWUP_THRESHOLD)
+        filter: Optional Pinecone metadata filter dict
 
     Returns: List of chunks with id, score, metadata
     """
@@ -388,11 +403,14 @@ def search_single_query(
     embedding = call_openai_embedding(query_text)
     index = get_pinecone_index()
 
-    results = index.query(
+    query_kwargs = dict(
         vector=embedding,
         top_k=top_k,
         include_metadata=True
     )
+    if filter:
+        query_kwargs["filter"] = filter
+    results = index.query(**query_kwargs)
 
     chunks = []
     for match in results.matches:
@@ -509,3 +527,31 @@ def search_for_chain_continuation(
 
     print(f"[vector_search] Chain continuation total: {len(merged)} chunks ({len(metadata_chunks)} metadata + {len(merged) - len(metadata_chunks)} semantic)")
     return merged[:top_k]
+
+
+def search_saved_web_chains(
+    query_text: str,
+    top_k: int = 8,
+    threshold: float = 0.35
+) -> list:
+    """
+    Search Pinecone for previously persisted web chains only.
+
+    Uses a lower similarity threshold (0.35) because web chains use different
+    phrasing than the original query — they were extracted from web sources,
+    not from the same Telegram/institutional corpus.
+
+    Args:
+        query_text: The search query
+        top_k: Number of results (default: 8)
+        threshold: Similarity threshold (default: 0.35, lower than normal)
+
+    Returns: List of chunks with id, score, metadata (only web_chain category)
+    """
+    print(f"[vector_search] Searching saved web chains: '{query_text[:80]}...'")
+    return search_single_query(
+        query_text,
+        top_k=top_k,
+        threshold=threshold,
+        filter=WEB_CHAINS_ONLY_FILTER
+    )

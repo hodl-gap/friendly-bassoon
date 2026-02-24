@@ -819,6 +819,67 @@ def _format_chain_enrichment(chains: List[Dict[str, Any]], sources: List[str]) -
     return "\n".join(lines)
 
 
+def _convert_saved_chunks_to_web_chains(chunks: list) -> list:
+    """
+    Convert Pinecone web chain chunks back to flat chain format.
+
+    Saved web chains in Pinecone have their chain data in metadata.extracted_data
+    (JSON string) or in top-level metadata fields (cause, effect, mechanism, etc.).
+    This parses them into the same flat dict format that fill_gaps_with_web_chains()
+    produces, so they can be merged with newly extracted chains.
+
+    Args:
+        chunks: List of Pinecone result dicts with id, score, metadata
+
+    Returns:
+        List of flat chain dicts compatible with merge_web_chains_with_db_chains()
+    """
+    chains = []
+    for chunk in chunks:
+        metadata = chunk.get("metadata", {})
+
+        # Try extracted_data JSON first (canonical storage format)
+        extracted_data = metadata.get("extracted_data", "")
+        if isinstance(extracted_data, str) and extracted_data:
+            try:
+                parsed = json.loads(extracted_data)
+                for lc in parsed.get("logic_chains", []):
+                    for step in lc.get("steps", []):
+                        chains.append({
+                            "cause": step.get("cause", ""),
+                            "effect": step.get("effect", ""),
+                            "mechanism": step.get("mechanism", lc.get("mechanism", "")),
+                            "polarity": step.get("polarity", "unknown"),
+                            "source_name": metadata.get("source", "web (saved)"),
+                            "confidence": step.get("confidence", "medium"),
+                            "source_type": "web",
+                            "confidence_weight": 0.7,
+                            "from_saved": True,
+                        })
+                if chains:
+                    continue  # Got chains from extracted_data, skip fallback
+            except (json.JSONDecodeError, TypeError):
+                pass
+
+        # Fallback: top-level metadata fields (set by web_chain_persistence.py)
+        cause = metadata.get("cause", "")
+        effect = metadata.get("effect", "")
+        if cause and effect:
+            chains.append({
+                "cause": cause,
+                "effect": effect,
+                "mechanism": metadata.get("mechanism", ""),
+                "polarity": metadata.get("polarity", "unknown"),
+                "source_name": metadata.get("source", "web (saved)"),
+                "confidence": metadata.get("confidence", "medium"),
+                "source_type": "web",
+                "confidence_weight": 0.7,
+                "from_saved": True,
+            })
+
+    return chains
+
+
 def fill_gaps_with_web_chains(
     gaps: List[Dict[str, Any]],
     query: str,
@@ -1790,11 +1851,40 @@ def detect_and_fill_gaps(
 
     print(f"[Knowledge Gap] Gap split: {len(web_chain_gaps)} web_chain, {len(web_search_gaps)} web_search, {len(data_fetch_gaps)} data_fetch, {len(historical_analog_gaps)} historical_analog")
 
-    all_filled = []
+    # Step 2.5: Check saved web chains in Pinecone before resorting to Tavily
+    saved_chains_filled = []
+    remaining_web_chain_gaps = []
+    saved_web_chain_list = []
+
+    if web_chain_gaps:
+        from vector_search import search_saved_web_chains
+        for gap in web_chain_gaps:
+            gap_query = gap.get("search_query") or gap.get("missing") or query
+            saved_chunks = search_saved_web_chains(gap_query)
+            if len(saved_chunks) >= 2:
+                converted = _convert_saved_chunks_to_web_chains(saved_chunks)
+                if converted:
+                    saved_web_chain_list.extend(converted)
+                    saved_chains_filled.append({
+                        **gap,
+                        "status": "FILLED",
+                        "chain_count": len(converted),
+                        "fill_source": "saved_web_chains",
+                    })
+                    print(f"[Knowledge Gap] Saved web chains: filled gap '{gap.get('category', '?')}' with {len(converted)} chains from Pinecone")
+                    continue
+            remaining_web_chain_gaps.append(gap)
+
+        filled_count = len(saved_chains_filled)
+        remaining_count = len(remaining_web_chain_gaps)
+        print(f"[Knowledge Gap] Saved web chains: {filled_count} gaps filled, {remaining_count} gaps remain for Tavily")
+        web_chain_gaps = remaining_web_chain_gaps
+
+    all_filled = list(saved_chains_filled)
     all_partial = []
     all_unfillable = []
     all_enrichment = []
-    extracted_web_chains = []
+    extracted_web_chains = list(saved_web_chain_list)
 
     # Parallel gap filling: run independent fill methods concurrently
     def _fill_web_chains():

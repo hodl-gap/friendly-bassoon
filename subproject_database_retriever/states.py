@@ -59,3 +59,6 @@ class RetrieverState(TypedDict, total=False):
     iteration_count: int  # Number of retrieval iterations
     needs_refinement: bool  # Whether to iterate again
     skip_gap_filling: bool  # If True, skip gap detection and filling
+
+    # Pinecone Filtering
+    pinecone_filter: Dict[str, Any]  # Optional metadata filter for Pinecone queries

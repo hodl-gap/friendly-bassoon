@@ -17,7 +17,7 @@ from retrieval_agent_prompts import COVERAGE_ASSESSMENT_PROMPT
 
 SEARCH_PINECONE_TOOL = {
     "name": "search_pinecone",
-    "description": "Search the Pinecone vector database for institutional research chunks. Returns chunk summaries with source, score, and key content. Call multiple times with different queries for broader coverage.",
+    "description": "Search the Pinecone vector database for institutional/Telegram research chunks (excludes web chains by default). Returns chunk summaries with source, score, and key content. Call multiple times with different queries for broader coverage.",
     "input_schema": {
         "type": "object",
         "properties": {
@@ -29,6 +29,11 @@ SEARCH_PINECONE_TOOL = {
                 "type": "integer",
                 "description": "Number of results to return (default: 8)",
                 "default": 8
+            },
+            "exclude_web_chains": {
+                "type": "boolean",
+                "description": "If true (default), excludes previously persisted web chains and returns only institutional/Telegram research. Set to false to include all sources.",
+                "default": True
             }
         },
         "required": ["query"]
@@ -204,9 +209,10 @@ class RetrievalAgentState:
 def build_tool_handlers(agent_state: RetrievalAgentState) -> dict:
     """Build tool handler dict bound to agent state."""
 
-    def handle_search_pinecone(query: str, top_k: int = 8) -> dict:
-        from vector_search import search_single_query
-        chunks = search_single_query(query, top_k=top_k)
+    def handle_search_pinecone(query: str, top_k: int = 8, exclude_web_chains: bool = True) -> dict:
+        from vector_search import search_single_query, EXCLUDE_WEB_CHAINS_FILTER
+        pinecone_filter = EXCLUDE_WEB_CHAINS_FILTER if exclude_web_chains else None
+        chunks = search_single_query(query, top_k=top_k, filter=pinecone_filter)
         agent_state.add_chunks(chunks)
 
         summaries = []
@@ -227,8 +233,36 @@ def build_tool_handlers(agent_state: RetrievalAgentState) -> dict:
         }
 
     def handle_extract_web_chains(query: str, angles: list = None) -> dict:
-        from knowledge_gap_detector import fill_gaps_with_web_chains
+        from vector_search import search_saved_web_chains
+        from knowledge_gap_detector import fill_gaps_with_web_chains, _convert_saved_chunks_to_web_chains
 
+        # Step 1: Check saved web chains in Pinecone first
+        saved_chunks = search_saved_web_chains(query)
+        saved_chains = _convert_saved_chunks_to_web_chains(saved_chunks) if saved_chunks else []
+
+        if len(saved_chunks) >= 3 and saved_chains:
+            # Sufficient saved chains — skip Tavily extraction
+            agent_state.web_chains.extend(saved_chains)
+            print(f"[extract_web_chains] Using {len(saved_chains)} saved web chains from Pinecone (skipping Tavily)")
+
+            chain_summaries = []
+            for wc in saved_chains[:10]:
+                chain_summaries.append({
+                    "cause": wc.get("cause", ""),
+                    "effect": wc.get("effect", ""),
+                    "mechanism": wc.get("mechanism", "")[:150],
+                    "source": wc.get("source_name", "web (saved)"),
+                    "confidence": wc.get("confidence", "unknown"),
+                })
+
+            return {
+                "chains_extracted": len(saved_chains),
+                "total_web_chains": len(agent_state.web_chains),
+                "chains": chain_summaries,
+                "source": "saved_web_chains",
+            }
+
+        # Step 2: Not enough saved chains — extract via Tavily
         # Build a synthetic gap for the web chain extraction function
         gaps = [{
             "category": "topic_not_covered",
@@ -246,10 +280,12 @@ def build_tool_handlers(agent_state: RetrievalAgentState) -> dict:
         )
 
         new_chains = result.get("extracted_chains", [])
-        agent_state.web_chains.extend(new_chains)
+        # Also include any saved chains found (even if < 3)
+        all_chains = saved_chains + new_chains
+        agent_state.web_chains.extend(all_chains)
 
         chain_summaries = []
-        for wc in new_chains[:10]:
+        for wc in all_chains[:10]:
             chain_summaries.append({
                 "cause": wc.get("cause", ""),
                 "effect": wc.get("effect", ""),
@@ -259,9 +295,10 @@ def build_tool_handlers(agent_state: RetrievalAgentState) -> dict:
             })
 
         return {
-            "chains_extracted": len(new_chains),
+            "chains_extracted": len(all_chains),
             "total_web_chains": len(agent_state.web_chains),
             "chains": chain_summaries,
+            "source": "tavily" + (f" (+{len(saved_chains)} saved)" if saved_chains else ""),
         }
 
     def handle_web_search(query: str, category: str = "general") -> dict:

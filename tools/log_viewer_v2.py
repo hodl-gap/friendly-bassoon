@@ -1,13 +1,15 @@
 """
-Pipeline Log Viewer — Converts run_*.log stdout into navigable HTML.
+Pipeline Log Viewer v2 — Human-readable gap analysis grouping.
 
-Split-panel layout:
-  Left:  Persistent pipeline flowchart — current node highlighted with glow
-  Right: Step-by-step log cards, expandable, navigable
+Changes from v1:
+  - Gap-related phases merged into single "Gap Analysis" visit
+  - Steps reordered by gap category (not execution order)
+  - Gap summary table from parsed JSON
+  - Per-gap group headers with status badges
 
 Usage:
-    python tools/log_viewer.py logs/run_20260220_020944.log
-    python tools/log_viewer.py logs/run_20260220_020944.log -o my_view.html
+    python tools/log_viewer_v2.py logs/run_20260220_020944.log
+    python tools/log_viewer_v2.py logs/run_20260221_045642.log -o my_view_v2.html
 """
 
 import re
@@ -17,7 +19,7 @@ import json
 from pathlib import Path
 
 
-# ── Line classification ──────────────────────────────────────────────────
+# ── Line classification (same as v1) ────────────────────────────────────
 
 def classify_line(line: str) -> str:
     stripped = line.strip()
@@ -49,16 +51,14 @@ def detect_module(line: str) -> str:
     return m.group(1).strip() if m else ""
 
 
-# ── Phase / module mappings ──────────────────────────────────────────────
+# ── Phase / module mappings (v2: Gap Analysis replaces separate phases) ──
 
 PHASE_ORDER = [
     "Query Processing",
     "Vector Search",
     "Answer Generation",
-    "Gap Detection & Filling",
-    "Web Chain Extraction",
+    "Gap Analysis",
     "Historical Analogs",
-    "Re-synthesis & Persistence",
     "Variable Extraction",
     "Data Collection",
     "Risk Intelligence",
@@ -69,10 +69,8 @@ PHASE_SHORT = {
     "Query Processing": "Query",
     "Vector Search": "Search",
     "Answer Generation": "Answer",
-    "Gap Detection & Filling": "Gaps",
-    "Web Chain Extraction": "Web Chains",
+    "Gap Analysis": "Gap Analysis",
     "Historical Analogs": "Hist. Analog",
-    "Re-synthesis & Persistence": "Re-synth",
     "Variable Extraction": "Variables",
     "Data Collection": "Data Fetch",
     "Risk Intelligence": "Risk Intel",
@@ -83,10 +81,8 @@ PHASE_ICONS = {
     "Query Processing": "&#x1F50D;",
     "Vector Search": "&#x1F4BE;",
     "Answer Generation": "&#x1F4DD;",
-    "Gap Detection & Filling": "&#x26A0;",
-    "Web Chain Extraction": "&#x1F310;",
+    "Gap Analysis": "&#x26A0;",
     "Historical Analogs": "&#x1F4C5;",
-    "Re-synthesis & Persistence": "&#x1F504;",
     "Variable Extraction": "&#x1F4CA;",
     "Data Collection": "&#x1F4E5;",
     "Risk Intelligence": "&#x1F9E0;",
@@ -100,16 +96,21 @@ MODULE_TO_PHASE = {
     "vector_search": "Vector Search",
     "chain_expansion": "Vector Search",
     "answer_generation": "Answer Generation",
-    "Knowledge Gap": "Gap Detection & Filling",
-    "retriever.gap_detector": "Gap Detection & Filling",
-    "Gap: topic_not_covered": "Gap Detection & Filling",
-    "Gap: event_calendar": "Gap Detection & Filling",
-    "Gap: exit_criteria": "Gap Detection & Filling",
-    "WebSearch": "Web Chain Extraction",
-    "web_chain_persistence": "Re-synthesis & Persistence",
-    "Chain Merge": "Re-synthesis & Persistence",
-    "Chain Triggers": "Re-synthesis & Persistence",
-    "Chain Graph": "Re-synthesis & Persistence",
+    # v2: all gap-related modules → Gap Analysis
+    "Knowledge Gap": "Gap Analysis",
+    "retriever.gap_detector": "Gap Analysis",
+    "Gap: topic_not_covered": "Gap Analysis",
+    "Gap: historical_precedent_depth": "Gap Analysis",
+    "Gap: quantified_relationships": "Gap Analysis",
+    "Gap: monitoring_thresholds": "Gap Analysis",
+    "Gap: event_calendar": "Gap Analysis",
+    "Gap: mechanism_conditions": "Gap Analysis",
+    "Gap: exit_criteria": "Gap Analysis",
+    "WebSearch": "Gap Analysis",
+    "web_chain_persistence": "Gap Analysis",
+    "Chain Merge": "Gap Analysis",
+    "Chain Triggers": "Gap Analysis",
+    "Chain Graph": "Gap Analysis",
     "Historical Analog": "Historical Analogs",
     "Historical Analogs": "Historical Analogs",
     "Historical Data": "Data Collection",
@@ -137,10 +138,8 @@ PHASE_COLORS = {
     "Query Processing": "#3b82f6",
     "Vector Search": "#8b5cf6",
     "Answer Generation": "#06b6d4",
-    "Gap Detection & Filling": "#f59e0b",
-    "Web Chain Extraction": "#10b981",
+    "Gap Analysis": "#f59e0b",
     "Historical Analogs": "#ec4899",
-    "Re-synthesis & Persistence": "#f97316",
     "Variable Extraction": "#a855f7",
     "Data Collection": "#0ea5e9",
     "Risk Intelligence": "#ef4444",
@@ -182,13 +181,54 @@ MODULE_COLORS = {
     "Relationship Store": "#78716c",
     "output_formatter": "#78716c",
     "rss_adapter": "#78716c",
-    "Gap: topic_not_covered": "#f59e0b",
-    "Gap: event_calendar": "#f59e0b",
-    "Gap: exit_criteria": "#f59e0b",
+    "Gap: topic_not_covered": "#10b981",
+    "Gap: historical_precedent_depth": "#8b5cf6",
+    "Gap: quantified_relationships": "#3b82f6",
+    "Gap: monitoring_thresholds": "#f59e0b",
+    "Gap: event_calendar": "#06b6d4",
+    "Gap: mechanism_conditions": "#ec4899",
+    "Gap: exit_criteria": "#ef4444",
 }
 
+# v2: Gap group config
+GAP_LABELS = {
+    "topic_not_covered": "Topic Coverage",
+    "historical_precedent_depth": "Historical Precedents",
+    "quantified_relationships": "Quantified Relationships",
+    "monitoring_thresholds": "Monitoring Thresholds",
+    "event_calendar": "Event Calendar",
+    "mechanism_conditions": "Mechanism Conditions",
+    "exit_criteria": "Exit Criteria",
+    "_overview": "Gap Detection",
+    "_conclusion": "Summary & Merge",
+}
 
-# ── Key step detection ───────────────────────────────────────────────────
+GAP_GROUP_COLORS = {
+    "topic_not_covered": "#10b981",
+    "historical_precedent_depth": "#8b5cf6",
+    "quantified_relationships": "#3b82f6",
+    "monitoring_thresholds": "#f59e0b",
+    "event_calendar": "#06b6d4",
+    "mechanism_conditions": "#ec4899",
+    "exit_criteria": "#ef4444",
+    "_overview": "#f59e0b",
+    "_conclusion": "#78716c",
+}
+
+GAP_CANONICAL_ORDER = [
+    "_overview",
+    "topic_not_covered",
+    "historical_precedent_depth",
+    "quantified_relationships",
+    "monitoring_thresholds",
+    "event_calendar",
+    "mechanism_conditions",
+    "exit_criteria",
+    "_conclusion",
+]
+
+
+# ── Key step detection (same as v1) ─────────────────────────────────────
 
 def is_key_step(line: str) -> bool:
     keywords = [
@@ -205,7 +245,146 @@ def is_key_step(line: str) -> bool:
     return any(kw in line for kw in keywords)
 
 
-# ── Parser ───────────────────────────────────────────────────────────────
+# ── Gap Analysis helpers (v2 only) ──────────────────────────────────────
+
+def extract_gap_json(body_lines: list[str]) -> dict | None:
+    """Extract gap detection JSON from step body lines."""
+    text = "\n".join(body_lines)
+    start = text.find('{\n  "coverage_rating"')
+    if start == -1:
+        start = text.find('{"coverage_rating"')
+    if start == -1:
+        return None
+    brace_count = 0
+    for i in range(start, len(text)):
+        if text[i] == '{':
+            brace_count += 1
+        elif text[i] == '}':
+            brace_count -= 1
+        if brace_count == 0:
+            try:
+                return json.loads(text[start:i + 1])
+            except json.JSONDecodeError:
+                return None
+    return None
+
+
+def tag_gap_step(step: dict, current_gap: str, seen_any_gap: bool) -> tuple[str, str]:
+    """Tag a step with its gap group. Returns (group, new_current_gap)."""
+    summary = step["summary"]
+    body_text = "\n".join(step["body"])
+
+    # 1. Explicit gap markers
+    m = re.match(r'\[Gap:\s*([\w_]+)\]', summary.strip())
+    if m:
+        cat = m.group(1)
+        return cat, cat
+
+    # 2. Web chain content → topic_not_covered
+    wc_markers = [
+        "Searching for logic chains on:",
+        "logic_chains with Haiku",
+        "Web chain expansion response",
+        "web chain queries",
+        "trusted sources from",
+        '"chain_count"',
+        "chains from",
+    ]
+    if any(marker in body_text for marker in wc_markers):
+        return "topic_not_covered", current_gap
+
+    # 3. Conclusion markers
+    conc_markers = ["Chain Merge", "chains extracted", "Web chain extraction:"]
+    if any(marker in summary for marker in conc_markers):
+        return "_conclusion", current_gap
+    if re.search(r'\[Knowledge Gap\].*Summary:', summary):
+        return "_conclusion", current_gap
+
+    # 4. Data fetch errors
+    if "yfinance" in body_text or "Data fetcher import" in body_text:
+        return "quantified_relationships", current_gap
+
+    # 5. Persistence
+    if "Persisted" in summary or "persist" in summary.lower():
+        return "_conclusion", current_gap
+
+    # 6. Before any gap → overview
+    if not seen_any_gap:
+        return "_overview", current_gap
+
+    # 7. "Attempting to fill" → overview
+    if "Attempting to fill" in summary:
+        return "_overview", current_gap
+
+    # 8. Default: current gap
+    return current_gap, current_gap
+
+
+def organize_gap_steps(steps: list[dict]) -> tuple[list[tuple], dict | None]:
+    """Organize gap steps into groups by category for nested rendering."""
+    # Extract gap JSON
+    gap_json = None
+    for step in steps:
+        gap_json = extract_gap_json(step["body"])
+        if gap_json:
+            break
+
+    # Tag all steps
+    current_gap = "_overview"
+    seen_any_gap = False
+    for step in steps:
+        if re.match(r'\[Gap:\s*', step["summary"].strip()):
+            seen_any_gap = True
+        group, current_gap = tag_gap_step(step, current_gap, seen_any_gap)
+        step["_gap_group"] = group
+
+    # Build ordered groups
+    groups = []
+    seen = set()
+    for group_name in GAP_CANONICAL_ORDER:
+        group_steps = [s for s in steps if s.get("_gap_group") == group_name]
+        if group_steps and group_name not in seen:
+            groups.append((group_name, group_steps))
+            seen.add(group_name)
+    # Catch any unlisted groups
+    for step in steps:
+        g = step.get("_gap_group", "_overview")
+        if g not in seen:
+            gs = [s for s in steps if s.get("_gap_group") == g]
+            groups.append((g, gs))
+            seen.add(g)
+
+    return groups, gap_json
+
+
+def detect_group_status(group_steps: list[dict]) -> str | None:
+    """Detect FILLED/UNFILLABLE/ERROR status from a gap group's steps."""
+    for step in group_steps:
+        body = "\n".join(step["body"])
+        if "Status: FILLED" in body:
+            return "FILLED"
+        if "Status: UNFILLABLE" in body:
+            return "UNFILLABLE"
+        if "Status: PARTIAL" in body:
+            return "PARTIAL"
+    for step in group_steps:
+        body = "\n".join(step["body"])
+        if "not installed" in body or "import failed" in body:
+            return "ERROR"
+    return None
+
+
+def get_gap_info(gap_json: dict | None, category: str) -> dict:
+    """Get gap info from JSON for a category."""
+    if not gap_json:
+        return {}
+    for gap in gap_json.get("gaps", []):
+        if gap.get("category") == category:
+            return gap
+    return {}
+
+
+# ── Parser (same as v1) ─────────────────────────────────────────────────
 
 def parse_log(lines: list[str]) -> list[dict]:
     steps = []
@@ -246,8 +425,7 @@ def parse_log(lines: list[str]) -> list[dict]:
                 j += 1
             if j < n:
                 next_line = lines[j].strip()
-                if next_line.startswith("IMPACT ANALYSIS") or next_line.startswith("LLM USAGE") or next_line.startswith("CURRENT MARKET"):
-                    # Skip stray section headers that appear before any real steps
+                if next_line.startswith("IMPACT ANALYSIS") or next_line.startswith("LLM USAGE") or next_line.startswith("CURRENT MARKET") or next_line.startswith("CONDENSED SUMMARY"):
                     has_real_steps = any(s["type"] == "step" for s in steps)
                     if not has_real_steps:
                         i = j + 1
@@ -260,8 +438,26 @@ def parse_log(lines: list[str]) -> list[dict]:
                     section_title = lines[i].strip() if i < n else "Section"
                     body.append(lines[i])
                     i += 1
-                    while i < n and classify_line(lines[i]) in ("separator", "blank"):
-                        i += 1
+                    # For content-heavy sections (CONDENSED SUMMARY), capture all
+                    # body lines until next === separator or EOF
+                    if "CONDENSED" in section_title:
+                        while i < n and classify_line(lines[i]) in ("separator", "blank"):
+                            i += 1
+                        while i < n:
+                            if classify_line(lines[i]) == "separator":
+                                # Check if this separator starts a new named section
+                                peek = i + 1
+                                while peek < n and classify_line(lines[peek]) == "blank":
+                                    peek += 1
+                                if peek < n and (lines[peek].strip().startswith("LLM USAGE") or
+                                                 lines[peek].strip().startswith("CONDENSED") or
+                                                 lines[peek].strip().startswith("Pipeline")):
+                                    break
+                            body.append(lines[i])
+                            i += 1
+                    else:
+                        while i < n and classify_line(lines[i]) in ("separator", "blank"):
+                            i += 1
                     phase = "Risk Intelligence" if "IMPACT" in section_title else "Output"
                     steps.append({"type": "section", "module": section_title, "phase": phase,
                                   "summary": section_title, "body": body, "is_key": True})
@@ -329,12 +525,46 @@ def parse_log(lines: list[str]) -> list[dict]:
     return steps
 
 
-# ── HTML Renderer (visit-based navigation) ────────────────────────────
+# ── Visit merging (v2 only) ─────────────────────────────────────────────
+
+def merge_gap_visits(visits: list[tuple]) -> list[tuple]:
+    """Merge gap-related visits into a single Gap Analysis visit."""
+    GAP_PHASE = "Gap Analysis"
+
+    # Find first and last gap visit
+    first_gap = None
+    last_gap = None
+    for i, (phase, _) in enumerate(visits):
+        if phase == GAP_PHASE:
+            if first_gap is None:
+                first_gap = i
+            last_gap = i
+
+    if first_gap is None:
+        return visits  # No gap visits
+
+    # Collect gap steps and defer interleaved non-gap visits
+    result = list(visits[:first_gap])
+    gap_steps = []
+    deferred = []
+
+    for i in range(first_gap, last_gap + 1):
+        phase, group = visits[i]
+        if phase == GAP_PHASE:
+            gap_steps.extend(group)
+        else:
+            deferred.append((phase, group))
+
+    result.append((GAP_PHASE, gap_steps))
+    result.extend(deferred)
+    result.extend(visits[last_gap + 1:])
+
+    return result
+
+
+# ── HTML Renderer (v2: gap-aware) ───────────────────────────────────────
 
 def render_html(steps: list[dict], log_path: str, query: str) -> str:
-    total_steps = len(steps)
-    key_steps = sum(1 for s in steps if s.get("is_key"))
-
     # Build visits (consecutive same-phase runs)
     visits = []
     cur_phase = None
@@ -351,7 +581,12 @@ def render_html(steps: list[dict], log_path: str, query: str) -> str:
     if cur_group:
         visits.append((cur_phase, cur_group))
 
+    # v2: merge gap visits
+    visits = merge_gap_visits(visits)
+
     total_visits = len(visits)
+    total_steps = sum(len(g) for _, g in visits)
+    key_steps = sum(1 for _, g in visits for s in g if s.get("is_key"))
 
     # Visit metadata JSON for JS
     visit_meta_js = json.dumps([
@@ -374,7 +609,7 @@ def render_html(steps: list[dict], log_path: str, query: str) -> str:
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Pipeline Trace — {html.escape(query[:60])}</title>
+<title>Pipeline Trace v2 — {html.escape(query[:60])}</title>
 <style>
 * {{ margin: 0; padding: 0; box-sizing: border-box; }}
 body {{ font-family: 'SF Mono', 'Consolas', 'Monaco', monospace; background: #0f172a; color: #e2e8f0; font-size: 13px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }}
@@ -548,12 +783,58 @@ body {{ font-family: 'SF Mono', 'Consolas', 'Monaco', monospace; background: #0f
 .step-card.expanded .step-body {{ display: block; }}
 
 .hidden {{ display: none !important; }}
+
+/* ── v2: Gap Analysis styles ── */
+.gap-summary {{
+    background: #1e293b; border: 1px solid #334155; border-radius: 8px;
+    padding: 10px 14px; margin-bottom: 12px;
+}}
+.gap-summary-title {{
+    font-size: 12px; font-weight: 700; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+}}
+.gap-summary-rating {{
+    font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600;
+}}
+.gap-table {{ width: 100%; border-collapse: collapse; }}
+.gap-table td {{
+    padding: 3px 6px; font-size: 10px; border-bottom: 1px solid #1e293b22;
+}}
+.gap-table td:first-child {{ width: 16px; text-align: center; }}
+.gap-table td:nth-child(2) {{ color: #cbd5e1; }}
+.gap-table td:nth-child(3) {{ text-align: right; font-weight: 600; font-size: 9px; }}
+.gap-table td:nth-child(4) {{ color: #64748b; font-size: 9px; text-align: right; }}
+.gap-row-covered td:first-child {{ color: #10b981; }}
+.gap-row-covered td:nth-child(3) {{ color: #10b981; }}
+.gap-row-gap td:first-child {{ color: #f59e0b; }}
+.gap-row-gap td:nth-child(3) {{ color: #f59e0b; }}
+
+.gap-group {{
+    margin: 10px 0 4px;
+    border-left: 3px solid var(--gc);
+    padding-left: 6px;
+}}
+.gap-group-hdr {{
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 600;
+    background: color-mix(in srgb, var(--gc) 10%, #0f172a);
+    color: var(--gc);
+}}
+.gap-group-hdr .gg-label {{ flex: 1; }}
+.gap-group-hdr .gg-method {{ font-size: 9px; font-weight: 400; opacity: 0.7; }}
+.gap-group-hdr .gg-status {{
+    font-size: 9px; padding: 2px 8px; border-radius: 10px; font-weight: 600;
+}}
+.gap-missing {{
+    font-size: 10px; color: #94a3b8; padding: 2px 8px 4px; font-style: italic;
+}}
 </style>
 </head>
 <body>
 
 <div class="top-bar">
-    <h1>Pipeline Trace</h1>
+    <h1>Pipeline Trace v2</h1>
     <div class="query">{html.escape(query)}</div>
     <div class="stats">{total_steps} steps &middot; {key_steps} key &middot; {total_visits} visits &middot; {html.escape(Path(log_path).name)}</div>
 </div>
@@ -617,7 +898,7 @@ body {{ font-family: 'SF Mono', 'Consolas', 'Monaco', monospace; background: #0f
 
     parts.append('</div>\n</div>\n\n')
 
-    # Right panel: visit blocks with step cards
+    # ── Right panel: visit blocks ──
     parts.append('<!-- ── Right: Steps ── -->\n<div class="right-panel" id="rightPanel">\n')
 
     global_idx = 0
@@ -633,27 +914,97 @@ body {{ font-family: 'SF Mono', 'Consolas', 'Monaco', monospace; background: #0f
         parts.append(f'  <span class="vh-meta">Visit {vi + 1}/{total_visits} &middot; {len(group)} steps</span>\n')
         parts.append(f'</div>\n')
 
-        for step in group:
-            module = step["module"]
-            mod_color = MODULE_COLORS.get(module, PHASE_COLORS.get(phase_name, "#64748b"))
-            is_key = step.get("is_key", False)
-            key_cls = " key" if is_key else ""
-            text_cls = " key-text" if is_key else ""
+        if phase_name == "Gap Analysis":
+            # v2: Render gap-organized content
+            gap_groups, gap_json = organize_gap_steps(group)
 
-            summary = step["summary"]
-            if len(summary) > 180:
-                summary = summary[:177] + "..."
+            # Gap summary table
+            if gap_json:
+                rating = gap_json.get("coverage_rating", "?")
+                gap_count = gap_json.get("gap_count", 0)
+                r_color = {"COMPLETE": "#10b981", "PARTIAL": "#f59e0b", "INSUFFICIENT": "#ef4444"}.get(rating, "#64748b")
+                parts.append(f'<div class="gap-summary">\n')
+                parts.append(f'  <div class="gap-summary-title">Knowledge Gap Assessment '
+                             f'<span class="gap-summary-rating" style="background:{r_color}20;color:{r_color};">'
+                             f'{html.escape(rating)} ({gap_count} gaps)</span></div>\n')
+                parts.append(f'  <table class="gap-table">\n')
+                for gap in gap_json.get("gaps", []):
+                    cat = gap.get("category", "?")
+                    status = gap.get("status", "?")
+                    fm = gap.get("fill_method", "")
+                    label = GAP_LABELS.get(cat, cat)
+                    row_cls = "gap-row-covered" if status == "COVERED" else "gap-row-gap"
+                    check = "&#x2713;" if status == "COVERED" else "&#x2717;"
+                    method_text = f"&rarr; {html.escape(fm)}" if status == "GAP" else ""
+                    parts.append(f'    <tr class="{row_cls}"><td>{check}</td>'
+                                 f'<td>{html.escape(label)}</td>'
+                                 f'<td>{html.escape(status)}</td>'
+                                 f'<td>{method_text}</td></tr>\n')
+                parts.append(f'  </table>\n')
+                parts.append(f'</div>\n')
 
-            body_text = html.escape("\n".join(step["body"]))
+            # Render each gap group with header
+            for gname, gsteps in gap_groups:
+                gc = GAP_GROUP_COLORS.get(gname, "#64748b")
+                glabel = GAP_LABELS.get(gname, gname)
+                gap_info = get_gap_info(gap_json, gname)
+                fm = gap_info.get("fill_method", "")
+                missing = gap_info.get("missing", "")
+                status = detect_group_status(gsteps)
 
-            parts.append(f'<div class="step-card{key_cls}" data-idx="{global_idx}" data-key="{1 if is_key else 0}" onclick="toggleStep(this)">\n')
-            parts.append(f'  <div class="step-summary">\n')
-            parts.append(f'    <span class="step-module" style="background:{mod_color}18; color:{mod_color};">{html.escape(module[:28])}</span>\n')
-            parts.append(f'    <span class="step-text{text_cls}">{html.escape(summary)}</span>\n')
-            parts.append(f'  </div>\n')
-            parts.append(f'  <div class="step-body">{body_text}</div>\n')
-            parts.append(f'</div>\n')
-            global_idx += 1
+                parts.append(f'<div class="gap-group" style="--gc:{gc};">\n')
+                parts.append(f'<div class="gap-group-hdr">\n')
+                parts.append(f'  <span class="gg-label">{html.escape(glabel)}</span>\n')
+                if fm:
+                    parts.append(f'  <span class="gg-method">{html.escape(fm)}</span>\n')
+                if status:
+                    sc = {"FILLED": "#10b981", "UNFILLABLE": "#ef4444", "PARTIAL": "#f59e0b", "ERROR": "#ef4444"}.get(status, "#64748b")
+                    parts.append(f'  <span class="gg-status" style="background:{sc}20;color:{sc};">{html.escape(status)}</span>\n')
+                parts.append(f'</div>\n')
+                if missing:
+                    parts.append(f'<div class="gap-missing">{html.escape(missing[:200])}</div>\n')
+
+                # Step cards within group
+                for step in gsteps:
+                    module = step["module"]
+                    mod_color = MODULE_COLORS.get(module, PHASE_COLORS.get(phase_name, "#64748b"))
+                    is_key = step.get("is_key", False)
+                    key_cls = " key" if is_key else ""
+                    text_cls = " key-text" if is_key else ""
+                    summary = step["summary"]
+                    if len(summary) > 180:
+                        summary = summary[:177] + "..."
+                    body_text = html.escape("\n".join(step["body"]))
+                    parts.append(f'<div class="step-card{key_cls}" data-idx="{global_idx}" data-key="{1 if is_key else 0}" onclick="toggleStep(this)">\n')
+                    parts.append(f'  <div class="step-summary">\n')
+                    parts.append(f'    <span class="step-module" style="background:{mod_color}18; color:{mod_color};">{html.escape(module[:28])}</span>\n')
+                    parts.append(f'    <span class="step-text{text_cls}">{html.escape(summary)}</span>\n')
+                    parts.append(f'  </div>\n')
+                    parts.append(f'  <div class="step-body">{body_text}</div>\n')
+                    parts.append(f'</div>\n')
+                    global_idx += 1
+
+                parts.append(f'</div>\n')  # close gap-group
+        else:
+            # Normal visit rendering (same as v1)
+            for step in group:
+                module = step["module"]
+                mod_color = MODULE_COLORS.get(module, PHASE_COLORS.get(phase_name, "#64748b"))
+                is_key = step.get("is_key", False)
+                key_cls = " key" if is_key else ""
+                text_cls = " key-text" if is_key else ""
+                summary = step["summary"]
+                if len(summary) > 180:
+                    summary = summary[:177] + "..."
+                body_text = html.escape("\n".join(step["body"]))
+                parts.append(f'<div class="step-card{key_cls}" data-idx="{global_idx}" data-key="{1 if is_key else 0}" onclick="toggleStep(this)">\n')
+                parts.append(f'  <div class="step-summary">\n')
+                parts.append(f'    <span class="step-module" style="background:{mod_color}18; color:{mod_color};">{html.escape(module[:28])}</span>\n')
+                parts.append(f'    <span class="step-text{text_cls}">{html.escape(summary)}</span>\n')
+                parts.append(f'  </div>\n')
+                parts.append(f'  <div class="step-body">{body_text}</div>\n')
+                parts.append(f'</div>\n')
+                global_idx += 1
 
         parts.append('</div>\n')
 
@@ -680,17 +1031,14 @@ function goToVisit(idx) {{
     currentVisit = idx;
     currentStep = -1;
 
-    // Show active visit block, hide others
     document.querySelectorAll('.visit-block').forEach(b => {{
         b.classList.toggle('active', parseInt(b.dataset.visit) === idx);
     }});
 
-    // Clear step highlights
     document.querySelectorAll('.step-card.highlight, .step-card.expanded').forEach(c => {{
         c.classList.remove('highlight', 'expanded');
     }});
 
-    // Update visit trail
     document.querySelectorAll('.visit-item').forEach(item => {{
         const vi = parseInt(item.dataset.visit);
         item.classList.toggle('active', vi === idx);
@@ -699,27 +1047,19 @@ function goToVisit(idx) {{
     const activeItem = document.getElementById('vi_' + idx);
     if (activeItem) activeItem.scrollIntoView({{ behavior: 'auto', block: 'nearest' }});
 
-    // Update flowchart
     highlightPhase(visits[idx].phase);
-
-    // Update controls
     updateVisitLabel();
     updateStepCounter();
 
-    // Reset progress bars
     document.querySelectorAll('.flow-progress').forEach(b => b.style.width = '0%');
-
-    // Scroll right panel to top
     document.getElementById('rightPanel').scrollTop = 0;
 }}
 
 function goToFirstVisit(phase) {{
-    // Find the first visit of this phase at or after current visit
     let idx = -1;
     for (let i = currentVisit; i < totalVisits; i++) {{
         if (visits[i].phase === phase) {{ idx = i; break; }}
     }}
-    // If not found ahead, search from beginning
     if (idx === -1) {{
         for (let i = 0; i < currentVisit; i++) {{
             if (visits[i].phase === phase) {{ idx = i; break; }}
@@ -745,7 +1085,6 @@ function highlightPhase(phase) {{
     const node = document.getElementById('fn_' + pid);
     if (node) {{
         node.classList.add('active');
-        // Mark phases visited before this visit
         const visitedPhases = new Set();
         for (let i = 0; i < currentVisit; i++) visitedPhases.add(visits[i].phase);
         visitedPhases.delete(phase);
@@ -756,7 +1095,6 @@ function highlightPhase(phase) {{
         node.scrollIntoView({{ behavior: 'auto', block: 'nearest' }});
     }}
 
-    // Arrow above active node
     const phaseIdx = PHASE_ORDER.indexOf(phase);
     if (phaseIdx > 0) {{
         const prevPid = phaseId(PHASE_ORDER[phaseIdx - 1]);
@@ -785,7 +1123,6 @@ function activateStep(card, stepIdx) {{
     card.scrollIntoView({{ behavior: 'auto', block: 'center' }});
     currentStep = stepIdx;
 
-    // Progress bar
     const phase = visits[currentVisit].phase;
     const total = getVisibleSteps().length;
     const pid = phaseId(phase);
@@ -818,7 +1155,6 @@ function navKey(dir) {{
     const allCards = getVisibleSteps();
     const keyCards = allCards.filter(c => c.dataset.key === '1');
 
-    // Try within current visit
     if (keyCards.length > 0) {{
         let pos = -1;
         if (currentStep >= 0) {{
@@ -832,7 +1168,6 @@ function navKey(dir) {{
         }}
     }}
 
-    // Cross-visit: find next visit with key steps
     let vi = currentVisit + dir;
     while (vi >= 0 && vi < totalVisits) {{
         if (visits[vi].keys > 0) {{
@@ -908,7 +1243,7 @@ goToVisit(0);
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python tools/log_viewer.py <log_file> [-o output.html]")
+        print("Usage: python tools/log_viewer_v2.py <log_file> [-o output.html]")
         sys.exit(1)
 
     log_path = sys.argv[1]
@@ -935,13 +1270,21 @@ def main():
     html_out = render_html(steps, log_path, query)
 
     if not output_path:
-        output_path = str(log_file.with_suffix(".html"))
+        output_path = str(log_file.with_suffix("")) + "_v2.html"
 
     Path(output_path).write_text(html_out, encoding="utf-8")
+
+    # Count gap groups
+    gap_groups = 0
+    for step in steps:
+        if step["phase"] == "Gap Analysis":
+            gap_groups += 1
+
     print(f"Generated: {output_path}")
     print(f"  Steps: {len(steps)}")
     print(f"  Key steps: {sum(1 for s in steps if s.get('is_key'))}")
     print(f"  Phases: {len(set(s['phase'] for s in steps))}")
+    print(f"  Gap-related steps: {gap_groups}")
 
 
 if __name__ == "__main__":

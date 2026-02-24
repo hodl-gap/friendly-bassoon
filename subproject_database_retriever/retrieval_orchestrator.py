@@ -311,12 +311,15 @@ def run_retrieval(query: str, image_path: str = None, skip_gap_filling: bool = F
     if ENABLE_SNAPSHOTS:
         _start_run()
 
+    from vector_search import EXCLUDE_WEB_CHAINS_FILTER
+
     graph = build_graph()
 
     initial_state = RetrieverState(
         query=query,
         iteration_count=0,
-        needs_refinement=False
+        needs_refinement=False,
+        pinecone_filter=EXCLUDE_WEB_CHAINS_FILTER
     )
 
     if image_path:
