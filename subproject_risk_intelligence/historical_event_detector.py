@@ -19,11 +19,9 @@ from .historical_event_prompts import (
     GAP_DETECTION_PROMPT,
     get_instrument_mapping_prompt,
     DATE_EXTRACTION_PROMPT,
-    MULTI_ANALOG_DETECTION_PROMPT,
-    MULTI_ANALOG_TOOL,
     CONTEXT_ANALOG_EXTRACTION_PROMPT,
     CONTEXT_ANALOG_TOOL,
-    format_logic_chains_for_prompt
+    format_logic_chains_for_prompt,
 )
 from .asset_configs import get_asset_config
 from . import config
@@ -641,25 +639,16 @@ def detect_historical_analogs(
     """
     Detect up to N historical analogs for the current query.
 
-    Uses research database first (if enabled), then LLM parametric memory.
+    Extracts analogs ONLY from already-retrieved context (DB + web chains).
+    No LLM parametric fallback — all analogs must be grounded in retrieved data.
     """
     all_analogs = []
 
-    # Step 1: Extract analogs from already-retrieved context (DB + web chains)
     if config.ENABLE_RESEARCH_ANALOG_SEARCH:
         context_analogs = extract_analogs_from_context(synthesis, logic_chains, max_results=max_analogs)
         for analog in context_analogs:
-            # Boost relevance for context-grounded analogs
             analog["relevance_score"] = min(1.0, analog.get("relevance_score", 0.5) + 0.15)
         all_analogs.extend(context_analogs)
-
-    # Step 2: Fill remaining slots with LLM parametric detection
-    remaining_slots = max_analogs - len(all_analogs)
-    if remaining_slots > 0:
-        llm_analogs = _detect_analogs_llm(query, synthesis, logic_chains, remaining_slots, relevance_threshold)
-        for analog in llm_analogs:
-            analog["source"] = "llm_parametric"
-        all_analogs.extend(llm_analogs)
 
     # Filter by relevance threshold and limit
     filtered = [
@@ -669,61 +658,8 @@ def detect_historical_analogs(
     filtered.sort(key=lambda a: a.get("relevance_score", 0), reverse=True)
     filtered = filtered[:max_analogs]
 
-    print(f"[Historical Analogs] Found {len(filtered)} analogs (from {len(all_analogs)} candidates)")
+    print(f"[Historical Analogs] Found {len(filtered)} analogs from retrieved context")
     for a in filtered:
-        source = a.get("source", "unknown")
-        print(f"  - {a.get('event_description', '?')} ({a.get('year', '?')}, relevance: {a.get('relevance_score', 0):.2f}, source: {source})")
+        print(f"  - {a.get('event_description', '?')} ({a.get('year', '?')}, relevance: {a.get('relevance_score', 0):.2f})")
 
     return filtered
-
-
-def _detect_analogs_llm(
-    query: str,
-    synthesis: str,
-    logic_chains: list,
-    max_analogs: int = 5,
-    relevance_threshold: float = 0.5
-) -> List[Dict[str, Any]]:
-    """Original LLM-based analog detection (extracted from detect_historical_analogs)."""
-    formatted_chains = format_logic_chains_for_prompt(logic_chains)
-
-    prompt = MULTI_ANALOG_DETECTION_PROMPT.format(
-        query=query,
-        synthesis=synthesis[:3000],
-        logic_chains=formatted_chains
-    )
-
-    try:
-        response = call_claude_with_tools(
-            messages=[{"role": "user", "content": prompt}],
-            tools=[MULTI_ANALOG_TOOL],
-            tool_choice={"type": "tool", "name": "detect_analogs"},
-            model="haiku",
-            max_tokens=1000,
-        )
-
-        # Extract tool_use result
-        result = None
-        for block in response.content:
-            if block.type == "tool_use" and block.name == "detect_analogs":
-                result = block.input
-                break
-
-        if not result:
-            print("[Historical Analogs] No tool_use block in LLM response")
-            return []
-
-        analogs = result.get("analogs", [])
-
-        # Filter by relevance threshold
-        filtered = [
-            a for a in analogs
-            if a.get("relevance_score", 0) >= relevance_threshold
-        ]
-        filtered = filtered[:max_analogs]
-
-        return filtered
-
-    except Exception as e:
-        print(f"[Historical Analogs] LLM detection error: {e}")
-        return []

@@ -62,7 +62,7 @@ subproject_risk_intelligence/
 |-- pattern_validator.py             # Validate research patterns vs current data (Phase 2)
 |-- relationship_store.py            # Logic chain persistence with theme index + validation reinforcement + trigger extraction
 |-- historical_event_detector.py     # Historical event detection + multi-analog detection
-|-- historical_event_prompts.py      # LLM prompts for historical detection + MULTI_ANALOG_TOOL
+|-- historical_event_prompts.py      # LLM prompts for historical detection (context-grounded only)
 |-- historical_data_fetcher.py       # Fetch historical data + metrics
 |-- historical_aggregator.py         # Multi-analog parallel fetch + aggregate statistics
 |-- theme_refresh.py                 # Daily theme monitoring + chain-specific trigger evaluation

@@ -300,11 +300,10 @@ def test_validate_analog_mechanism_no_data():
     print("PASSED")
 
 
-def test_detect_historical_analogs_integration():
-    """Test detect_historical_analogs: context analogs appear before LLM parametric ones."""
+def test_detect_historical_analogs_from_context():
+    """Test detect_historical_analogs: only returns context-grounded analogs."""
     from subproject_risk_intelligence.historical_event_detector import detect_historical_analogs
 
-    # Mock extract_analogs_from_context to return 2 context-sourced analogs
     context_analogs = [
         {
             "event_description": "August 2024 yen carry unwind",
@@ -324,27 +323,8 @@ def test_detect_historical_analogs_integration():
         },
     ]
 
-    # Mock _detect_analogs_llm to return 2 LLM-sourced analogs
-    llm_analogs = [
-        {
-            "event_description": "2018 crypto winter",
-            "year": 2018,
-            "relevance_score": 0.65,
-            "date_search_query": "2018 crypto crash dates",
-            "key_mechanism": "Speculative bubble burst",
-        },
-        {
-            "event_description": "1998 LTCM crisis",
-            "year": 1998,
-            "relevance_score": 0.55,
-            "date_search_query": "1998 LTCM crisis dates",
-            "key_mechanism": "Carry trade and leverage unwind",
-        },
-    ]
-
     with patch("subproject_risk_intelligence.config.ENABLE_RESEARCH_ANALOG_SEARCH", True), \
-         patch("subproject_risk_intelligence.historical_event_detector.extract_analogs_from_context", return_value=context_analogs), \
-         patch("subproject_risk_intelligence.historical_event_detector._detect_analogs_llm", return_value=llm_analogs):
+         patch("subproject_risk_intelligence.historical_event_detector.extract_analogs_from_context", return_value=context_analogs):
         result = detect_historical_analogs(
             query="How does BOJ rate hike affect carry trades?",
             synthesis="BOJ is expected to hike rates...",
@@ -353,44 +333,28 @@ def test_detect_historical_analogs_integration():
             relevance_threshold=0.5,
         )
 
-    print(f"\n=== DETECT ANALOGS INTEGRATION TEST ===")
+    print(f"\n=== DETECT ANALOGS (CONTEXT ONLY) TEST ===")
     print(f"Total analogs: {len(result)}")
     for a in result:
         print(f"  {a['event_description']} (relevance: {a.get('relevance_score', 0):.2f}, source: {a.get('source', '?')})")
 
-    assert len(result) == 4
+    assert len(result) == 2
 
     # Context analogs should have boosted relevance (+0.15) and appear first
     assert result[0]["source"] == "retrieved_context"
     assert result[0]["relevance_score"] == 0.90  # 0.75 + 0.15
 
-    # Second should also be retrieved_context (0.60 + 0.15 = 0.75)
     assert result[1]["source"] == "retrieved_context"
-    assert result[1]["relevance_score"] == 0.75
-
-    # LLM analogs should have source = "llm_parametric"
-    llm_results = [a for a in result if a.get("source") == "llm_parametric"]
-    assert len(llm_results) == 2
+    assert result[1]["relevance_score"] == 0.75  # 0.60 + 0.15
 
     print("PASSED")
 
 
 def test_detect_historical_analogs_context_disabled():
-    """Test detect_historical_analogs when context extraction is disabled."""
+    """Test detect_historical_analogs returns empty when context extraction is disabled."""
     from subproject_risk_intelligence.historical_event_detector import detect_historical_analogs
 
-    llm_analogs = [
-        {
-            "event_description": "2018 crypto winter",
-            "year": 2018,
-            "relevance_score": 0.65,
-            "date_search_query": "2018 crypto crash dates",
-            "key_mechanism": "Speculative bubble burst",
-        },
-    ]
-
-    with patch("subproject_risk_intelligence.config.ENABLE_RESEARCH_ANALOG_SEARCH", False), \
-         patch("subproject_risk_intelligence.historical_event_detector._detect_analogs_llm", return_value=llm_analogs):
+    with patch("subproject_risk_intelligence.config.ENABLE_RESEARCH_ANALOG_SEARCH", False):
         result = detect_historical_analogs(
             query="What happened in crypto winter?",
             synthesis="Crypto markets...",
@@ -400,8 +364,7 @@ def test_detect_historical_analogs_context_disabled():
         )
 
     print(f"\n=== CONTEXT EXTRACTION DISABLED TEST ===")
-    assert len(result) == 1
-    assert result[0]["source"] == "llm_parametric"
+    assert len(result) == 0
 
     print("PASSED")
 
@@ -479,8 +442,7 @@ def test_relevance_score_boost():
     ]
 
     with patch("subproject_risk_intelligence.config.ENABLE_RESEARCH_ANALOG_SEARCH", True), \
-         patch("subproject_risk_intelligence.historical_event_detector.extract_analogs_from_context", return_value=context_analogs), \
-         patch("subproject_risk_intelligence.historical_event_detector._detect_analogs_llm", return_value=[]):
+         patch("subproject_risk_intelligence.historical_event_detector.extract_analogs_from_context", return_value=context_analogs):
         result = detect_historical_analogs(
             query="test",
             synthesis="test",
@@ -512,8 +474,7 @@ def test_relevance_score_boost_capped_at_1():
     ]
 
     with patch("subproject_risk_intelligence.config.ENABLE_RESEARCH_ANALOG_SEARCH", True), \
-         patch("subproject_risk_intelligence.historical_event_detector.extract_analogs_from_context", return_value=context_analogs), \
-         patch("subproject_risk_intelligence.historical_event_detector._detect_analogs_llm", return_value=[]):
+         patch("subproject_risk_intelligence.historical_event_detector.extract_analogs_from_context", return_value=context_analogs):
         result = detect_historical_analogs(
             query="test",
             synthesis="test",

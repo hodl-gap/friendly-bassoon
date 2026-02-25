@@ -15,7 +15,7 @@ from .states import RiskImpactState
 
 DETECT_ANALOGS_TOOL = {
     "name": "detect_analogs",
-    "description": "Detect up to 5 historical analogs for the current event using research database and LLM parametric memory. Returns analog descriptions with relevance scores.",
+    "description": "Detect up to 5 historical analogs for the current event by extracting events explicitly mentioned in retrieved research context. Returns analog descriptions with relevance scores.",
     "input_schema": {
         "type": "object",
         "properties": {
