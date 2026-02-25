@@ -17,7 +17,7 @@ from models import call_claude_sonnet
 
 from .states import RiskImpactState
 from .impact_analysis import analyze_impact, _prepare_prompt_data, _get_insight_tool, _parse_insight_tool_result, _MODEL_SHORT_NAME
-from .impact_analysis_prompts import INSIGHT_SYSTEM_PROMPT, get_insight_prompt
+from .impact_analysis_prompts import SYSTEM_PROMPT, get_insight_prompt
 from .current_data_fetcher import format_current_values_for_prompt
 from .synthesis_prompts import VERIFICATION_PROMPT
 from .asset_configs import get_asset_config
@@ -147,7 +147,7 @@ def run_synthesis_phase(state: RiskImpactState, asset_class: str) -> RiskImpactS
             model=model_short,
             temperature=0.3,
             max_tokens=8192,
-            system=INSIGHT_SYSTEM_PROMPT,
+            system=SYSTEM_PROMPT,
         )
 
         # Retry with higher limit if truncated
@@ -160,7 +160,7 @@ def run_synthesis_phase(state: RiskImpactState, asset_class: str) -> RiskImpactS
                 model=model_short,
                 temperature=0.3,
                 max_tokens=12000,
-                system=INSIGHT_SYSTEM_PROMPT,
+                system=SYSTEM_PROMPT,
             )
 
         tool_input = None

@@ -72,7 +72,9 @@ def detect_and_fill_gaps(state: RetrieverState) -> RetrieverState:
         image_path=image_path
     )
 
-    # Update state with gap results
+    # Update state with gap results, merging new web chains with agent's existing ones
+    existing_web_chains = state.get("extracted_web_chains", [])
+    new_web_chains = gap_result.get("extracted_web_chains", [])
     return {
         **state,
         "knowledge_gaps": gap_result.get("knowledge_gaps", {}),
@@ -80,7 +82,7 @@ def detect_and_fill_gaps(state: RetrieverState) -> RetrieverState:
         "filled_gaps": gap_result.get("filled_gaps", []),
         "partially_filled_gaps": gap_result.get("partially_filled_gaps", []),
         "unfillable_gaps": gap_result.get("unfillable_gaps", []),
-        "extracted_web_chains": gap_result.get("extracted_web_chains", []),
+        "extracted_web_chains": existing_web_chains + new_web_chains,
         "logic_chains": gap_result.get("merged_logic_chains", all_chains)
     }
 
@@ -266,7 +268,14 @@ def run_retrieval(query: str, image_path: str = None, skip_gap_filling: bool = F
         return _run_lightweight_retrieval(query)
 
     from retrieval_agent import run_retrieval_agent
-    return run_retrieval_agent(query, image_path=image_path)
+    state = run_retrieval_agent(query, image_path=image_path)
+
+    # Post-agent: detect gaps in the finished synthesis, fill them, resynthesise, persist
+    state = detect_and_fill_gaps(state)
+    state = conditional_resynthesis(state)
+    state = persist_learning(state)
+
+    return state
 
 
 if __name__ == "__main__":
