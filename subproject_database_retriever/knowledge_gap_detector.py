@@ -468,6 +468,61 @@ def _empty_fill_result(reason: str) -> Dict[str, Any]:
     }
 
 
+def _extract_chains_from_web_search_fills(
+    filled_gaps: List[Dict[str, Any]],
+    query: str,
+    extracted_web_chains: list,
+) -> None:
+    """
+    Extract structured logic chains from web_search gap fill results.
+
+    web_search produces enrichment text but no chains. This runs chain extraction
+    on the same queries (Tavily caches 15 min) so the findings get persisted to
+    Pinecone via persist_learning.
+
+    Modifies extracted_web_chains in-place.
+    """
+    adapter = _get_web_chain_adapter()
+    if not adapter:
+        return
+
+    # Collect unique queries from filled gaps
+    seen_queries = set()
+    queries_to_extract = []
+    for gap in filled_gaps:
+        search_q = gap.get("refined_query") or gap.get("search_query")
+        if search_q and search_q not in seen_queries:
+            seen_queries.add(search_q)
+            queries_to_extract.append((search_q, gap.get("category", "unknown")))
+
+    if not queries_to_extract:
+        return
+
+    print(f"[Knowledge Gap] Extracting chains from {len(queries_to_extract)} web_search results for persistence...")
+
+    total_chains = 0
+    for search_q, category in queries_to_extract:
+        try:
+            result = adapter.search_and_extract_chains(
+                query=search_q,
+                topic=query,
+                min_tier=2,
+                verify_quotes=True,
+            )
+            chains = result.get("chains", [])
+            for chain in chains:
+                chain["source_type"] = "web"
+                chain["confidence_weight"] = 0.7
+                chain["fill_source"] = "web_search_gap"
+            extracted_web_chains.extend(chains)
+            total_chains += len(chains)
+            print(f"  [{category}] {search_q[:60]}: {len(chains)} chains extracted")
+        except Exception as e:
+            print(f"  [{category}] {search_q[:60]}: extraction failed ({e})")
+
+    print(f"[Knowledge Gap] Web search chain extraction: {total_chains} chains from {len(queries_to_extract)} queries")
+
+
 def fill_gaps_with_search(
     gaps: List[Dict[str, Any]],
     max_searches: int = 6,
@@ -1901,6 +1956,7 @@ def detect_and_fill_gaps(
     all_unfillable = []
     all_enrichment = []
     extracted_web_chains = list(saved_web_chain_list)
+    web_search_filled_gaps = []
 
     # Parallel gap filling: run independent fill methods concurrently
     def _fill_web_chains():
@@ -1975,6 +2031,7 @@ def detect_and_fill_gaps(
                     all_enrichment.extend(result_data.get("enrichment", []))
 
                 elif fill_type == "web_search":
+                    web_search_filled_gaps = result_data.get("filled_gaps", []) + result_data.get("partially_filled_gaps", [])
                     all_filled.extend(result_data.get("filled_gaps", []))
                     all_partial.extend(result_data.get("partially_filled_gaps", []))
                     all_unfillable.extend(result_data.get("unfillable_gaps", []))
@@ -1983,6 +2040,12 @@ def detect_and_fill_gaps(
 
             except Exception as e:
                 print(f"[retriever.gap_detector] Error in {fill_type} fill: {e}")
+
+    # Step 3.5: Extract structured chains from web_search results for persistence
+    # web_search produces enrichment text but no chains — run chain extraction on
+    # the same queries (Tavily caches 15min, so only Haiku LLM cost per query)
+    if web_search_filled_gaps:
+        _extract_chains_from_web_search_fills(web_search_filled_gaps, query, extracted_web_chains)
 
     # Step 4: Merge web chains with DB chains
     merged_chains = logic_chains
