@@ -1760,7 +1760,8 @@ def detect_and_fill_gaps(
     enable_gap_filling: bool = True,
     max_searches: int = 6,
     max_attempts_per_gap: int = 2,
-    image_path: str = None
+    image_path: str = None,
+    existing_web_chains: list = None,
 ) -> Dict[str, Any]:
     """
     Main entry point: detect gaps and fill them.
@@ -1780,6 +1781,8 @@ def detect_and_fill_gaps(
         max_searches: Maximum web searches
         max_attempts_per_gap: Max refinement attempts per gap
         image_path: Optional path to indicator chart image for vision-based extraction
+        existing_web_chains: Web chains already gathered by the retrieval agent (skip
+            redundant Pinecone search if provided)
 
     Returns:
         {
@@ -1852,11 +1855,24 @@ def detect_and_fill_gaps(
     print(f"[Knowledge Gap] Gap split: {len(web_chain_gaps)} web_chain, {len(web_search_gaps)} web_search, {len(data_fetch_gaps)} data_fetch, {len(historical_analog_gaps)} historical_analog")
 
     # Step 2.5: Check saved web chains in Pinecone before resorting to Tavily
+    # Skip if the retrieval agent already gathered web chains (avoids redundant Pinecone search)
     saved_chains_filled = []
     remaining_web_chain_gaps = []
     saved_web_chain_list = []
 
-    if web_chain_gaps:
+    if web_chain_gaps and existing_web_chains:
+        # Agent already fetched web chains — treat web_chain_extraction gaps as filled
+        # Don't add to saved_web_chain_list; caller already tracks these chains
+        for gap in web_chain_gaps:
+            saved_chains_filled.append({
+                **gap,
+                "status": "FILLED",
+                "chain_count": len(existing_web_chains),
+                "fill_source": "agent_web_chains",
+            })
+        print(f"[Knowledge Gap] Using {len(existing_web_chains)} web chains from retrieval agent (skipping Pinecone re-search)")
+        web_chain_gaps = []
+    elif web_chain_gaps:
         from vector_search import search_saved_web_chains
         for gap in web_chain_gaps:
             gap_query = gap.get("search_query") or gap.get("missing") or query

@@ -50,17 +50,19 @@ def detect_and_fill_gaps(state: RetrieverState) -> RetrieverState:
     synthesis = state.get("synthesis", "")
     topic_coverage = state.get("topic_coverage", {})
 
-    # Extract logic chains from chunks for gap detection
-    logic_chains = _extract_logic_chains_from_chunks(state.get("retrieved_chunks", []))
-
-    # Also parse chains from answer text
-    answer_chains = _parse_logic_chains_from_answer(state.get("answer", ""))
-    all_chains = logic_chains + answer_chains
+    # Use the agent's already-merged logic chains (DB + web) if available,
+    # otherwise fall back to re-extracting from chunks/answer
+    all_chains = state.get("logic_chains", [])
+    if not all_chains:
+        logic_chains = _extract_logic_chains_from_chunks(state.get("retrieved_chunks", []))
+        answer_chains = _parse_logic_chains_from_answer(state.get("answer", ""))
+        all_chains = logic_chains + answer_chains
 
     print(f"[retrieval] Running gap detection with {len(all_chains)} chains...")
 
     # Run gap detection and filling
     image_path = state.get("image_path")
+    existing_web_chains = state.get("extracted_web_chains", [])
     gap_result = run_gap_detection(
         query=query,
         synthesis=synthesis,
@@ -69,7 +71,8 @@ def detect_and_fill_gaps(state: RetrieverState) -> RetrieverState:
         enable_gap_filling=ENABLE_GAP_FILLING,
         max_searches=MAX_GAP_SEARCHES,
         max_attempts_per_gap=MAX_ATTEMPTS_PER_GAP,
-        image_path=image_path
+        image_path=image_path,
+        existing_web_chains=existing_web_chains or None,
     )
 
     # Update state with gap results, merging new web chains with agent's existing ones
