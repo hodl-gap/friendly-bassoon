@@ -11,6 +11,8 @@ import hashlib
 from datetime import datetime
 from typing import List, Dict, Any
 
+import numpy as np
+
 from dotenv import load_dotenv
 
 # Load environment
@@ -123,6 +125,9 @@ def persist_web_chains(web_chains: List[Dict[str, Any]], query: str) -> int:
     if not vectors:
         return 0
 
+    # Cluster near-duplicate vectors before upserting
+    vectors = _cluster_vectors(vectors, threshold=0.85)
+
     # Upsert to Pinecone
     try:
         batch_size = 100
@@ -135,3 +140,66 @@ def persist_web_chains(web_chains: List[Dict[str, Any]], query: str) -> int:
         return 0
 
     return len(vectors)
+
+
+def _cluster_vectors(vectors: List[Dict[str, Any]], threshold: float = 0.85) -> List[Dict[str, Any]]:
+    """
+    Cluster vectors by cosine similarity and return one representative per cluster.
+
+    Greedy clustering: iterate vectors, assign each to the first cluster whose
+    representative has cosine similarity >= threshold. If none, start a new cluster.
+
+    Per cluster the representative is the vector with the longest mechanism text
+    (most informative). Its metadata gets validation_count = cluster size.
+
+    Args:
+        vectors: List of dicts with "id", "values" (embedding), "metadata"
+        threshold: Cosine similarity threshold for clustering (default 0.85)
+
+    Returns:
+        Deduplicated list of representative vectors with validation_count set.
+    """
+    if len(vectors) <= 1:
+        for v in vectors:
+            v["metadata"]["validation_count"] = 1
+        return vectors
+
+    # Extract embeddings as numpy array
+    embeddings = np.array([v["values"] for v in vectors])
+    norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
+    # Avoid division by zero
+    norms = np.where(norms == 0, 1.0, norms)
+    normalized = embeddings / norms
+
+    # Greedy clustering
+    clusters: List[List[int]] = []  # each cluster is a list of vector indices
+    rep_indices: List[int] = []     # index of the representative per cluster
+
+    for i in range(len(vectors)):
+        assigned = False
+        for c_idx, rep_idx in enumerate(rep_indices):
+            sim = float(np.dot(normalized[i], normalized[rep_idx]))
+            if sim >= threshold:
+                clusters[c_idx].append(i)
+                assigned = True
+                break
+        if not assigned:
+            clusters.append([i])
+            rep_indices.append(i)
+
+    # Pick representative per cluster: longest mechanism text
+    representatives = []
+    for cluster_indices in clusters:
+        best_idx = max(
+            cluster_indices,
+            key=lambda idx: len(vectors[idx]["metadata"].get("interpretation", ""))
+        )
+        rep = vectors[best_idx].copy()
+        rep["metadata"] = dict(rep["metadata"])
+        rep["metadata"]["validation_count"] = len(cluster_indices)
+        representatives.append(rep)
+
+    if len(representatives) < len(vectors):
+        print(f"[web_chain_persistence] Clustered {len(vectors)} vectors → {len(representatives)} representatives (threshold={threshold})")
+
+    return representatives

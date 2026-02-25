@@ -549,9 +549,89 @@ def search_saved_web_chains(
     Returns: List of chunks with id, score, metadata (only web_chain category)
     """
     print(f"[vector_search] Searching saved web chains: '{query_text[:80]}...'")
-    return search_single_query(
+    raw_chunks = search_single_query(
         query_text,
         top_k=top_k,
         threshold=threshold,
         filter=WEB_CHAINS_ONLY_FILTER
     )
+    return _dedup_web_chain_results(raw_chunks, threshold=0.60)
+
+
+def _dedup_web_chain_results(chunks: list, threshold: float = 0.60) -> list:
+    """
+    Deduplicate web chain search results using Jaccard similarity on what_happened text.
+
+    Pinecone results don't include embeddings, so we use a text heuristic:
+    tokenize the what_happened field and compute Jaccard similarity between pairs.
+
+    Per cluster: keep the chunk with the highest Pinecone score, sum validation_count
+    across members, and set similar_count.
+
+    Args:
+        chunks: List of chunk dicts from search_single_query (id, score, metadata)
+        threshold: Jaccard similarity threshold for clustering (default 0.60)
+
+    Returns:
+        Deduplicated list of chunks with merged validation_count and similar_count.
+    """
+    if len(chunks) <= 1:
+        return chunks
+
+    import re
+
+    def _tokenize(text: str) -> set:
+        return set(re.findall(r'\w+', text.lower()))
+
+    def _jaccard(a: set, b: set) -> float:
+        if not a and not b:
+            return 1.0
+        if not a or not b:
+            return 0.0
+        return len(a & b) / len(a | b)
+
+    # Tokenize what_happened for each chunk
+    tokens = []
+    for chunk in chunks:
+        what_happened = chunk.get("metadata", {}).get("what_happened", "")
+        tokens.append(_tokenize(what_happened))
+
+    # Greedy clustering
+    clusters: list[list[int]] = []
+    rep_indices: list[int] = []
+
+    for i in range(len(chunks)):
+        assigned = False
+        for c_idx, rep_idx in enumerate(rep_indices):
+            if _jaccard(tokens[i], tokens[rep_idx]) >= threshold:
+                clusters[c_idx].append(i)
+                assigned = True
+                break
+        if not assigned:
+            clusters.append([i])
+            rep_indices.append(i)
+
+    # Pick representative per cluster: highest Pinecone score
+    deduped = []
+    for cluster_indices in clusters:
+        best_idx = max(cluster_indices, key=lambda idx: chunks[idx].get("score", 0))
+        rep = {
+            "id": chunks[best_idx]["id"],
+            "score": chunks[best_idx]["score"],
+            "metadata": dict(chunks[best_idx].get("metadata", {})),
+        }
+
+        # Sum validation_count across cluster members
+        total_validation = sum(
+            chunks[idx].get("metadata", {}).get("validation_count", 1)
+            for idx in cluster_indices
+        )
+        rep["metadata"]["validation_count"] = total_validation
+        rep["metadata"]["similar_count"] = len(cluster_indices)
+
+        deduped.append(rep)
+
+    if len(deduped) < len(chunks):
+        print(f"[vector_search] Deduped web chains: {len(chunks)} → {len(deduped)} (Jaccard threshold={threshold})")
+
+    return deduped

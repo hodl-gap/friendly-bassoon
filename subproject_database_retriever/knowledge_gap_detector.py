@@ -895,6 +895,10 @@ def _convert_saved_chunks_to_web_chains(chunks: list) -> list:
 
         # Try extracted_data JSON first (canonical storage format)
         extracted_data = metadata.get("extracted_data", "")
+        # Pass through dedup counts from retrieval-side clustering
+        validation_count = metadata.get("validation_count", 1)
+        similar_count = metadata.get("similar_count", 1)
+
         if isinstance(extracted_data, str) and extracted_data:
             try:
                 parsed = json.loads(extracted_data)
@@ -910,6 +914,8 @@ def _convert_saved_chunks_to_web_chains(chunks: list) -> list:
                             "source_type": "web",
                             "confidence_weight": 0.7,
                             "from_saved": True,
+                            "validation_count": validation_count,
+                            "similar_count": similar_count,
                         })
                 if chains:
                     continue  # Got chains from extracted_data, skip fallback
@@ -930,6 +936,8 @@ def _convert_saved_chunks_to_web_chains(chunks: list) -> list:
                 "source_type": "web",
                 "confidence_weight": 0.7,
                 "from_saved": True,
+                "validation_count": validation_count,
+                "similar_count": similar_count,
             })
 
     return chains
