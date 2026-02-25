@@ -156,6 +156,28 @@ Running the pipeline repeatedly improves future analysis through these persisten
 - [x] Add chain completeness (Rule 8) and regime-shift consideration (Rule 9) to resynthesis prompt. Rewrite web chain angle #3 for alternative interpretations. Validated: Case 4 16→18/20, Case 6 12→14/16.
 - [x] **TEST hybrid agentic pipeline** — Tested Cases 1, 2, 4 with `--hybrid`. Results: +3 across all cases. Three bugs fixed: dict key mismatch in web chain handler, agent prompt too weak (kept searching after ADEQUATE), synthesis patch overwriting good output with empty result. (Added 2026-02-23, tested 2026-02-24)
 
+### Long-term: Data Collection Infrastructure
+
+Currently all market data is fetched on-demand per query (FRED, Yahoo Finance). This works for now since we focus on precedents and reasoning rather than data freshness, and we only use a few months of public data. But it won't scale.
+
+- [ ] **Persistent data collection** — Move from on-demand fetching to scheduled scraping/storage. Examples of data not available through current adapters:
+  - CBOE equity put-call ratio (CPCE) — not on FRED or Yahoo. Free CBOE CSVs stop at Oct 2019. Would need CBOE daily page scraper. (Discovered via Case 5: pipeline used VIX as proxy instead of actual put-call ratio)
+  - Sectoral ETF tracking (IGV, SMH, XLF, XLE, etc.) — available via Yahoo but not systematically tracked. Case 4 showed IGV -18.2% as a key signal but this was only discovered through web chains, not from our own data
+  - Dark pool / institutional flow data — Case 5 rubric expected spot buying signals, pipeline had no access
+- [ ] **Data source registry** — Centralize which variables are available from which source, what the update frequency is, and what gaps exist. Current `variable_resolver.py` maps variable names to FRED/Yahoo IDs but doesn't track coverage gaps or staleness.
+
+### Long-term: Proactive Anomaly Detection Agent
+
+Current system is static and reactive (query → research → insight). Future goal: a proactive agent that continuously monitors data and surfaces anomalies worth investigating.
+
+- [ ] **Design proactive scan architecture** — The agent should scan daily-updated data to detect anomalies like:
+  - Indicator extremes: put-call ratio at all-time high, VIX spike above 2σ, AAII bearish sentiment at 60%+
+  - Sector divergences: IGV down 18% while SMH up 12% (cross-sector rotation signals)
+  - Historical pattern matches: "this configuration was observed N times in last M years, and X% of the time Y happened within Z weeks"
+  - Threshold breaches on chain-specific triggers (partially exists in `theme_refresh.py` but limited to simple % change checks)
+- [ ] **Build anomaly → query bridge** — When the proactive agent detects an anomaly, it should auto-generate a research query and run it through the existing pipeline. Example: detect put-call ratio at 99th percentile → generate "CBOE equity put-call ratio at extreme levels, what are the historical precedents?" → run full pipeline → surface insight to trader
+- [ ] **Use case studies as design input** — Cases 1-6 reveal what patterns the system should be watching for proactively. Each case study's trigger event (SaaS meltdown, snap election, record shorting, tariff ruling, put-call spike, labor equilibrium) is something the proactive agent should have detected from data before a human asked about it. Reverse-engineer the detection rules from existing case studies.
+
 ## Archive Folder
 
 The `archive/` folder contains resolved evaluation documents and historical analysis files.

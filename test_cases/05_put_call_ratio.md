@@ -1,7 +1,9 @@
 # Test Case 05: Put-Call Ratio Surge & Hedging Demand (Feb 2026)
 
-**Status**: PASS (13/16)
+**Status**: PASS (13/16) — INCOMPLETE DATA
 **Date**: 2026-02-23
+
+> **Data Gap**: CBOE equity put-call ratio (CPCE) is not available through FRED or Yahoo Finance. Free CBOE CSVs stop at Oct 2019. Pipeline used VIX as a proxy but never fetched the actual put-call ratio value (0.62 as of Feb 24, 2026). No free programmatic data source currently exists for this indicator.
 
 ---
 
