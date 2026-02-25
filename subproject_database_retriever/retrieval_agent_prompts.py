@@ -15,16 +15,23 @@ WORKFLOW:
 1. Start by searching Pinecone with the original query and 2-3 alternative phrasings (returns institutional research only)
 2. Also extract web chains early (call extract_web_chains) — this first checks for previously saved web chains, then extracts new ones via Tavily if needed
 3. Call assess_coverage to check if material is sufficient
-4. If INSUFFICIENT: search again with different angles, extract more web chains, search web for factual gaps
+4. If INSUFFICIENT: use the false flags to decide what to search for next (see COVERAGE FLAGS below)
 5. Call assess_coverage again after each major gathering step
 6. Once coverage is ADEQUATE or COMPLETE: IMMEDIATELY call generate_synthesis — do NOT search further
 7. After synthesis completes, call finish_retrieval
+
+COVERAGE FLAGS — how to act on false flags from assess_coverage:
+- has_causal_chains=false → search Pinecone with different phrasings, extract more web chains
+- has_counter_argument=false → web_search for opposing/contrarian views on the topic
+- has_monitoring_thresholds=false → web_search for analyst targets, key price levels, intervention thresholds
+- has_event_calendar=false → web_search for upcoming meeting dates, policy decisions, earnings dates
+- has_mechanism_conditions=false → web_search for preconditions that must hold for the causal mechanism to work
+- has_exit_criteria=false → web_search for conditions that would invalidate the thesis
 
 CRITICAL RULES:
 - When assess_coverage returns ADEQUATE or COMPLETE, your VERY NEXT tool call MUST be generate_synthesis. Do NOT do more searches after ADEQUATE.
 - ALWAYS call extract_web_chains at least once — web chains provide causal mechanisms that Pinecone chunks often lack.
 - ALWAYS call generate_synthesis before finish_retrieval. Finishing without synthesis wastes all gathered material.
-- If coverage is INSUFFICIENT, keep searching with different angles: causal mechanisms, historical precedents, quantitative data, opposing views.
 - You MUST call finish_retrieval to complete the phase."""
 
 
@@ -44,18 +51,27 @@ CHUNK SUMMARIES:
 WEB CHAIN SUMMARIES:
 {web_chain_summaries}
 
-Rate coverage:
-- COMPLETE: ≥2 independent causal chains from trigger to asset impact, counter-argument present, chains complete (A→B→C→impact)
-- ADEQUATE: ≥2 chains, most paths complete, minor gaps acceptable
-- INSUFFICIENT: <2 chains, or major gaps in causal reasoning, or no counter-argument
+Check each flag as true/false based on the gathered material:
 
-If INSUFFICIENT, specify exactly what to search for next (be specific about search queries).
+1. has_causal_chains: ≥2 independent causal chains from trigger to asset impact, each with complete path (A→B→C→impact)
+2. has_counter_argument: at least one opposing view or risk factor that challenges the main thesis
+3. has_monitoring_thresholds: specific analyst targets, key price levels, or intervention thresholds mentioned
+4. has_event_calendar: upcoming dated events that could affect timing (meetings, decisions, earnings)
+5. has_mechanism_conditions: preconditions for the causal mechanisms to work are specified
+6. has_exit_criteria: conditions that would invalidate or end the thesis
+
+Rating rules:
+- INSUFFICIENT: has_causal_chains=false
+- ADEQUATE: has_causal_chains=true (proceed to synthesis even if other flags are false)
+- COMPLETE: all flags true
 
 Respond with a JSON object:
 {{
     "rating": "COMPLETE" | "ADEQUATE" | "INSUFFICIENT",
-    "chain_count": <number of independent causal chains found>,
+    "has_causal_chains": true/false,
     "has_counter_argument": true/false,
-    "gaps": ["specific gap 1", "specific gap 2"],
-    "next_searches": ["specific search query 1", "specific search query 2"]
+    "has_monitoring_thresholds": true/false,
+    "has_event_calendar": true/false,
+    "has_mechanism_conditions": true/false,
+    "has_exit_criteria": true/false
 }}"""

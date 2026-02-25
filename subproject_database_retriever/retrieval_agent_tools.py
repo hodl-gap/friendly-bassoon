@@ -371,22 +371,28 @@ def build_tool_handlers(agent_state: RetrievalAgentState) -> dict:
         response = call_claude_sonnet(
             [{"role": "user", "content": prompt}],
             temperature=0.1,
-            max_tokens=500,
+            max_tokens=300,
         )
 
         # Parse JSON from response
         try:
-            # Find JSON in response
             import re
             json_match = re.search(r'\{[^{}]*\}', response, re.DOTALL)
             if json_match:
                 result = json.loads(json_match.group())
             else:
-                result = {"rating": "INSUFFICIENT", "gaps": ["Could not parse coverage assessment"]}
+                result = {"rating": "INSUFFICIENT", "has_causal_chains": False}
         except (json.JSONDecodeError, ValueError):
-            result = {"rating": "INSUFFICIENT", "gaps": ["Could not parse coverage assessment"]}
+            result = {"rating": "INSUFFICIENT", "has_causal_chains": False}
 
-        print(f"[Coverage] Rating: {result.get('rating', 'UNKNOWN')}")
+        # Log checklist
+        flags = ["has_causal_chains", "has_counter_argument", "has_monitoring_thresholds",
+                 "has_event_calendar", "has_mechanism_conditions", "has_exit_criteria"]
+        true_count = sum(1 for f in flags if result.get(f, False))
+        print(f"[Coverage] {result.get('rating', 'UNKNOWN')} ({true_count}/{len(flags)} flags)")
+        for f in flags:
+            status = "Y" if result.get(f, False) else "N"
+            print(f"  [{status}] {f}")
         return result
 
     def handle_finish_retrieval(coverage_rating: str = "ADEQUATE", summary: str = "", iterations_used: int = 0) -> dict:
