@@ -204,15 +204,15 @@
     "source": "CSV",
     "series_id": "equity_pc_ratio",
     "frequency": "daily",
-    "description": "CBOE Equity Put-Call Ratio (CPCE). Scraped from CBOE CDN. Archive 2003-2019, daily API 2019-present.",
+    "description": "CBOE Equity Put-Call Ratio (CPCE). Options on individual stocks. Scraped from CBOE CDN. Archive 2003-2019, daily API 2019-present.",
     "verified": true
   },
-  "total_put_call_ratio": {
-    "normalized_name": "total_put_call_ratio",
+  "put_call_ratio": {
+    "normalized_name": "put_call_ratio",
     "source": "CSV",
-    "series_id": "total_pc_ratio",
+    "series_id": "equity_pc_ratio",
     "frequency": "daily",
-    "description": "CBOE Total Put-Call Ratio (CPC). Scraped from CBOE CDN. Archive 2003-2019, daily API 2019-present.",
+    "description": "CBOE Equity Put-Call Ratio (CPCE). Alias for equity_put_call_ratio.",
     "verified": true
   }
 }

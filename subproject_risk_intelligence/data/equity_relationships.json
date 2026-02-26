@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "last_updated": "2026-02-24T06:28:19.202873",
-    "total_relationships": 236
+    "last_updated": "2026-02-26T03:04:10.027332",
+    "total_relationships": 266
   },
   "relationships": [
     {
@@ -8260,9 +8260,9 @@
       "source_attribution": "Source 6 (steps 1-2), Sources 3/12 (Takaichi campaign messaging favoring weak yen), Source 10 (steps 2-4), Source 9 (BOJ April hike acceleration)",
       "id": "rel_ea736124",
       "discovered_at": "2026-02-23T15:23:22.267835",
-      "validation_count": 2,
+      "validation_count": 4,
       "relationship_type": "negative",
-      "confidence": 0.7899999999999999,
+      "confidence": 0.7482999999999999,
       "trigger_conditions": [
         {
           "variable": "jpy",
@@ -8279,7 +8279,7 @@
           "timeframe_days": 7
         }
       ],
-      "last_validated": "2026-02-23T15:41:09.991020"
+      "last_validated": "2026-02-25T02:30:05.256549"
     },
     {
       "logic_chain": {
@@ -10772,6 +10772,1556 @@
           "condition_value": 5,
           "condition_direction": "decrease",
           "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Takaichi dissolution report",
+            "cause_normalized": "takaiichi_dissolution_report",
+            "effect": "USDJPY surge / JPY weakness",
+            "effect_normalized": "usd_jpy",
+            "mechanism": "Political uncertainty from snap election triggers yen selling (markets price in delayed BOJ normalization, pro-growth/weak-yen policy continuation) → weaker JPY improves exporter earnings expectations, supporting equities; carry dynamics channel liquidity into risk assets including crypto"
+          },
+          {
+            "cause": "USDJPY surge / JPY weakness",
+            "cause_normalized": "usd_jpy",
+            "effect": "Nikkei strength + Bitcoin rebound",
+            "effect_normalized": "risk_asset_rebound",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "takaiichi_dissolution_report -> usd_jpy -> risk_asset_rebound"
+      },
+      "terminal_effect": "risk_asset_rebound",
+      "mechanism": "Political uncertainty from snap election triggers yen selling (markets price in delayed BOJ normalization, pro-growth/weak-yen policy continuation) → weaker JPY improves exporter earnings expectations, supporting equities; carry dynamics channel liquidity into risk assets including crypto",
+      "source_attribution": "Source 5",
+      "id": "rel_4b831db3",
+      "discovered_at": "2026-02-24T09:28:31.038225",
+      "validation_count": 2,
+      "relationship_type": "positive",
+      "confidence": 0.714,
+      "trigger_conditions": [
+        {
+          "variable": "takaiichi_dissolution_report",
+          "condition_type": "absolute_threshold",
+          "condition_value": 1,
+          "condition_direction": "above",
+          "timeframe_days": 1
+        },
+        {
+          "variable": "usd_jpy",
+          "condition_type": "percentage_change",
+          "condition_value": 2,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ],
+      "last_validated": "2026-02-25T02:29:58.602513"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Takaichi dissolution report",
+            "cause_normalized": "takaiichi_dissolution_report",
+            "effect": "USDJPY surge / JPY weakness",
+            "effect_normalized": "usd_jpy",
+            "mechanism": "Election announcement weakens JPY → interbank rates fall (reduced funding cost pressure) → lower funding costs support risk asset positioning including Bitcoin"
+          },
+          {
+            "cause": "USDJPY surge / JPY weakness",
+            "cause_normalized": "usd_jpy",
+            "effect": "Hibo rate plunge",
+            "effect_normalized": "hibo_rate",
+            "mechanism": ""
+          },
+          {
+            "cause": "Hibo rate plunge",
+            "cause_normalized": "hibo_rate",
+            "effect": "Bitcoin rebound",
+            "effect_normalized": "bitcoin_price",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "takaiichi_dissolution_report -> usd_jpy -> hibo_rate -> bitcoin_price"
+      },
+      "terminal_effect": "bitcoin_price",
+      "mechanism": "Election announcement weakens JPY → interbank rates fall (reduced funding cost pressure) → lower funding costs support risk asset positioning including Bitcoin",
+      "source_attribution": "Source 5",
+      "id": "rel_42ff03ee",
+      "discovered_at": "2026-02-24T09:28:32.415637",
+      "validation_count": 2,
+      "relationship_type": "negative",
+      "confidence": 0.714,
+      "trigger_conditions": [
+        {
+          "variable": "usd_jpy",
+          "condition_type": "percentage_change",
+          "condition_value": 2,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "hibo_rate",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ],
+      "last_validated": "2026-02-25T02:29:58.602629"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Takaichi campaign messaging emphasizing yen weakness benefits",
+            "cause_normalized": "political_messaging",
+            "effect": "government tolerance for accommodative monetary conditions",
+            "effect_normalized": "policy_stance",
+            "mechanism": "PM publicly highlights export competitiveness and FX special account gains while omitting import inflation costs → signals government preference for weak yen → reduces political pressure on BOJ to hike aggressively → yen weakness persists"
+          },
+          {
+            "cause": "government tolerance for accommodative monetary conditions",
+            "cause_normalized": "policy_stance",
+            "effect": "yen weakness sustained",
+            "effect_normalized": "yen_weakness",
+            "mechanism": ""
+          },
+          {
+            "cause": "yen weakness sustained",
+            "cause_normalized": "yen_weakness",
+            "effect": "export industries gain opportunity",
+            "effect_normalized": "export_performance",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "political_messaging -> policy_stance -> yen_weakness -> export_performance"
+      },
+      "terminal_effect": "export_performance",
+      "mechanism": "PM publicly highlights export competitiveness and FX special account gains while omitting import inflation costs → signals government preference for weak yen → reduces political pressure on BOJ to hike aggressively → yen weakness persists",
+      "source_attribution": "Sources 1, 2, 3",
+      "id": "rel_4cd29004",
+      "discovered_at": "2026-02-24T09:28:33.854833",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "dxy",
+          "condition_type": "percentage_change",
+          "condition_value": 2,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "jpy",
+          "condition_type": "percentage_change",
+          "condition_value": 2,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "yen weakness",
+            "cause_normalized": "yen_weakness",
+            "effect": "foreign exchange special account operating comfortably",
+            "effect_normalized": "fx_account_position",
+            "mechanism": "Weaker JPY improves the mark-to-market position of Japan's FX reserves held in foreign currency, giving government fiscal headroom and reducing urgency to intervene"
+          }
+        ],
+        "chain_summary": "yen_weakness -> fx_account_position"
+      },
+      "terminal_effect": "fx_account_position",
+      "mechanism": "Weaker JPY improves the mark-to-market position of Japan's FX reserves held in foreign currency, giving government fiscal headroom and reducing urgency to intervene",
+      "source_attribution": "Source 3",
+      "id": "rel_210ef132",
+      "discovered_at": "2026-02-24T09:28:35.220292",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "yen_weakness",
+          "condition_type": "percentage_change",
+          "condition_value": 3,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "yen_weakness",
+          "condition_type": "absolute_threshold",
+          "condition_value": 155,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ likely rate hike",
+            "cause_normalized": "boj_rate",
+            "effect": "market liquidity drain",
+            "effect_normalized": "market_liquidity",
+            "mechanism": "Higher BOJ policy rate reduces carry trade profitability → positions unwind → reduced liquidity increases funding stress → leveraged positions face margin calls and forced selling"
+          },
+          {
+            "cause": "market liquidity drain",
+            "cause_normalized": "market_liquidity",
+            "effect": "margin calls and forced deleveraging",
+            "effect_normalized": "margin_calls",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "boj_rate -> market_liquidity -> margin_calls"
+      },
+      "terminal_effect": "margin_calls",
+      "mechanism": "Higher BOJ policy rate reduces carry trade profitability → positions unwind → reduced liquidity increases funding stress → leveraged positions face margin calls and forced selling",
+      "source_attribution": "Source 12",
+      "id": "rel_1e09f04a",
+      "discovered_at": "2026-02-24T09:28:36.414712",
+      "validation_count": 2,
+      "relationship_type": "positive",
+      "confidence": 0.714,
+      "trigger_conditions": [
+        {
+          "variable": "boj_rate",
+          "condition_type": "absolute_threshold",
+          "condition_value": 0.25,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "jpy",
+          "condition_type": "percentage_change",
+          "condition_value": 3,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ],
+      "last_validated": "2026-02-25T02:30:01.045609"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "JPY surge due to intervention risk",
+            "cause_normalized": "jpy_intervention_risk",
+            "effect": "USD strength shaken",
+            "effect_normalized": "usd_strength_shaken",
+            "mechanism": "Intervention risk (or actual intervention) limits USD appreciation → carry traders unwind JPY-funded positions to avoid FX losses → mass deleveraging reduces global USD liquidity → risk-off pressure transmits to Bitcoin and other risk assets"
+          },
+          {
+            "cause": "USD strength shaken",
+            "cause_normalized": "usd_strength_shaken",
+            "effect": "yen carry unwind and global liquidity contraction",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": ""
+          },
+          {
+            "cause": "yen carry unwind and global liquidity contraction",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "crypto market headwind",
+            "effect_normalized": "crypto_downside",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "jpy_intervention_risk -> usd_strength_shaken -> carry_trade_unwind -> crypto_downside"
+      },
+      "terminal_effect": "crypto_downside",
+      "mechanism": "Intervention risk (or actual intervention) limits USD appreciation → carry traders unwind JPY-funded positions to avoid FX losses → mass deleveraging reduces global USD liquidity → risk-off pressure transmits to Bitcoin and other risk assets",
+      "source_attribution": "Source 9 (steps 1-3), Source 15 (carry_unwind → crypto_downside)",
+      "id": "rel_4cce4fc1",
+      "discovered_at": "2026-02-24T09:28:37.567321",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "jpy_intervention_risk",
+          "condition_type": "absolute_threshold",
+          "condition_value": 75,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "dxy",
+          "condition_type": "percentage_change",
+          "condition_value": 2,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "USD/JPY violent reversal",
+            "cause_normalized": "usd_jpy",
+            "effect": "government response elevated",
+            "effect_normalized": "govt_response_elevated",
+            "mechanism": "Sharp FX move triggers political concern → PM direct warning escalates beyond routine jawboning → markets interpret as preparatory step for actual intervention → FX volatility transmits to high-beta assets via carry and leverage exposures"
+          },
+          {
+            "cause": "government response elevated",
+            "cause_normalized": "govt_response_elevated",
+            "effect": "PM verbal warning",
+            "effect_normalized": "pm_verbal_warning",
+            "mechanism": ""
+          },
+          {
+            "cause": "PM verbal warning",
+            "cause_normalized": "pm_verbal_warning",
+            "effect": "operational signalling",
+            "effect_normalized": "operational_signalling",
+            "mechanism": ""
+          },
+          {
+            "cause": "operational signalling",
+            "cause_normalized": "operational_signalling",
+            "effect": "FX volatility spill to equities and crypto",
+            "effect_normalized": "fx_vol_spill",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "usd_jpy -> govt_response_elevated -> pm_verbal_warning -> operational_signalling -> fx_vol_spill"
+      },
+      "terminal_effect": "fx_vol_spill",
+      "mechanism": "Sharp FX move triggers political concern → PM direct warning escalates beyond routine jawboning → markets interpret as preparatory step for actual intervention → FX volatility transmits to high-beta assets via carry and leverage exposures",
+      "source_attribution": "Source 10",
+      "id": "rel_7f8ec525",
+      "discovered_at": "2026-02-24T09:28:38.847803",
+      "validation_count": 2,
+      "relationship_type": "neutral",
+      "confidence": 0.714,
+      "trigger_conditions": [
+        {
+          "variable": "usd_jpy",
+          "condition_type": "percentage_change",
+          "condition_value": 3,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "usd_jpy",
+          "condition_type": "percentage_change",
+          "condition_value": 3,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ],
+      "last_validated": "2026-02-25T02:30:03.997681"
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "carry position unwind",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "need to repurchase USD",
+            "effect_normalized": "usd_repurchase",
+            "mechanism": "Closing JPY-funded carry positions requires buying back borrowed USD → large-scale USD demand reduces money-market liquidity → secured overnight funding rates spike → funding scarcity transmits to risk assets including crypto (analogous to 2008, 2024 episodes)"
+          },
+          {
+            "cause": "need to repurchase USD",
+            "cause_normalized": "usd_repurchase",
+            "effect": "temporary global dollar shortage",
+            "effect_normalized": "usd_shortage",
+            "mechanism": ""
+          },
+          {
+            "cause": "temporary global dollar shortage",
+            "cause_normalized": "usd_shortage",
+            "effect": "SOFR spike",
+            "effect_normalized": "sofr",
+            "mechanism": ""
+          },
+          {
+            "cause": "SOFR spike",
+            "cause_normalized": "sofr",
+            "effect": "short-term funding stress",
+            "effect_normalized": "short-term_funding_stress",
+            "mechanism": ""
+          },
+          {
+            "cause": "short-term funding stress",
+            "cause_normalized": "short-term_funding_stress",
+            "effect": "crypto shock",
+            "effect_normalized": "funding_stress",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "carry_trade_unwind -> usd_repurchase -> usd_shortage -> sofr -> short-term_funding_stress -> funding_stress"
+      },
+      "terminal_effect": "funding_stress",
+      "mechanism": "Closing JPY-funded carry positions requires buying back borrowed USD → large-scale USD demand reduces money-market liquidity → secured overnight funding rates spike → funding scarcity transmits to risk assets including crypto (analogous to 2008, 2024 episodes)",
+      "source_attribution": "Source 14 (steps 1-4), Source 15 (SOFR → crypto shock)",
+      "id": "rel_8b385e2e",
+      "discovered_at": "2026-02-24T09:28:40.040993",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "dxy",
+          "condition_type": "percentage_change",
+          "condition_value": 2,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "sofr",
+          "condition_type": "absolute_threshold",
+          "condition_value": 15,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "intervention followed by easing expectations",
+            "cause_normalized": "post_intervention_easing_expectations",
+            "effect": "Bitcoin medium-term positive",
+            "effect_normalized": "btc_midterm_positive",
+            "mechanism": "After intervention stabilizes JPY, markets anticipate eventual policy easing to offset tightening effects → increased risk appetite and liquidity expectations support risk assets on medium-term horizon"
+          }
+        ],
+        "chain_summary": "post_intervention_easing_expectations -> btc_midterm_positive"
+      },
+      "terminal_effect": "btc_midterm_positive",
+      "mechanism": "After intervention stabilizes JPY, markets anticipate eventual policy easing to offset tightening effects → increased risk appetite and liquidity expectations support risk assets on medium-term horizon",
+      "source_attribution": "Source 9",
+      "id": "rel_e076973a",
+      "discovered_at": "2026-02-24T09:28:41.275124",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "us10y",
+          "condition_type": "absolute_threshold",
+          "condition_value": 15,
+          "condition_direction": "below",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ hawkish comments / Japan macro beat",
+            "cause_normalized": "boj_hawkish_comments",
+            "effect": "yen carry-trade unwind risk",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": "Stronger Japan GDP/CPI data + hawkish Ueda guidance raises JPY yield expectations → carry trade attractiveness falls → unwind pressure builds → USD funding tightens → risk-off in crypto"
+          },
+          {
+            "cause": "yen carry-trade unwind risk",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "crypto market headwind",
+            "effect_normalized": "crypto_downside",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "boj_hawkish_comments -> carry_trade_unwind -> crypto_downside"
+      },
+      "terminal_effect": "crypto_downside",
+      "mechanism": "Stronger Japan GDP/CPI data + hawkish Ueda guidance raises JPY yield expectations → carry trade attractiveness falls → unwind pressure builds → USD funding tightens → risk-off in crypto",
+      "source_attribution": "Source 15",
+      "id": "rel_b048d379",
+      "discovered_at": "2026-02-24T09:28:42.513670",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "boj_hawkish_comments",
+          "condition_type": "absolute_threshold",
+          "condition_value": 1,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "jpy",
+          "condition_type": "percentage_change",
+          "condition_value": 2,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ rate normalization cycle",
+            "cause_normalized": "boj_rate",
+            "effect": "JGB yields surge (0.65%",
+            "effect_normalized": "jgb_yields_surge_(0.65%",
+            "mechanism": "Sustained BOJ tightening raises long-end JGB yields to multi-decade highs → Japanese institutions holding overseas assets face incentive to repatriate (higher domestic yields) → repatriation requires selling foreign assets and buying JPY → carry trades unwind at scale → global liquidity contracts"
+          },
+          {
+            "cause": "JGB yields surge (0.65%",
+            "cause_normalized": "jgb_yields_surge_(0.65%",
+            "effect": "3.86% over 5 years)",
+            "effect_normalized": "jgb_yields",
+            "mechanism": ""
+          },
+          {
+            "cause": "3.86% over 5 years)",
+            "cause_normalized": "jgb_yields",
+            "effect": "forced choice between bond market collapse or massive BOJ easing",
+            "effect_normalized": "policy_dilemma",
+            "mechanism": ""
+          },
+          {
+            "cause": "forced choice between bond market collapse or massive BOJ easing",
+            "cause_normalized": "policy_dilemma",
+            "effect": "Japanese capital repatriation",
+            "effect_normalized": "capital_repatriation",
+            "mechanism": ""
+          },
+          {
+            "cause": "Japanese capital repatriation",
+            "cause_normalized": "capital_repatriation",
+            "effect": "carry trade unwinding",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": ""
+          },
+          {
+            "cause": "carry trade unwinding",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "short-term volatility across risk assets",
+            "effect_normalized": "short-term_volatility_across_risk_assets",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "boj_rate -> jgb_yields_surge_(0.65% -> jgb_yields -> policy_dilemma -> capital_repatriation -> carry_trade_unwind -> short-term_volatility_across_risk_assets"
+      },
+      "terminal_effect": "short-term_volatility_across_risk_assets",
+      "mechanism": "Sustained BOJ tightening raises long-end JGB yields to multi-decade highs → Japanese institutions holding overseas assets face incentive to repatriate (higher domestic yields) → repatriation requires selling foreign assets and buying JPY → carry trades unwind at scale → global liquidity contracts",
+      "source_attribution": "Source 8 (JGB yield data + repatriation mechanism), Source 7 (historical carry trade context), Source 14 (carry unwind mechanics)",
+      "id": "rel_b2accc3a",
+      "discovered_at": "2026-02-24T09:28:43.914842",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "boj_rate",
+          "condition_type": "absolute_threshold",
+          "condition_value": 0.5,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "jgb_yields",
+          "condition_type": "absolute_threshold",
+          "condition_value": 15,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Takaichi pro-weak-yen political stance",
+            "cause_normalized": "political_messaging",
+            "effect": "pressure to delay BOJ normalization",
+            "effect_normalized": "policy_stance",
+            "mechanism": "The snap election creates a structural tension: Takaichi's messaging favors weak yen and accommodative policy, but the inflation feedback loop from yen weakness forces BOJ's hand regardless of political preference — the resolution of this tension determines whether carry trades remain intact or unwind"
+          },
+          {
+            "cause": "pressure to delay BOJ normalization",
+            "cause_normalized": "policy_stance",
+            "effect": "BUT JPY weakness raises import inflation",
+            "effect_normalized": "jpy_weakness",
+            "mechanism": ""
+          },
+          {
+            "cause": "BUT JPY weakness raises import inflation",
+            "cause_normalized": "jpy_weakness",
+            "effect": "inflation_pressure",
+            "effect_normalized": "inflation_pressure",
+            "mechanism": ""
+          },
+          {
+            "cause": "inflation_pressure",
+            "cause_normalized": "inflation_pressure",
+            "effect": "BOJ hawkish shift despite political pressure",
+            "effect_normalized": "boj_hawkish_shift",
+            "mechanism": ""
+          },
+          {
+            "cause": "BOJ hawkish shift despite political pressure",
+            "cause_normalized": "boj_hawkish_shift",
+            "effect": "carry unwind risk re-emerges",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "political_messaging -> policy_stance -> jpy_weakness -> inflation_pressure -> boj_hawkish_shift -> carry_trade_unwind"
+      },
+      "terminal_effect": "carry_trade_unwind",
+      "mechanism": "The snap election creates a structural tension: Takaichi's messaging favors weak yen and accommodative policy, but the inflation feedback loop from yen weakness forces BOJ's hand regardless of political preference — the resolution of this tension determines whether carry trades remain intact or unwind",
+      "source_attribution": "Sources 1, 2, 3 (political stance) → Source 6 (inflation feedback) → Sources 12, 14, 15 (carry unwind consequences)",
+      "id": "rel_92658147",
+      "discovered_at": "2026-02-24T09:28:45.132517",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "jpy",
+          "condition_type": "percentage_change",
+          "condition_value": 3,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "us10y",
+          "condition_type": "absolute_threshold",
+          "condition_value": 15,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Takaichi campaign messaging emphasizing yen weakness benefits",
+            "cause_normalized": "political_messaging",
+            "effect": "government tolerance for accommodative monetary conditions",
+            "effect_normalized": "policy_stance",
+            "mechanism": "PM selectively highlights export competitiveness and FX special account gains while omitting import inflation costs → signals government will not aggressively push BOJ toward tightening → yen remains weak → exporters benefit"
+          },
+          {
+            "cause": "government tolerance for accommodative monetary conditions",
+            "cause_normalized": "policy_stance",
+            "effect": "yen weakness sustained",
+            "effect_normalized": "jpy_weakness",
+            "mechanism": ""
+          },
+          {
+            "cause": "yen weakness sustained",
+            "cause_normalized": "jpy_weakness",
+            "effect": "export industries gain opportunity",
+            "effect_normalized": "export_performance",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "political_messaging -> policy_stance -> jpy_weakness -> export_performance"
+      },
+      "terminal_effect": "export_performance",
+      "mechanism": "PM selectively highlights export competitiveness and FX special account gains while omitting import inflation costs → signals government will not aggressively push BOJ toward tightening → yen remains weak → exporters benefit",
+      "source_attribution": "Source 1, Source 2, Source 3",
+      "id": "rel_b94bf03c",
+      "discovered_at": "2026-02-25T02:29:58.602759",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.7,
+      "trigger_conditions": [
+        {
+          "variable": "jpy",
+          "condition_type": "percentage_change",
+          "condition_value": 3,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "dxy",
+          "condition_type": "percentage_change",
+          "condition_value": 2,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "fiscal spending expansion prospect",
+            "cause_normalized": "fiscal_expansion",
+            "effect": "nominal rates rise",
+            "effect_normalized": "jgb_nominal_rate",
+            "mechanism": "Election-driven fiscal expansion expectations push nominal JGB yields up → inflation expectations outpace nominal yield rise → real yields go deeper negative → negative real returns reduce yen attractiveness → capital rotates into real assets (equities, commodities, crypto) as store of value"
+          },
+          {
+            "cause": "nominal rates rise",
+            "cause_normalized": "jgb_nominal_rate",
+            "effect": "expected inflation rises faster than nominal, real rates deepen negative",
+            "effect_normalized": "real_rates",
+            "mechanism": ""
+          },
+          {
+            "cause": "expected inflation rises faster than nominal, real rates deepen negative",
+            "cause_normalized": "real_rates",
+            "effect": "yen purchasing power loss / yen weakens",
+            "effect_normalized": "jpy_weakness",
+            "mechanism": ""
+          },
+          {
+            "cause": "yen purchasing power loss / yen weakens",
+            "cause_normalized": "jpy_weakness",
+            "effect": "increased demand for real assets",
+            "effect_normalized": "real_assets_demand",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "fiscal_expansion -> jgb_nominal_rate -> real_rates -> jpy_weakness -> real_assets_demand"
+      },
+      "terminal_effect": "real_assets_demand",
+      "mechanism": "Election-driven fiscal expansion expectations push nominal JGB yields up → inflation expectations outpace nominal yield rise → real yields go deeper negative → negative real returns reduce yen attractiveness → capital rotates into real assets (equities, commodities, crypto) as store of value",
+      "source_attribution": "Source 13 (Plan G Research)",
+      "id": "rel_89acd0be",
+      "discovered_at": "2026-02-25T02:29:59.877504",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.7,
+      "trigger_conditions": [
+        {
+          "variable": "us10y",
+          "condition_type": "absolute_threshold",
+          "condition_value": 15,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "dxy",
+          "condition_type": "percentage_change",
+          "condition_value": 2,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ rate hike to highest since 1995",
+            "cause_normalized": "policy_rate",
+            "effect": "tighter monetary conditions",
+            "effect_normalized": "monetary_tightening",
+            "mechanism": "Rate normalization to multi-decade highs makes JPY funding costs prohibitive → carry positions globally unwind → liquidity withdrawn from equities and crypto → leveraged positions face margin calls → forced selling amplifies drawdowns"
+          },
+          {
+            "cause": "tighter monetary conditions",
+            "cause_normalized": "monetary_tightening",
+            "effect": "carry trade unwind",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": ""
+          },
+          {
+            "cause": "carry trade unwind",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "liquidity outflow from risk assets",
+            "effect_normalized": "market_liquidity",
+            "mechanism": ""
+          },
+          {
+            "cause": "liquidity outflow from risk assets",
+            "cause_normalized": "market_liquidity",
+            "effect": "margin calls and forced deleveraging",
+            "effect_normalized": "margin_calls",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "policy_rate -> monetary_tightening -> carry_trade_unwind -> market_liquidity -> margin_calls"
+      },
+      "terminal_effect": "margin_calls",
+      "mechanism": "Rate normalization to multi-decade highs makes JPY funding costs prohibitive → carry positions globally unwind → liquidity withdrawn from equities and crypto → leveraged positions face margin calls → forced selling amplifies drawdowns",
+      "source_attribution": "Source 12 (BOJ), Source 9 (BOJ), Source 6 (i3 Invest)",
+      "id": "rel_4f73c7e1",
+      "discovered_at": "2026-02-25T02:30:01.045883",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.7,
+      "trigger_conditions": [
+        {
+          "variable": "policy_rate",
+          "condition_type": "absolute_threshold",
+          "condition_value": 0.25,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "jpy",
+          "condition_type": "percentage_change",
+          "condition_value": 3,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "market expects sustained BOJ tightening cycle through 2026",
+            "cause_normalized": "boj_rate_expectations",
+            "effect": "carry trade profitability erodes progressively",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": "Markets pricing ~2 full hikes by Oct 2026 (implied rate ~1.0%) means carry traders must price in ongoing spread compression → gradual unwind rather than single shock → persistent liquidity headwind for risk assets; Google Trends data shows BOJ rate hike search spikes historically correlate with Bitcoin corrections"
+          },
+          {
+            "cause": "carry trade profitability erodes progressively",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "liquidity withdrawal from global risk assets",
+            "effect_normalized": "market_liquidity",
+            "mechanism": ""
+          },
+          {
+            "cause": "liquidity withdrawal from global risk assets",
+            "cause_normalized": "market_liquidity",
+            "effect": "Bitcoin and equity volatility elevated",
+            "effect_normalized": "btc_volatility",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "boj_rate_expectations -> carry_trade_unwind -> market_liquidity -> btc_volatility"
+      },
+      "terminal_effect": "btc_volatility",
+      "mechanism": "Markets pricing ~2 full hikes by Oct 2026 (implied rate ~1.0%) means carry traders must price in ongoing spread compression → gradual unwind rather than single shock → persistent liquidity headwind for risk assets; Google Trends data shows BOJ rate hike search spikes historically correlate with Bitcoin corrections",
+      "source_attribution": "Source 10, Source 14 (rate hike pricing), Source 18 (Google Trends correlation)",
+      "id": "rel_5c619a36",
+      "discovered_at": "2026-02-25T02:30:02.318681",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.7,
+      "trigger_conditions": [
+        {
+          "variable": "boj_rate_expectations",
+          "condition_type": "absolute_threshold",
+          "condition_value": 75,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "us10y",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ or government acts to support JPY",
+            "cause_normalized": "policy_action_yen_support",
+            "effect": "JPY rebound",
+            "effect_normalized": "jpy_rebound",
+            "mechanism": "Policy intervention (verbal or operational) reverses yen weakness → carry traders who borrowed JPY to buy risk assets face adverse FX moves → forced unwind of carry positions → crypto among first assets sold as high-beta, liquid carry destination"
+          },
+          {
+            "cause": "JPY rebound",
+            "cause_normalized": "jpy_rebound",
+            "effect": "carry trade unwind risk",
+            "effect_normalized": "carry_trade_unwind",
+            "mechanism": ""
+          },
+          {
+            "cause": "carry trade unwind risk",
+            "cause_normalized": "carry_trade_unwind",
+            "effect": "short-term Bitcoin price moves",
+            "effect_normalized": "bitcoin_price",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "policy_action_yen_support -> jpy_rebound -> carry_trade_unwind -> bitcoin_price"
+      },
+      "terminal_effect": "bitcoin_price",
+      "mechanism": "Policy intervention (verbal or operational) reverses yen weakness → carry traders who borrowed JPY to buy risk assets face adverse FX moves → forced unwind of carry positions → crypto among first assets sold as high-beta, liquid carry destination",
+      "source_attribution": "Source 5 (Plan G)",
+      "id": "rel_44279879",
+      "discovered_at": "2026-02-25T02:30:03.997907",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.7,
+      "trigger_conditions": [
+        {
+          "variable": "jpy",
+          "condition_type": "percentage_change",
+          "condition_value": 2,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "dxy",
+          "condition_type": "percentage_change",
+          "condition_value": 2,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "Takaichi pro-weak-yen messaging",
+            "cause_normalized": "political_messaging",
+            "effect": "yen weakness sustained",
+            "effect_normalized": "jpy_weakness",
+            "mechanism": "Political signaling favors weak yen → yen stays weak → import costs rise → BOJ forced to respond to inflation mandate regardless of government preference → policy tension between PM's export-growth stance and BOJ's price stability mandate → market uncertainty about policy direction creates downside risk"
+          },
+          {
+            "cause": "yen weakness sustained",
+            "cause_normalized": "jpy_weakness",
+            "effect": "import inflation pressure",
+            "effect_normalized": "inflation_pressure",
+            "mechanism": ""
+          },
+          {
+            "cause": "import inflation pressure",
+            "cause_normalized": "inflation_pressure",
+            "effect": "BOJ hawkish shift despite political preference",
+            "effect_normalized": "boj_hawkish_shift",
+            "mechanism": ""
+          },
+          {
+            "cause": "BOJ hawkish shift despite political preference",
+            "cause_normalized": "boj_hawkish_shift",
+            "effect": "market downside risk",
+            "effect_normalized": "market_downside_risk",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "political_messaging -> jpy_weakness -> inflation_pressure -> boj_hawkish_shift -> market_downside_risk"
+      },
+      "terminal_effect": "market_downside_risk",
+      "mechanism": "Political signaling favors weak yen → yen stays weak → import costs rise → BOJ forced to respond to inflation mandate regardless of government preference → policy tension between PM's export-growth stance and BOJ's price stability mandate → market uncertainty about policy direction creates downside risk",
+      "source_attribution": "Sources 1, 2 (political messaging), Source 8 (inflation → BOJ chain)",
+      "id": "rel_9be8c859",
+      "discovered_at": "2026-02-25T02:30:05.256816",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.7,
+      "trigger_conditions": [
+        {
+          "variable": "jpy",
+          "condition_type": "percentage_change",
+          "condition_value": 3,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "dxy",
+          "condition_type": "percentage_change",
+          "condition_value": 2,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "BOJ or government JPY support action",
+            "cause_normalized": "policy_action_yen_support",
+            "effect": "JPY strengthens",
+            "effect_normalized": "jpy_strength",
+            "mechanism": "If authorities successfully reverse yen weakness (contradicting Takaichi's pro-weak-yen stance), exporter earnings expectations fall → Nikkei loses election-driven bid; simultaneously carry positions unwind as JPY funding cost rises → crypto sells off as leveraged carry destinations are liquidated"
+          },
+          {
+            "cause": "JPY strengthens",
+            "cause_normalized": "jpy_strength",
+            "effect": "Nikkei exporters lose tailwind+ carry unwind accelerates",
+            "effect_normalized": "nikkei_risk",
+            "mechanism": ""
+          },
+          {
+            "cause": "Nikkei exporters lose tailwind+ carry unwind accelerates",
+            "cause_normalized": "nikkei_risk",
+            "effect": "Bitcoin short-term correction",
+            "effect_normalized": "bitcoin_price",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "policy_action_yen_support -> jpy_strength -> nikkei_risk -> bitcoin_price"
+      },
+      "terminal_effect": "bitcoin_price",
+      "mechanism": "If authorities successfully reverse yen weakness (contradicting Takaichi's pro-weak-yen stance), exporter earnings expectations fall → Nikkei loses election-driven bid; simultaneously carry positions unwind as JPY funding cost rises → crypto sells off as leveraged carry destinations are liquidated",
+      "source_attribution": "Source 5 (Plan G — \"policy action magnitude will drive short-term Bitcoin moves, monitor carry unwind risk\"), Source 7 (operational signalling)",
+      "id": "rel_8502b515",
+      "discovered_at": "2026-02-25T02:30:06.466501",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.7,
+      "trigger_conditions": [
+        {
+          "variable": "policy_action_yen_support",
+          "condition_type": "absolute_threshold",
+          "condition_value": 1,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "jpy_strength",
+          "condition_type": "percentage_change",
+          "condition_value": 3,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "negative real rates deepening",
+            "cause_normalized": "real_rates",
+            "effect": "yen depreciation",
+            "effect_normalized": "jpy_weakness",
+            "mechanism": "Fiscal expansion under Takaichi government deepens negative real yields → yen loses purchasing power → investors seek real asset alternatives → risk assets including crypto receive inflows as inflation hedge and carry destination; this chain runs opposite to the BOJ tightening unwind risk"
+          },
+          {
+            "cause": "yen depreciation",
+            "cause_normalized": "jpy_weakness",
+            "effect": "increased real asset demand",
+            "effect_normalized": "real_assets_demand",
+            "mechanism": ""
+          },
+          {
+            "cause": "increased real asset demand",
+            "cause_normalized": "real_assets_demand",
+            "effect": "Bitcoin and equity bid as carry destination",
+            "effect_normalized": "risk_asset_rebound",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "real_rates -> jpy_weakness -> real_assets_demand -> risk_asset_rebound"
+      },
+      "terminal_effect": "risk_asset_rebound",
+      "mechanism": "Fiscal expansion under Takaichi government deepens negative real yields → yen loses purchasing power → investors seek real asset alternatives → risk assets including crypto receive inflows as inflation hedge and carry destination; this chain runs opposite to the BOJ tightening unwind risk",
+      "source_attribution": "Source 13 (Plan G Research)",
+      "id": "rel_a41885b9",
+      "discovered_at": "2026-02-25T02:30:07.589110",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.7,
+      "trigger_conditions": [
+        {
+          "variable": "real_rates",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "us10y",
+          "condition_type": "absolute_threshold",
+          "condition_value": 15,
+          "condition_direction": "below",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "equity put-call ratio surge",
+            "cause_normalized": "put_call_ratio",
+            "effect": "elevated fear/hedging demand",
+            "effect_normalized": "bearish_options_positioning",
+            "mechanism": "Rising put-call ratio reflects increased demand for downside protection relative to upside speculation; at 52nd percentile (near mean of 0.63), the current reading is moderate — the surge from 0.474 to 0.710 (+50% in 5d MA) signals a rapid sentiment shift toward fear, but the subsequent easing to 0.646 suggests the panic peak may have passed; historically, extreme put-call spikes (approaching 90th–95th pct: 0.78–0.85) are contrarian bullish signals, while sustained elevated readings confirm genuine risk-off"
+          },
+          {
+            "cause": "elevated fear/hedging demand",
+            "cause_normalized": "bearish_options_positioning",
+            "effect": "contrarian bullish signal or confirmation of risk-off shift",
+            "effect_normalized": "risk_asset_outlook",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "put_call_ratio -> bearish_options_positioning -> risk_asset_outlook"
+      },
+      "terminal_effect": "risk_asset_outlook",
+      "mechanism": "Rising put-call ratio reflects increased demand for downside protection relative to upside speculation; at 52nd percentile (near mean of 0.63), the current reading is moderate — the surge from 0.474 to 0.710 (+50% in 5d MA) signals a rapid sentiment shift toward fear, but the subsequent easing to 0.646 suggests the panic peak may have passed; historically, extreme put-call spikes (approaching 90th–95th pct: 0.78–0.85) are contrarian bullish signals, while sustained elevated readings confirm genuine risk-off",
+      "source_attribution": "Query data; Source 12 (bearish options positioning mechanism)",
+      "id": "rel_c914ca0f",
+      "discovered_at": "2026-02-26T03:03:57.327489",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "put_call_ratio",
+          "condition_type": "percentage_change",
+          "condition_value": 30,
+          "condition_direction": "increase",
+          "timeframe_days": 5
+        },
+        {
+          "variable": "put_call_ratio",
+          "condition_type": "absolute_threshold",
+          "condition_value": 0.78,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "put-call ratio surge",
+            "cause_normalized": "put_call_ratio",
+            "effect": "bearish options positioning",
+            "effect_normalized": "bearish_options_positioning",
+            "mechanism": "Higher put demand relative to calls raises put premiums, reflecting market participants pricing in tail risk; this is the same mechanism observed in BTC 6m25d skew reaching cycle highs"
+          },
+          {
+            "cause": "bearish options positioning",
+            "cause_normalized": "bearish_options_positioning",
+            "effect": "option buyers pay more for downside protection than upside",
+            "effect_normalized": "downside_hedging_cost",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "put_call_ratio -> bearish_options_positioning -> downside_hedging_cost"
+      },
+      "terminal_effect": "downside_hedging_cost",
+      "mechanism": "Higher put demand relative to calls raises put premiums, reflecting market participants pricing in tail risk; this is the same mechanism observed in BTC 6m25d skew reaching cycle highs",
+      "source_attribution": "Source 12 (9ee82fd8a114b774_559)",
+      "id": "rel_2a5ecffd",
+      "discovered_at": "2026-02-26T03:03:58.518613",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "put_call_ratio",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "put_call_ratio",
+          "condition_type": "absolute_threshold",
+          "condition_value": 0.75,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "put-call ratio spikes toward 75th–90th pct threshold",
+            "cause_normalized": "put_call_ratio_threshold",
+            "effect": "peak fear/hedging saturation",
+            "effect_normalized": "bearish_options_positioning",
+            "mechanism": "Step 1: Ratio approaching 0.70–0.78 signals broad hedging demand; Step 2: When hedging demand saturates (most who want protection have bought it), incremental selling pressure exhausts; Step 3: Persistent distrust accumulates volatility risk; Step 4: Historical pattern — extreme put-call spikes precede volatility regime normalization as fear unwinds"
+          },
+          {
+            "cause": "peak fear/hedging saturation",
+            "cause_normalized": "bearish_options_positioning",
+            "effect": "market distrust peaks",
+            "effect_normalized": "market_distrust",
+            "mechanism": ""
+          },
+          {
+            "cause": "market distrust peaks",
+            "cause_normalized": "market_distrust",
+            "effect": "volatility risk elevated but mean-reversion likely",
+            "effect_normalized": "volatility_risk",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "put_call_ratio_threshold -> bearish_options_positioning -> market_distrust -> volatility_risk"
+      },
+      "terminal_effect": "volatility_risk",
+      "mechanism": "Step 1: Ratio approaching 0.70–0.78 signals broad hedging demand; Step 2: When hedging demand saturates (most who want protection have bought it), incremental selling pressure exhausts; Step 3: Persistent distrust accumulates volatility risk; Step 4: Historical pattern — extreme put-call spikes precede volatility regime normalization as fear unwinds",
+      "source_attribution": "Query data (thresholds); Sources 656ec0d72d97fc29_148 and 34701fcfb89ae4db_260 (market_distrust → volatility_risk chain)",
+      "id": "rel_ceac175f",
+      "discovered_at": "2026-02-26T03:03:59.720997",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "put_call_ratio",
+          "condition_type": "absolute_threshold",
+          "condition_value": 0.7,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "put_call_ratio",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "put-call ratio eases from peak (0.710",
+            "cause_normalized": "put-call_ratio_eases_from_peak_(0.710",
+            "effect": "0.646)",
+            "effect_normalized": "put_call_ratio",
+            "mechanism": "As fear subsides from the Feb-17 peak, IV tends to compress → cheaper put premia create attractive entry for structured hedges (e.g., 95/85 put spreads as noted in GS research); this is the \"buy the dip in fear\" hedge opportunity"
+          },
+          {
+            "cause": "0.646)",
+            "cause_normalized": "put_call_ratio",
+            "effect": "hedging demand subsiding",
+            "effect_normalized": "bearish_options_positioning",
+            "mechanism": ""
+          },
+          {
+            "cause": "hedging demand subsiding",
+            "cause_normalized": "bearish_options_positioning",
+            "effect": "implied volatility compression potential",
+            "effect_normalized": "implied_volatility",
+            "mechanism": ""
+          },
+          {
+            "cause": "implied volatility compression potential",
+            "cause_normalized": "implied_volatility",
+            "effect": "put option premia become cheaper",
+            "effect_normalized": "option_premia_low",
+            "mechanism": ""
+          },
+          {
+            "cause": "put option premia become cheaper",
+            "cause_normalized": "option_premia_low",
+            "effect": "put spread hedging becomes attractive",
+            "effect_normalized": "put_spread_hedge",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "put-call_ratio_eases_from_peak_(0.710 -> put_call_ratio -> bearish_options_positioning -> implied_volatility -> option_premia_low -> put_spread_hedge"
+      },
+      "terminal_effect": "put_spread_hedge",
+      "mechanism": "As fear subsides from the Feb-17 peak, IV tends to compress → cheaper put premia create attractive entry for structured hedges (e.g., 95/85 put spreads as noted in GS research); this is the \"buy the dip in fear\" hedge opportunity",
+      "source_attribution": "Query data (ratio easing); Source 9188c9ebc4c860b4_118 (implied_volatility → option_premia_low → put_spread_hedge chain)",
+      "id": "rel_0b050d21",
+      "discovered_at": "2026-02-26T03:04:00.946997",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "put_call_ratio",
+          "condition_type": "percentage_change",
+          "condition_value": 10,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "vix",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "retail options traders net bullish (positive put/call direction ratio)",
+            "cause_normalized": "retail_options_sentiment",
+            "effect": "contrarian warning if equity put-call ratio simultaneously elevated",
+            "effect_normalized": "put_call_ratio",
+            "mechanism": "Source 1 shows retail traders were net bullish (positive call/put direction ratio, ~7-9% in early 2025); if institutional/professional hedgers are driving the put-call surge while retail remains bullish, the signal is ambiguous — institutional hedging can be precautionary rather than directional, while retail bullishness can sustain upside momentum"
+          },
+          {
+            "cause": "contrarian warning if equity put-call ratio simultaneously elevated",
+            "cause_normalized": "put_call_ratio",
+            "effect": "mixed signal: institutional hedging vs. retail speculation",
+            "effect_normalized": "risk_asset_outlook",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "retail_options_sentiment -> put_call_ratio -> risk_asset_outlook"
+      },
+      "terminal_effect": "risk_asset_outlook",
+      "mechanism": "Source 1 shows retail traders were net bullish (positive call/put direction ratio, ~7-9% in early 2025); if institutional/professional hedgers are driving the put-call surge while retail remains bullish, the signal is ambiguous — institutional hedging can be precautionary rather than directional, while retail bullishness can sustain upside momentum",
+      "source_attribution": "Source 1 (d9a6926aa0bcd163_177); Query data",
+      "id": "rel_8abf0a80",
+      "discovered_at": "2026-02-26T03:04:02.284443",
+      "validation_count": 1,
+      "relationship_type": "positive",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "retail_options_sentiment",
+          "condition_type": "absolute_threshold",
+          "condition_value": 8,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "put_call_ratio",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "asset managers net short VIX futures",
+            "cause_normalized": "vix_short_positioning",
+            "effect": "institutional confidence in low volatility",
+            "effect_normalized": "volatility_outlook",
+            "mechanism": "Large asset manager short VIX positions (Source 15: largest since June 2024) suggest institutions are not structurally bearish on volatility even as put-call ratio surged; this implies the put buying may be tactical/hedging overlays rather than outright bearish conviction — a nuance that limits the bearish read on risk assets"
+          },
+          {
+            "cause": "institutional confidence in low volatility",
+            "cause_normalized": "volatility_outlook",
+            "effect": "put-call ratio surge may be tactical hedging rather than structural fear",
+            "effect_normalized": "put_call_ratio",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "vix_short_positioning -> volatility_outlook -> put_call_ratio"
+      },
+      "terminal_effect": "put_call_ratio",
+      "mechanism": "Large asset manager short VIX positions (Source 15: largest since June 2024) suggest institutions are not structurally bearish on volatility even as put-call ratio surged; this implies the put buying may be tactical/hedging overlays rather than outright bearish conviction — a nuance that limits the bearish read on risk assets",
+      "source_attribution": "Source 15 (2ce9b9b1c42dbc43_217); Query data",
+      "id": "rel_d45f1366",
+      "discovered_at": "2026-02-26T03:04:03.762817",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "vix_short_positioning",
+          "condition_type": "absolute_threshold",
+          "condition_value": 75,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "put_call_ratio",
+          "condition_type": "percentage_change",
+          "condition_value": 20,
+          "condition_direction": "increase",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "insider sell/buy ratio at 5-year high",
+            "cause_normalized": "insider_sell_buy_ratio",
+            "effect": "negative equity sentiment signal",
+            "effect_normalized": "equity_flows",
+            "mechanism": "1,000 sellers vs. 207 buyers; ratio >6.0 historically precedes market corrections; corroborates the put-call ratio surge as part of a broader risk-reduction environment rather than isolated noise"
+          },
+          {
+            "cause": "negative equity sentiment signal",
+            "cause_normalized": "equity_flows",
+            "effect": "historical downside signal triggered",
+            "effect_normalized": "equity_flows",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "insider_sell_buy_ratio -> equity_flows -> equity_flows"
+      },
+      "terminal_effect": "equity_flows",
+      "mechanism": "1,000 sellers vs. 207 buyers; ratio >6.0 historically precedes market corrections; corroborates the put-call ratio surge as part of a broader risk-reduction environment rather than isolated noise",
+      "source_attribution": "Source 4 (9a42ea7a16918b1e_9)",
+      "id": "rel_cb8d13a9",
+      "discovered_at": "2026-02-26T03:04:04.830120",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "insider_sell_buy_ratio",
+          "condition_type": "absolute_threshold",
+          "condition_value": 6.0,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "US small-cap largest 2025 outflow",
+            "cause_normalized": "us_smallcap_flows",
+            "effect": "capital reallocation from risk assets",
+            "effect_normalized": "equity_flows",
+            "mechanism": "Record small-cap outflows (BofA data) confirm institutional rotation away from high-beta risk assets, corroborating the hedging demand reflected in elevated put-call ratios"
+          },
+          {
+            "cause": "capital reallocation from risk assets",
+            "cause_normalized": "equity_flows",
+            "effect": "consistent with put-call ratio surge signaling risk-off",
+            "effect_normalized": "put_call_ratio",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "us_smallcap_flows -> equity_flows -> put_call_ratio"
+      },
+      "terminal_effect": "put_call_ratio",
+      "mechanism": "Record small-cap outflows (BofA data) confirm institutional rotation away from high-beta risk assets, corroborating the hedging demand reflected in elevated put-call ratios",
+      "source_attribution": "Source 20 (2899019b861ab026_293); Source 16 (b53987ae4e9fdb58_294)",
+      "id": "rel_148c708a",
+      "discovered_at": "2026-02-26T03:04:05.953122",
+      "validation_count": 1,
+      "relationship_type": "neutral",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "us_smallcap_flows",
+          "condition_type": "percentage_change",
+          "condition_value": 15,
+          "condition_direction": "decrease",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "put_call_ratio",
+          "condition_type": "absolute_threshold",
+          "condition_value": 1.2,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "put-call ratio sustains above 75th pct (0.70)",
+            "cause_normalized": "put_call_ratio_threshold",
+            "effect": "confirmed risk-off regime",
+            "effect_normalized": "bearish_options_positioning",
+            "mechanism": "Sustained readings above 0.70 (75th pct) indicate persistent hedging demand beyond tactical positioning; the Feb-17 peak of 0.710 briefly breached this level but has since eased — if ratio re-accelerates above 0.70 and holds, it would confirm structural risk-off\n\n**CHAIN:** put-call ratio reaches 90th–95th pct (0.78–0.85) [put_call_ratio_extreme] → maximum fear/capitulation signal [bearish_options_positioning] → contrarian bullish entry for risk assets [risk_asset_reversal]\n**MECHANISM:** Extreme put-call readings historically mark sentiment exhaustion; at these levels, most bearish positioning is already expressed, reducing incremental selling pressure and creating conditions for relief rallies; current reading (0.646, 60th pct 5d MA) is well below this threshold — the Feb-17 peak (0.710) did not reach capitulation levels"
+          },
+          {
+            "cause": "confirmed risk-off regime",
+            "cause_normalized": "bearish_options_positioning",
+            "effect": "risk assets face headwinds",
+            "effect_normalized": "risk_asset_outlook",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "put_call_ratio_threshold -> bearish_options_positioning -> risk_asset_outlook"
+      },
+      "terminal_effect": "risk_asset_outlook",
+      "mechanism": "Sustained readings above 0.70 (75th pct) indicate persistent hedging demand beyond tactical positioning; the Feb-17 peak of 0.710 briefly breached this level but has since eased — if ratio re-accelerates above 0.70 and holds, it would confirm structural risk-off\n\n**CHAIN:** put-call ratio reaches 90th–95th pct (0.78–0.85) [put_call_ratio_extreme] → maximum fear/capitulation signal [bearish_options_positioning] → contrarian bullish entry for risk assets [risk_asset_reversal]\n**MECHANISM:** Extreme put-call readings historically mark sentiment exhaustion; at these levels, most bearish positioning is already expressed, reducing incremental selling pressure and creating conditions for relief rallies; current reading (0.646, 60th pct 5d MA) is well below this threshold — the Feb-17 peak (0.710) did not reach capitulation levels",
+      "source_attribution": "Query data (thresholds); Source 3 (Nomura: extreme Sharpe spikes \"often precede mean reversion or volatility regime changes\")",
+      "id": "rel_2a87f631",
+      "discovered_at": "2026-02-26T03:04:07.325637",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "put_call_ratio_threshold",
+          "condition_type": "absolute_threshold",
+          "condition_value": 0.7,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        },
+        {
+          "variable": "put_call_ratio_extreme",
+          "condition_type": "absolute_threshold",
+          "condition_value": 0.78,
+          "condition_direction": "above",
+          "timeframe_days": 7
+        }
+      ]
+    },
+    {
+      "logic_chain": {
+        "steps": [
+          {
+            "cause": "put-call ratio surge from 0.474",
+            "cause_normalized": "put-call_ratio_surge_from_0.474",
+            "effect": "0.710 then easing to 0.646",
+            "effect_normalized": "put_call_ratio",
+            "mechanism": "The +50% surge in 5d MA represents meaningful fear escalation (highest since April 2025), but the subsequent easing suggests the acute fear phase has passed; at 60th pct (5d MA), the ratio is mildly elevated but not at the 75th–95th pct thresholds that historically generate strong contrarian signals; risk assets face moderate headwinds from elevated (but not extreme) hedging demand, corroborated by insider selling and small-cap outflows, but not yet at the capitulation levels that would signal a clear buying opportunity"
+          },
+          {
+            "cause": "0.710 then easing to 0.646",
+            "cause_normalized": "put_call_ratio",
+            "effect": "fear spike followed by partial normalization",
+            "effect_normalized": "bearish_options_positioning",
+            "mechanism": ""
+          },
+          {
+            "cause": "fear spike followed by partial normalization",
+            "cause_normalized": "bearish_options_positioning",
+            "effect": "ambiguous near-term signal: not at contrarian extreme, not at complacency",
+            "effect_normalized": "risk_asset_outlook",
+            "mechanism": ""
+          }
+        ],
+        "chain_summary": "put-call_ratio_surge_from_0.474 -> put_call_ratio -> bearish_options_positioning -> risk_asset_outlook"
+      },
+      "terminal_effect": "risk_asset_outlook",
+      "mechanism": "The +50% surge in 5d MA represents meaningful fear escalation (highest since April 2025), but the subsequent easing suggests the acute fear phase has passed; at 60th pct (5d MA), the ratio is mildly elevated but not at the 75th–95th pct thresholds that historically generate strong contrarian signals; risk assets face moderate headwinds from elevated (but not extreme) hedging demand, corroborated by insider selling and small-cap outflows, but not yet at the capitulation levels that would signal a clear buying opportunity",
+      "source_attribution": "Query data; Sources 4, 16, 20 (corroborating flows); Source 3 (regime change context)",
+      "id": "rel_b7c07b9f",
+      "discovered_at": "2026-02-26T03:04:08.599194",
+      "validation_count": 1,
+      "relationship_type": "negative",
+      "confidence": 0.72,
+      "trigger_conditions": [
+        {
+          "variable": "put_call_ratio",
+          "condition_type": "percentage_change",
+          "condition_value": 50,
+          "condition_direction": "increase",
+          "timeframe_days": 5
+        },
+        {
+          "variable": "put_call_ratio",
+          "condition_type": "absolute_threshold",
+          "condition_value": 0.6,
+          "condition_direction": "above",
+          "timeframe_days": 5
         }
       ]
     }

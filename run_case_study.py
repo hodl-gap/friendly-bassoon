@@ -56,7 +56,7 @@ CASE_STUDIES = {
         "total_points": 20,
     },
     5: {
-        "query": "put ratio up up, what this mean?",
+        "query": "Equity put-call ratio surging. What does this mean for risk assets?",
         "asset": "equity",
         "rubric_file": "test_cases/05_put_call_ratio.md",
         "pass_threshold": 10,
@@ -72,6 +72,24 @@ CASE_STUDIES = {
 }
 
 
+def enrich_query_with_data(query: str, case_num: int) -> str:
+    """Enrich a case study query with current data state when relevant.
+
+    For queries about data-observable indicators (e.g. put-call ratio), prepend
+    the actual current state so the pipeline has concrete numbers before
+    retrieval begins.
+    """
+    if case_num == 5:
+        try:
+            from subproject_data_collection.proactive_data_collector import describe_put_call_state
+            state = describe_put_call_state()
+            if state:
+                return f"{state}\n\nTrader query: {query}"
+        except Exception as e:
+            print(f"[enrich] Could not generate put-call state: {e}")
+    return query
+
+
 def run_case(case_num: int, run_num: int, asset: str = None, query_override: str = None):
     """Run a single case study through the full pipeline with debug logging."""
 
@@ -82,6 +100,10 @@ def run_case(case_num: int, run_num: int, asset: str = None, query_override: str
 
     query = query_override or case["query"]
     asset = asset or (case["asset"] if case else "btc")
+
+    # Enrich data-driven queries with current state from local CSV series
+    if not query_override:
+        query = enrich_query_with_data(query, case_num)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_filename = f"debug_case{case_num}_run{run_num}_{timestamp}.log"

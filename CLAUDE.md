@@ -148,9 +148,7 @@ Running the pipeline repeatedly improves future analysis through these persisten
 
 ## TODO
 
-- [ ] Ingest wider date range from globaletfi (Jan 27 - Feb 10) for earnings season coverage
-- [ ] Ingest additional Telegram channels for broader sell-side research coverage
-- [ ] Evaluate whether extracted metadata (English) should be concatenated with raw text (Korean) before embedding — low priority, CAPEX gap is about missing bearish interpretation in source material, not retrieval (see Known Issue #2)
+- [ ] **Audit categorization accuracy** — The `categorization_prompts.py` LLM categorizer previously misclassified forwarded institutional research (e.g., `[GS]` tagged analysis) as `event_announcement` or advertisement instead of `data_opinion`. Fix was applied (see Known Issue #1) but needs ongoing monitoring: sample recent categorizations to verify institutional research is not being silently dropped. Consider adding a periodic QA check or classification confidence threshold.
 - [ ] **Implement true feedback loops** — The pipeline currently has weak self-learning (web chains to Pinecone, local chain accumulation). Need closed-loop mechanisms where pipeline outputs feed back to improve future pipeline inputs: scoring past predictions against actual outcomes, promoting validated local chains into the RAG corpus, and using downstream usage signals to improve upstream retrieval quality.
 - [x] Add condensed summary output alongside the full insight report. Generated mechanically from structured track data in `format_insight()` — no extra LLM call. Appended after the full report.
 - [x] Add chain completeness (Rule 8) and regime-shift consideration (Rule 9) to resynthesis prompt. Rewrite web chain angle #3 for alternative interpretations. Validated: Case 4 16→18/20, Case 6 12→14/16.
@@ -177,6 +175,7 @@ Current system is static and reactive (query → research → insight). Future g
   - Threshold breaches on chain-specific triggers (partially exists in `theme_refresh.py` but limited to simple % change checks)
 - [ ] **Build anomaly → query bridge** — When the proactive agent detects an anomaly, it should auto-generate a research query and run it through the existing pipeline. Example: detect put-call ratio at 99th percentile → generate "CBOE equity put-call ratio at extreme levels, what are the historical precedents?" → run full pipeline → surface insight to trader
 - [ ] **Use case studies as design input** — Cases 1-6 reveal what patterns the system should be watching for proactively. Each case study's trigger event (SaaS meltdown, snap election, record shorting, tariff ruling, put-call spike, labor equilibrium) is something the proactive agent should have detected from data before a human asked about it. Reverse-engineer the detection rules from existing case studies.
+- [ ] **Decaying long-term memory** — The proactive agent needs a memory system that weights recent information more heavily than old. News and research should have a temporal decay function so the agent naturally prioritizes fresh signals while retaining older context at lower weight. This prevents stale narratives from dominating and ensures the agent's worldview stays current. Design considerations: decay curve shape (exponential vs linear), per-theme decay rates (fast-moving themes like positioning decay faster than structural themes like rates), and explicit refresh triggers when new data contradicts old conclusions.
 
 ## Archive Folder
 

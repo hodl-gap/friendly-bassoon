@@ -501,6 +501,107 @@ def export_long_form():
     print(f"  [done] Exported {exported} series to {CSV_SERIES_DIR}")
 
 
+# ── Step 5: State description for pipeline enrichment ──────────────────────
+
+
+def describe_put_call_state(series_id: str = "equity_pc_ratio") -> str:
+    """Generate a plain-text state description of the put-call ratio.
+
+    Returns a short paragraph suitable for injecting into a pipeline query or
+    prompt, summarising: current value, percentile, 5-day MA trend, recent
+    trough-to-peak move, and key thresholds.
+
+    Args:
+        series_id: CSV series to analyse (default: equity_pc_ratio).
+
+    Returns:
+        Multi-line state description string, or empty string if data missing.
+    """
+    csv_path = CSV_SERIES_DIR / f"{series_id}.csv"
+    if not csv_path.exists():
+        return ""
+
+    # Load series
+    data = []
+    with open(csv_path, newline="") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            val = row.get("value", "").strip()
+            if val:
+                data.append((row["date"], float(val)))
+    if len(data) < 30:
+        return ""
+
+    values = [v for _, v in data]
+    latest_d, latest_v = data[-1]
+    mean_val = sum(values) / len(values)
+    sorted_vals = sorted(values)
+
+    # Percentile of current value
+    current_pct = sum(1 for v in values if v <= latest_v) / len(values) * 100
+
+    # 5-day moving average
+    ma5_series = []
+    for i in range(4, len(data)):
+        w = [v for _, v in data[i - 4 : i + 1]]
+        ma5_series.append((data[i][0], sum(w) / 5))
+    current_ma5 = ma5_series[-1][1]
+    ma5_pct = sum(1 for _, v in ma5_series if v <= current_ma5) / len(ma5_series) * 100
+
+    # Recent trough and peak in 5d MA (last 60 trading days)
+    recent_ma5 = ma5_series[-60:]
+    trough_d, trough_v = min(recent_ma5, key=lambda x: x[1])
+    peak_d, peak_v = max(recent_ma5, key=lambda x: x[1])
+    roc_pct = (peak_v - trough_v) / trough_v * 100 if trough_v else 0
+
+    # Highest 5d MA since when (before peak)
+    peak_idx = next(i for i, (d, _) in enumerate(ma5_series) if d == peak_d)
+    ma5_highest_since = None
+    for i in range(peak_idx - 1, -1, -1):
+        if ma5_series[i][1] >= peak_v:
+            ma5_highest_since = ma5_series[i][0]
+            break
+
+    # Key percentile thresholds
+    p75 = sorted_vals[int(len(sorted_vals) * 0.75)]
+    p90 = sorted_vals[int(len(sorted_vals) * 0.90)]
+    p95 = sorted_vals[int(len(sorted_vals) * 0.95)]
+
+    # Build description
+    lines = []
+    lines.append(
+        f"CBOE equity put-call ratio: {latest_v:.2f} on {latest_d} "
+        f"({current_pct:.0f}th percentile, mean {mean_val:.2f}, data since {data[0][0]})."
+    )
+    lines.append(
+        f"5-day MA: {current_ma5:.3f} ({ma5_pct:.0f}th percentile)."
+    )
+
+    # Trend narrative
+    if trough_d < peak_d:
+        trend = (
+            f"Surged from {trough_v:.3f} ({trough_d}) to {peak_v:.3f} ({peak_d}), "
+            f"+{roc_pct:.0f}% in 5d MA."
+        )
+        if ma5_highest_since:
+            trend += f" That peak was the highest 5d MA since {ma5_highest_since}."
+        if peak_d != latest_d:
+            trend += f" Since eased to {current_ma5:.3f}."
+    else:
+        trend = (
+            f"Fell from {peak_v:.3f} ({peak_d}) to {trough_v:.3f} ({trough_d}), "
+            f"{roc_pct:+.0f}% in 5d MA."
+        )
+    lines.append(trend)
+
+    lines.append(
+        f"Thresholds: 75th pct = {p75:.2f}, 90th pct = {p90:.2f}, "
+        f"95th pct = {p95:.2f}."
+    )
+
+    return "\n".join(lines)
+
+
 # ── CLI ────────────────────────────────────────────────────────────────────
 
 
