@@ -153,6 +153,7 @@ Running the pipeline repeatedly improves future analysis through these persisten
 - [x] Add condensed summary output alongside the full insight report. Generated mechanically from structured track data in `format_insight()` — no extra LLM call. Appended after the full report.
 - [x] Add chain completeness (Rule 8) and regime-shift consideration (Rule 9) to resynthesis prompt. Rewrite web chain angle #3 for alternative interpretations. Validated: Case 4 16→18/20, Case 6 12→14/16.
 - [x] **TEST hybrid agentic pipeline** — Tested Cases 1, 2, 4 with `--hybrid`. Results: +3 across all cases. Three bugs fixed: dict key mismatch in web chain handler, agent prompt too weak (kept searching after ADEQUATE), synthesis patch overwriting good output with empty result. (Added 2026-02-23, tested 2026-02-24)
+- [ ] **Multi-variable divergence detection for `find_indicator_extremes`** — Current tool finds extremes for a single indicator. Cannot handle cross-asset divergence queries like "software sector down while S&P 500 up" (requires computing a derived spread between two series, then finding extremes on that spread). Extend with a `find_divergence_extremes` function: takes two variables, computes rolling spread/ratio, runs the same percentile + clustering + forward return machinery on the derived series. Tool schema would get an optional `reference_variable` parameter — when provided, switches from single-indicator mode to divergence mode.
 
 ### Long-term: Data Collection Infrastructure
 

@@ -264,15 +264,9 @@ def aggregate_analogs(
                 target_recovery = metrics.get("recovery_days", None)
                 break
 
-        # If target not found, use the first instrument with peak_to_trough data
-        if target_change is None:
-            for name, data in instruments.items():
-                metrics = data.get("metrics", {})
-                ptt = metrics.get("peak_to_trough_pct")
-                if ptt is not None:
-                    target_change = ptt
-                    target_recovery = metrics.get("recovery_days")
-                    break
+        # If target not found, skip — "no data" is better than wrong data
+        # (Previous fallback grabbed the first random instrument's peak-to-trough,
+        # which produced garbage like VIX -74.3% reported as an equity return)
 
         direction = "neutral"
         if target_change is not None:

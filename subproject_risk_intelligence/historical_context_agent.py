@@ -73,9 +73,9 @@ def run_historical_context_agent(state: RiskImpactState) -> RiskImpactState:
           f"({loop_result['iterations']} iterations, "
           f"{len(loop_result['tool_calls'])} tool calls)")
 
-    # If agent didn't detect analogs, run the standard enrichment as fallback
-    if not agent_state.analogs and not agent_state.enriched_analogs:
-        print("[Historical Context Agent] No analogs found, running standard enrichment...")
+    # If agent didn't detect analogs or indicator extremes, run the standard enrichment as fallback
+    if not agent_state.analogs and not agent_state.enriched_analogs and not agent_state.indicator_extremes_data:
+        print("[Historical Context Agent] No analogs or indicator extremes found, running standard enrichment...")
         from .insight_orchestrator import enrich_with_historical_event
         state = enrich_with_historical_event(state)
         return state
@@ -86,6 +86,11 @@ def run_historical_context_agent(state: RiskImpactState) -> RiskImpactState:
             "enriched": agent_state.enriched_analogs,
             "aggregated": agent_state.aggregated,
         }
+
+    if agent_state.indicator_extremes_data:
+        ha = state.get("historical_analogs", {})
+        ha["indicator_extremes"] = agent_state.indicator_extremes_data
+        state["historical_analogs"] = ha
 
     if agent_state.historical_analogs_text:
         state["historical_analogs_text"] = agent_state.historical_analogs_text

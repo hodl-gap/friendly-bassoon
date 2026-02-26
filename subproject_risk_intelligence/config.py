@@ -60,3 +60,6 @@ ENABLE_CHAIN_TRIGGERS = os.getenv("RISK_CHAIN_TRIGGERS", "true").lower() == "tru
 # Gap 1: Regime Characterization (compare "now vs then" at regime level)
 ENABLE_REGIME_CHARACTERIZATION = os.getenv("RISK_REGIME_CHAR", "true").lower() == "true"
 
+# Indicator Extremes (programmatic percentile-based historical precedents)
+ENABLE_INDICATOR_EXTREMES = os.getenv("RISK_INDICATOR_EXTREMES", "true").lower() == "true"
+

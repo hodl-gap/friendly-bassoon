@@ -107,6 +107,42 @@ FETCH_ADDITIONAL_DATA_TOOL = {
     }
 }
 
+FIND_INDICATOR_EXTREMES_TOOL = {
+    "name": "find_indicator_extremes",
+    "description": "Find dates when an indicator hit extreme percentile readings and compute verified forward returns for correlated assets. Use for indicator-driven queries (put-call ratio extremes, VIX spikes, yield curve inversions). Returns real data, no LLM — pure computation.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "indicator_variable": {
+                "type": "string",
+                "description": "Variable name to analyze (e.g., 'equity_put_call_ratio', 'vix', 'us10y')"
+            },
+            "percentile_threshold": {
+                "type": "number",
+                "description": "Percentile threshold (default 90). E.g., 95 = top 5%",
+                "default": 90
+            },
+            "direction": {
+                "type": "string",
+                "enum": ["above", "below"],
+                "description": "Direction of extreme: 'above' for high readings, 'below' for low",
+                "default": "above"
+            },
+            "forward_return_assets": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Yahoo tickers for forward return computation (e.g., ['SPY', 'QQQ']). Defaults based on asset class."
+            },
+            "max_episodes": {
+                "type": "integer",
+                "description": "Maximum episodes to return (default 12)",
+                "default": 12
+            }
+        },
+        "required": ["indicator_variable"]
+    }
+}
+
 FINISH_HISTORICAL_TOOL = {
     "name": "finish_historical",
     "description": "Signal that historical context analysis is complete.",
@@ -133,6 +169,7 @@ ALL_TOOLS = [
     CHARACTERIZE_REGIME_TOOL,
     LOAD_THEME_CHAINS_TOOL,
     FETCH_ADDITIONAL_DATA_TOOL,
+    FIND_INDICATOR_EXTREMES_TOOL,
     FINISH_HISTORICAL_TOOL,
 ]
 
@@ -153,6 +190,7 @@ class HistoricalAgentState:
         self.historical_analogs_text = ""
         self.regime_characterization_text = ""
         self.additional_data = {}
+        self.indicator_extremes_data = {}
 
 
 def build_tool_handlers(agent_state: HistoricalAgentState) -> dict:
@@ -251,7 +289,11 @@ def build_tool_handlers(agent_state: HistoricalAgentState) -> dict:
             enriched_analogs=agent_state.enriched_analogs,
             current_conditions=current_values,
         )
-        agent_state.historical_analogs_text = text
+        # Append to existing text (e.g., from find_indicator_extremes) rather than overwrite
+        if agent_state.historical_analogs_text:
+            agent_state.historical_analogs_text += "\n\n" + text
+        else:
+            agent_state.historical_analogs_text = text
 
         return {
             "analog_count": aggregated.get("analog_count", 0),
@@ -327,6 +369,105 @@ def build_tool_handlers(agent_state: HistoricalAgentState) -> dict:
         except Exception as e:
             return {"error": str(e)}
 
+    def handle_find_indicator_extremes(
+        indicator_variable: str,
+        percentile_threshold: float = 90,
+        direction: str = "above",
+        forward_return_assets: list = None,
+        max_episodes: int = 12,
+    ) -> dict:
+        from . import config
+        if not config.ENABLE_INDICATOR_EXTREMES:
+            return {"error": "Indicator extremes feature is disabled"}
+
+        from .indicator_extremes import (
+            fetch_full_series, find_extreme_dates,
+            compute_all_forward_returns, aggregate_extreme_episodes,
+            format_extremes_for_prompt,
+        )
+
+        # Default forward return assets based on asset class
+        asset_class = agent_state.state.get("asset_class", "btc")
+        if forward_return_assets is None:
+            if asset_class == "equity":
+                forward_return_assets = ["SPY", "QQQ"]
+            else:
+                forward_return_assets = ["SPY", "BTC-USD"]
+
+        # Primary asset for aggregation direction signal
+        if asset_class == "btc":
+            primary_asset = "BTC"
+        else:
+            primary_asset = "SPY"
+
+        # Fetch full history
+        history, source_label = fetch_full_series(indicator_variable)
+        if not history:
+            return {"error": f"No data for indicator: {indicator_variable}"}
+
+        # Find extreme episodes
+        episodes = find_extreme_dates(
+            history,
+            percentile=percentile_threshold,
+            direction=direction,
+            max_episodes=max_episodes,
+        )
+        if not episodes:
+            return {
+                "error": f"No extreme episodes found for {indicator_variable} "
+                         f"at {percentile_threshold}th percentile ({direction})",
+                "data_points": len(history),
+            }
+
+        print(f"[IndicatorExtremes] Found {len(episodes)} episodes, "
+              f"computing forward returns for {forward_return_assets}...")
+
+        # Compute forward returns for all episodes x assets
+        episodes = compute_all_forward_returns(episodes, forward_return_assets)
+
+        # Aggregate
+        aggregated = aggregate_extreme_episodes(episodes, primary_asset=primary_asset)
+
+        # Format for prompt and append to historical_analogs_text
+        formatted = format_extremes_for_prompt(
+            indicator_variable, percentile_threshold, direction,
+            episodes, aggregated,
+        )
+        if agent_state.historical_analogs_text:
+            agent_state.historical_analogs_text += "\n\n" + formatted
+        else:
+            agent_state.historical_analogs_text = formatted
+
+        # Store structured data
+        agent_state.indicator_extremes_data = {
+            "variable": indicator_variable,
+            "percentile": percentile_threshold,
+            "direction": direction,
+            "source": source_label,
+            "episodes": episodes,
+            "aggregated": aggregated,
+        }
+
+        # Date range from history
+        date_range = f"{history[0][0]} to {history[-1][0]}"
+
+        # Per-asset 1mo medians for summary
+        per_asset_1mo = {}
+        for asset_name, windows in aggregated.get("per_asset", {}).items():
+            stats_1mo = windows.get("1mo", {})
+            if stats_1mo:
+                per_asset_1mo[asset_name] = stats_1mo["median"]
+
+        return {
+            "episodes_found": len(episodes),
+            "data_points": len(history),
+            "source": source_label,
+            "date_range": date_range,
+            "direction_signal": aggregated["direction_signal"],
+            "per_asset_1mo_median": per_asset_1mo,
+            "summary": aggregated["summary"],
+        }
+
     def handle_finish_historical(summary: str = "", analogs_found: int = 0) -> dict:
         return {"status": "completed", "summary": summary}
 
@@ -337,5 +478,6 @@ def build_tool_handlers(agent_state: HistoricalAgentState) -> dict:
         "characterize_regime": handle_characterize_regime,
         "load_theme_chains": handle_load_theme_chains,
         "fetch_additional_data": handle_fetch_additional_data,
+        "find_indicator_extremes": handle_find_indicator_extremes,
         "finish_historical": handle_finish_historical,
     }
