@@ -73,6 +73,16 @@ def call_gpt41_mini(messages, temperature=0.7, max_tokens=4000):
     )
     return response.choices[0].message.content
 
+async def call_gpt41_mini_async(messages, temperature=0.7, max_tokens=4000):
+    """Async version of call_gpt41_mini for parallel processing"""
+    response = await async_openai_client.chat.completions.create(
+        model="gpt-4.1-mini",
+        messages=messages,
+        temperature=temperature,
+        max_tokens=max_tokens
+    )
+    return response.choices[0].message.content
+
 # =============================================================================
 # OPENAI MODELS - GPT-5 Series (Latest Generation - Nov 2025)
 # =============================================================================
@@ -592,6 +602,7 @@ async def process_batch_parallel(
 
     # Map model names to async functions
     model_map = {
+        "gpt41_mini": call_gpt41_mini_async,
         "gpt5": call_gpt5_async,
         "gpt51": call_gpt51_async,
         "gpt5_mini": call_gpt5_mini_async,
@@ -665,6 +676,7 @@ async def process_batch_parallel_with_retry(
 
     # Map model names to async functions
     model_map = {
+        "gpt41_mini": call_gpt41_mini_async,
         "gpt5": call_gpt5_async,
         "gpt51": call_gpt51_async,
         "gpt5_mini": call_gpt5_mini_async,

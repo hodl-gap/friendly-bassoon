@@ -7,7 +7,7 @@ import time
 import asyncio
 import re
 sys.path.append('../')
-from models import call_claude_sonnet, call_gpt41_mini, call_gpt5, process_batch_parallel, process_batch_parallel_with_retry, process_batch_parallel_with_retry_sync, call_claude_with_cache, call_claude_with_cache_async
+from models import call_claude_sonnet, call_gpt41_mini, call_gpt41_mini_async, call_gpt5, process_batch_parallel, process_batch_parallel_with_retry, process_batch_parallel_with_retry_sync, call_claude_with_cache, call_claude_with_cache_async
 from categorization_prompts import get_categorization_prompt
 from data_opinion_prompts import get_data_opinion_extraction_prompt, get_data_opinion_system_prompt, get_data_opinion_user_prompt
 from interview_meeting_prompts import get_interview_extraction_prompt
@@ -84,6 +84,89 @@ def categorize_by_rules(text: str) -> tuple:
 
     # No match - need LLM
     return None, None
+
+
+# =============================================================================
+# IMAGE ROUTING — categorize-first to skip unnecessary vision calls
+# =============================================================================
+
+EXTRACTABLE_CATEGORIES = {'data_opinion', 'interview_meeting'}
+NON_EXTRACTABLE_CATEGORIES = {'greeting', 'event_announcement', 'schedule', 'advertisement'}
+MIN_TEXT_FOR_CATEGORIZATION = 50
+
+
+def classify_for_image_routing(msg):
+    """
+    Pre-filter: determine routing for each message before LLM categorization.
+
+    Returns:
+        (route, category, reason)
+        route: 'skip' | 'needs_image' | 'text_only' | 'pending_llm'
+        category: pre-assigned category if route=='skip', else None
+        reason: human-readable reason for the routing decision
+    """
+    text = msg.get('text', '')
+    has_photo = bool(msg.get('photo'))
+
+    # Rule-based first
+    rule_cat, rule_conf = categorize_by_rules(text)
+    if rule_cat:
+        return 'skip', rule_cat, 'rule'
+
+    # Short text + photo → needs image context to categorize
+    if has_photo and len(text.strip()) < MIN_TEXT_FOR_CATEGORIZATION:
+        return 'needs_image', None, 'short_text'
+
+    # No photo → text-only categorization (cheap)
+    if not has_photo:
+        return 'text_only', None, 'no_photo'
+
+    # Has photo + enough text → LLM will categorize on text alone first
+    return 'pending_llm', None, 'has_photo_and_text'
+
+
+async def categorize_batch_text_only(pending_items, max_concurrent=10):
+    """
+    Async parallel LLM categorization using text only (no images).
+
+    Args:
+        pending_items: list of (index_into_messages, msg_dict) tuples
+        max_concurrent: concurrency limit
+
+    Returns:
+        list of (index, category_str_or_None) tuples
+    """
+    semaphore = asyncio.Semaphore(max_concurrent)
+
+    async def _categorize_single(idx, msg):
+        async with semaphore:
+            try:
+                cat_prompt = get_categorization_prompt(msg['text'], msg['date'])
+                cat_messages = [{"role": "user", "content": cat_prompt}]
+                response = await call_gpt41_mini_async(cat_messages, temperature=0.7, max_tokens=4000)
+                cat_text = _strip_code_block(response)
+                category_data = json.loads(cat_text)
+                return (idx, category_data.get('category', 'unknown'))
+            except Exception as e:
+                print(f"  [Categorize {idx}] Error: {e}")
+                return (idx, None)
+
+    tasks = [_categorize_single(idx, msg) for idx, msg in pending_items]
+    return await asyncio.gather(*tasks)
+
+
+def _run_async(coro):
+    """Run an async coroutine from sync context, handling nested event loops."""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    if loop and loop.is_running():
+        import nest_asyncio
+        nest_asyncio.apply()
+    return asyncio.run(coro)
+
 
 # =============================================================================
 # CONFIGURATION
@@ -630,61 +713,155 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
     from pathlib import Path
     checkpoint_dir = Path(__file__).parent / "data" / "checkpoints"
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
-    # Use input CSV name to create unique checkpoint file
     csv_name = Path(input_csv).stem
-    checkpoint_file = checkpoint_dir / f"{csv_name}_step1.json"
+    checkpoint_step2 = checkpoint_dir / f"{csv_name}_step2.json"
+    checkpoint_legacy = checkpoint_dir / f"{csv_name}_step1.json"
 
-    # Check for Step 1 checkpoint (resume after crash)
-    skip_step1 = False
-    if checkpoint_file.exists():
-        print(f"\n🔄 Found Step 1 checkpoint: {checkpoint_file}")
-        print("   Resuming from checkpoint (skipping Step 1 image extraction)...")
+    # Check for checkpoint (resume after crash — skips Steps 1, 2, 2.5)
+    skip_to_step3 = False
+    if checkpoint_step2.exists():
+        print(f"\n🔄 Found Step 2 checkpoint: {checkpoint_step2}")
+        print("   Resuming from checkpoint (skipping Steps 1, 2, 2.5)...")
         try:
-            with open(checkpoint_file, 'r', encoding='utf-8') as f:
+            with open(checkpoint_step2, 'r', encoding='utf-8') as f:
                 checkpoint_data = json.load(f)
-            # Restore message data from checkpoint
             for i, msg in enumerate(messages):
                 if i < len(checkpoint_data):
-                    msg['image_summary'] = checkpoint_data[i].get('image_summary', '')
-                    msg['combined_text'] = checkpoint_data[i].get('combined_text', msg['text'])
-                    msg['image_structured_data_cached'] = checkpoint_data[i].get('image_structured_data_cached', {})
-            step_times['step1_image_summaries'] = checkpoint_data[0].get('_step1_time', 0) if checkpoint_data else 0
-            api_costs['image_summaries'] = checkpoint_data[0].get('_api_calls', 0) if checkpoint_data else 0
-            skip_step1 = True
+                    cp = checkpoint_data[i]
+                    msg['category'] = cp.get('category', 'unknown')
+                    msg['image_summary'] = cp.get('image_summary', '')
+                    msg['combined_text'] = cp.get('combined_text', msg['text'])
+                    msg['image_structured_data_cached'] = cp.get('image_structured_data_cached', {})
+                    msg['image_route'] = cp.get('image_route', '')
+            step_times['step1_categorization'] = checkpoint_data[0].get('_step1_time', 0) if checkpoint_data else 0
+            step_times['step2_image_extraction'] = checkpoint_data[0].get('_step2_time', 0) if checkpoint_data else 0
+            api_costs['categorizations'] = checkpoint_data[0].get('_cat_api_calls', 0) if checkpoint_data else 0
+            api_costs['image_summaries'] = checkpoint_data[0].get('_img_api_calls', 0) if checkpoint_data else 0
+            skip_to_step3 = True
             print(f"   ✅ Restored {len(messages)} messages from checkpoint")
         except Exception as e:
             print(f"   ⚠️ Failed to load checkpoint: {e}")
-            print("   Running Step 1 from scratch...")
-            skip_step1 = False
+            print("   Running from scratch...")
+            skip_to_step3 = False
+    elif checkpoint_legacy.exists():
+        print(f"\n🔄 Found legacy checkpoint: {checkpoint_legacy}")
+        print("   Legacy checkpoint from old pipeline — re-running with new pipeline...")
+        checkpoint_legacy.unlink()
 
-    if not skip_step1:
+    if not skip_to_step3:
+        # ==================================================================
+        # STEP 1: TEXT-ONLY CATEGORIZATION
+        # ==================================================================
         print("=" * 80)
-        print("STEP 1: EXTRACT IMAGE SUMMARIES + STRUCTURED DATA (COMBINED)")
+        print("STEP 1: TEXT-ONLY CATEGORIZATION (rule-based + parallel LLM)")
         print("=" * 80)
         step1_start = time.time()
 
-        # Step 1: Extract BOTH summary and structured data in one call
-        # This saves one API call per image for data_opinion/interview_meeting categories
-        # Uses thread pool for parallel image extraction
+        # Phase 1a: Classify every message for image routing
+        route_counts = {'skip': 0, 'needs_image': 0, 'text_only': 0, 'pending_llm': 0}
+        text_only_items = []    # (msg_index, msg) — no photo, categorize on text
+        pending_llm_items = []  # (msg_index, msg) — has photo + text, categorize on text first
+        needs_image_indices = []  # msg indices that need image before categorization
 
-        # Set defaults for all messages first
-        for msg in messages:
-            msg['image_summary'] = ""
-            msg['combined_text'] = msg['text']
-            msg['image_structured_data_cached'] = {}
-
-        # Collect messages that have photos and pass the pre-filter
-        image_tasks = []  # (msg_index, msg, photo_path)
+        rule_based_count = 0
         for i, msg in enumerate(messages):
-            if msg.get('photo'):
+            route, cat, reason = classify_for_image_routing(msg)
+            msg['image_route'] = route
+            route_counts[route] += 1
+
+            if route == 'skip':
+                msg['category'] = cat
+                rule_based_count += 1
+                print(f"  Message {i+1}: {cat} (rule-based)")
+            elif route == 'text_only':
+                text_only_items.append((i, msg))
+            elif route == 'pending_llm':
+                pending_llm_items.append((i, msg))
+            elif route == 'needs_image':
+                needs_image_indices.append(i)
+                msg['category'] = None  # will be set after image extraction
+
+        print(f"\n  Phase 1a routing: skip={route_counts['skip']}, text_only={route_counts['text_only']}, "
+              f"pending_llm={route_counts['pending_llm']}, needs_image={route_counts['needs_image']}")
+
+        # Phase 1b: Parallel async LLM categorization for text_only + pending_llm
+        all_llm_items = text_only_items + pending_llm_items
+        llm_based_count = 0
+
+        if all_llm_items:
+            print(f"\n  Phase 1b: Categorizing {len(all_llm_items)} messages via LLM (text-only, parallel)...")
+            llm_results = _run_async(categorize_batch_text_only(all_llm_items, max_concurrent=MAX_CONCURRENT_REQUESTS))
+
+            for idx, category in llm_results:
+                msg = messages[idx]
+                has_photo = bool(msg.get('photo'))
+
+                if category is None:
+                    # LLM failed — if has photo, route to needs_image; otherwise unknown
+                    if has_photo:
+                        msg['image_route'] = 'needs_image'
+                        needs_image_indices.append(idx)
+                        msg['category'] = None
+                        print(f"  Message {idx+1}: LLM failed, routing to needs_image")
+                    else:
+                        msg['category'] = 'unknown'
+                        print(f"  Message {idx+1}: unknown (LLM failed)")
+                elif has_photo:
+                    # Message has a photo — route based on category
+                    if category in NON_EXTRACTABLE_CATEGORIES:
+                        msg['category'] = category
+                        msg['image_route'] = 'skip'
+                        print(f"  Message {idx+1}: {category} (text-only, image skipped)")
+                    else:
+                        # Extractable or ambiguous — need the image for extraction
+                        msg['category'] = category
+                        msg['image_route'] = 'extract'
+                        print(f"  Message {idx+1}: {category} (text-only, image needed for extraction)")
+                else:
+                    # No photo — category is final
+                    msg['category'] = category
+                    print(f"  Message {idx+1}: {category} (text-only)")
+
+                llm_based_count += 1
+                api_costs['categorizations'] += 1
+
+        step_times['step1_categorization'] = time.time() - step1_start
+        total_categorized = rule_based_count + llm_based_count
+        print(f"\n⏱️  Step 1 completed in {step_times['step1_categorization']:.1f}s")
+        if total_categorized > 0:
+            print(f"    Rule-based: {rule_based_count}, LLM: {llm_based_count} ({rule_based_count/total_categorized*100:.0f}% saved)")
+
+        # ==================================================================
+        # STEP 2: TARGETED IMAGE EXTRACTION
+        # ==================================================================
+        print(f"\n{'=' * 80}")
+        print("STEP 2: TARGETED IMAGE EXTRACTION (extract + needs_image only)")
+        print("=" * 80)
+        step2_start = time.time()
+
+        # Set defaults for all messages
+        for msg in messages:
+            msg.setdefault('image_summary', '')
+            msg.setdefault('combined_text', msg['text'])
+            msg.setdefault('image_structured_data_cached', {})
+
+        # Collect messages that need image extraction
+        image_tasks = []
+        for i, msg in enumerate(messages):
+            if msg.get('image_route') in ('extract', 'needs_image') and msg.get('photo'):
                 photo_path = base_photo_path + msg['photo']
                 if should_extract_image(photo_path):
                     image_tasks.append((i, msg, photo_path))
                 else:
                     print(f"  Skipping image for message {i+1}: failed pre-filter ({msg['photo']})")
 
+        # Count images saved vs old pipeline (all photos)
+        total_photos = sum(1 for m in messages if m.get('photo'))
+        images_saved = total_photos - len(image_tasks)
+
         if image_tasks:
-            print(f"\n  Extracting {len(image_tasks)} images in parallel (max {MAX_CONCURRENT_REQUESTS} concurrent)...")
+            print(f"\n  Extracting {len(image_tasks)}/{total_photos} images ({images_saved} skipped via text-only categorization)")
+            print(f"  Running in parallel (max {MAX_CONCURRENT_REQUESTS} concurrent)...")
             from concurrent.futures import ThreadPoolExecutor, as_completed
 
             def _extract_single_image(task):
@@ -706,88 +883,73 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
                         msg['image_summary'] = image_summary
                         msg['combined_text'] = f"{msg['text']}\n\n[Image contains: {image_summary}]"
                         msg['image_structured_data_cached'] = combined_result.get('structured_data', {})
+        else:
+            print(f"\n  No images to extract ({images_saved} skipped via text-only categorization)")
 
-        step_times['step1_image_summaries'] = time.time() - step1_start
-        print(f"\n⏱️  Step 1 completed in {step_times['step1_image_summaries']:.1f}s")
+        step_times['step2_image_extraction'] = time.time() - step2_start
+        print(f"\n⏱️  Step 2 completed in {step_times['step2_image_extraction']:.1f}s")
+        if images_saved > 0:
+            saved_cost = images_saved * 0.01
+            print(f"    💰 Images saved: {images_saved} (~${saved_cost:.2f} saved vs old pipeline)")
 
-        # Save Step 1 checkpoint for resume capability
-        print(f"   💾 Saving checkpoint to {checkpoint_file}...")
+        # ==================================================================
+        # STEP 2.5: RE-CATEGORIZE needs_image MESSAGES
+        # ==================================================================
+        needs_image_msgs = [i for i in needs_image_indices if messages[i].get('category') is None]
+        if needs_image_msgs:
+            print(f"\n{'=' * 80}")
+            print(f"STEP 2.5: RE-CATEGORIZE {len(needs_image_msgs)} needs_image MESSAGES (with image context)")
+            print("=" * 80)
+
+            for idx in needs_image_msgs:
+                msg = messages[idx]
+                cat_prompt = get_categorization_prompt(msg['combined_text'], msg['date'])
+                cat_messages_api = [{"role": "user", "content": cat_prompt}]
+                cat_response = call_gpt41_mini(cat_messages_api)
+                api_costs['categorizations'] += 1
+
+                try:
+                    cat_text = _strip_code_block(cat_response)
+                    category_data = json.loads(cat_text)
+                    msg['category'] = category_data.get('category', 'unknown')
+                    print(f"  Message {idx+1}: {msg['category']} (re-categorized with image)")
+                except json.JSONDecodeError as e:
+                    print(f"  Message {idx+1}: error ({e})")
+                    msg['category'] = 'error'
+
+        # Mark filtered messages (all categorizations now final)
+        from processing_tracker import mark_filtered
+        filtered_count = 0
+        for msg in messages:
+            if msg.get('category') not in EXTRACTABLE_CATEGORIES:
+                telegram_msg_id = msg.get('telegram_msg_id')
+                if telegram_msg_id:
+                    try:
+                        mark_filtered(channel_name, int(telegram_msg_id))
+                        filtered_count += 1
+                    except (ValueError, TypeError):
+                        pass
+        if filtered_count > 0:
+            print(f"    Tracked {filtered_count} filtered messages (won't re-categorize on next run)")
+
+        # Save checkpoint after Steps 1+2+2.5 complete
+        print(f"   💾 Saving checkpoint to {checkpoint_step2}...")
         checkpoint_data = []
         for msg in messages:
             checkpoint_data.append({
+                'category': msg.get('category', 'unknown'),
                 'image_summary': msg.get('image_summary', ''),
                 'combined_text': msg.get('combined_text', ''),
                 'image_structured_data_cached': msg.get('image_structured_data_cached', {}),
-                '_step1_time': step_times['step1_image_summaries'],
-                '_api_calls': api_costs['image_summaries']
+                'image_route': msg.get('image_route', ''),
+                '_step1_time': step_times.get('step1_categorization', 0),
+                '_step2_time': step_times.get('step2_image_extraction', 0),
+                '_cat_api_calls': api_costs['categorizations'],
+                '_img_api_calls': api_costs['image_summaries'],
             })
-        with open(checkpoint_file, 'w', encoding='utf-8') as f:
+        with open(checkpoint_step2, 'w', encoding='utf-8') as f:
             json.dump(checkpoint_data, f, ensure_ascii=False)
         print(f"   ✅ Checkpoint saved")
-
-    print(f"\n{'=' * 80}")
-    print("STEP 2: CATEGORIZE USING TEXT + IMAGE")
-    print("=" * 80)
-    step2_start = time.time()
-
-    # Track rule-based vs LLM categorizations
-    rule_based_count = 0
-    llm_based_count = 0
-
-    # Step 2: Categorize using combined text
-    for i, msg in enumerate(messages, 1):
-        print(f"\nCategorizing message {i}/{len(messages)}...")
-
-        # Try rule-based categorization first (saves ~$0.0004 per match)
-        rule_category, rule_confidence = categorize_by_rules(msg['combined_text'])
-
-        if rule_category:
-            msg['category'] = rule_category
-            rule_based_count += 1
-            print(f"  → {msg['category']} (rule-based, {rule_confidence})")
-            continue
-
-        # Fall back to LLM for complex cases
-        cat_prompt = get_categorization_prompt(msg['combined_text'], msg['date'])
-        cat_messages = [{"role": "user", "content": cat_prompt}]
-        cat_response = call_gpt41_mini(cat_messages)
-        api_costs['categorizations'] += 1
-        llm_based_count += 1
-
-        try:
-            cat_text = _strip_code_block(cat_response)
-
-            category_data = json.loads(cat_text)
-            msg['category'] = category_data.get('category', 'unknown')
-            print(f"  → {msg['category']} (LLM)")
-
-        except json.JSONDecodeError as e:
-            print(f"  → Error: {e}")
-            msg['category'] = 'error'
-
-    step_times['step2_categorization'] = time.time() - step2_start
-    print(f"\n⏱️  Step 2 completed in {step_times['step2_categorization']:.1f}s")
-    total_categorized = rule_based_count + llm_based_count
-    if total_categorized > 0:
-        print(f"    Rule-based: {rule_based_count}, LLM: {llm_based_count} ({rule_based_count/total_categorized*100:.0f}% saved)")
-    else:
-        print(f"    No messages categorized")
-
-    # Track filtered messages (categories that won't be extracted) to avoid re-categorization
-    from processing_tracker import mark_filtered
-    extractable_categories = {'data_opinion', 'interview_meeting'}
-    filtered_count = 0
-    for msg in messages:
-        if msg.get('category') not in extractable_categories:
-            telegram_msg_id = msg.get('telegram_msg_id')
-            if telegram_msg_id:
-                try:
-                    mark_filtered(channel_name, int(telegram_msg_id))
-                    filtered_count += 1
-                except (ValueError, TypeError):
-                    pass
-    if filtered_count > 0:
-        print(f"    Tracked {filtered_count} filtered messages (won't re-categorize on next run)")
 
     print(f"\n{'=' * 80}", flush=True)
     print("STEP 3: USE CACHED STRUCTURED DATA FROM IMAGES", flush=True)
@@ -862,7 +1024,7 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
 
     # Handle schedule and data_update (no extraction needed)
     for msg in messages:
-        if msg['category'] in ['schedule', 'data_update']:
+        if msg['category'] in ['schedule', 'data_update', 'individual_stock']:
             all_results.append({
                 'telegram_msg_id': msg.get('telegram_msg_id', ''),
                 'original_message_num': msg['original_num'],
@@ -976,17 +1138,24 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
     print(f"\n{'=' * 80}")
     print("COST ESTIMATE")
     print("=" * 80)
+
+    # Compute images saved (works for both fresh run and checkpoint resume)
+    total_photos = sum(1 for m in messages if m.get('photo'))
+    images_extracted = api_costs['image_summaries']
+    images_saved = total_photos - images_extracted
+
     print(f"API Calls:")
-    print(f"  Image summaries (Claude Sonnet vision): {api_costs['image_summaries']}")
+    print(f"  Image extractions (Claude Sonnet vision): {images_extracted}")
+    if images_saved > 0:
+        print(f"    💰 Images skipped (text-only categorization): {images_saved} (~${images_saved * 0.01:.2f} saved)")
     print(f"  Categorizations (GPT-4.1 mini): {api_costs['categorizations']}")
-    print(f"  Image extractions (Claude Sonnet vision): {api_costs['image_extractions']}")
     print(f"  Batch extractions ({EXTRACTION_MODEL}): {api_costs['batch_extractions']}")
 
     # Rough cost estimates (as of Nov 2025)
     # Claude Sonnet: ~$3/1M input, $15/1M output (~$0.01 per call avg)
     # GPT-4.1 mini: ~$0.10/1M input, $0.40/1M output (~$0.0004 per call avg)
     # GPT-5: ~$15/1M input, $60/1M output (~$0.05 per call avg)
-    vision_cost = (api_costs['image_summaries'] + api_costs['image_extractions']) * 0.01
+    vision_cost = images_extracted * 0.01
     mini_cost = api_costs['categorizations'] * 0.0004
 
     # Batch extraction cost depends on model
@@ -1023,10 +1192,11 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
         print(f"  {step_name}: {step_time:.1f}s ({pct:.1f}%)")
     print(f"  TOTAL: {total_time:.1f}s")
 
-    # Clean up checkpoint after successful completion
-    if checkpoint_file.exists():
-        checkpoint_file.unlink()
-        print(f"\n🗑️  Checkpoint cleaned up (processing completed successfully)")
+    # Clean up checkpoints after successful completion
+    for cp in [checkpoint_step2, checkpoint_legacy]:
+        if cp.exists():
+            cp.unlink()
+            print(f"\n🗑️  Checkpoint cleaned up: {cp.name}")
 
     return all_results
 
