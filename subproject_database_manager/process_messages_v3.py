@@ -717,18 +717,37 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
     checkpoint_step2 = checkpoint_dir / f"{csv_name}_step2.json"
     checkpoint_legacy = checkpoint_dir / f"{csv_name}_step1.json"
 
-    # Check for checkpoint (resume after crash — skips Steps 1, 2, 2.5)
+    def _save_checkpoint(complete=False):
+        """Save current message state to checkpoint file."""
+        data = []
+        for msg in messages:
+            data.append({
+                'category': msg.get('category'),
+                'image_summary': msg.get('image_summary', ''),
+                'combined_text': msg.get('combined_text', ''),
+                'image_structured_data_cached': msg.get('image_structured_data_cached', {}),
+                'image_route': msg.get('image_route', ''),
+                '_step1_time': step_times.get('step1_categorization', 0),
+                '_step2_time': step_times.get('step2_image_extraction', 0),
+                '_cat_api_calls': api_costs['categorizations'],
+                '_img_api_calls': api_costs['image_summaries'],
+                '_complete': complete,
+            })
+        with open(checkpoint_step2, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False)
+
+    # Check for checkpoint (resume support)
     skip_to_step3 = False
+    categories_from_checkpoint = False
     if checkpoint_step2.exists():
-        print(f"\n🔄 Found Step 2 checkpoint: {checkpoint_step2}")
-        print("   Resuming from checkpoint (skipping Steps 1, 2, 2.5)...")
+        print(f"\n🔄 Found checkpoint: {checkpoint_step2}")
         try:
             with open(checkpoint_step2, 'r', encoding='utf-8') as f:
                 checkpoint_data = json.load(f)
             for i, msg in enumerate(messages):
                 if i < len(checkpoint_data):
                     cp = checkpoint_data[i]
-                    msg['category'] = cp.get('category', 'unknown')
+                    msg['category'] = cp.get('category')
                     msg['image_summary'] = cp.get('image_summary', '')
                     msg['combined_text'] = cp.get('combined_text', msg['text'])
                     msg['image_structured_data_cached'] = cp.get('image_structured_data_cached', {})
@@ -737,7 +756,14 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
             step_times['step2_image_extraction'] = checkpoint_data[0].get('_step2_time', 0) if checkpoint_data else 0
             api_costs['categorizations'] = checkpoint_data[0].get('_cat_api_calls', 0) if checkpoint_data else 0
             api_costs['image_summaries'] = checkpoint_data[0].get('_img_api_calls', 0) if checkpoint_data else 0
-            skip_to_step3 = True
+
+            if checkpoint_data and checkpoint_data[0].get('_complete'):
+                skip_to_step3 = True
+                print("   Resuming from complete checkpoint (skipping Steps 1, 2, 2.5)...")
+            else:
+                categories_from_checkpoint = True
+                already_extracted = sum(1 for m in messages if m.get('image_summary'))
+                print(f"   Resuming from partial checkpoint (Step 1 done, {already_extracted} images already extracted)...")
             print(f"   ✅ Restored {len(messages)} messages from checkpoint")
         except Exception as e:
             print(f"   ⚠️ Failed to load checkpoint: {e}")
@@ -748,7 +774,7 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
         print("   Legacy checkpoint from old pipeline — re-running with new pipeline...")
         checkpoint_legacy.unlink()
 
-    if not skip_to_step3:
+    if not skip_to_step3 and not categories_from_checkpoint:
         # ==================================================================
         # STEP 1: TEXT-ONLY CATEGORIZATION
         # ==================================================================
@@ -831,6 +857,15 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
         if total_categorized > 0:
             print(f"    Rule-based: {rule_based_count}, LLM: {llm_based_count} ({rule_based_count/total_categorized*100:.0f}% saved)")
 
+        # Save checkpoint after Step 1 (enables incremental resume for Step 2)
+        _save_checkpoint(complete=False)
+        print(f"   💾 Checkpoint saved after Step 1")
+
+    # Reconstruct needs_image_indices if restoring from partial checkpoint
+    if categories_from_checkpoint:
+        needs_image_indices = [i for i, msg in enumerate(messages) if msg.get('image_route') == 'needs_image']
+
+    if not skip_to_step3:
         # ==================================================================
         # STEP 2: TARGETED IMAGE EXTRACTION
         # ==================================================================
@@ -845,15 +880,21 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
             msg.setdefault('combined_text', msg['text'])
             msg.setdefault('image_structured_data_cached', {})
 
-        # Collect messages that need image extraction
+        # Collect messages that need image extraction (skip already-extracted on resume)
         image_tasks = []
+        already_done = 0
         for i, msg in enumerate(messages):
             if msg.get('image_route') in ('extract', 'needs_image') and msg.get('photo'):
+                if msg.get('image_summary'):
+                    already_done += 1
+                    continue  # Already extracted in a previous partial run
                 photo_path = base_photo_path + msg['photo']
                 if should_extract_image(photo_path):
                     image_tasks.append((i, msg, photo_path))
                 else:
                     print(f"  Skipping image for message {i+1}: failed pre-filter ({msg['photo']})")
+        if already_done > 0:
+            print(f"  {already_done} images already extracted (restored from checkpoint)")
 
         # Count images saved vs old pipeline (all photos)
         total_photos = sum(1 for m in messages if m.get('photo'))
@@ -870,12 +911,14 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
                 result = extract_image_combined(photo_path, msg['text'], msg['date'])
                 return (msg_idx, result)
 
+            extracted_count = 0
             with ThreadPoolExecutor(max_workers=MAX_CONCURRENT_REQUESTS) as executor:
                 futures = {executor.submit(_extract_single_image, task): task for task in image_tasks}
                 for future in as_completed(futures):
                     msg_idx, combined_result = future.result()
                     msg = messages[msg_idx]
                     api_costs['image_summaries'] += 1
+                    extracted_count += 1
 
                     if combined_result:
                         image_summary = combined_result.get('summary', '')
@@ -883,6 +926,10 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
                         msg['image_summary'] = image_summary
                         msg['combined_text'] = f"{msg['text']}\n\n[Image contains: {image_summary}]"
                         msg['image_structured_data_cached'] = combined_result.get('structured_data', {})
+
+                    # Incremental checkpoint — saves progress after each image
+                    _save_checkpoint(complete=False)
+                    print(f"    [{extracted_count}/{len(image_tasks)}] checkpoint saved")
         else:
             print(f"\n  No images to extract ({images_saved} skipped via text-only categorization)")
 
@@ -932,24 +979,9 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
         if filtered_count > 0:
             print(f"    Tracked {filtered_count} filtered messages (won't re-categorize on next run)")
 
-        # Save checkpoint after Steps 1+2+2.5 complete
-        print(f"   💾 Saving checkpoint to {checkpoint_step2}...")
-        checkpoint_data = []
-        for msg in messages:
-            checkpoint_data.append({
-                'category': msg.get('category', 'unknown'),
-                'image_summary': msg.get('image_summary', ''),
-                'combined_text': msg.get('combined_text', ''),
-                'image_structured_data_cached': msg.get('image_structured_data_cached', {}),
-                'image_route': msg.get('image_route', ''),
-                '_step1_time': step_times.get('step1_categorization', 0),
-                '_step2_time': step_times.get('step2_image_extraction', 0),
-                '_cat_api_calls': api_costs['categorizations'],
-                '_img_api_calls': api_costs['image_summaries'],
-            })
-        with open(checkpoint_step2, 'w', encoding='utf-8') as f:
-            json.dump(checkpoint_data, f, ensure_ascii=False)
-        print(f"   ✅ Checkpoint saved")
+        # Save final checkpoint (marks all steps complete)
+        _save_checkpoint(complete=True)
+        print(f"   💾 Final checkpoint saved (Steps 1+2+2.5 complete)")
 
     print(f"\n{'=' * 80}", flush=True)
     print("STEP 3: USE CACHED STRUCTURED DATA FROM IMAGES", flush=True)
