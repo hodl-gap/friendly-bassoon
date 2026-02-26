@@ -19,7 +19,7 @@ from config import (
     DEFAULT_LOOKBACK_YEARS,
     AUTO_DISCOVER_MISSING_DATA_IDS
 )
-from adapters import FREDAdapter, YahooAdapter, CoinGeckoAdapter
+from adapters import FREDAdapter, YahooAdapter, CoinGeckoAdapter, CSVAdapter
 from adapters.fred_adapter import COMMON_FRED_SERIES
 from adapters.yahoo_adapter import COMMON_YAHOO_TICKERS
 from adapters.coingecko_adapter import COMMON_COINGECKO_COINS
@@ -243,7 +243,8 @@ def fetch_historical_data(state: DataCollectionState) -> DataCollectionState:
     adapters = {
         "FRED": FREDAdapter(),
         "Yahoo": YahooAdapter(),
-        "CoinGecko": CoinGeckoAdapter()
+        "CoinGecko": CoinGeckoAdapter(),
+        "CSV": CSVAdapter(),
     }
 
     # Fetch data for each variable

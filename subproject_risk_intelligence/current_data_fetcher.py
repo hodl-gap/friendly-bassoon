@@ -317,6 +317,61 @@ def fetch_yahoo_with_history(ticker: str, lookback_days: int = 45) -> Optional[D
     return None
 
 
+def fetch_csv_with_history(series_id: str, lookback_days: int = 45) -> Optional[Dict[str, Any]]:
+    """
+    Fetch data from a local CSV series file with historical values for change calculation.
+
+    Reads from subproject_data_collection/data/csv_series/{series_id}.csv.
+
+    Returns dict with:
+        - value: latest value
+        - date: latest date
+        - history: list of (date, value) tuples
+    """
+    csv_series_dir = Path(__file__).parent.parent / "subproject_data_collection" / "data" / "csv_series"
+    csv_path = csv_series_dir / f"{series_id}.csv"
+
+    if not csv_path.exists():
+        print(f"[CSV] Series file not found: {csv_path}")
+        return None
+
+    try:
+        import csv as csv_module
+
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=lookback_days)
+        start_str = start_date.strftime("%Y-%m-%d")
+
+        history = []
+        with open(csv_path, newline="") as f:
+            reader = csv_module.DictReader(f)
+            for row in reader:
+                date_str = row.get("date", "").strip()
+                value_str = row.get("value", "").strip()
+                if not date_str or not value_str:
+                    continue
+                if date_str < start_str:
+                    continue
+                try:
+                    history.append((date_str, float(value_str)))
+                except ValueError:
+                    continue
+
+        if history:
+            latest = history[-1]
+            return {
+                "value": latest[1],
+                "date": latest[0],
+                "source": "CSV",
+                "series_id": series_id,
+                "history": history,
+            }
+    except Exception as e:
+        print(f"[CSV] Error reading {series_id}: {e}")
+
+    return None
+
+
 def calculate_changes(history: List[Tuple[str, float]]) -> Dict[str, Any]:
     """
     Calculate period-over-period changes from history.
@@ -450,6 +505,8 @@ def fetch_current_data(state: "RiskImpactState") -> "RiskImpactState":
             result = fetch_fred_with_history(series_id, lookback)
         elif source == "Yahoo":
             result = fetch_yahoo_with_history(series_id, lookback)
+        elif source == "CSV":
+            result = fetch_csv_with_history(series_id, lookback)
 
         if result:
             history = result.pop("history", [])
@@ -498,6 +555,8 @@ def fetch_current_data(state: "RiskImpactState") -> "RiskImpactState":
                                     result = fetch_fred_with_history(series_id, lookback)
                                 elif source == "Yahoo":
                                     result = fetch_yahoo_with_history(series_id, lookback)
+                                elif source == "CSV":
+                                    result = fetch_csv_with_history(series_id, lookback)
                                 if result:
                                     history = result.pop("history", [])
                                     result["changes"] = calculate_changes(history)

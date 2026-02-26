@@ -29,7 +29,7 @@ EXTRACT_VARIABLES_TOOL = {
 
 FETCH_VARIABLE_DATA_TOOL = {
     "name": "fetch_variable_data",
-    "description": "Fetch current market data for a specific variable from FRED or Yahoo Finance. Returns current value, date, and period-over-period changes.",
+    "description": "Fetch current market data for a specific variable from FRED, Yahoo Finance, or local CSV series. Returns current value, date, and period-over-period changes.",
     "input_schema": {
         "type": "object",
         "properties": {
@@ -39,7 +39,7 @@ FETCH_VARIABLE_DATA_TOOL = {
             },
             "source": {
                 "type": "string",
-                "enum": ["fred", "yahoo", "auto"],
+                "enum": ["fred", "yahoo", "csv", "auto"],
                 "description": "Data source. Use 'auto' to let the system resolve (default).",
                 "default": "auto"
             }
@@ -158,6 +158,7 @@ def build_tool_handlers(agent_state: DataGroundingAgentState) -> dict:
     def handle_fetch_variable_data(variable_name: str, source: str = "auto") -> dict:
         from .current_data_fetcher import (
             resolve_variable, fetch_fred_with_history, fetch_yahoo_with_history,
+            fetch_csv_with_history,
             calculate_changes, MONTHLY_FRED_SERIES, MONTHLY_LOOKBACK_DAYS, DEFAULT_LOOKBACK_DAYS,
         )
 
@@ -174,6 +175,8 @@ def build_tool_handlers(agent_state: DataGroundingAgentState) -> dict:
         try:
             if data_source.upper() == "FRED":
                 data = fetch_fred_with_history(series_id, lookback)
+            elif data_source.upper() == "CSV":
+                data = fetch_csv_with_history(series_id, lookback)
             else:
                 data = fetch_yahoo_with_history(series_id, lookback)
 

@@ -198,5 +198,21 @@
     "frequency": null,
     "description": "Monthly/quarterly options expiration dates",
     "verified": true
+  },
+  "equity_put_call_ratio": {
+    "normalized_name": "equity_put_call_ratio",
+    "source": "CSV",
+    "series_id": "equity_pc_ratio",
+    "frequency": "daily",
+    "description": "CBOE Equity Put-Call Ratio (CPCE). Scraped from CBOE CDN. Archive 2003-2019, daily API 2019-present.",
+    "verified": true
+  },
+  "total_put_call_ratio": {
+    "normalized_name": "total_put_call_ratio",
+    "source": "CSV",
+    "series_id": "total_pc_ratio",
+    "frequency": "daily",
+    "description": "CBOE Total Put-Call Ratio (CPC). Scraped from CBOE CDN. Archive 2003-2019, daily API 2019-present.",
+    "verified": true
   }
 }

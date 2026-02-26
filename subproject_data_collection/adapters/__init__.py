@@ -13,6 +13,7 @@ from .base_adapter import BaseDataAdapter
 from .fred_adapter import FREDAdapter
 from .yahoo_adapter import YahooAdapter
 from .coingecko_adapter import CoinGeckoAdapter
+from .csv_adapter import CSVAdapter
 from .web_search_adapter import WebSearchAdapter, search_data_points, search_announcements
 
 # Institutional allocation scrapers
@@ -23,6 +24,7 @@ __all__ = [
     "FREDAdapter",
     "YahooAdapter",
     "CoinGeckoAdapter",
+    "CSVAdapter",
     "WebSearchAdapter",
     "search_data_points",
     "search_announcements",
