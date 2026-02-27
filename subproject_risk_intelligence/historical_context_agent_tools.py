@@ -107,6 +107,21 @@ FETCH_ADDITIONAL_DATA_TOOL = {
     }
 }
 
+CHARACTERIZE_EPISODES_TOOL = {
+    "name": "characterize_episodes",
+    "description": "For indicator-driven queries: fetch macro conditions (VIX, rates, DXY, etc.) at each mechanical episode date, compute regime similarity to current conditions, and cluster episodes by regime. Call after find_indicator_extremes.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "max_episodes": {
+                "type": "integer",
+                "description": "Max episodes to characterize (default 20). Covers all episodes including older crisis-era dates.",
+                "default": 20
+            }
+        },
+    }
+}
+
 FIND_INDICATOR_EXTREMES_TOOL = {
     "name": "find_indicator_extremes",
     "description": "Find dates when an indicator hit extreme percentile readings and compute verified forward returns for correlated assets. Use for indicator-driven queries (put-call ratio extremes, VIX spikes, yield curve inversions). Returns real data, no LLM — pure computation.",
@@ -170,6 +185,7 @@ ALL_TOOLS = [
     LOAD_THEME_CHAINS_TOOL,
     FETCH_ADDITIONAL_DATA_TOOL,
     FIND_INDICATOR_EXTREMES_TOOL,
+    CHARACTERIZE_EPISODES_TOOL,
     FINISH_HISTORICAL_TOOL,
 ]
 
@@ -381,7 +397,7 @@ def build_tool_handlers(agent_state: HistoricalAgentState) -> dict:
             return {"error": "Indicator extremes feature is disabled"}
 
         from .indicator_extremes import (
-            fetch_full_series, find_extreme_dates,
+            fetch_full_series, find_extreme_dates, validate_external_dates,
             compute_all_forward_returns, aggregate_extreme_episodes,
             format_extremes_for_prompt,
         )
@@ -424,6 +440,47 @@ def build_tool_handlers(agent_state: HistoricalAgentState) -> dict:
 
         # Compute forward returns for all episodes x assets
         episodes = compute_all_forward_returns(episodes, forward_return_assets)
+
+        # Merge validated external dates from Phase 1 gap filler + Phase 3 analogs
+        external_dates = set()
+
+        # Source 1: Phase 1 gap filler episodes
+        filled_gaps = agent_state.state.get("filled_gaps", [])
+        for gap in filled_gaps:
+            ha = gap.get("historical_analysis", {})
+            for ep in ha.get("episodes", []):
+                date = ep.get("date", "")
+                if date:
+                    external_dates.add(date)
+
+        # Source 2: Phase 3 enriched analogs (period.start dates)
+        for analog in agent_state.enriched_analogs:
+            period = analog.get("period", {})
+            start = period.get("start", "")
+            if start:
+                external_dates.add(start)
+
+        if external_dates and history:
+            # Use a relaxed threshold (above-median) for validation —
+            # the mechanical finder already captured the top percentile;
+            # external dates are valuable if the indicator was even
+            # moderately elevated, expanding regime diversity.
+            validation_threshold = min(percentile_threshold, 50)
+            validated = validate_external_dates(
+                history, list(external_dates),
+                percentile_threshold=validation_threshold,
+                direction=direction,
+            )
+            if validated:
+                # Dedup by date (mechanical episodes take priority)
+                mechanical_dates = {e["date"] for e in episodes}
+                new_episodes = [e for e in validated if e["date"] not in mechanical_dates]
+                if new_episodes:
+                    new_episodes = compute_all_forward_returns(new_episodes, forward_return_assets)
+                    episodes = episodes + new_episodes
+                    episodes.sort(key=lambda e: e["date"], reverse=True)
+                    print(f"[IndicatorExtremes] Merged {len(new_episodes)} validated external dates "
+                          f"(threshold: {validation_threshold}th pct)")
 
         # Aggregate
         aggregated = aggregate_extreme_episodes(episodes, primary_asset=primary_asset)
@@ -468,6 +525,67 @@ def build_tool_handlers(agent_state: HistoricalAgentState) -> dict:
             "summary": aggregated["summary"],
         }
 
+    def handle_characterize_episodes(max_episodes: int = 20) -> dict:
+        if not agent_state.indicator_extremes_data:
+            return {"error": "No indicator extremes. Call find_indicator_extremes first."}
+
+        from .indicator_extremes import (
+            characterize_mechanical_episodes, format_episodes_with_regime,
+            build_regime_variables,
+        )
+
+        episodes = agent_state.indicator_extremes_data["episodes"]
+        current_values = agent_state.state.get("current_values", {})
+        extracted_variables = agent_state.state.get("extracted_variables", [])
+        regime_variables = build_regime_variables(extracted_variables)
+
+        enriched = characterize_mechanical_episodes(
+            episodes, current_values, regime_variables,
+            max_episodes=max_episodes,
+        )
+
+        # Update stored episodes with regime data
+        agent_state.indicator_extremes_data["episodes"] = enriched
+
+        # Format and replace the indicator extremes text
+        formatted = format_episodes_with_regime(
+            agent_state.indicator_extremes_data["variable"],
+            agent_state.indicator_extremes_data["percentile"],
+            agent_state.indicator_extremes_data["direction"],
+            enriched,
+            agent_state.indicator_extremes_data["aggregated"],
+            current_values,
+        )
+
+        # Replace old extremes section (keep any other accumulated text)
+        marker = "## DATA-VERIFIED INDICATOR EXTREMES"
+        existing = agent_state.historical_analogs_text
+        if marker in existing:
+            start = existing.index(marker)
+            next_section = existing.find("\n## ", start + len(marker))
+            if next_section >= 0:
+                agent_state.historical_analogs_text = existing[:start] + formatted + existing[next_section:]
+            else:
+                agent_state.historical_analogs_text = existing[:start] + formatted
+        else:
+            agent_state.historical_analogs_text = formatted
+
+        # Summary for agent
+        regime_counts = {}
+        for ep in enriched:
+            label = ep.get("regime_label", "unknown")
+            regime_counts[label] = regime_counts.get(label, 0) + 1
+
+        most_similar = max(enriched, key=lambda e: e.get("similarity_score", 0)) if enriched else {}
+
+        return {
+            "episodes_characterized": len(enriched),
+            "regime_distribution": regime_counts,
+            "most_similar_date": most_similar.get("date", ""),
+            "most_similar_score": round(most_similar.get("similarity_score", 0), 2),
+            "most_similar_regime": most_similar.get("regime_label", ""),
+        }
+
     def handle_finish_historical(summary: str = "", analogs_found: int = 0) -> dict:
         return {"status": "completed", "summary": summary}
 
@@ -479,5 +597,6 @@ def build_tool_handlers(agent_state: HistoricalAgentState) -> dict:
         "load_theme_chains": handle_load_theme_chains,
         "fetch_additional_data": handle_fetch_additional_data,
         "find_indicator_extremes": handle_find_indicator_extremes,
+        "characterize_episodes": handle_characterize_episodes,
         "finish_historical": handle_finish_historical,
     }

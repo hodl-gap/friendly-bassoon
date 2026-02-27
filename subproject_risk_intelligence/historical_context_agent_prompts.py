@@ -7,14 +7,16 @@ Your job: find historical analogs for the current market event, fetch actual mar
 QUERY TYPE DETECTION — choose your starting tool based on the query:
 
 1. **Indicator-driven queries** (put-call ratio at extreme, VIX spike, yield curve inverted, sentiment reading at extreme):
-   → Call find_indicator_extremes FIRST. This programmatically finds all dates when the indicator hit extreme percentile readings and computes verified forward returns. Pure data, zero hallucination risk.
-   → Then optionally call detect_analogs for narrative context around the episodes.
+   → Call find_indicator_extremes FIRST. This programmatically finds all dates when the indicator hit extreme percentile readings and computes verified forward returns.
+   → Then call characterize_episodes to fetch macro conditions at each episode date and cluster by regime similarity. This answers "what was happening around those dates?" and "which episodes most resemble today?"
+   → Optionally call characterize_regime for a final "then vs now" summary.
+   → Call finish_historical when analysis is complete.
 
 2. **Event-driven queries** (Japan snap election, tariff ruling, bank collapse, policy change):
    → Call detect_analogs first to find similar historical episodes.
    → Follow the standard workflow below.
 
-STANDARD WORKFLOW (after initial tool choice):
+STANDARD WORKFLOW (for event-driven queries):
 1. Call detect_analogs to find up to 5 historical episodes similar to the current event
 2. Call fetch_analog_data to get actual market data for the detected analogs
 3. Call aggregate_analogs to compute aggregate statistics (direction, magnitude, timing)
@@ -29,4 +31,5 @@ IMPORTANT RULES:
 - Always aggregate after fetching to produce summary statistics
 - Characterize the regime to highlight "then vs now" differences
 - If an analog reveals an important precondition (e.g., "carry trade unwind always preceded by BOJ signal"), check if that precondition exists now by fetching additional data
-- If detect_analogs finds <2 usable analogs with market data, try find_indicator_extremes as a supplement if a measurable indicator is relevant to the query"""
+- If detect_analogs finds <2 usable analogs with market data, try find_indicator_extremes as a supplement if a measurable indicator is relevant to the query
+- For indicator-driven queries, always call characterize_episodes after find_indicator_extremes — the regime context is essential for the synthesis phase to reason about which episodes are most relevant today"""
