@@ -427,6 +427,68 @@ def identify_instruments(
         return [get_asset_config(asset_class)["default_instruments"][0]]
 
 
+def _assess_snippet_relevance(search_query: str, formatted_results: str) -> float:
+    """
+    Assess whether web search snippets are relevant to the search query.
+
+    Uses a Haiku call to score relevance 0.0-1.0. Catches cases where
+    web search returns tangential articles (e.g., podcast transcripts,
+    generic portfolio advice) instead of content about the queried indicator.
+
+    Returns:
+        Float 0.0-1.0 relevance score. Below 0.5 = skip date extraction.
+    """
+    relevance_tool = {
+        "name": "assess_relevance",
+        "description": "Score how relevant the search snippets are to the query.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "relevance_score": {
+                    "type": "number",
+                    "description": "Score 0.0-1.0: do snippets contain specific historical dates/episodes for the queried indicator?"
+                },
+                "reasoning": {
+                    "type": "string",
+                    "description": "Brief explanation of the score"
+                }
+            },
+            "required": ["relevance_score", "reasoning"]
+        }
+    }
+
+    prompt = (
+        f"SEARCH QUERY: {search_query}\n\n"
+        f"SEARCH RESULTS:\n{formatted_results[:3000]}\n\n"
+        f"Do these search results contain specific historical dates or episodes "
+        f"directly relevant to the search query? Score 0.0 (completely irrelevant, "
+        f"generic articles, tangential content) to 1.0 (contains specific dates and "
+        f"descriptions of the queried events/indicator readings)."
+    )
+
+    try:
+        response = call_claude_with_tools(
+            messages=[{"role": "user", "content": prompt}],
+            tools=[relevance_tool],
+            tool_choice={"type": "tool", "name": "assess_relevance"},
+            model="haiku",
+            max_tokens=200,
+        )
+
+        for block in response.content:
+            if block.type == "tool_use" and block.name == "assess_relevance":
+                score = block.input.get("relevance_score", 0.5)
+                reasoning = block.input.get("reasoning", "")
+                print(f"[Historical Event] Snippet relevance: {score:.2f} — {reasoning}")
+                return float(score)
+
+        return 0.5  # Default if no tool response
+
+    except Exception as e:
+        print(f"[Historical Event] Snippet relevance check error: {e}")
+        return 0.5  # Default on error — don't block
+
+
 def get_date_range(
     event_description: str,
     date_search_query: str
@@ -454,9 +516,9 @@ def get_date_range(
         print("[Historical Event] WebSearchAdapter not available, using fallback")
         return _fallback_date_range(event_description)
 
-    # Perform web search
+    # Perform web search (Tavily for better finance-domain results)
     adapter = WebSearchAdapter(max_results=5)
-    search_results = adapter._search_duckduckgo(date_search_query)
+    search_results = adapter._search_tavily(date_search_query, include_raw_content=False)
 
     if not search_results:
         print("[Historical Event] No search results for date query")
@@ -464,6 +526,12 @@ def get_date_range(
 
     # Format search results for LLM
     formatted_results = adapter._format_search_results(search_results)
+
+    # Pre-check: assess snippet relevance before date extraction
+    snippet_relevance = _assess_snippet_relevance(date_search_query, formatted_results)
+    if snippet_relevance < 0.5:
+        print(f"[Historical Event] Snippets irrelevant to query (relevance={snippet_relevance:.2f}), skipping date extraction")
+        return _fallback_date_range(event_description)
 
     # Extract dates using LLM via tool_use
     prompt = DATE_EXTRACTION_PROMPT.format(

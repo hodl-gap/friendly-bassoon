@@ -465,7 +465,7 @@ def build_tool_handlers(agent_state: HistoricalAgentState) -> dict:
             # the mechanical finder already captured the top percentile;
             # external dates are valuable if the indicator was even
             # moderately elevated, expanding regime diversity.
-            validation_threshold = min(percentile_threshold, 50)
+            validation_threshold = min(percentile_threshold, 70)
             validated = validate_external_dates(
                 history, list(external_dates),
                 percentile_threshold=validation_threshold,

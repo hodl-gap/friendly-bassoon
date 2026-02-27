@@ -75,6 +75,12 @@ Only use sequencing when tracks are genuinely sequential. Independent parallel t
 You will receive current market data, historical chain graphs, and precedent analysis. Use ALL of it.
 Where information is missing, widen your confidence intervals and note the gap.
 
+## SOURCING DISCIPLINE
+- You may ONLY cite specific events, data points, or statistics that appear in the evidence sections above.
+- For episode dates where no narrative context is provided, describe them by their regime conditions (e.g., "a low-vol, easy-policy period") — do NOT assign event labels from your own knowledge.
+- If you believe additional data would strengthen the analysis (e.g., insider flow data, dark pool activity), note it as a "DATA GAP" in the key_uncertainties section rather than filling it in yourself.
+- General labels for well-known dates (e.g., "COVID period" for March 2020) are acceptable ONLY when clearly marked as context, not as evidence.
+
 Be specific, quantitative, and ground every track in historical evidence."""
 
 

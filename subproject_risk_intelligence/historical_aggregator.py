@@ -136,6 +136,15 @@ def fetch_multiple_analogs(
             # Get date range
             date_range = get_date_range(event, date_query)
 
+            # Gate: reject analogs where date extraction confidence is low
+            if date_range.get("confidence") == "low":
+                print(f"[Historical Analogs] Skipping {event}: date extraction confidence=low")
+                return {
+                    **analog,
+                    "fetch_success": False,
+                    "error": "Date extraction confidence too low",
+                }
+
             # Identify instruments
             instruments = identify_instruments(
                 event_description=event,
