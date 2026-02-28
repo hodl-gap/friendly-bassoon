@@ -32,10 +32,14 @@ subproject_database_retriever/
 ├── config.py                    # Configuration management
 ├── utils/                       # Utility functions
 │
+│   # EDF (Epistemic Decomposition Framework) — Phase 0:
+├── edf_decomposer.py            # Phase 0: Opus call → knowledge tree JSON (7 knowledge types)
+├── edf_decomposer_prompts.py    # Phase 0: Decomposition + coverage scoring prompts
+│
 │   # Hybrid agentic pipeline files (tested 2026-02-24):
-├── retrieval_agent.py           # Phase 1: Agentic retrieval orchestrator (ReAct loop)
-├── retrieval_agent_tools.py     # Phase 1: Tool schemas + handlers (6 tools incl. coverage checker)
-└── retrieval_agent_prompts.py   # Phase 1: System prompt + coverage assessment prompt
+├── retrieval_agent.py           # Phase 0+1: EDF decomposition → agentic retrieval (ReAct loop)
+├── retrieval_agent_tools.py     # Phase 1: Tool schemas + handlers (6 tools, EDF-aware coverage)
+└── retrieval_agent_prompts.py   # Phase 1: System prompt (EDF + generic) + coverage prompts
 ```
 
 ### Main File Structure (`retrieval_orchestrator.py`)
@@ -465,6 +469,68 @@ After gap filling and resynthesis, verified web chains are persisted to Pinecone
 | `persist_web_chains()` | `web_chain_persistence.py` | Filter, embed, upsert web chains to Pinecone |
 | `persist_learning()` | `retrieval_orchestrator.py` | Graph node wrapping persistence + frequency tracking |
 
+### EDF Decomposition — Phase 0 (NEW)
+
+**Status: Implemented, enabled by default. Toggle: `EDF_ENABLED=0` to disable.**
+
+Solves the "doesn't know what it doesn't know" problem. Before retrieval begins, an Opus call decomposes the query into a structured knowledge tree across 7 dimensions. This replaces generic query expansion with targeted retrieval guided by the tree.
+
+**The 7 Knowledge Types:**
+
+| # | Type | What It Captures |
+|---|------|-----------------|
+| 1 | factual_specifics | Numbers, dates, scope, legal citations |
+| 2 | actor_knowledge | Key people/institutions and their roles |
+| 3 | structural_knowledge | System/process/legal framework mechanics |
+| 4 | behavioral_precedent | What actors have done before in similar situations |
+| 5 | reaction_space | What could happen next, alternative paths |
+| 6 | historical_analogs | When has something similar happened before |
+| 7 | impact_channels | Specific mechanisms connecting event to target |
+
+Types 2-5 are the dimensions that distinguish deep analysis from shallow — they capture human and institutional dynamics. These were entirely absent from the previous generic coverage checks.
+
+**How It Works:**
+
+1. `edf_decomposer.py` calls Opus with the query → returns a knowledge tree (JSON with keywords × items × 7 types)
+2. Each item has: `priority` (ESSENTIAL/IMPORTANT/SUPPLEMENTARY), `source_hint` (research_db/web_search/data_api/parametric), `searchable_query`
+3. The retrieval agent receives the tree as a structured search plan in its initial message
+4. Coverage assessment scores gathered material against the tree items (Y/P/N per item) instead of 6 generic binary flags
+5. Unfilled ESSENTIAL items become explicit gap-fill targets with suggested queries
+
+**Source Hint Routing:**
+- `research_db` → Pinecone search queries (reasoning/mechanisms only — NEVER for specific data points)
+- `web_search` → Tavily web search / web chain extraction (ground truth for factual data)
+- `data_api` → deferred to Phase 2 (data grounding)
+- `parametric` → no retrieval needed (LLM already knows this)
+
+**Source Credibility Rules (CRITICAL):**
+
+Pinecone contains institutional research logic chains from Telegram. These are **pointers** — they tell you what mechanisms exist, what variables matter, what causal paths to investigate. They are **NOT ground truth data sources**.
+
+| Source | Can score Y (fully covered) for | Can only score P (partial) for |
+|--------|--------------------------------|-------------------------------|
+| Pinecone chunks / web chains | impact_channels, behavioral_precedent, structural_knowledge, reaction_space, actor_knowledge | factual_specifics with numbers/dates/amounts, historical_analogs with quantified outcomes |
+| Web search results | Any item type (primary/verifiable source) | — |
+| Parametric | Well-established frameworks (constitutional mechanics, basic economic theory) | — |
+
+**Example:** If a Pinecone chain says "BoJ sold $1T USD → JPY/USD up 10%", the system should use this to know to *investigate BoJ FX interventions and track JPY/USD*, but must NEVER treat "$1T" or "10%" as verified data. Those specific numbers must come from web search or data API to score Y.
+
+**Phase 0.5 — Mechanical Pre-Fetch:**
+
+After decomposition, the search plan is executed deterministically before the agent loop starts:
+- All `research_db` items → Pinecone queries (deduped, ~5 chunks per query)
+- The original query → Pinecone (always, often the best single search)
+- All ESSENTIAL `web_search` items → Tavily web search
+- Main query → web chain extraction (saved chains first, then Tavily)
+
+The agent loop then starts with material already gathered. Its first action is `assess_coverage` to score what's been found, then it adaptively fills any remaining gaps. This ensures every EDF item gets searched — the agent doesn't decide whether to search, only whether gaps need more targeted filling.
+
+**Files:** `edf_decomposer.py`, `edf_decomposer_prompts.py`, pre-fetch logic in `retrieval_agent.py:_run_edf_prefetch()`
+
+**Cost:** ~$0.15-0.30 extra per query (1 Opus call for decomposition + Sonnet calls for EDF coverage scoring + Pinecone queries are essentially free)
+
+**Feature flag:** `shared/feature_flags.py: edf_enabled()` (env: `EDF_ENABLED`, default: enabled)
+
 ### Agentic Retrieval — Phase 1 (Tested 2026-02-24)
 
 **Status: Tested on Cases 1, 2, 4. Two bugs fixed: dict key mismatch (`"web_chains"` → `"extracted_chains"` in handler) silently dropped all web chains, and agent prompt too weak (kept searching after ADEQUATE coverage instead of synthesizing). Fixed in commit b2151d1.**
@@ -485,12 +551,30 @@ The agentic retrieval agent is the default path for all queries (except lightwei
 | `assess_coverage` | NEW — Sonnet call with rubric-aware prompt | Rates material as COMPLETE/ADEQUATE/INSUFFICIENT |
 | `finish_retrieval` | Exit tool | Agent passes final state summary |
 
-**Coverage Checker**: Lightweight Sonnet call (~500 tokens) that acts as a rubric-aware quality gate. Rates gathered material as:
-- **COMPLETE**: ≥2 independent causal chains, counter-argument present, chains complete
-- **ADEQUATE**: ≥2 chains, most paths complete, minor gaps acceptable
-- **INSUFFICIENT**: <2 chains or major gaps — agent must search again with different angles
+**Coverage Checker**: Two modes depending on whether EDF is enabled:
+
+*EDF mode (default)*: Scores gathered material against the knowledge tree. Each item gets Y/P/N weighted by priority (ESSENTIAL=1.0, IMPORTANT=0.5, SUPPLEMENTARY=0.25). Source credibility rules enforce that Pinecone can only score P for factual data items. Rating:
+- **COMPLETE**: 0 ESSENTIAL items scored N, 0-2 IMPORTANT items scored N
+- **ADEQUATE**: 0-1 ESSENTIAL items scored N — proceed to synthesis
+- **INSUFFICIENT**: 2+ ESSENTIAL items scored N — must search more
+
+*Generic mode (fallback)*: 6 binary flags (has_causal_chains, has_counter_argument, etc.). Rates as:
+- **COMPLETE**: All flags true
+- **ADEQUATE**: has_causal_chains=true (proceed even if other flags false)
+- **INSUFFICIENT**: has_causal_chains=false
 
 **Max iterations**: 5 (configurable via `RETRIEVAL_MAX_ITER` env var)
+
+**Stall Detection** (prevents wasted iterations on unfillable gaps):
+
+The coverage scorer is stateless — it can return INSUFFICIENT repeatedly even when gaps are genuinely unfillable. Stall detection compares consecutive `assess_coverage` scores and intervenes when no progress is made.
+
+Three mechanisms work together:
+1. **Coverage history tracking**: `RetrievalAgentState.coverage_history` records the percentage from each assessment call
+2. **Auto-assessment**: After 3 search tool calls without an `assess_coverage`, automatically triggers one. If coverage improved < 5 percentage points (stall), directly calls `handle_generate_synthesis()` — bypassing the agent's decision entirely
+3. **Short-circuit**: Once stall is detected (`agent_state.stall_detected = True`), all subsequent search tool calls (`search_pinecone`, `extract_web_chains`, `web_search`) return immediately with a skip message instead of making real API calls
+
+The stall handler generates synthesis directly because the agent reliably ignores ADEQUATE signals embedded in parallel tool results (the signal gets diluted when it's one of three results in a batch). Generating synthesis mechanically is more reliable than trying to convince the agent to do it.
 
 **Returns**: Dict compatible with `RetrieverState` (same fields as `run_retrieval()`).
 

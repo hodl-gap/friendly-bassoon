@@ -9,6 +9,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from models import call_claude_sonnet
 from retrieval_agent_prompts import COVERAGE_ASSESSMENT_PROMPT
+from edf_decomposer_prompts import EDF_COVERAGE_ASSESSMENT_PROMPT
+from edf_decomposer import format_tree_items_for_scoring, compute_coverage_score
 
 
 # =============================================================================
@@ -150,9 +152,10 @@ ALL_TOOLS = [
 class RetrievalAgentState:
     """Mutable state accumulated across agent iterations."""
 
-    def __init__(self, query: str, image_path: str = None):
+    def __init__(self, query: str, image_path: str = None, knowledge_tree: dict = None):
         self.query = query
         self.image_path = image_path
+        self.knowledge_tree = knowledge_tree  # EDF knowledge tree (Phase 0 output)
         self.chunks = []          # All retrieved chunks (deduplicated by id)
         self.chunk_ids = set()    # Track seen chunk IDs
         self.web_chains = []      # Extracted web chains
@@ -162,6 +165,9 @@ class RetrievalAgentState:
         self.logic_chains = []
         self.confidence_metadata = {}
         self.topic_coverage = {}
+        self.coverage_history = []  # List of coverage percentages from assess_coverage calls
+        self.calls_since_last_assessment = 0  # Tool calls since last assess_coverage
+        self.stall_detected = False  # Set when coverage stall detected; short-circuits further searches
 
     def add_chunks(self, new_chunks: list):
         """Add chunks, deduplicating by ID."""
@@ -210,6 +216,9 @@ def build_tool_handlers(agent_state: RetrievalAgentState) -> dict:
     """Build tool handler dict bound to agent state."""
 
     def handle_search_pinecone(query: str, top_k: int = 8, exclude_web_chains: bool = True) -> dict:
+        short = _short_circuit_if_stalled("search_pinecone")
+        if short:
+            return short
         from vector_search import search_single_query, EXCLUDE_WEB_CHAINS_FILTER
         pinecone_filter = EXCLUDE_WEB_CHAINS_FILTER if exclude_web_chains else None
         chunks = search_single_query(query, top_k=top_k, filter=pinecone_filter)
@@ -226,13 +235,16 @@ def build_tool_handlers(agent_state: RetrievalAgentState) -> dict:
                 "interpretation": meta.get("interpretation", "")[:200],
             })
 
-        return {
+        return _maybe_auto_assess({
             "chunks_returned": len(chunks),
             "total_chunks": len(agent_state.chunks),
             "results": summaries,
-        }
+        })
 
     def handle_extract_web_chains(query: str, angles: list = None) -> dict:
+        short = _short_circuit_if_stalled("extract_web_chains")
+        if short:
+            return short
         from vector_search import search_saved_web_chains
         from knowledge_gap_detector import fill_gaps_with_web_chains, _convert_saved_chunks_to_web_chains
 
@@ -255,12 +267,12 @@ def build_tool_handlers(agent_state: RetrievalAgentState) -> dict:
                     "confidence": wc.get("confidence", "unknown"),
                 })
 
-            return {
+            return _maybe_auto_assess({
                 "chains_extracted": len(saved_chains),
                 "total_web_chains": len(agent_state.web_chains),
                 "chains": chain_summaries,
                 "source": "saved_web_chains",
-            }
+            })
 
         # Step 2: Not enough saved chains — extract via Tavily
         # Build a synthetic gap for the web chain extraction function
@@ -294,14 +306,17 @@ def build_tool_handlers(agent_state: RetrievalAgentState) -> dict:
                 "confidence": wc.get("confidence", "unknown"),
             })
 
-        return {
+        return _maybe_auto_assess({
             "chains_extracted": len(all_chains),
             "total_web_chains": len(agent_state.web_chains),
             "chains": chain_summaries,
             "source": "tavily" + (f" (+{len(saved_chains)} saved)" if saved_chains else ""),
-        }
+        })
 
     def handle_web_search(query: str, category: str = "general") -> dict:
+        short = _short_circuit_if_stalled("web_search")
+        if short:
+            return short
         try:
             from knowledge_gap_detector import _get_web_search_adapter, _search_and_evaluate
             adapter = _get_web_search_adapter()
@@ -309,11 +324,11 @@ def build_tool_handlers(agent_state: RetrievalAgentState) -> dict:
                 return {"error": "WebSearchAdapter not available"}
             result = _search_and_evaluate(adapter, query, category, query)
             agent_state.web_search_results.append(result)
-            return {
+            return _maybe_auto_assess({
                 "found": result.get("found", False),
                 "content": result.get("content", "")[:1000],
                 "source": result.get("source", ""),
-            }
+            })
         except Exception as e:
             return {"error": str(e)}
 
@@ -357,15 +372,125 @@ def build_tool_handlers(agent_state: RetrievalAgentState) -> dict:
             "synthesis_preview": agent_state.synthesis[:500],
         }
 
+    def _run_assessment() -> dict:
+        """Run coverage assessment with stall detection."""
+        if agent_state.knowledge_tree and agent_state.knowledge_tree.get("keywords"):
+            result = _assess_coverage_edf(agent_state)
+        else:
+            result = _assess_coverage_generic(agent_state)
+
+        # Stall detection: if 2+ assessments and no meaningful improvement, override to ADEQUATE
+        history = agent_state.coverage_history
+        if len(history) >= 2:
+            delta = history[-1] - history[-2]
+            if delta < 5.0 and result.get("rating") == "INSUFFICIENT":
+                print(f"[Coverage] Stall detected: {history[-2]:.1f}% → {history[-1]:.1f}% "
+                      f"(delta={delta:.1f}%). Overriding to ADEQUATE.")
+                result["rating"] = "ADEQUATE"
+                result["stall_detected"] = True
+
+        agent_state.calls_since_last_assessment = 0
+        return result
+
     def handle_assess_coverage(notes: str = "") -> dict:
+        return _run_assessment()
+
+    def _maybe_auto_assess(tool_result: dict) -> dict:
+        """Auto-trigger coverage assessment after 3+ tool calls without one.
+        If stall detected, directly run synthesis and short-circuit the agent."""
+        agent_state.calls_since_last_assessment += 1
+        if agent_state.calls_since_last_assessment >= 3 and agent_state.coverage_history:
+            print(f"[Coverage] Auto-triggering assessment ({agent_state.calls_since_last_assessment} calls since last)")
+            assessment = _run_assessment()
+            if assessment.get("stall_detected"):
+                # Directly generate synthesis — don't rely on agent to do it
+                if not agent_state.synthesis:
+                    print("[Coverage] Stall confirmed — generating synthesis directly")
+                    handle_generate_synthesis()
+                agent_state.stall_detected = True
+                return {
+                    "SYNTHESIS_COMPLETE": True,
+                    "message": "Coverage stall detected. Synthesis has been generated. Call finish_retrieval now.",
+                    "synthesis_length": len(agent_state.synthesis),
+                }
+            tool_result["auto_coverage_assessment"] = assessment
+        return tool_result
+
+    def _short_circuit_if_stalled(tool_name: str) -> dict | None:
+        """Return a short-circuit result if stall was already detected."""
+        if agent_state.stall_detected:
+            return {
+                "SKIPPED": f"{tool_name} skipped — coverage stall detected. Call generate_synthesis now.",
+                "rating": "ADEQUATE",
+            }
+        return None
+
+    def _assess_coverage_edf(state: RetrievalAgentState) -> dict:
+        """Score gathered material against the EDF knowledge tree."""
+        import re as re_mod
+
+        tree_items_str = format_tree_items_for_scoring(state.knowledge_tree)
+
+        prompt = EDF_COVERAGE_ASSESSMENT_PROMPT.format(
+            query=state.query,
+            tree_items=tree_items_str,
+            chunk_count=len(state.chunks),
+            chunk_summaries=state.get_chunk_summaries(),
+            web_chain_count=len(state.web_chains),
+            web_chain_summaries=state.get_web_chain_summaries(),
+            web_search_count=len(state.web_search_results),
+        )
+
+        response = call_claude_sonnet(
+            [{"role": "user", "content": prompt}],
+            temperature=0.1,
+            max_tokens=2000,
+        )
+
+        # Parse JSON from response
+        try:
+            # Find the outermost JSON object
+            first_brace = response.find('{')
+            last_brace = response.rfind('}')
+            if first_brace != -1 and last_brace > first_brace:
+                result = json.loads(response[first_brace:last_brace + 1])
+            else:
+                result = {"rating": "INSUFFICIENT", "scores": {}, "essential_gaps": [], "suggested_queries": []}
+        except (json.JSONDecodeError, ValueError):
+            result = {"rating": "INSUFFICIENT", "scores": {}, "essential_gaps": [], "suggested_queries": []}
+
+        # Compute detailed coverage metrics from scores
+        scores = result.get("scores", {})
+        coverage = compute_coverage_score(state.knowledge_tree, scores)
+
+        # Track coverage percentage for stall detection
+        state.coverage_history.append(coverage["percentage"])
+
+        # Log EDF coverage
+        essential_gaps = result.get("essential_gaps", coverage.get("essential_gaps", []))
+        print(f"[Coverage EDF] {result.get('rating', 'UNKNOWN')} "
+              f"({coverage['score']}/{coverage['max_score']} = {coverage['percentage']}%)")
+        print(f"  Essential gaps: {essential_gaps}")
+        if coverage.get("by_type"):
+            for ktype, counts in coverage["by_type"].items():
+                print(f"  {ktype}: {counts['covered']}Y + {counts['partial']}P + {counts['missing']}N / {counts['total']}")
+
+        # Return result with both EDF scores and suggested queries for the agent
+        result["coverage_metrics"] = coverage
+        return result
+
+    def _assess_coverage_generic(state: RetrievalAgentState) -> dict:
+        """Original generic 6-flag coverage assessment (fallback when no EDF tree)."""
+        import re as re_mod
+
         prompt = COVERAGE_ASSESSMENT_PROMPT.format(
-            query=agent_state.query,
-            chunk_count=len(agent_state.chunks),
-            web_chain_count=len(agent_state.web_chains),
-            web_search_count=len(agent_state.web_search_results),
-            sources=agent_state.get_sources(),
-            chunk_summaries=agent_state.get_chunk_summaries(),
-            web_chain_summaries=agent_state.get_web_chain_summaries(),
+            query=state.query,
+            chunk_count=len(state.chunks),
+            web_chain_count=len(state.web_chains),
+            web_search_count=len(state.web_search_results),
+            sources=state.get_sources(),
+            chunk_summaries=state.get_chunk_summaries(),
+            web_chain_summaries=state.get_web_chain_summaries(),
         )
 
         response = call_claude_sonnet(
@@ -376,8 +501,7 @@ def build_tool_handlers(agent_state: RetrievalAgentState) -> dict:
 
         # Parse JSON from response
         try:
-            import re
-            json_match = re.search(r'\{[^{}]*\}', response, re.DOTALL)
+            json_match = re_mod.search(r'\{[^{}]*\}', response, re_mod.DOTALL)
             if json_match:
                 result = json.loads(json_match.group())
             else:
@@ -389,6 +513,10 @@ def build_tool_handlers(agent_state: RetrievalAgentState) -> dict:
         flags = ["has_causal_chains", "has_counter_argument", "has_monitoring_thresholds",
                  "has_event_calendar", "has_mechanism_conditions", "has_exit_criteria"]
         true_count = sum(1 for f in flags if result.get(f, False))
+
+        # Track coverage percentage for stall detection
+        state.coverage_history.append(true_count / len(flags) * 100)
+
         print(f"[Coverage] {result.get('rating', 'UNKNOWN')} ({true_count}/{len(flags)} flags)")
         for f in flags:
             status = "Y" if result.get(f, False) else "N"
