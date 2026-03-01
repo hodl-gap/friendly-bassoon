@@ -214,5 +214,85 @@
     "frequency": "daily",
     "description": "CBOE Equity Put-Call Ratio (CPCE). Alias for equity_put_call_ratio.",
     "verified": true
+  },
+  "fdic_afs_fair_value": {
+    "normalized_name": "fdic_afs_fair_value",
+    "source": "CSV",
+    "series_id": "fdic_afs_fair_value",
+    "frequency": "quarterly",
+    "description": "FDIC aggregate AFS (available-for-sale) securities fair value for all US banks ($M). Source: FDIC QBP Excel.",
+    "verified": true
+  },
+  "fdic_afs_amortized_cost": {
+    "normalized_name": "fdic_afs_amortized_cost",
+    "source": "CSV",
+    "series_id": "fdic_afs_amortized_cost",
+    "frequency": "quarterly",
+    "description": "FDIC aggregate AFS securities amortized cost for all US banks ($M). Source: FDIC QBP Excel. Only available from QBP, not from API.",
+    "verified": true
+  },
+  "fdic_afs_unrealized": {
+    "normalized_name": "fdic_afs_unrealized",
+    "source": "CSV",
+    "series_id": "fdic_afs_unrealized",
+    "frequency": "quarterly",
+    "description": "FDIC aggregate AFS securities unrealized gain/loss for all US banks ($M). Negative = losses. Source: FDIC QBP Excel.",
+    "verified": true
+  },
+  "fdic_htm_fair_value": {
+    "normalized_name": "fdic_htm_fair_value",
+    "source": "CSV",
+    "series_id": "fdic_htm_fair_value",
+    "frequency": "quarterly",
+    "description": "FDIC aggregate HTM (held-to-maturity) securities fair value for all US banks ($M). Source: FDIC QBP Excel.",
+    "verified": true
+  },
+  "fdic_htm_amortized_cost": {
+    "normalized_name": "fdic_htm_amortized_cost",
+    "source": "CSV",
+    "series_id": "fdic_htm_amortized_cost",
+    "frequency": "quarterly",
+    "description": "FDIC aggregate HTM securities amortized cost for all US banks ($M). Source: FDIC QBP Excel.",
+    "verified": true
+  },
+  "fdic_htm_unrealized": {
+    "normalized_name": "fdic_htm_unrealized",
+    "source": "CSV",
+    "series_id": "fdic_htm_unrealized",
+    "frequency": "quarterly",
+    "description": "FDIC aggregate HTM securities unrealized gain/loss for all US banks ($M). Negative = losses. Source: FDIC QBP Excel.",
+    "verified": true
+  },
+  "fdic_total_unrealized": {
+    "normalized_name": "fdic_total_unrealized",
+    "source": "CSV",
+    "series_id": "fdic_total_unrealized",
+    "frequency": "quarterly",
+    "description": "FDIC aggregate total unrealized gain/loss on securities (AFS+HTM) for all US banks ($M). Negative = losses. Peak: -$688B in Q3 2022. Source: FDIC QBP Excel.",
+    "verified": true
+  },
+  "fdic_total_securities": {
+    "normalized_name": "fdic_total_securities",
+    "source": "CSV",
+    "series_id": "fdic_total_securities",
+    "frequency": "quarterly",
+    "description": "FDIC aggregate total securities holdings (SCHA+SCAF) for all US banks ($M). Source: FDIC BankFind API.",
+    "verified": true
+  },
+  "fdic_total_securities_mv": {
+    "normalized_name": "fdic_total_securities_mv",
+    "source": "CSV",
+    "series_id": "fdic_total_securities_mv",
+    "frequency": "quarterly",
+    "description": "FDIC aggregate total securities market value for all US banks ($M). Source: FDIC BankFind API.",
+    "verified": true
+  },
+  "bank_unrealized_losses": {
+    "normalized_name": "bank_unrealized_losses",
+    "source": "CSV",
+    "series_id": "fdic_total_unrealized",
+    "frequency": "quarterly",
+    "description": "US bank aggregate unrealized securities losses ($M). Alias for fdic_total_unrealized. Peaked at -$688B in Q3 2022.",
+    "verified": true
   }
 }
