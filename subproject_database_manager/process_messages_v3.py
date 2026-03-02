@@ -194,8 +194,8 @@ def _strip_code_block(text: str) -> str:
     return text
 
 
-EXTRACTION_MODEL = "gpt5_mini"
-FALLBACK_MODEL = "claude_sonnet"  # Used if primary model fails
+EXTRACTION_MODEL = "claude_sonnet"
+FALLBACK_MODEL = "gpt5_mini"  # Used if primary model fails
 
 # Maximum concurrent requests for parallel processing
 # Adjust based on your API tier:
@@ -362,7 +362,7 @@ def extract_image_combined(image_path, message_text, message_date):
         }
 
 
-def process_batch(messages_batch, category, channel_name, use_gpt5=True):
+def process_batch(messages_batch, category, channel_name, use_gpt5=False):
     """
     Process a batch of messages of the same category.
 
@@ -370,7 +370,7 @@ def process_batch(messages_batch, category, channel_name, use_gpt5=True):
         messages_batch: List of message dicts
         category: 'data_opinion' or 'interview_meeting'
         channel_name: Name of the Telegram channel
-        use_gpt5: If True, use GPT-5 for extraction; if False, use Claude Sonnet
+        use_gpt5: If True, use GPT-5 for extraction; if False, use Claude Sonnet (default)
     """
 
     results = []
