@@ -219,7 +219,7 @@ Tracks can express temporal dependency via `sequence_position` (1=first, 2=next,
 
 ### Regime Characterization (`insight_orchestrator.py`)
 
-Compares current market conditions against historical analogs to produce a structured "then vs now" assessment. Uses Haiku + tool_use (same pattern as other extraction steps) to output: regime name, closest analog, similarities, key differences, and summary. Results appear in the LLM prompt as `## REGIME CHARACTERIZATION (Then vs Now)`. Feature-flagged via `ENABLE_REGIME_CHARACTERIZATION`.
+Compares current market conditions against historical analogs to produce a structured "then vs now" assessment. Uses Haiku + tool_use (same pattern as other extraction steps) to output: regime name, closest analog, similarities, key differences, and summary. Results appear in the LLM prompt as `## REGIME CHARACTERIZATION (Then vs Now)`. Feature-flagged via `ENABLE_REGIME_CHARACTERIZATION`. The orchestrator skips this call if Phase 3 already populated `regime_characterization_text` (avoids duplicate Haiku cost).
 
 ### Key Functions
 
@@ -295,13 +295,21 @@ ENABLE_REGIME_CHARACTERIZATION = True  # env: RISK_REGIME_CHAR
 
 ## Agentic Pipeline Phases
 
+### Inter-Phase Knowledge Handoff (EDF Routing Directives)
+
+The EDF knowledge tree from Phase 0 is preserved through the pipeline via `state["_edf_knowledge_tree"]` (extracted in `retrieve_context()`). Phase 2 and 3 agents receive short routing directives extracted from the tree — not the full tree itself.
+
+- **Phase 2** receives a list of `data_api` items to prioritize (via `edf_decomposer.get_data_api_items()`)
+- **Phase 3** receives a query type hint ("indicator-driven" vs "event-driven") and historical analog items (via `edf_decomposer.get_query_type_hint()` and `get_historical_items()`)
+- Both agents receive the full synthesis (no truncation)
+
 ### Phase 2: Data Grounding Agent (`data_grounding_agent.py`)
-Iteratively extracts variables, fetches data, validates claims, and computes derived metrics. Max 5 iterations via Sonnet.
+Iteratively extracts variables, fetches data, validates claims, and computes derived metrics. Max 5 iterations via Sonnet. Receives EDF `data_api` routing directive in initial message.
 
 **Tools**: `extract_variables`, `fetch_variable_data`, `validate_claim`, `compute_derived`, `finish_grounding`
 
 ### Phase 3: Historical Context Agent (`historical_context_agent.py`)
-Detects analogs, fetches market data, aggregates statistics, characterizes regime, and can discover preconditions worth checking in current data. Max 4 iterations via Sonnet.
+Detects analogs, fetches market data, aggregates statistics, characterizes regime, and can discover preconditions worth checking in current data. Max 4 iterations via Sonnet. Receives query type hint and EDF historical items in initial message.
 
 **Tools**: `detect_analogs`, `fetch_analog_data`, `aggregate_analogs`, `characterize_regime`, `load_theme_chains`, `fetch_additional_data`, `finish_historical`
 

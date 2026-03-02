@@ -36,13 +36,25 @@ def run_data_grounding_agent(state: RiskImpactState) -> RiskImpactState:
 
     # Build context summary for the agent
     query = state.get("query", "")
-    synthesis_preview = state.get("synthesis", "")[:500]
+    synthesis = state.get("synthesis", "")
     chain_count = len(state.get("logic_chains", []))
+
+    # Extract EDF routing directive: which data_api variables to ground
+    data_directive = ""
+    edf_tree = state.get("_edf_knowledge_tree")
+    if edf_tree:
+        from edf_decomposer import get_data_api_items
+        items = get_data_api_items(edf_tree)
+        if items:
+            data_directive = "\n\nEDF data variables to ground:\n" + "\n".join(
+                f"- {item['id']}: {item['description'][:80]}" for item in items
+            )
 
     initial_message = (
         f"Research query: {query}\n\n"
-        f"Synthesis preview: {synthesis_preview}\n\n"
-        f"Logic chains available: {chain_count}\n\n"
+        f"Synthesis:\n{synthesis}\n\n"
+        f"Logic chains available: {chain_count}"
+        f"{data_directive}\n\n"
         f"Extract variables from the research, fetch current data for each, "
         f"compute derived metrics, and validate patterns against current data."
     )

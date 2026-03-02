@@ -33,7 +33,7 @@ subproject_database_retriever/
 ├── utils/                       # Utility functions
 │
 │   # EDF (Epistemic Decomposition Framework) — Phase 0:
-├── edf_decomposer.py            # Phase 0: Opus call → knowledge tree JSON (7 knowledge types)
+├── edf_decomposer.py            # Phase 0: Opus call → knowledge tree JSON (7 knowledge types) + routing helpers for Phase 2/3
 ├── edf_decomposer_prompts.py    # Phase 0: Decomposition + coverage scoring prompts
 │
 │   # Hybrid agentic pipeline files (tested 2026-02-24):
@@ -526,6 +526,13 @@ After decomposition, the search plan is executed deterministically before the ag
 The agent loop then starts with material already gathered. Its first action is `assess_coverage` to score what's been found, then it adaptively fills any remaining gaps. This ensures every EDF item gets searched — the agent doesn't decide whether to search, only whether gaps need more targeted filling.
 
 **Files:** `edf_decomposer.py`, `edf_decomposer_prompts.py`, pre-fetch logic in `retrieval_agent.py:_run_edf_prefetch()`
+
+**Routing Helpers** (used by risk_intelligence Phase 2/3 agents):
+| Function | Purpose |
+|----------|---------|
+| `get_data_api_items(tree)` | Extract `source_hint='data_api'` items → Phase 2 variable list |
+| `get_historical_items(tree)` | Extract `knowledge_type='historical_analogs'` items → Phase 3 precedent targets |
+| `get_query_type_hint(tree)` | Heuristic: `data_api` count >= 2 → "indicator-driven", else "event-driven" |
 
 **Cost:** ~$0.15-0.30 extra per query (1 Opus call for decomposition + Sonnet calls for EDF coverage scoring + Pinecone queries are essentially free)
 

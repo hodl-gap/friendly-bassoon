@@ -197,6 +197,11 @@ def retrieve_context(query: str, image_path: str = None) -> RiskImpactState:
         state["logic_chains"] = chunk_chains + answer_chains
         print(f"\n[Retrieve] Extracted {len(state['logic_chains'])} chains from chunks/answer")
 
+    # Preserve EDF knowledge tree for downstream routing directives (Phase 2/3)
+    edf_tree = result.get("_edf_knowledge_tree")
+    if edf_tree:
+        state["_edf_knowledge_tree"] = edf_tree
+
     # Copy gap-related fields from retriever result
     state["knowledge_gaps"] = result.get("knowledge_gaps", {})
     state["gap_enrichment_text"] = result.get("gap_enrichment_text", "")
@@ -631,7 +636,8 @@ def run_asset_impact(
     state["chain_graph_text"] = chain_graph.format_for_prompt(all_tracks, convergence_points=convergence)
 
     # Regime characterization (Gap 1): compare current regime vs historical analogs
-    if config.ENABLE_REGIME_CHARACTERIZATION:
+    # Skip if Phase 3 already characterized the regime (avoid double Haiku call)
+    if config.ENABLE_REGIME_CHARACTERIZATION and not state.get("regime_characterization_text"):
         state = characterize_regime(state)
         if ENABLE_SNAPSHOTS:
             snapshot_state(f"characterize_regime_{asset_class}", state, "out")

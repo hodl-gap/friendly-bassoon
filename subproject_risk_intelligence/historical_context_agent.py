@@ -42,15 +42,29 @@ def run_historical_context_agent(state: RiskImpactState) -> RiskImpactState:
     tool_handlers = build_tool_handlers(agent_state)
 
     query = state.get("query", "")
-    synthesis_preview = state.get("synthesis", "")[:500]
+    synthesis = state.get("synthesis", "")
     chain_count = len(state.get("logic_chains", []))
     current_values_count = len(state.get("current_values", {}))
 
+    # Extract EDF routing directive: query type + historical items
+    query_hint = ""
+    edf_tree = state.get("_edf_knowledge_tree")
+    if edf_tree:
+        from edf_decomposer import get_query_type_hint, get_historical_items
+        qtype = get_query_type_hint(edf_tree)
+        query_hint = f"\n\nQuery type: {qtype}."
+        hist_items = get_historical_items(edf_tree)
+        if hist_items:
+            query_hint += "\nEDF historical items:\n" + "\n".join(
+                f"- {item['id']}: {item['description'][:80]}" for item in hist_items
+            )
+
     initial_message = (
         f"Research query: {query}\n\n"
-        f"Synthesis preview: {synthesis_preview}\n\n"
+        f"Synthesis:\n{synthesis}\n\n"
         f"Logic chains available: {chain_count}\n"
-        f"Current data variables: {current_values_count}\n\n"
+        f"Current data variables: {current_values_count}"
+        f"{query_hint}\n\n"
         f"Find historical analogs for this event, fetch market data, "
         f"compute aggregate statistics, and characterize the current regime "
         f"relative to historical precedents."

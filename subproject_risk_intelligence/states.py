@@ -107,5 +107,8 @@ class RiskImpactState(TypedDict, total=False):
     # Regime characterization (Gap 1)
     regime_characterization_text: str  # Formatted "Then vs Now" regime comparison
 
+    # EDF knowledge tree from Phase 0 (optional, passed through for routing directives)
+    _edf_knowledge_tree: Dict[str, Any]
+
     # Insight output
     insight_output: Dict[str, Any]  # InsightOutput (tracks, synthesis, key_uncertainties)

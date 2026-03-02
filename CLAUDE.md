@@ -38,8 +38,10 @@ Trader query
         Coverage scoring enforces source credibility: Pinecone = reasoning pointers (never data), web = ground truth
         Tools: search_pinecone, extract_web_chains, web_search, generate_synthesis, assess_coverage, finish_retrieval
     → PHASE 2: DATA GROUNDING AGENT (agentic, adaptive depth)
+        Receives EDF data_api routing directive (which variables to ground) + full synthesis
         Tools: extract_variables, fetch_variable_data, validate_claim, compute_derived, finish_grounding
     → PHASE 3: HISTORICAL CONTEXT AGENT (agentic, adaptive analog count)
+        Receives EDF query type hint (indicator-driven vs event-driven) + historical items + full synthesis
         Tools: detect_analogs, fetch_analog_data, aggregate_analogs, characterize_regime, load_theme_chains, fetch_additional_data, finish_historical
     → PHASE 4: SYNTHESIS (Opus generate + Sonnet self-check + optional patch)
     → Structured insight output for trader consumption
