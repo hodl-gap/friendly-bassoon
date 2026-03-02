@@ -6,12 +6,56 @@ Input: Path to processed CSV file
 Output: List of dicts with {id, embedding, metadata}
 """
 
+import json
 import sys
 import pandas as pd
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent))
 from models import call_openai_embedding_batch
+from chain_vocab import normalize_extracted_data
+
+
+def build_embedding_text(extracted_data_str: str) -> str:
+    """Compose a clean natural-language string for embedding from extracted_data JSON.
+
+    Includes: what_happened, interpretation, chain narratives (cause -> effect: mechanism),
+    and used_data. Excludes JSON syntax, field names, _normalized terms, dead fields.
+    """
+    try:
+        d = json.loads(extracted_data_str) if extracted_data_str else {}
+    except (json.JSONDecodeError, TypeError):
+        return str(extracted_data_str) if extracted_data_str else ""
+
+    parts = []
+
+    if d.get("what_happened"):
+        parts.append(d["what_happened"])
+    if d.get("interpretation"):
+        parts.append(d["interpretation"])
+
+    # Chain narratives using natural-language fields (not _normalized)
+    for chain in d.get("logic_chains", []):
+        for step in chain.get("steps", []):
+            cause = step.get("cause", "")
+            effect = step.get("effect", "")
+            mechanism = step.get("mechanism", "")
+            if cause and effect:
+                if mechanism:
+                    parts.append(f"{cause} -> {effect}: {mechanism}")
+                else:
+                    parts.append(f"{cause} -> {effect}")
+
+    if d.get("used_data"):
+        ud = d["used_data"]
+        if isinstance(ud, str):
+            parts.append(ud)
+        elif isinstance(ud, list):
+            parts.append(", ".join(str(item) for item in ud))
+        else:
+            parts.append(str(ud))
+
+    return ". ".join(parts) if parts else str(extracted_data_str)
 
 
 def generate_embeddings_from_csv(csv_path: str) -> list[dict]:
@@ -52,8 +96,8 @@ def generate_embeddings_from_csv(csv_path: str) -> list[dict]:
         print("No rows with extracted_data found")
         return []
 
-    # Prepare texts for embedding (embed the extracted_data JSON)
-    texts = df_with_data['extracted_data'].tolist()
+    # Prepare texts for embedding (clean natural-language string, not raw JSON)
+    texts = [build_embedding_text(ed) for ed in df_with_data['extracted_data'].tolist()]
 
     # Generate embeddings in batch
     print(f"Generating embeddings for {len(texts)} entries...")
@@ -64,17 +108,21 @@ def generate_embeddings_from_csv(csv_path: str) -> list[dict]:
     results = []
     for idx, (_, row) in enumerate(df_with_data.iterrows()):
         # Create unique ID (must be ASCII)
-        import hashlib
+        import hashlib  # noqa: E402 (legacy placement)
         raw_id = f"{row.get('tg_channel', '')}_{row.get('opinion_id', '')}_{idx}"
         unique_id = hashlib.md5(raw_id.encode()).hexdigest()[:16] + f"_{idx}"
 
         # Parse extracted_data to get key fields for direct access
-        import json
         extracted_data_str = str(row.get('extracted_data', '{}'))
         try:
             extracted_dict = json.loads(extracted_data_str) if extracted_data_str else {}
         except json.JSONDecodeError:
             extracted_dict = {}
+
+        # Normalize chain vocab in metadata (safety net for pre-normalization CSVs)
+        if extracted_dict.get("logic_chains"):
+            normalize_extracted_data(extracted_dict)
+            extracted_data_str = json.dumps(extracted_dict, ensure_ascii=False)
 
         results.append({
             "id": unique_id,

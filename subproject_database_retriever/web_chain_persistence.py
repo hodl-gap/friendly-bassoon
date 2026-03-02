@@ -78,8 +78,13 @@ def persist_web_chains(web_chains: List[Dict[str, Any]], query: str) -> int:
         chain_id = f"web_{hashlib.md5(id_input.encode()).hexdigest()[:16]}"
 
         # Normalize to canonical LogicChain format for extracted_data
-        cause_normalized = cause.lower().replace(" ", "_").replace("-", "_")[:50]
-        effect_normalized = effect.lower().replace(" ", "_").replace("-", "_")[:50]
+        try:
+            from chain_vocab import normalize_term
+            cause_normalized = normalize_term(cause.lower().replace(" ", "_").replace("-", "_")[:50])
+            effect_normalized = normalize_term(effect.lower().replace(" ", "_").replace("-", "_")[:50])
+        except ImportError:
+            cause_normalized = cause.lower().replace(" ", "_").replace("-", "_")[:50]
+            effect_normalized = effect.lower().replace(" ", "_").replace("-", "_")[:50]
 
         logic_chain_data = {
             "logic_chains": [{

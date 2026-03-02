@@ -13,6 +13,14 @@ from data_opinion_prompts import get_data_opinion_extraction_prompt, get_data_op
 from interview_meeting_prompts import get_interview_extraction_prompt
 from image_extraction_prompts import get_image_summary_prompt, get_image_structured_extraction_prompt, get_combined_image_extraction_prompt
 from metrics_mapping_utils import append_new_metrics, collect_new_metrics_from_extractions, normalize_sources_in_csv
+from chain_vocab import normalize_extracted_data
+
+
+def _build_extracted_data_json(item: dict) -> str:
+    """Build normalized extracted_data JSON from an extraction item."""
+    extracted = {k: v for k, v in item.items() if k not in ['message_index', 'opinion_id']}
+    normalize_extracted_data(extracted)
+    return json.dumps(extracted, ensure_ascii=False)
 
 
 # =============================================================================
@@ -410,7 +418,7 @@ def process_batch(messages_batch, category, channel_name, use_gpt5=True):
                         'opinion_id': item.get('opinion_id', ''),
                         'raw_text': original_msg['text'],
                         'has_photo': original_msg.get('photo', ''),
-                        'extracted_data': json.dumps({k: v for k, v in item.items() if k not in ['message_index', 'opinion_id']}, ensure_ascii=False)
+                        'extracted_data': _build_extracted_data_json(item)
                     }
                     results.append(text_entry)
 
@@ -469,7 +477,7 @@ def process_batch(messages_batch, category, channel_name, use_gpt5=True):
                         'opinion_id': item.get('opinion_id', ''),
                         'raw_text': original_msg['text'],
                         'has_photo': original_msg.get('photo', ''),
-                        'extracted_data': json.dumps({k: v for k, v in item.items() if k not in ['message_index', 'opinion_id']}, ensure_ascii=False)
+                        'extracted_data': _build_extracted_data_json(item)
                     }
                     results.append(text_entry)
 
@@ -619,7 +627,7 @@ async def process_batches_parallel(all_batches, channel_name):
                         'opinion_id': item.get('opinion_id', ''),
                         'raw_text': original_msg['text'],
                         'has_photo': original_msg.get('photo', ''),
-                        'extracted_data': json.dumps({k: v for k, v in item.items() if k not in ['message_index', 'opinion_id']}, ensure_ascii=False)
+                        'extracted_data': _build_extracted_data_json(item)
                     }
                     all_results.append(text_entry)
 
