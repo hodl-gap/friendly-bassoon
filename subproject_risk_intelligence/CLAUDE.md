@@ -72,7 +72,7 @@ subproject_risk_intelligence/
 |-- synthesis_phase.py               # Phase 4: Opus generate + Sonnet verify + optional patch
 |-- synthesis_prompts.py             # Verification prompt for synthesis self-check
 |-- data_grounding_agent.py          # Phase 2: Agentic data grounding orchestrator
-|-- data_grounding_agent_tools.py    # Phase 2: Tool schemas + handlers (6 tools)
+|-- data_grounding_agent_tools.py    # Phase 2: Tool schemas + handlers (5 tools)
 |-- data_grounding_agent_prompts.py  # Phase 2: System prompt
 |-- historical_context_agent.py      # Phase 3: Agentic historical context orchestrator
 |-- historical_context_agent_tools.py # Phase 3: Tool schemas + handlers (7 tools)
@@ -114,7 +114,7 @@ query (CLI input)
 |                                                                         |
 |  +-- PHASE 2: DATA GROUNDING AGENT (agentic, adaptive depth) --------+ |
 |  |   Tools: extract_variables, fetch_variable_data, validate_claim,   | |
-|  |          validate_patterns, compute_derived, finish_grounding      | |
+|  |          compute_derived, finish_grounding                        | |
 |  +--------------------------------------------------------------------+ |
 |                                                                         |
 |  +-- PHASE 3: HISTORICAL CONTEXT AGENT (agentic, adaptive analog) ---+ |
@@ -296,9 +296,9 @@ ENABLE_REGIME_CHARACTERIZATION = True  # env: RISK_REGIME_CHAR
 ## Agentic Pipeline Phases
 
 ### Phase 2: Data Grounding Agent (`data_grounding_agent.py`)
-Iteratively extracts variables, fetches data, validates claims, and computes derived metrics. Max 4 iterations via Sonnet.
+Iteratively extracts variables, fetches data, validates claims, and computes derived metrics. Max 5 iterations via Sonnet.
 
-**Tools**: `extract_variables`, `fetch_variable_data`, `validate_claim`, `validate_patterns`, `compute_derived`, `finish_grounding`
+**Tools**: `extract_variables`, `fetch_variable_data`, `validate_claim`, `compute_derived`, `finish_grounding`
 
 ### Phase 3: Historical Context Agent (`historical_context_agent.py`)
 Detects analogs, fetches market data, aggregates statistics, characterizes regime, and can discover preconditions worth checking in current data. Max 4 iterations via Sonnet.

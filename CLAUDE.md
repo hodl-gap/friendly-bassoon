@@ -30,10 +30,15 @@ Research module for a macro-data oriented hedge fund. Traders query the system w
 
 ```
 Trader query
-    → PHASE 1: RETRIEVAL AGENT (agentic, iterate until coverage adequate)
+    → PHASE 0: EDF DECOMPOSITION (single Opus call → knowledge tree)
+        Output: 3-5 keywords × 7 knowledge types → search plan with source_hint routing
+    → PHASE 0.5: MECHANICAL PRE-FETCH (deterministic, no LLM decisions)
+        Runs all research_db queries → Pinecone, ESSENTIAL web_search queries → Tavily, web chain extraction
+    → PHASE 1: RETRIEVAL AGENT (agentic, assess pre-fetched material + fill gaps)
+        Coverage scoring enforces source credibility: Pinecone = reasoning pointers (never data), web = ground truth
         Tools: search_pinecone, extract_web_chains, web_search, generate_synthesis, assess_coverage, finish_retrieval
     → PHASE 2: DATA GROUNDING AGENT (agentic, adaptive depth)
-        Tools: extract_variables, fetch_variable_data, validate_claim, validate_patterns, compute_derived, finish_grounding
+        Tools: extract_variables, fetch_variable_data, validate_claim, compute_derived, finish_grounding
     → PHASE 3: HISTORICAL CONTEXT AGENT (agentic, adaptive analog count)
         Tools: detect_analogs, fetch_analog_data, aggregate_analogs, characterize_regime, load_theme_chains, fetch_additional_data, finish_historical
     → PHASE 4: SYNTHESIS (Opus generate + Sonnet self-check + optional patch)
@@ -44,11 +49,12 @@ Daily monitoring (cron)
     → Morning Briefing (template-based summary of all theme states)
 ```
 
-**Iteration Limits** (`shared/feature_flags.py`):
+**Iteration Limits & Feature Flags** (`shared/feature_flags.py`):
 | Setting | Default | Purpose |
 |---------|---------|---------|
+| `EDF_ENABLED` | `1` (on) | Enable Phase 0 EDF decomposition (Opus knowledge tree) |
 | `RETRIEVAL_MAX_ITER` | 5 | Max iterations for retrieval agent |
-| `DATA_GROUNDING_MAX_ITER` | 4 | Max iterations for data grounding agent |
+| `DATA_GROUNDING_MAX_ITER` | 5 | Max iterations for data grounding agent |
 | `HISTORICAL_MAX_ITER` | 4 | Max iterations for historical context agent |
 
 **CLI Usage**:
@@ -82,7 +88,7 @@ python -m subproject_risk_intelligence --asset btc,equity "Fed just cut rates 50
 | `variable_frequency.py` | Tracks variable appearance frequency across chains; promotion/demotion candidates |
 | `data/anchor_variables.json` | 25 curated anchor variables with verified data source mappings |
 | `agent_loop.py` | Generic ReAct loop runner for agentic phases (detect tool_use → execute handler → append result → loop) |
-| `feature_flags.py` | Agentic pipeline iteration limits (configurable via env vars) |
+| `feature_flags.py` | Agentic pipeline iteration limits + EDF toggle (configurable via env vars) |
 
 ## Scripts (`scripts/`)
 

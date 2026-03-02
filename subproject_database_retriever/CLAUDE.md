@@ -570,7 +570,7 @@ The agentic retrieval agent is the default path for all queries (except lightwei
 The coverage scorer is stateless — it can return INSUFFICIENT repeatedly even when gaps are genuinely unfillable. Stall detection compares consecutive `assess_coverage` scores and intervenes when no progress is made.
 
 Three mechanisms work together:
-1. **Coverage history tracking**: `RetrievalAgentState.coverage_history` records the percentage from each assessment call
+1. **Coverage history tracking**: `RetrievalAgentState.coverage_history` records the percentage from each assessment call. Stall detection requires at least 5 assessments before activating, giving the agent sufficient iterations to self-correct tool choices.
 2. **Auto-assessment**: After 3 search tool calls without an `assess_coverage`, automatically triggers one. If coverage improved < 5 percentage points (stall), directly calls `handle_generate_synthesis()` — bypassing the agent's decision entirely
 3. **Short-circuit**: Once stall is detected (`agent_state.stall_detected = True`), all subsequent search tool calls (`search_pinecone`, `extract_web_chains`, `web_search`) return immediately with a skip message instead of making real API calls
 
