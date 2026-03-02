@@ -42,11 +42,17 @@ subproject_database_manager/
 │
 ├── metrics_mapping_utils.py          # Metrics dictionary management + clustering
 ├── processing_tracker.py             # SQLite tracker for incremental updates + deduplication
+├── chain_vocab.py                    # Post-processing normalization of cause/effect_normalized terms
 │
-├── data/                             # Data folders (raw, processed, qa_logs, processing_state.db)
+├── data/
+│   ├── chain_vocab.json              # Canonical vocabulary (67 terms, 272 synonyms)
+│   ├── raw/, processed/, qa_logs/    # Data folders
+│   └── team_processed/compile_csv.py # Team pipeline CSV compiler (uses chain_vocab)
 └── tests/
     ├── enrich_data_opinions.py       # Post-mortem enrichment with data_update context
     ├── cleanup_metrics.py            # Post-mortem metrics deduplication
+    ├── backfill_normalize_csvs.py    # One-time backfill: normalize existing CSVs + Pinecone web chains
+    ├── seed_chain_vocab.py           # One-time vocab builder from anchor_variables + frequency data
     └── ...                           # Test files + obsolete modules
 ```
 
@@ -190,10 +196,22 @@ Each logic chain step now includes **normalized variable names** for explicit cr
 - Create snake_case version for new concepts (max 30 chars)
 - Common patterns: `tga`, `rrp`, `sofr`, `fed_funds`, `bank_reserves`, `carry_trade`, `risk_off`
 
+**Post-Processing Normalization (`chain_vocab.py`):**
+
+After LLM extraction, all `cause_normalized`/`effect_normalized` fields are run through `normalize_extracted_data()` which applies a 4-step cascade:
+1. Exact match on canonical name (67 terms in `data/chain_vocab.json`)
+2. Exact match on any synonym (272 synonyms)
+3. Word overlap > 0.7 vs canonical names and synonyms
+4. Passthrough (sanitized: lowercase, strip parens, replace `/-` with `_`, truncate 30 chars)
+
+Applied at all extraction points: `process_messages_v3.py`, `compile_csv.py`, `web_chain_persistence.py`, and as a safety net in `embedding_generation.py` metadata.
+
+**Embedding Input:** `embedding_generation.py` now composes a clean natural-language string for embedding (`build_embedding_text()`) instead of raw JSON. Includes `what_happened`, `interpretation`, chain narratives (`cause -> effect: mechanism`), and `used_data`. Excludes JSON syntax, field names, and `_normalized` terms.
+
 **Purpose:** Enables the retrieval system to explicitly connect chains across different chunks:
-- Chunk A: `jpy_weakness` → `carry_unwind`
-- Chunk B: `carry_unwind` → `em_selling`
-- Connection: `jpy_weakness` → `carry_unwind` → `em_selling` (multi-hop)
+- Chunk A: `jpy_weakness` → `carry_trade_unwind`
+- Chunk B: `carry_trade_unwind` → `em_selling`
+- Connection: `jpy_weakness` → `carry_trade_unwind` → `em_selling` (multi-hop)
 
 ### Temporal & Regime Context
 
@@ -495,7 +513,7 @@ If a run fails mid-extraction:
 - [x] Incremental updates (SQLite tracker + dedup before LLM extraction)
 
 ## TODO
-- [ ] Individual stock research category
+- [x] Individual stock research category (added as `individual_stock`, saves raw text only, no extraction)
 - [ ] Keyword search support for Telegram fetching
 
 ## Related Files in Parent Directory
