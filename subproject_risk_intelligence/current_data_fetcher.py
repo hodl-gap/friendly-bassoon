@@ -74,9 +74,9 @@ MONTHLY_FRED_SERIES = {
     "PAYEMS",      # Nonfarm Payrolls - monthly
 }
 
-# Default lookback days (45 for daily/weekly, 120 for monthly)
-DEFAULT_LOOKBACK_DAYS = 45
-MONTHLY_LOOKBACK_DAYS = 120
+# Default lookback days (270 ~1yr for daily, 400 ~1yr for monthly)
+DEFAULT_LOOKBACK_DAYS = 270
+MONTHLY_LOOKBACK_DAYS = 400
 
 
 # ============================================================================
@@ -167,7 +167,7 @@ def compute_derived_metrics(current_values: dict) -> dict:
 
         # Compute derived changes if both inputs have change data
         changes = {}
-        for period in ["change_1w", "change_1m"]:
+        for period in ["change_1w", "change_1m", "change_3m", "change_6m"]:
             change_a = input_a.get("changes", {}).get(period)
             change_b = input_b.get("changes", {}).get(period)
             if change_a and change_b:
@@ -390,8 +390,14 @@ def calculate_changes(history: List[Tuple[str, float]]) -> Dict[str, Any]:
 
     changes = {}
 
-    # Detect if this is monthly data (few points over long period)
-    is_monthly = len(history) <= 3
+    # Detect if this is monthly data by average gap between observations
+    if len(history) >= 2:
+        first_date = datetime.strptime(history[0][0], "%Y-%m-%d")
+        last_date = datetime.strptime(history[-1][0], "%Y-%m-%d")
+        avg_gap = (last_date - first_date).days / (len(history) - 1)
+        is_monthly = avg_gap > 20  # monthly data has ~30 day gaps
+    else:
+        is_monthly = False
 
     # Find value from ~1 week ago (5-10 days) for weekly data
     # For monthly data, use previous data point as "prior period"
@@ -457,6 +463,68 @@ def calculate_changes(history: List[Tuple[str, float]]) -> Dict[str, Any]:
             "direction": direction,
             "from_date": month_ago_date
         }
+
+    # --- 3-month change (60-100 days for daily, 3 periods back for monthly) ---
+    three_month_value = None
+    three_month_date = None
+
+    if is_monthly:
+        if len(history) >= 4:
+            three_month_value = history[-4][1]
+            three_month_date = history[-4][0]
+    else:
+        for date_str, value in reversed(history):
+            date = datetime.strptime(date_str, "%Y-%m-%d")
+            days_diff = (latest_date - date).days
+            if 60 <= days_diff <= 100:
+                three_month_value = value
+                three_month_date = date_str
+                break
+
+    if three_month_value and three_month_value != 0:
+        abs_change = latest_value - three_month_value
+        pct_change = (abs_change / three_month_value) * 100
+        direction = "↑" if abs_change > 0 else "↓" if abs_change < 0 else "→"
+        changes["change_3m"] = {
+            "absolute": abs_change,
+            "percentage": pct_change,
+            "direction": direction,
+            "from_date": three_month_date,
+        }
+
+    # --- 6-month change (150-200 days for daily, 6 periods back for monthly) ---
+    six_month_value = None
+    six_month_date = None
+
+    if is_monthly:
+        if len(history) >= 7:
+            six_month_value = history[-7][1]
+            six_month_date = history[-7][0]
+    else:
+        for date_str, value in reversed(history):
+            date = datetime.strptime(date_str, "%Y-%m-%d")
+            days_diff = (latest_date - date).days
+            if 150 <= days_diff <= 200:
+                six_month_value = value
+                six_month_date = date_str
+                break
+
+    if six_month_value and six_month_value != 0:
+        abs_change = latest_value - six_month_value
+        pct_change = (abs_change / six_month_value) * 100
+        direction = "↑" if abs_change > 0 else "↓" if abs_change < 0 else "→"
+        changes["change_6m"] = {
+            "absolute": abs_change,
+            "percentage": pct_change,
+            "direction": direction,
+            "from_date": six_month_date,
+        }
+
+    # --- 1-year percentile rank ---
+    if len(history) >= 20:  # need meaningful sample
+        all_values = [v for _, v in history]
+        rank = sum(1 for v in all_values if v <= latest_value)
+        changes["percentile_1y"] = round(rank / len(all_values) * 100, 1)
 
     return changes
 
@@ -657,6 +725,20 @@ def format_value_with_changes(var_name: str, val: Dict[str, Any]) -> str:
         c = changes["change_1m"]
         abs_formatted = format_change_value(var_name, c["absolute"])
         change_parts.append(f"{c['direction']}{abs_formatted} / {c['percentage']:+.1f}% 1m")
+
+    if changes.get("change_3m"):
+        c = changes["change_3m"]
+        abs_formatted = format_change_value(var_name, c["absolute"])
+        change_parts.append(f"{c['direction']}{abs_formatted} / {c['percentage']:+.1f}% 3m")
+
+    if changes.get("change_6m"):
+        c = changes["change_6m"]
+        abs_formatted = format_change_value(var_name, c["absolute"])
+        change_parts.append(f"{c['direction']}{abs_formatted} / {c['percentage']:+.1f}% 6m")
+
+    if changes.get("percentile_1y") is not None:
+        pct = changes["percentile_1y"]
+        change_parts.append(f"{pct:.0f}th pct 1y")
 
     result = f"{var_name.upper()}: {formatted_value}"
     if change_parts:

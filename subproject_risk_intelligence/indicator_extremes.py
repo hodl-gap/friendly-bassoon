@@ -195,9 +195,24 @@ def find_extreme_dates(
             "source": "csv_mechanical",
         })
 
-    # Sort most-recent-first, cap at max_episodes
-    result.sort(key=lambda e: e["date"], reverse=True)
-    return result[:max_episodes]
+    # Hybrid selection: top N most extreme + top N most recent (deduplicated)
+    # This avoids recency bias that would discard informative historical episodes
+    # (e.g., 2008 crisis, 2020 COVID, 2022 Q4 extremes)
+    half = max(max_episodes // 2, 1)
+
+    # Top N by extremity (absolute value for above, inverse for below)
+    by_extremity = sorted(result, key=lambda e: abs(e["value"]), reverse=True)
+    extreme_picks = by_extremity[:half]
+    extreme_dates = {e["date"] for e in extreme_picks}
+
+    # Top N by recency (excluding already-picked)
+    by_recency = sorted(result, key=lambda e: e["date"], reverse=True)
+    recent_picks = [e for e in by_recency if e["date"] not in extreme_dates][:max_episodes - len(extreme_picks)]
+
+    # Merge and sort by date for display
+    selected = extreme_picks + recent_picks
+    selected.sort(key=lambda e: e["date"], reverse=True)
+    return selected
 
 
 def validate_external_dates(
@@ -422,16 +437,6 @@ def aggregate_extreme_episodes(
                     "max": round(max(values), 2),
                 }
 
-    # Direction signal from primary asset 1mo median
-    direction_signal = "neutral"
-    primary_1mo = per_asset.get(primary_asset, {}).get("1mo", {})
-    if primary_1mo:
-        med = primary_1mo["median"]
-        if med < -3:
-            direction_signal = "bearish"
-        elif med > 3:
-            direction_signal = "bullish"
-
     # Summary string
     ep_count = len(episodes)
     primary_stats = per_asset.get(primary_asset, {}).get("1mo", {})
@@ -446,7 +451,6 @@ def aggregate_extreme_episodes(
 
     return {
         "per_asset": per_asset,
-        "direction_signal": direction_signal,
         "summary": summary,
         "episode_count": ep_count,
     }
@@ -469,7 +473,6 @@ def format_extremes_for_prompt(
         "",
         f"**Indicator**: {variable_name} (top {100 - percentile:.0f}% {direction} readings)",
         f"**Episodes found**: {aggregated['episode_count']}",
-        f"**Direction signal**: {aggregated['direction_signal']}",
         f"**Summary**: {aggregated['summary']}",
         "",
     ]
@@ -706,7 +709,6 @@ def format_episodes_with_regime(
         "",
         f"**Indicator**: {variable_name} (top {100 - percentile:.0f}% {direction} readings)",
         f"**Episodes found**: {aggregated.get('episode_count', len(episodes))}",
-        f"**Direction signal**: {aggregated.get('direction_signal', 'neutral')}",
         f"**Summary**: {aggregated.get('summary', '')}",
     ]
 

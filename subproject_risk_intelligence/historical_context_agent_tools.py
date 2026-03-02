@@ -520,7 +520,6 @@ def build_tool_handlers(agent_state: HistoricalAgentState) -> dict:
             "data_points": len(history),
             "source": source_label,
             "date_range": date_range,
-            "direction_signal": aggregated["direction_signal"],
             "per_asset_1mo_median": per_asset_1mo,
             "summary": aggregated["summary"],
         }

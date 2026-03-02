@@ -379,9 +379,9 @@ def build_tool_handlers(agent_state: RetrievalAgentState) -> dict:
         else:
             result = _assess_coverage_generic(agent_state)
 
-        # Stall detection: if 2+ assessments and no meaningful improvement, override to ADEQUATE
+        # Stall detection: if 3+ assessments and no meaningful improvement, override to ADEQUATE
         history = agent_state.coverage_history
-        if len(history) >= 2:
+        if len(history) >= 5:
             delta = history[-1] - history[-2]
             if delta < 5.0 and result.get("rating") == "INSUFFICIENT":
                 print(f"[Coverage] Stall detected: {history[-2]:.1f}% → {history[-1]:.1f}% "
@@ -466,15 +466,29 @@ def build_tool_handlers(agent_state: RetrievalAgentState) -> dict:
         # Track coverage percentage for stall detection
         state.coverage_history.append(coverage["percentage"])
 
-        # Log EDF coverage
+        # Build item_id → source_hint lookup from the knowledge tree
+        item_source_hints = {}
+        for kw in state.knowledge_tree.get("keywords", []):
+            for item in kw.get("items", []):
+                item_source_hints[item.get("id", "")] = item.get("source_hint", "unknown")
+
+        # Annotate essential_gaps with source_hint so the agent knows which tool to use
         essential_gaps = result.get("essential_gaps", coverage.get("essential_gaps", []))
+        annotated_gaps = []
+        for gap_id in essential_gaps:
+            hint = item_source_hints.get(gap_id, "unknown")
+            annotated_gaps.append({"id": gap_id, "source_hint": hint})
+
+        # Log EDF coverage
         print(f"[Coverage EDF] {result.get('rating', 'UNKNOWN')} "
               f"({coverage['score']}/{coverage['max_score']} = {coverage['percentage']}%)")
-        print(f"  Essential gaps: {essential_gaps}")
+        print(f"  Essential gaps: {[g['id'] + '(' + g['source_hint'] + ')' for g in annotated_gaps]}")
         if coverage.get("by_type"):
             for ktype, counts in coverage["by_type"].items():
                 print(f"  {ktype}: {counts['covered']}Y + {counts['partial']}P + {counts['missing']}N / {counts['total']}")
 
+        # Replace flat gap list with annotated version for the agent
+        result["essential_gaps"] = annotated_gaps
         # Return result with both EDF scores and suggested queries for the agent
         result["coverage_metrics"] = coverage
         return result

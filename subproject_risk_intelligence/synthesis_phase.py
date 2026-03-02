@@ -110,6 +110,15 @@ def run_synthesis_phase(state: RiskImpactState, asset_class: str) -> RiskImpactS
     debug_log("SYNTHESIS_VERIFICATION_RESULT", verification_result)
     print(f"[Synthesis Phase] Verification result:\n{verification_result[:500]}")
 
+    # Strip confirmation lines — only gaps matter for the patch prompt
+    gap_lines = []
+    for line in verification_result.strip().split("\n"):
+        stripped = line.strip()
+        if stripped.startswith(("\u2713", "\u2714", "\u2705")) or stripped == "":
+            continue
+        gap_lines.append(line)
+    verification_for_patch = "\n".join(gap_lines).strip() if gap_lines else verification_result
+
     # Step 3: Check if gaps were found
     if "NO_GAPS" in verification_result.upper():
         print("[Synthesis Phase] Verification passed — no gaps found")
@@ -130,7 +139,7 @@ def run_synthesis_phase(state: RiskImpactState, asset_class: str) -> RiskImpactS
     patched_prompt = (
         f"{original_prompt}\n\n"
         f"## QUALITY REVIEW FEEDBACK (address these gaps in your output)\n"
-        f"{verification_result}\n\n"
+        f"{verification_for_patch}\n\n"
         f"IMPORTANT: Address ALL feedback items above. "
         f"Ensure every causal mechanism from the evidence appears in a track. "
         f"Include quantified historical precedents. "
@@ -146,22 +155,9 @@ def run_synthesis_phase(state: RiskImpactState, asset_class: str) -> RiskImpactS
             tool_choice={"type": "tool", "name": "output_insight"},
             model=model_short,
             temperature=0.3,
-            max_tokens=8192,
+            max_tokens=16000,
             system=SYSTEM_PROMPT,
         )
-
-        # Retry with higher limit if truncated
-        if getattr(response, "stop_reason", None) == "max_tokens":
-            print("[Synthesis Phase] Patch response truncated at 8192, retrying with 12000...")
-            response = call_claude_with_tools(
-                messages=[{"role": "user", "content": patched_prompt}],
-                tools=[insight_tool],
-                tool_choice={"type": "tool", "name": "output_insight"},
-                model=model_short,
-                temperature=0.3,
-                max_tokens=12000,
-                system=SYSTEM_PROMPT,
-            )
 
         tool_input = None
         for block in response.content:

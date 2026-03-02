@@ -50,7 +50,7 @@ FETCH_VARIABLE_DATA_TOOL = {
 
 VALIDATE_CLAIM_TOOL = {
     "name": "validate_claim",
-    "description": "Validate a specific quantitative claim from the synthesis against actual data. Tests correlation and statistical significance.",
+    "description": "Validate a specific quantitative claim DERIVED FROM RESEARCH against actual data. Tests correlation and statistical significance. Only use for research-derived claims (e.g., 'BTC follows gold with 63-428 day lag'). Do NOT validate numbers from the trader's original query — those are ground truth input data, not claims.",
     "input_schema": {
         "type": "object",
         "properties": {
@@ -60,20 +60,6 @@ VALIDATE_CLAIM_TOOL = {
             }
         },
         "required": ["claim_text"]
-    }
-}
-
-VALIDATE_PATTERNS_TOOL = {
-    "name": "validate_patterns",
-    "description": "Extract quantitative patterns from research and validate against current data. Returns triggered/not-triggered for each pattern.",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "notes": {
-                "type": "string",
-                "description": "Optional notes"
-            }
-        },
     }
 }
 
@@ -118,7 +104,6 @@ ALL_TOOLS = [
     EXTRACT_VARIABLES_TOOL,
     FETCH_VARIABLE_DATA_TOOL,
     VALIDATE_CLAIM_TOOL,
-    VALIDATE_PATTERNS_TOOL,
     COMPUTE_DERIVED_TOOL,
     FINISH_GROUNDING_TOOL,
 ]
@@ -135,7 +120,6 @@ class DataGroundingAgentState:
         self.state = state
         self.extracted_variables = []
         self.current_values = {}
-        self.validated_patterns = []
         self.claim_validation_results = []
         self.fetch_errors = []
 
@@ -186,10 +170,16 @@ def build_tool_handlers(agent_state: DataGroundingAgentState) -> dict:
                 data["changes"] = changes
                 agent_state.current_values[variable_name] = data
 
-                change_str = ""
-                if changes.get("change_1w"):
-                    c = changes["change_1w"]
-                    change_str = f" ({c['direction']}{abs(c['percentage']):.1f}% 1w)"
+                # Build compact change summary for agent
+                change_summary = []
+                for period in ["change_1w", "change_1m", "change_3m", "change_6m"]:
+                    c = changes.get(period)
+                    if c:
+                        label = period.replace("change_", "")
+                        change_summary.append(f"{c['direction']}{abs(c['percentage']):.1f}% {label}")
+                pct = changes.get("percentile_1y")
+                if pct is not None:
+                    change_summary.append(f"{pct:.0f}th pct 1y")
 
                 return {
                     "variable": variable_name,
@@ -197,7 +187,7 @@ def build_tool_handlers(agent_state: DataGroundingAgentState) -> dict:
                     "date": data.get("date", ""),
                     "source": data_source,
                     "series_id": series_id,
-                    "change_1w": change_str,
+                    "changes": ", ".join(change_summary) if change_summary else "",
                 }
             else:
                 agent_state.fetch_errors.append(variable_name)
@@ -211,12 +201,15 @@ def build_tool_handlers(agent_state: DataGroundingAgentState) -> dict:
             from . import config as risk_config
             import sys
             dc_path = str(risk_config.DATA_COLLECTION_DIR)
+            saved_config = sys.modules.pop("config", None)
             saved_states = sys.modules.pop("states", None)
             if dc_path not in sys.path:
                 sys.path.insert(0, dc_path)
 
             from subproject_data_collection.data_collection_orchestrator import run_claim_validation
 
+            if saved_config is not None:
+                sys.modules["config"] = saved_config
             if saved_states is not None:
                 sys.modules["states"] = saved_states
 
@@ -239,28 +232,6 @@ def build_tool_handlers(agent_state: DataGroundingAgentState) -> dict:
         except Exception as e:
             return {"error": f"Claim validation failed: {str(e)}"}
 
-    def handle_validate_patterns(notes: str = "") -> dict:
-        from .pattern_validator import validate_patterns
-
-        # Build state with current values for pattern validation
-        temp_state = dict(agent_state.state)
-        temp_state["current_values"] = agent_state.current_values
-        result_state = validate_patterns(temp_state)
-
-        agent_state.validated_patterns = result_state.get("validated_patterns", [])
-
-        return {
-            "patterns_found": len(agent_state.validated_patterns),
-            "patterns": [
-                {
-                    "pattern": p.get("pattern_description", "")[:100],
-                    "triggered": p.get("triggered", False),
-                    "current_value": p.get("current_value"),
-                }
-                for p in agent_state.validated_patterns[:10]
-            ],
-        }
-
     def handle_compute_derived(notes: str = "") -> dict:
         from .current_data_fetcher import compute_derived_metrics
 
@@ -282,7 +253,6 @@ def build_tool_handlers(agent_state: DataGroundingAgentState) -> dict:
         "extract_variables": handle_extract_variables,
         "fetch_variable_data": handle_fetch_variable_data,
         "validate_claim": handle_validate_claim,
-        "validate_patterns": handle_validate_patterns,
         "compute_derived": handle_compute_derived,
         "finish_grounding": handle_finish_grounding,
     }

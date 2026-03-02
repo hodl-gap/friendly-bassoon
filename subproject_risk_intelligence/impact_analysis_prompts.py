@@ -100,13 +100,11 @@ def format_theme_states_for_prompt(theme_states: dict) -> str:
 
 def _format_data_sections(
     query: str,
-    retrieval_answer: str,
     synthesis: str,
     logic_chains: list,
     confidence_metadata: dict,
     current_values_text: str = "",
     historical_chains_text: str = "",
-    validated_patterns_text: str = "",
     historical_event_text: str = "",
     knowledge_gaps: dict = None,
     gap_enrichment_text: str = "",
@@ -155,9 +153,6 @@ def _format_data_sections(
     if historical_chains_text and historical_chains_text != "(No relevant historical chains)":
         sections.append(f"\n## HISTORICAL LOGIC CHAINS (Previously Discovered)\n{historical_chains_text}")
 
-    if validated_patterns_text:
-        sections.append(f"\n{validated_patterns_text}")
-
     if historical_event_text:
         sections.append(f"\n{historical_event_text}")
 
@@ -201,33 +196,27 @@ def _format_data_sections(
 
     optional_text = "\n".join(sections)
 
-    return f"""## USER QUERY
-{query}
+    # Build main sections — skip retrieval_answer (synthesis subsumes it)
+    main_parts = [f"## USER QUERY\n{query}", f"\n## SYNTHESIS\n{synthesis}"]
 
-## RETRIEVED ANALYSIS
-{retrieval_answer}
+    # Only include LOGIC CHAINS if there are actual chains
+    if logic_chains:
+        main_parts.append(f"\n## LOGIC CHAINS\n{chains_text}")
 
-## SYNTHESIS
-{synthesis}
+    main_parts.append(f"\n## RETRIEVAL CONFIDENCE\n{conf_text}")
+    main_parts.append(optional_text)
+    main_parts.append("---")
 
-## LOGIC CHAINS
-{chains_text}
-
-## RETRIEVAL CONFIDENCE
-{conf_text}
-{optional_text}
----"""
+    return "\n".join(main_parts)
 
 
 def get_insight_prompt(
     query: str,
-    retrieval_answer: str,
     synthesis: str,
     logic_chains: list,
     confidence_metadata: dict,
     current_values_text: str = "",
     historical_chains_text: str = "",
-    validated_patterns_text: str = "",
     historical_event_text: str = "",
     knowledge_gaps: dict = None,
     gap_enrichment_text: str = "",
@@ -242,13 +231,11 @@ def get_insight_prompt(
 
     data_sections = _format_data_sections(
         query=query,
-        retrieval_answer=retrieval_answer,
         synthesis=synthesis,
         logic_chains=logic_chains,
         confidence_metadata=confidence_metadata,
         current_values_text=current_values_text,
         historical_chains_text=historical_chains_text,
-        validated_patterns_text=validated_patterns_text,
         historical_event_text=historical_event_text,
         knowledge_gaps=knowledge_gaps,
         gap_enrichment_text=gap_enrichment_text,

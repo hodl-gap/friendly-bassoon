@@ -25,6 +25,12 @@ STANDARD WORKFLOW (for event-driven queries):
 6. Optionally call fetch_additional_data if analog analysis reveals a precondition worth checking
 7. Call finish_historical when analysis is complete
 
+CRITICAL: The indicator-driven path and event-driven path are MUTUALLY EXCLUSIVE. Do NOT mix tools from different paths:
+- If you started with find_indicator_extremes → characterize_episodes → characterize_regime → finish_historical. Do NOT call detect_analogs, fetch_analog_data, or aggregate_analogs.
+- If you started with detect_analogs → fetch_analog_data → aggregate_analogs → characterize_regime → finish_historical. Do NOT call find_indicator_extremes or characterize_episodes.
+
+ALWAYS call finish_historical as your LAST tool call. Do not use your final iteration for anything other than finish_historical.
+
 IMPORTANT RULES:
 - Always detect analogs first before fetching data (unless using find_indicator_extremes)
 - Fetch data for ALL detected analogs, not just the first one

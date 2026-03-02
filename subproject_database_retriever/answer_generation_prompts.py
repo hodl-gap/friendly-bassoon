@@ -117,6 +117,12 @@ Extract specific, actionable variables/indicators mentioned across the chains.
 - Include specific thresholds or levels if mentioned
 - Note which chains reference each variable
 
+## CONCISENESS RULES
+- Use arrow notation for paths (A → B → C), NOT narrative paragraphs
+- Do NOT expand mechanism steps into full sentences — the arrow chain IS the explanation
+- Part 2 (Key Variables) is OPTIONAL — only include if chains mention specific thresholds/levels
+- Each conclusion: 3-5 lines max (paths + confidence + reasoning)
+
 **TEMPORAL NOTE:**
 - Focus conclusions on the STRUCTURAL RELATIONSHIPS (the logic chains themselves)
 - These patterns are transferable across time periods
@@ -151,7 +157,7 @@ Confidence Guidelines:
 Note: For variables with specific values, indicate these are from historical data context and would need updating for current application.
 
 ## Example
-<!-- [FEW-SHOT v1] Source: run_20260211_081110 (JPY Rally BTC). Review & improve — consider adding a lower-confidence example. -->
+<!-- [FEW-SHOT v2] Compact format — arrow paths, no narrative. -->
 
 Query: On 2026-01-24, JPY/USD rallied to 155.90 rising 1.6% daily, and Japan finance minister warned speculators. What is the BTC impact?
 
@@ -159,41 +165,26 @@ Query: On 2026-01-24, JPY/USD rallied to 155.90 rising 1.6% daily, and Japan fin
 
 **CONCLUSION:** BTC faces downward pressure from JPY intervention risk through carry trade unwind
 **SUPPORTING PATHS:**
-- Path 1: JPY intervention risk → carry trade unwind → BTC selling pressure (Source: Plan G Research, Macro Jungle)
-- Path 2: BOJ tightening events → BTC drawdowns of 20-30% (Source: historical pattern — Mar 2024 -22.28%, Jul 2024 -26.63%, Jan 2025 -30.34%)
-- Path 3: BOJ rate expectations → yen strength → global liquidity tightening → carry unwind → BTC pressure (Source: Plan G Research)
-- Path 4: BOJ hike + Fed cut expectations → carry profitability compression → risk asset liquidation (Source: Plan G Research)
+- JPY intervention risk → carry trade unwind → BTC selling pressure (Plan G Research, Macro Jungle)
+- BOJ tightening events → BTC drawdowns 20-30% (historical: Mar24 -22%, Jul24 -27%, Jan25 -30%)
+- BOJ rate expectations → yen strength → carry unwind → BTC pressure (Plan G Research)
+- BOJ hike + Fed cut → carry profitability compression → risk liquidation (Plan G Research)
 **PATH_COUNT:** 4
 **SOURCE_DIVERSITY:** 3
 **CONFIDENCE:** High
 **CONFIDENCE_SCORE:** 0.85
-**CONFIDENCE_REASONING:** 4 independent paths from 3+ sources converge; historical pattern validated across 3 BOJ tightening episodes
+**CONFIDENCE_REASONING:** 4 paths from 3+ sources; validated across 3 BOJ tightening episodes
 
 **CONCLUSION:** Carry trade unwind is the primary transmission mechanism
 **SUPPORTING PATHS:**
-- Path 1: Intervention risk → carry position liquidation → forced USD repurchase → dollar shortage → SOFR spike (Source: Plan G Research)
-- Path 2: BOJ rate hike → market liquidity drain → margin calls → forced deleveraging (Source: Macro Jungle)
-- Path 3: Yen strength → global liquidity tightening concerns → carry trade compression (Source: Plan G Research)
+- Intervention risk → carry liquidation → forced USD repurchase → dollar shortage → SOFR spike (Plan G Research)
+- BOJ rate hike → liquidity drain → margin calls → forced deleveraging (Macro Jungle)
+- Yen strength → global liquidity tightening → carry compression (Plan G Research)
 **PATH_COUNT:** 3
 **SOURCE_DIVERSITY:** 2
 **CONFIDENCE:** High
 **CONFIDENCE_SCORE:** 0.80
-**CONFIDENCE_REASONING:** 3 paths from 2 sources with detailed mechanism descriptions
-
-## KEY VARIABLES TO MONITOR
-
-**Immediate Triggers:**
-- JPY/USD level (currently 155.90, 1.6% daily rally) [referenced in: Direct Intervention Impact]
-- BOJ intervention signals beyond jawboning [referenced in: Direct Intervention Impact]
-- NY Fed rate check activity (operational coordination) [referenced in: Direct Intervention Impact]
-
-**Liquidity Indicators:**
-- SOFR spikes (carry unwind stress signal) [referenced in: Carry Trade Unwind]
-- Global dollar liquidity conditions [referenced in: Multi-Hop chains]
-
-**BTC Technical Levels:**
-- Bear market targets: $70,000, $56,000 [referenced in: Historical Pattern]
-- Tail risk: 42% market-implied probability for <$60k [referenced in: Historical Pattern]"""
+**CONFIDENCE_REASONING:** 3 paths from 2 sources with detailed mechanism descriptions"""
 
 
 # Stage 3: Identify contradicting evidence (Issue 5: Negative Evidence Handling)
@@ -275,6 +266,7 @@ Rules:
 7. Keep the same output format as the original synthesis (consensus conclusions + key variables)
 8. **Check chain completeness**: For each causal conclusion, verify the full chain is articulated (A → B → C, not just A → C). Common missing intermediate steps: real rates (nominal minus inflation), yield curve dynamics (term premium, bear steepening vs flattening), trade balance effects, fiscal deficit implications. If data for intermediate steps exists in the new information, spell out the full chain.
 9. **Consider regime-shift interpretations**: If the data supports a clear directional conclusion, also check whether any web-sourced chains suggest a structural change or regime shift that could alter the trajectory. If credible opposing views from named institutions exist in the new information, present them as a competing scenario alongside the main conclusion. Do NOT force a contrarian view if no evidence supports one.
+10. **Be concise**: Use arrow notation for chains (A → B → C). Do NOT expand into narrative paragraphs. Each conclusion: paths + confidence + reasoning only.
 
 Output the updated synthesis directly. Do not include meta-commentary about what changed."""
 

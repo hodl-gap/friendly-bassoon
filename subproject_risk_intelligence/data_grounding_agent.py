@@ -25,7 +25,7 @@ def run_data_grounding_agent(state: RiskImpactState) -> RiskImpactState:
     Agentic data grounding: iteratively extracts variables, fetches data,
     validates claims and patterns.
 
-    Returns: Updated state with current_values, validated_patterns, etc.
+    Returns: Updated state with current_values, claim_validation_results, etc.
     """
     from shared.debug_logger import debug_log_node
     debug_log_node("data_grounding_agent", "ENTER", f"query={state.get('query', '')[:100]}")
@@ -115,7 +115,6 @@ def run_data_grounding_agent(state: RiskImpactState) -> RiskImpactState:
     # Update state with gathered data
     state["extracted_variables"] = agent_state.extracted_variables
     state["current_values"] = agent_state.current_values
-    state["validated_patterns"] = agent_state.validated_patterns
     state["claim_validation_results"] = agent_state.claim_validation_results
     state["fetch_errors"] = agent_state.fetch_errors
 
@@ -126,13 +125,12 @@ def run_data_grounding_agent(state: RiskImpactState) -> RiskImpactState:
         state["btc_price"] = agent_state.current_values["btc"].get("value")
 
     print(f"[Data Grounding Agent] Variables: {len(agent_state.extracted_variables)}, "
-          f"Values: {len(agent_state.current_values)}, "
-          f"Patterns: {len(agent_state.validated_patterns)}")
+          f"Values: {len(agent_state.current_values)}")
 
     debug_log_node("data_grounding_agent", "EXIT", (
         f"variables={len(agent_state.extracted_variables)}, "
         f"values={len(agent_state.current_values)}, "
-        f"patterns={len(agent_state.validated_patterns)}, "
+        f"claims={len(agent_state.claim_validation_results)}, "
         f"exit_reason={loop_result['exit_reason']}"
     ))
     return state

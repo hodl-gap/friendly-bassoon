@@ -15,7 +15,6 @@ from .impact_analysis_prompts import (
 )
 from .current_data_fetcher import format_current_values_for_prompt
 from .relationship_store import get_relevant_historical_chains, format_historical_chains_for_prompt
-from .pattern_validator import format_validated_patterns_for_prompt
 from .historical_data_fetcher import format_historical_data_for_prompt
 from .asset_configs import get_asset_config
 from .states import RiskImpactState
@@ -170,9 +169,6 @@ def _prepare_prompt_data(state: RiskImpactState, asset_class: str) -> dict:
     relevant_chains = get_relevant_historical_chains(query, historical_chains, limit=5)
     historical_chains_text = format_historical_chains_for_prompt(relevant_chains)
 
-    validated_patterns = state.get("validated_patterns", [])
-    validated_patterns_text = format_validated_patterns_for_prompt(validated_patterns)
-
     historical_event_data = state.get("historical_event_data", {})
     historical_event_text = format_historical_data_for_prompt(historical_event_data)
 
@@ -204,13 +200,11 @@ def _prepare_prompt_data(state: RiskImpactState, asset_class: str) -> dict:
 
     return {
         "query": query,
-        "retrieval_answer": state.get("retrieval_answer", ""),
         "synthesis": state.get("synthesis", ""),
         "logic_chains": state.get("logic_chains", []),
         "confidence_metadata": state.get("confidence_metadata", {}),
         "current_values_text": current_values_text,
         "historical_chains_text": historical_chains_text,
-        "validated_patterns_text": validated_patterns_text,
         "historical_event_text": historical_event_text,
         "knowledge_gaps": state.get("knowledge_gaps", {}),
         "gap_enrichment_text": state.get("gap_enrichment_text", ""),
@@ -241,22 +235,9 @@ def _analyze_insight(state: RiskImpactState, asset_class: str = "btc") -> RiskIm
             tool_choice={"type": "tool", "name": "output_insight"},
             model=model_short,
             temperature=0.3,
-            max_tokens=8192,
+            max_tokens=16000,
             system=SYSTEM_PROMPT,
         )
-
-        # Retry with higher limit if truncated
-        if getattr(response, "stop_reason", None) == "max_tokens":
-            print("[Impact Analysis] Response truncated at 8192 tokens, retrying with 12000...")
-            response = call_claude_with_tools(
-                messages=[{"role": "user", "content": prompt}],
-                tools=[insight_tool],
-                tool_choice={"type": "tool", "name": "output_insight"},
-                model=model_short,
-                temperature=0.3,
-                max_tokens=12000,
-                system=SYSTEM_PROMPT,
-            )
 
         print("\n[Impact Analysis] Raw LLM Response (insight):")
         print("-" * 40)
