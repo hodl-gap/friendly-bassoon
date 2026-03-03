@@ -59,19 +59,21 @@ ADDITIONAL_FRED_SERIES = {
     "cpi": "CPIAUCSL",                           # CPI All Urban Consumers
     "gdp": "GDP",                                # Gross Domestic Product
     "nonfarm_payrolls": "PAYEMS",                # Total Nonfarm Payrolls
+    "oecd_cli": "USALOLITONOSTSAM",             # OECD Composite Leading Indicator (normalized)
 }
 
 # FRED series that are released monthly (need extended lookback for change calculations)
 # Monthly series need ~90 days lookback to get 3 data points for proper change calc
 MONTHLY_FRED_SERIES = {
-    "TOTRESNS",    # Total Reserves - monthly
-    "FEDFUNDS",    # Fed Funds Rate - monthly
-    "M2SL",        # M2 Money Supply - monthly
-    "JTSJOL",      # JOLTS Job Openings - monthly
-    "UNRATE",      # Unemployment Rate - monthly
-    "CPIAUCSL",    # CPI - monthly
-    "GDP",         # GDP - quarterly
-    "PAYEMS",      # Nonfarm Payrolls - monthly
+    "TOTRESNS",          # Total Reserves - monthly
+    "FEDFUNDS",          # Fed Funds Rate - monthly
+    "M2SL",              # M2 Money Supply - monthly
+    "JTSJOL",            # JOLTS Job Openings - monthly
+    "UNRATE",            # Unemployment Rate - monthly
+    "CPIAUCSL",          # CPI - monthly
+    "GDP",               # GDP - quarterly
+    "PAYEMS",            # Nonfarm Payrolls - monthly
+    "USALOLITONOSTSAM",  # OECD CLI - monthly
 }
 
 # Default lookback days (270 ~1yr for daily, 400 ~1yr for monthly)
