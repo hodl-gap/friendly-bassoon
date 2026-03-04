@@ -34,6 +34,11 @@ SEARCH STRATEGY:
 - Group related queries into a single broader search when possible (e.g., combine 3 related tariff queries into one good Pinecone query)
 
 CRITICAL RULES:
+- TOOL ROUTING: Each essential_gap from assess_coverage includes a source_hint. Use the correct tool:
+  - source_hint="research_db" → search_pinecone (reasoning, mechanisms, causal chains)
+  - source_hint="web_search" → web_search or extract_web_chains (facts, dates, current events, analyst data)
+  Pinecone contains institutional research logic chains — it has NO factual data like selloff dates, Fed policy stances, tariff details, or market events. NEVER use search_pinecone for web_search gaps.
+  FALLBACK: If a research_db gap was already searched via Pinecone in a previous iteration and remains unfilled (still scored N or P), try web_search instead. The DB may simply not contain that content.
 - When assess_coverage returns ADEQUATE or COMPLETE, your VERY NEXT tool call MUST be generate_synthesis. Do NOT do more searches after ADEQUATE.
 - ALWAYS call extract_web_chains at least once — web chains provide causal mechanisms that Pinecone chunks often lack.
 - ALWAYS call generate_synthesis before finish_retrieval.

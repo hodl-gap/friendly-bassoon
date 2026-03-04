@@ -532,19 +532,20 @@ def search_for_chain_continuation(
 def search_saved_web_chains(
     query_text: str,
     top_k: int = 8,
-    threshold: float = 0.35
+    threshold: float = 0.50
 ) -> list:
     """
     Search Pinecone for previously persisted web chains only.
 
-    Uses a lower similarity threshold (0.35) because web chains use different
-    phrasing than the original query — they were extracted from web sources,
-    not from the same Telegram/institutional corpus.
+    Uses a moderate similarity threshold (0.50) to filter out clearly irrelevant
+    chains while still capturing topic-adjacent results. Callers should apply
+    additional relevance checks (e.g., LLM filtering) before treating results
+    as sufficient.
 
     Args:
         query_text: The search query
         top_k: Number of results (default: 8)
-        threshold: Similarity threshold (default: 0.35, lower than normal)
+        threshold: Similarity threshold (default: 0.50)
 
     Returns: List of chunks with id, score, metadata (only web_chain category)
     """

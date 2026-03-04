@@ -7,10 +7,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, str(Path(__file__).parent))
 
-from models import call_claude_sonnet
+from models import call_claude_sonnet, call_claude_with_tools
 from retrieval_agent_prompts import COVERAGE_ASSESSMENT_PROMPT
 from edf_decomposer_prompts import EDF_COVERAGE_ASSESSMENT_PROMPT
 from edf_decomposer import format_tree_items_for_scoring, compute_coverage_score
+from vector_search_prompts import SAVED_CHAIN_RELEVANCE_PROMPT
 
 
 # =============================================================================
@@ -166,6 +167,7 @@ class RetrievalAgentState:
         self.confidence_metadata = {}
         self.topic_coverage = {}
         self.coverage_history = []  # List of coverage percentages from assess_coverage calls
+        self.best_item_scores = {}  # {item_id: "Y"|"P"|"N"} — monotonic best per item
         self.calls_since_last_assessment = 0  # Tool calls since last assess_coverage
         self.stall_detected = False  # Set when coverage stall detected; short-circuits further searches
 
@@ -211,6 +213,140 @@ class RetrievalAgentState:
                 sources.add(src)
         return ", ".join(sorted(sources)[:10]) if sources else "(none)"
 
+    def get_web_search_summaries(self) -> str:
+        lines = []
+        for i, ws in enumerate(self.web_search_results[:10], 1):
+            info = ws.get("extracted_info", {}) or {}
+            facts = info.get("extracted_facts", [])
+            for f in facts[:3]:
+                lines.append(f"  WS{i}: {f.get('fact', '?')} (source: {f.get('source', '?')})")
+        return "\n".join(lines) if lines else "(none)"
+
+
+def _filter_saved_chains_by_relevance(query: str, saved_chunks: list, saved_chains: list) -> list:
+    """
+    LLM-filter saved web chains for topical relevance to the query.
+
+    Embeddings can't distinguish "Japan 2026 bond crash" from "US 1994 bond crash"
+    because they share concept vocabulary. This uses a single Haiku call to judge
+    whether each saved chunk is actually about the same topic as the query.
+
+    Args:
+        query: The search query
+        saved_chunks: Pinecone chunks (with metadata containing what_happened etc.)
+        saved_chains: Flat chain dicts produced by _convert_saved_chunks_to_web_chains
+
+    Returns:
+        Filtered list of chains (only those from relevant chunks)
+    """
+    if not saved_chunks:
+        return saved_chains
+
+    # Format chunks compactly for the LLM
+    lines = []
+    for i, chunk in enumerate(saved_chunks):
+        meta = chunk.get("metadata", {})
+        source = meta.get("source", "unknown")
+        what = meta.get("what_happened", "")[:150]
+        interp = meta.get("interpretation", "")[:100]
+        lines.append(f"[{i}] ({source}) {what}")
+        if interp:
+            lines.append(f"    Interpretation: {interp}")
+    chains_text = "\n".join(lines)
+
+    # Tool schema for structured output
+    relevance_tool = {
+        "name": "judge_chain_relevance",
+        "description": "Submit relevance judgments for each saved chain.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "judgments": {
+                    "type": "array",
+                    "description": "One judgment per chain",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "chain_index": {
+                                "type": "integer",
+                                "description": "Index of the chain (0-based)"
+                            },
+                            "relevant": {
+                                "type": "boolean",
+                                "description": "True if chain is about the same topic as the query"
+                            }
+                        },
+                        "required": ["chain_index", "relevant"]
+                    }
+                }
+            },
+            "required": ["judgments"]
+        }
+    }
+
+    user_prompt = SAVED_CHAIN_RELEVANCE_PROMPT.format(query=query, chains_text=chains_text)
+
+    try:
+        response = call_claude_with_tools(
+            messages=[{"role": "user", "content": user_prompt}],
+            tools=[relevance_tool],
+            tool_choice={"type": "tool", "name": "judge_chain_relevance"},
+            model="haiku",
+            temperature=0.0,
+            max_tokens=1000,
+        )
+
+        # Parse judgments
+        relevant_chunk_indices = set()
+        for content_block in response.content:
+            if content_block.type == "tool_use" and content_block.name == "judge_chain_relevance":
+                for j in content_block.input.get("judgments", []):
+                    if j.get("relevant", False):
+                        relevant_chunk_indices.add(j["chain_index"])
+
+        print(f"[extract_web_chains] LLM relevance filter: {len(relevant_chunk_indices)}/{len(saved_chunks)} chunks judged relevant")
+
+        if not relevant_chunk_indices:
+            return []
+
+        # Map chunk indices back to chains.
+        # _convert_saved_chunks_to_web_chains produces chains in chunk order:
+        # it iterates saved_chunks, and each chunk may produce 0-N chains.
+        # Re-derive that mapping by replaying the same iteration.
+        filtered_chains = []
+        chain_cursor = 0
+        for chunk_idx, chunk in enumerate(saved_chunks):
+            metadata = chunk.get("metadata", {})
+            extracted_data = metadata.get("extracted_data", "")
+            chains_from_chunk = 0
+
+            if isinstance(extracted_data, str) and extracted_data:
+                try:
+                    parsed = json.loads(extracted_data)
+                    for lc in parsed.get("logic_chains", []):
+                        chains_from_chunk += len(lc.get("steps", []))
+                except (json.JSONDecodeError, TypeError):
+                    pass
+
+            # Fallback: top-level metadata fields
+            if chains_from_chunk == 0:
+                cause = metadata.get("cause", "")
+                effect = metadata.get("effect", "")
+                if cause and effect:
+                    chains_from_chunk = 1
+
+            # Keep chains from this chunk if it was judged relevant
+            if chunk_idx in relevant_chunk_indices:
+                filtered_chains.extend(saved_chains[chain_cursor:chain_cursor + chains_from_chunk])
+
+            chain_cursor += chains_from_chunk
+
+        return filtered_chains
+
+    except Exception as e:
+        print(f"[extract_web_chains] WARNING: LLM relevance filter failed ({e}), using all chains (safe fallback)")
+        return saved_chains
+
 
 def build_tool_handlers(agent_state: RetrievalAgentState) -> dict:
     """Build tool handler dict bound to agent state."""
@@ -221,7 +357,7 @@ def build_tool_handlers(agent_state: RetrievalAgentState) -> dict:
             return short
         from vector_search import search_single_query, EXCLUDE_WEB_CHAINS_FILTER
         pinecone_filter = EXCLUDE_WEB_CHAINS_FILTER if exclude_web_chains else None
-        chunks = search_single_query(query, top_k=top_k, filter=pinecone_filter)
+        chunks = search_single_query(query, top_k=top_k, threshold=0.50, filter=pinecone_filter)
         agent_state.add_chunks(chunks)
 
         summaries = []
@@ -235,11 +371,15 @@ def build_tool_handlers(agent_state: RetrievalAgentState) -> dict:
                 "interpretation": meta.get("interpretation", "")[:200],
             })
 
-        return _maybe_auto_assess({
+        result = {
             "chunks_returned": len(chunks),
             "total_chunks": len(agent_state.chunks),
             "results": summaries,
-        })
+        }
+        if len(chunks) == 0:
+            result["note"] = "No relevant results found in database for this query. Try web_search or extract_web_chains instead."
+
+        return _maybe_auto_assess(result)
 
     def handle_extract_web_chains(query: str, angles: list = None) -> dict:
         short = _short_circuit_if_stalled("extract_web_chains")
@@ -253,26 +393,35 @@ def build_tool_handlers(agent_state: RetrievalAgentState) -> dict:
         saved_chains = _convert_saved_chunks_to_web_chains(saved_chunks) if saved_chunks else []
 
         if len(saved_chunks) >= 3 and saved_chains:
-            # Sufficient saved chains — skip Tavily extraction
-            agent_state.web_chains.extend(saved_chains)
-            print(f"[extract_web_chains] Using {len(saved_chains)} saved web chains from Pinecone (skipping Tavily)")
+            # LLM-filter for topical relevance before deciding sufficiency
+            relevant_chains = _filter_saved_chains_by_relevance(query, saved_chunks, saved_chains)
 
-            chain_summaries = []
-            for wc in saved_chains[:10]:
-                chain_summaries.append({
-                    "cause": wc.get("cause", ""),
-                    "effect": wc.get("effect", ""),
-                    "mechanism": wc.get("mechanism", "")[:150],
-                    "source": wc.get("source_name", "web (saved)"),
-                    "confidence": wc.get("confidence", "unknown"),
+            if len(relevant_chains) >= 3:
+                # Genuinely relevant — skip Tavily extraction
+                agent_state.web_chains.extend(relevant_chains)
+                print(f"[extract_web_chains] Using {len(relevant_chains)} relevant saved web chains from Pinecone (skipping Tavily)")
+
+                chain_summaries = []
+                for wc in relevant_chains[:10]:
+                    chain_summaries.append({
+                        "cause": wc.get("cause", ""),
+                        "effect": wc.get("effect", ""),
+                        "mechanism": wc.get("mechanism", "")[:150],
+                        "source": wc.get("source_name", "web (saved)"),
+                        "confidence": wc.get("confidence", "unknown"),
+                    })
+
+                return _maybe_auto_assess({
+                    "chains_extracted": len(relevant_chains),
+                    "total_web_chains": len(agent_state.web_chains),
+                    "chains": chain_summaries,
+                    "source": "saved_web_chains",
                 })
 
-            return _maybe_auto_assess({
-                "chains_extracted": len(saved_chains),
-                "total_web_chains": len(agent_state.web_chains),
-                "chains": chain_summaries,
-                "source": "saved_web_chains",
-            })
+            # Not enough relevant chains — fall through to Tavily
+            # Keep any relevant ones for merging below
+            saved_chains = relevant_chains
+            print(f"[extract_web_chains] Only {len(relevant_chains)} relevant saved chains (need 3) — falling through to Tavily")
 
         # Step 2: Not enough saved chains — extract via Tavily
         # Build a synthetic gap for the web chain extraction function
@@ -324,10 +473,15 @@ def build_tool_handlers(agent_state: RetrievalAgentState) -> dict:
                 return {"error": "WebSearchAdapter not available"}
             result = _search_and_evaluate(adapter, query, category, query)
             agent_state.web_search_results.append(result)
+            extracted_info = result.get("extracted_info", {}) or {}
+            facts = extracted_info.get("extracted_facts", [])
+            summary = extracted_info.get("summary", "")
+            sources = result.get("sources", [])
+            content = summary[:1000] if summary else "; ".join(f.get("fact", "") for f in facts[:3])
             return _maybe_auto_assess({
-                "found": result.get("found", False),
-                "content": result.get("content", "")[:1000],
-                "source": result.get("source", ""),
+                "found": result.get("filled", False),
+                "content": content,
+                "source": sources[0] if sources else "",
             })
         except Exception as e:
             return {"error": str(e)}
@@ -439,6 +593,7 @@ def build_tool_handlers(agent_state: RetrievalAgentState) -> dict:
             web_chain_count=len(state.web_chains),
             web_chain_summaries=state.get_web_chain_summaries(),
             web_search_count=len(state.web_search_results),
+            web_search_summaries=state.get_web_search_summaries(),
         )
 
         response = call_claude_sonnet(
@@ -459,9 +614,18 @@ def build_tool_handlers(agent_state: RetrievalAgentState) -> dict:
         except (json.JSONDecodeError, ValueError):
             result = {"rating": "INSUFFICIENT", "scores": {}, "essential_gaps": [], "suggested_queries": []}
 
-        # Compute detailed coverage metrics from scores
-        scores = result.get("scores", {})
-        coverage = compute_coverage_score(state.knowledge_tree, scores)
+        # Monotonic score enforcement: never downgrade an item's best-seen score
+        raw_scores = result.get("scores", {})
+        score_rank = {"N": 0, "P": 1, "Y": 2}
+        for item_id, new_score in raw_scores.items():
+            prev = state.best_item_scores.get(item_id, "N")
+            if score_rank.get(new_score, 0) > score_rank.get(prev, 0):
+                state.best_item_scores[item_id] = new_score
+            else:
+                state.best_item_scores[item_id] = prev
+
+        # Compute coverage from monotonic best scores (not raw Sonnet scores)
+        coverage = compute_coverage_score(state.knowledge_tree, state.best_item_scores)
 
         # Track coverage percentage for stall detection
         state.coverage_history.append(coverage["percentage"])

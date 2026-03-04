@@ -56,7 +56,7 @@ def decompose_query(query: str) -> dict:
     response = call_claude_opus(
         [{"role": "user", "content": prompt}],
         temperature=0.2,
-        max_tokens=8000,
+        max_tokens=12000,
     )
 
     print(f"[EDF Decomposer] Raw response length: {len(response)} chars")

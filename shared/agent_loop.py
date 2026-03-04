@@ -3,6 +3,9 @@
 Implements a conversational tool-use loop using call_claude_with_tools().
 Each iteration: send messages -> parse response -> if tool_use, execute handler,
 append tool_result, continue. If exit tool called, return its input.
+
+Step mode (STEP_MODE=1): pauses after each LLM decision and tool execution
+for interactive inspection.
 """
 
 import json
@@ -14,6 +17,91 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from models import call_claude_with_tools
 
+
+# =============================================================================
+# Step Mode Helpers
+# =============================================================================
+
+def _step_show_decision(phase_label, iteration, max_iterations, text_blocks, tool_use_blocks):
+    """Display full LLM reasoning and tool choices for step mode."""
+    w = 80
+    print(f"\n{'═' * w}")
+    print(f"  STEP [{phase_label}] Iteration {iteration}/{max_iterations} — LLM Decision")
+    print(f"{'═' * w}")
+
+    if text_blocks:
+        print(f"\n  REASONING:")
+        print(f"  {'─' * (w - 4)}")
+        for tb in text_blocks:
+            for line in tb.text.split('\n'):
+                print(f"  {line}")
+
+    print(f"\n  TOOL CALLS ({len(tool_use_blocks)}):")
+    print(f"  {'─' * (w - 4)}")
+    for i, tb in enumerate(tool_use_blocks, 1):
+        is_exit = hasattr(tb, '_is_exit') and tb._is_exit
+        label = f"  [{i}] {tb.name}" + (" [EXIT TOOL]" if is_exit else "")
+        print(label)
+        input_str = json.dumps(tb.input, default=str, indent=2)
+        for line in input_str.split('\n'):
+            print(f"      {line}")
+
+    print(f"{'═' * w}")
+
+
+def _step_show_results(phase_label, iteration, results_data):
+    """Display full tool results for step mode."""
+    w = 80
+    print(f"\n{'═' * w}")
+    print(f"  STEP [{phase_label}] Iteration {iteration} — Tool Results")
+    print(f"{'═' * w}")
+
+    for tool_name, result_str in results_data:
+        print(f"\n  {tool_name}:")
+        print(f"  {'─' * (w - 4)}")
+        for line in result_str.split('\n'):
+            print(f"  {line}")
+
+    print(f"{'═' * w}")
+
+
+def _step_show_exit(phase_label, iteration, exit_tool_name, exit_input):
+    """Display exit tool result for step mode."""
+    w = 80
+    print(f"\n{'═' * w}")
+    print(f"  STEP [{phase_label}] Iteration {iteration} — Phase Complete ({exit_tool_name})")
+    print(f"{'═' * w}")
+
+    input_str = json.dumps(exit_input, default=str, indent=2)
+    for line in input_str.split('\n'):
+        print(f"  {line}")
+
+    print(f"{'═' * w}")
+
+
+_STEP_SIGNAL_FILE = Path("/tmp/claude_step_signal")
+
+
+def _step_wait(action_desc):
+    """Wait for signal file to advance. Write 'go' to /tmp/claude_step_signal to proceed."""
+    # Clean up any leftover signal
+    _STEP_SIGNAL_FILE.unlink(missing_ok=True)
+
+    print(f"\n  >> PAUSED. Waiting for signal to {action_desc}...")
+    print(f"  >> Write 'go' to {_STEP_SIGNAL_FILE} to advance")
+    sys.stdout.flush()
+
+    while True:
+        if _STEP_SIGNAL_FILE.exists():
+            _STEP_SIGNAL_FILE.unlink(missing_ok=True)
+            print("  >> Advancing...")
+            break
+        time.sleep(0.5)
+
+
+# =============================================================================
+# Main Agent Loop
+# =============================================================================
 
 def run_agent_loop(
     system_prompt: str,
@@ -51,8 +139,10 @@ def run_agent_loop(
         }
     """
     from shared.debug_logger import debug_log, debug_log_node
+    from shared.feature_flags import step_mode_enabled
 
     tag = f"AGENT_LOOP[{phase_label}]"
+    stepping = step_mode_enabled()
 
     debug_log(f"{tag} START", (
         f"Phase: {phase_label}\n"
@@ -60,6 +150,7 @@ def run_agent_loop(
         f"Max iterations: {max_iterations}\n"
         f"Exit tool: {exit_tool_name}\n"
         f"Tools available: {[t['name'] for t in tools]}\n"
+        f"Step mode: {stepping}\n"
         f"Initial message:\n{initial_message}"
     ))
 
@@ -87,7 +178,8 @@ def run_agent_loop(
 
         if text_blocks:
             for tb in text_blocks:
-                print(f"[Agent Loop] Agent: {tb.text[:300]}...")
+                if not stepping:
+                    print(f"[Agent Loop] Agent: {tb.text[:300]}...")
                 debug_log(f"{tag} AGENT_TEXT iter={iteration}", tb.text)
 
         if not tool_use_blocks:
@@ -100,6 +192,11 @@ def run_agent_loop(
                 "tool_calls": tool_call_log,
                 "exit_reason": "text_response",
             }
+
+        # Step mode: show LLM decision before executing tools
+        if stepping:
+            _step_show_decision(phase_label, iteration, max_iterations, text_blocks, tool_use_blocks)
+            _step_wait("execute tools")
 
         # Build assistant message with all content blocks
         assistant_message = {"role": "assistant", "content": []}
@@ -121,6 +218,7 @@ def run_agent_loop(
         # Process each tool call
         tool_results = []
         exit_result = None
+        step_results_data = []
 
         for tool_block in tool_use_blocks:
             tool_name = tool_block.name
@@ -128,7 +226,8 @@ def run_agent_loop(
             tool_id = tool_block.id
 
             input_preview = json.dumps(tool_input, default=str)[:200]
-            print(f"[Agent Loop] Tool call: {tool_name}({input_preview})")
+            if not stepping:
+                print(f"[Agent Loop] Tool call: {tool_name}({input_preview})")
             debug_log(f"{tag} TOOL_CALL iter={iteration} tool={tool_name}", (
                 f"Tool: {tool_name}\n"
                 f"Input: {json.dumps(tool_input, default=str, indent=2)}"
@@ -137,7 +236,8 @@ def run_agent_loop(
             # Check if this is the exit tool
             if tool_name == exit_tool_name:
                 elapsed = time.time() - loop_start
-                print(f"[Agent Loop] Exit tool called after {iteration} iterations")
+                if not stepping:
+                    print(f"[Agent Loop] Exit tool called after {iteration} iterations")
                 debug_log(f"{tag} EXIT exit_tool", (
                     f"Exit tool '{exit_tool_name}' called at iteration {iteration}\n"
                     f"Total tool calls: {len(tool_call_log) + 1}\n"
@@ -176,11 +276,15 @@ def run_agent_loop(
                 result_str = result_str[:15000] + "\n... [truncated]"
 
             result_preview = result_str[:200] + "..." if len(result_str) > 200 else result_str
-            print(f"[Agent Loop] Result: {result_preview}")
+            if not stepping:
+                print(f"[Agent Loop] Result: {result_preview}")
             debug_log(f"{tag} TOOL_RESULT iter={iteration} tool={tool_name}", (
                 f"Tool: {tool_name}\n"
                 f"Result ({len(result_str)} chars):\n{result_str}"
             ))
+
+            # Collect for step mode display
+            step_results_data.append((tool_name, result_str))
 
             tool_call_log.append({
                 "tool": tool_name,
@@ -197,12 +301,20 @@ def run_agent_loop(
 
         # If exit tool was called, return now
         if exit_result is not None:
+            if stepping:
+                _step_show_exit(phase_label, iteration, exit_tool_name, exit_result)
+                _step_wait("finish this phase")
             return {
                 "result": exit_result,
                 "iterations": iteration,
                 "tool_calls": tool_call_log,
                 "exit_reason": "exit_tool",
             }
+
+        # Step mode: show tool results before next LLM call
+        if stepping and step_results_data:
+            _step_show_results(phase_label, iteration, step_results_data)
+            _step_wait("call LLM with results")
 
         # Append all tool results as a user message
         messages.append({"role": "user", "content": tool_results})

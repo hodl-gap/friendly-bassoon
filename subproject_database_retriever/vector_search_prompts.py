@@ -64,3 +64,20 @@ STRUCTURED_RERANK_USER_PROMPT = """Score each chunk for CAUSAL RELEVANCE to this
 {chunks_text}
 
 Use the submit_rerank_scores tool to submit your scores for ALL chunks."""
+
+
+# Prompt for judging whether saved web chains are relevant to a new query
+SAVED_CHAIN_RELEVANCE_PROMPT = """Are these saved research chains relevant to the new query?
+
+Query: {query}
+
+Saved chains (from previous research):
+{chains_text}
+
+For each chain, judge: is it about the SAME specific topic, event, or mechanism as the query?
+- RELEVANT: same topic, mechanism, or event (e.g., query about "US bank unrealized losses" and chain about "US bank HTM losses" = relevant)
+- IRRELEVANT: shares vocabulary but different event, country, or time period (e.g., "Japan 2026 bond crash" ≠ "US 1994 bond crash"; "SaaS meltdown" ≠ "bank balance sheet stress")
+
+Be strict: when in doubt, mark IRRELEVANT. Surface-level keyword overlap is NOT enough.
+
+Use the judge_chain_relevance tool to submit your judgments for ALL chains."""
