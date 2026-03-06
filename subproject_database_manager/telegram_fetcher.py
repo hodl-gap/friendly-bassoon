@@ -58,6 +58,34 @@ async def get_all_channels(client):
     return channels
 
 
+async def fetch_last_n_messages(client, channel_identifier, limit):
+    """
+    Fetch the last N messages from a channel (newest first).
+
+    Args:
+        client: Telethon client
+        channel_identifier: Channel username, title, or ID
+        limit: Number of messages to fetch
+
+    Returns:
+        list: List of message objects (newest first)
+    """
+    print(f"\n=== Fetching last {limit} messages from '{channel_identifier}' ===")
+
+    try:
+        channel = await client.get_entity(channel_identifier)
+    except Exception as e:
+        print(f"Error: Could not find channel '{channel_identifier}': {e}")
+        return []
+
+    messages = []
+    async for message in client.iter_messages(channel, limit=limit):
+        messages.append(message)
+
+    print(f"Fetched {len(messages)} messages")
+    return messages
+
+
 async def fetch_messages_by_date_range(client, channel_identifier, start_date, end_date, limit=None):
     """
     Fetch messages from a channel within a date range
@@ -220,15 +248,16 @@ def convert_to_chatexport_format(channel, messages, image_paths, channel_identif
     return export_data
 
 
-async def fetch_and_export(channel_names, start_date, end_date, output_base_dir="telegram_messages"):
+async def fetch_and_export(channel_names, start_date, end_date, output_base_dir="telegram_messages", last_n=None):
     """
     Main function to fetch messages and export in ChatExport format
 
     Args:
         channel_names: List of channel names/IDs to fetch from
-        start_date: datetime object for start date
-        end_date: datetime object for end date
+        start_date: datetime object for start date (None if using last_n)
+        end_date: datetime object for end date (None if using last_n)
         output_base_dir: Base directory for exports (default: "telegram_messages")
+        last_n: If set, fetch last N messages instead of using date range
 
     Returns:
         list: List of export folder paths created in this run
@@ -253,12 +282,15 @@ async def fetch_and_export(channel_names, start_date, end_date, output_base_dir=
         print(f"{'='*60}")
 
         # Fetch messages
-        messages = await fetch_messages_by_date_range(
-            client,
-            channel_name,
-            start_date,
-            end_date
-        )
+        if last_n:
+            messages = await fetch_last_n_messages(client, channel_name, last_n)
+        else:
+            messages = await fetch_messages_by_date_range(
+                client,
+                channel_name,
+                start_date,
+                end_date
+            )
 
         if not messages:
             print(f"⚠️  No messages found for {channel_name}")
@@ -271,7 +303,8 @@ async def fetch_and_export(channel_names, start_date, end_date, output_base_dir=
         # Format: ChatExport_<channel_id>_<end_date>
         # Use the original channel identifier (user input) instead of channel.title for consistent naming
         safe_channel_id = "".join(c for c in channel_name if c.isalnum() or c in (' ', '-', '_')).strip()
-        export_folder_name = f"ChatExport_{safe_channel_id}_{end_date.strftime('%Y-%m-%d')}"
+        date_label = end_date.strftime('%Y-%m-%d') if end_date else datetime.now().strftime('%Y-%m-%d')
+        export_folder_name = f"ChatExport_{safe_channel_id}_{date_label}"
         export_path = base_path / export_folder_name
         export_path.mkdir(parents=True, exist_ok=True)
 
@@ -374,6 +407,13 @@ Examples:
     )
 
     parser.add_argument(
+        '--last',
+        type=int,
+        default=None,
+        help='Fetch last N messages (newest first, no date range needed)'
+    )
+
+    parser.add_argument(
         '--output',
         type=str,
         default='telegram_messages',
@@ -394,14 +434,17 @@ Examples:
         return
 
     # Validate required arguments for fetch mode
-    if not args.channels or not args.start_date or not args.end_date:
-        parser.error("--channels, --start-date, and --end-date are required (or use --list-channels)")
+    if not args.channels:
+        parser.error("--channels is required (or use --list-channels)")
+
+    if not args.last and (not args.start_date or not args.end_date):
+        parser.error("--start-date and --end-date are required (or use --last N)")
 
     # Parse channel list
     channel_list = [ch.strip() for ch in args.channels.split(',')]
 
-    # Validate date range
-    if args.start_date > args.end_date:
+    # Validate date range if provided
+    if args.start_date and args.end_date and args.start_date > args.end_date:
         parser.error("start-date must be before or equal to end-date")
 
     # Run the fetcher
@@ -409,7 +452,10 @@ Examples:
     print("Telegram Message Fetcher")
     print("="*60)
     print(f"Channels: {', '.join(channel_list)}")
-    print(f"Date range: {args.start_date.date()} to {args.end_date.date()}")
+    if args.last:
+        print(f"Mode: last {args.last} messages")
+    else:
+        print(f"Date range: {args.start_date.date()} to {args.end_date.date()}")
     print(f"Output directory: {args.output}")
     print("="*60 + "\n")
 
@@ -417,7 +463,8 @@ Examples:
         channel_list,
         args.start_date,
         args.end_date,
-        args.output
+        args.output,
+        last_n=args.last
     ))
 
 

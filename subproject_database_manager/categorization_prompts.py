@@ -51,7 +51,14 @@ Text: {message_text}
    - Example: "호주 10년물 금리 18bp 상승... RBA 기준금리 동결... 금리 인하 사이클 종료 가능성"
    - Will extract full structured analysis
 
-7. **other** - Doesn't fit any of the above categories
+7. **individual_stock** - Individual stock/company-specific research and analysis
+   - Earnings analysis, company fundamentals, stock-specific trade ideas
+   - Example: "삼성전자 4Q 실적 리뷰: DRAM 가격 상승으로..."
+   - Example: "AAPL: iPhone 16 cycle disappointing, cutting PT to $200"
+   - NOTE: If the stock analysis connects to a MACRO theme (e.g., "NVDA earnings → AI CAPEX cycle → market regime"), categorize as data_opinion instead
+   - Will save raw text only
+
+8. **other** - Doesn't fit any of the above categories
    - Use this if you're uncertain or the message is ambiguous
    - Flag for manual review
 
@@ -61,7 +68,7 @@ Categorize this message into ONE of the above categories.
 **Output (JSON only):**
 ```json
 {{
-    "category": "one of: greeting|schedule|event_announcement|interview_meeting|data_update|data_opinion|other",
+    "category": "one of: greeting|schedule|event_announcement|interview_meeting|data_update|data_opinion|individual_stock|other",
     "confidence": "high|medium|low",
     "reason": "1-2 sentence explanation"
 }}

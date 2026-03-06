@@ -1,15 +1,18 @@
 """
-Pipeline Log Viewer v2 — Human-readable gap analysis grouping.
+Pipeline Log Viewer v2 — Agentic pipeline visualization.
 
-Changes from v1:
-  - Gap-related phases merged into single "Gap Analysis" visit
-  - Steps reordered by gap category (not execution order)
-  - Gap summary table from parsed JSON
-  - Per-gap group headers with status badges
+Designed for the 4-phase ReAct agent architecture:
+  Phase 1: Retrieval Agent (agentic search + coverage assessment)
+  Phase 2: Data Grounding Agent (variable extraction + data fetching)
+  Phase 3: Historical Context Agent (analog detection + regime characterization)
+  Phase 4: Synthesis (Opus generate + Sonnet self-check)
+  Output: Tracks, synthesis, current data, condensed summary, LLM usage
+
+Groups by phases → iterations → tool calls instead of visits + steps.
 
 Usage:
-    python tools/log_viewer_v2.py logs/run_20260220_020944.log
-    python tools/log_viewer_v2.py logs/run_20260221_045642.log -o my_view_v2.html
+    python tools/log_viewer_v2.py logs/run_20260226_025056.log
+    python tools/log_viewer_v2.py logs/run_20260226_025056.log -o my_view.html
 """
 
 import re
@@ -17,599 +20,804 @@ import sys
 import html
 import json
 from pathlib import Path
+from dataclasses import dataclass, field
 
 
-# ── Line classification (same as v1) ────────────────────────────────────
+# ── Data model ───────────────────────────────────────────────────────────
 
-def classify_line(line: str) -> str:
-    stripped = line.strip()
-    if not stripped:
-        return "blank"
-    if stripped.startswith("=====") or stripped.startswith("-----") or stripped.startswith("#####"):
-        return "separator"
-    if re.match(r'^\[[\w\s./:\-]+\]', stripped) and not line.startswith(' '):
-        return "step"
-    if stripped.startswith("DIMENSION:"):
-        return "dimension"
-    if stripped.startswith("REASONING:"):
-        return "reasoning"
-    if stripped.startswith("QUERY:"):
-        return "query_line"
-    if stripped.startswith("**CHAIN:**") or stripped.startswith("**MECHANISM:**") or stripped.startswith("**SOURCE:**") or stripped.startswith("**CONNECTION:**"):
-        return "chain_detail"
-    if re.match(r'^2\d{3}-\d{2}-\d{2}.*httpx.*HTTP Request', stripped):
-        return "httpx_noise"
-    if stripped.startswith("Pipeline Run:") or stripped.startswith("Query:") and len(stripped) < 200:
-        return "header"
-    if stripped.startswith("Message(id="):
-        return "raw_message"
-    return "body"
+@dataclass
+class SubLog:
+    tag: str
+    text: str
 
 
-def detect_module(line: str) -> str:
-    m = re.match(r'^\[([\w\s./:]+)\]', line.strip())
-    return m.group(1).strip() if m else ""
+@dataclass
+class ToolCall:
+    tool_name: str
+    arguments: str
+    result_preview: str = ""
+    sub_logs: list[SubLog] = field(default_factory=list)
 
 
-# ── Phase / module mappings (v2: Gap Analysis replaces separate phases) ──
+@dataclass
+class Iteration:
+    number: int
+    max_iterations: int
+    thinking: str = ""
+    tool_calls: list[ToolCall] = field(default_factory=list)
 
-PHASE_ORDER = [
-    "Query Processing",
-    "Vector Search",
-    "Answer Generation",
-    "Gap Analysis",
-    "Historical Analogs",
-    "Variable Extraction",
-    "Data Collection",
-    "Risk Intelligence",
-    "Output",
-]
 
-PHASE_SHORT = {
-    "Query Processing": "Query",
-    "Vector Search": "Search",
-    "Answer Generation": "Answer",
-    "Gap Analysis": "Gap Analysis",
-    "Historical Analogs": "Hist. Analog",
-    "Variable Extraction": "Variables",
-    "Data Collection": "Data Fetch",
-    "Risk Intelligence": "Risk Intel",
-    "Output": "Output",
+@dataclass
+class LogEntry:
+    tag: str
+    lines: list[str] = field(default_factory=list)
+
+
+@dataclass
+class CoverageResult:
+    rating: str = ""
+    flags_met: int = 0
+    flags_total: int = 0
+    flags: list[tuple[bool, str]] = field(default_factory=list)
+
+
+@dataclass
+class Phase:
+    name: str
+    phase_number: int
+    iterations: list[Iteration] = field(default_factory=list)
+    post_processing: list[LogEntry] = field(default_factory=list)
+    completion_note: str = ""
+
+
+@dataclass
+class Track:
+    number: int
+    title: str
+    confidence: int = 0
+    mechanism: str = ""
+    time_horizon: str = ""
+    phase_num: int = 0
+    evidence: str = ""
+    asset_implications: list[str] = field(default_factory=list)
+    monitor: list[str] = field(default_factory=list)
+
+
+@dataclass
+class OutputSection:
+    asset: str = ""
+    tracks: list[Track] = field(default_factory=list)
+    synthesis: str = ""
+    uncertainties: list[str] = field(default_factory=list)
+    current_data: str = ""
+    condensed: str = ""
+
+
+@dataclass
+class LLMModelUsage:
+    model: str = ""
+    calls: int = 0
+    input_tokens: int = 0
+    output_tokens: int = 0
+    cost: float = 0.0
+
+
+@dataclass
+class PipelineRun:
+    query: str = ""
+    timestamp: str = ""
+    log_path: str = ""
+    phases: list[Phase] = field(default_factory=list)
+    output: OutputSection = field(default_factory=OutputSection)
+    llm_usage: list[LLMModelUsage] = field(default_factory=list)
+    total_cost: float = 0.0
+    total_tokens: int = 0
+    duration: str = ""
+
+
+# ── Parser ───────────────────────────────────────────────────────────────
+
+# Regex patterns
+RE_PHASE_START = {
+    1: re.compile(r'\[Retrieval Agent\] Starting agentic retrieval'),
+    2: re.compile(r'\[Data Grounding Agent\] Starting agentic data grounding'),
+    3: re.compile(r'\[Historical Context Agent\] Starting agentic historical'),
+    4: re.compile(r'\[Synthesis Phase\] Starting'),
 }
-
-PHASE_ICONS = {
-    "Query Processing": "&#x1F50D;",
-    "Vector Search": "&#x1F4BE;",
-    "Answer Generation": "&#x1F4DD;",
-    "Gap Analysis": "&#x26A0;",
-    "Historical Analogs": "&#x1F4C5;",
-    "Variable Extraction": "&#x1F4CA;",
-    "Data Collection": "&#x1F4E5;",
-    "Risk Intelligence": "&#x1F9E0;",
-    "Output": "&#x2705;",
-}
-
-MODULE_TO_PHASE = {
-    "query_processing": "Query Processing",
-    "Retrieve": "Query Processing",
-    "retrieval": "Query Processing",
-    "vector_search": "Vector Search",
-    "chain_expansion": "Vector Search",
-    "answer_generation": "Answer Generation",
-    # v2: all gap-related modules → Gap Analysis
-    "Knowledge Gap": "Gap Analysis",
-    "retriever.gap_detector": "Gap Analysis",
-    "Gap: topic_not_covered": "Gap Analysis",
-    "Gap: historical_precedent_depth": "Gap Analysis",
-    "Gap: quantified_relationships": "Gap Analysis",
-    "Gap: monitoring_thresholds": "Gap Analysis",
-    "Gap: event_calendar": "Gap Analysis",
-    "Gap: mechanism_conditions": "Gap Analysis",
-    "Gap: exit_criteria": "Gap Analysis",
-    "WebSearch": "Gap Analysis",
-    "web_chain_persistence": "Gap Analysis",
-    "Chain Merge": "Gap Analysis",
-    "Chain Triggers": "Gap Analysis",
-    "Chain Graph": "Gap Analysis",
-    "Historical Analog": "Historical Analogs",
-    "Historical Analogs": "Historical Analogs",
-    "Historical Data": "Data Collection",
-    "Historical Event": "Data Collection",
-    "Variable Extraction": "Variable Extraction",
-    "current_data": "Data Collection",
-    "Current Data": "Data Collection",
-    "data_fetching": "Data Collection",
-    "claim_parsing": "Data Collection",
-    "Claim Validation": "Data Collection",
-    "validation": "Data Collection",
-    "Pattern Validator": "Data Collection",
-    "Impact Analysis": "Risk Intelligence",
-    "orchestrator": "Risk Intelligence",
-    "Regime State": "Risk Intelligence",
-    "Regime Characterization": "Risk Intelligence",
-    "Regime/Bitcoin": "Risk Intelligence",
-    "Prediction Tracker": "Output",
-    "Relationship Store": "Output",
-    "output_formatter": "Output",
-    "rss_adapter": "Output",
-}
-
-PHASE_COLORS = {
-    "Query Processing": "#3b82f6",
-    "Vector Search": "#8b5cf6",
-    "Answer Generation": "#06b6d4",
-    "Gap Analysis": "#f59e0b",
-    "Historical Analogs": "#ec4899",
-    "Variable Extraction": "#a855f7",
-    "Data Collection": "#0ea5e9",
-    "Risk Intelligence": "#ef4444",
-    "Output": "#78716c",
-}
-
-MODULE_COLORS = {
-    "query_processing": "#3b82f6",
-    "vector_search": "#8b5cf6",
-    "answer_generation": "#06b6d4",
-    "chain_expansion": "#6366f1",
-    "Knowledge Gap": "#f59e0b",
-    "WebSearch": "#10b981",
-    "Historical Analog": "#ec4899",
-    "Historical Analogs": "#ec4899",
-    "Historical Data": "#d946ef",
-    "Historical Event": "#d946ef",
-    "Chain Merge": "#f97316",
-    "Chain Triggers": "#f97316",
-    "Chain Graph": "#f97316",
-    "web_chain_persistence": "#14b8a6",
-    "retrieval": "#3b82f6",
-    "retriever.gap_detector": "#f59e0b",
-    "Retrieve": "#2563eb",
-    "Variable Extraction": "#a855f7",
-    "current_data": "#0ea5e9",
-    "Current Data": "#0ea5e9",
-    "Impact Analysis": "#ef4444",
-    "orchestrator": "#ef4444",
-    "claim_parsing": "#64748b",
-    "Claim Validation": "#64748b",
-    "data_fetching": "#64748b",
-    "validation": "#64748b",
-    "Pattern Validator": "#64748b",
-    "Regime State": "#dc2626",
-    "Regime Characterization": "#dc2626",
-    "Regime/Bitcoin": "#dc2626",
-    "Prediction Tracker": "#78716c",
-    "Relationship Store": "#78716c",
-    "output_formatter": "#78716c",
-    "rss_adapter": "#78716c",
-    "Gap: topic_not_covered": "#10b981",
-    "Gap: historical_precedent_depth": "#8b5cf6",
-    "Gap: quantified_relationships": "#3b82f6",
-    "Gap: monitoring_thresholds": "#f59e0b",
-    "Gap: event_calendar": "#06b6d4",
-    "Gap: mechanism_conditions": "#ec4899",
-    "Gap: exit_criteria": "#ef4444",
-}
-
-# v2: Gap group config
-GAP_LABELS = {
-    "topic_not_covered": "Topic Coverage",
-    "historical_precedent_depth": "Historical Precedents",
-    "quantified_relationships": "Quantified Relationships",
-    "monitoring_thresholds": "Monitoring Thresholds",
-    "event_calendar": "Event Calendar",
-    "mechanism_conditions": "Mechanism Conditions",
-    "exit_criteria": "Exit Criteria",
-    "_overview": "Gap Detection",
-    "_conclusion": "Summary & Merge",
-}
-
-GAP_GROUP_COLORS = {
-    "topic_not_covered": "#10b981",
-    "historical_precedent_depth": "#8b5cf6",
-    "quantified_relationships": "#3b82f6",
-    "monitoring_thresholds": "#f59e0b",
-    "event_calendar": "#06b6d4",
-    "mechanism_conditions": "#ec4899",
-    "exit_criteria": "#ef4444",
-    "_overview": "#f59e0b",
-    "_conclusion": "#78716c",
-}
-
-GAP_CANONICAL_ORDER = [
-    "_overview",
-    "topic_not_covered",
-    "historical_precedent_depth",
-    "quantified_relationships",
-    "monitoring_thresholds",
-    "event_calendar",
-    "mechanism_conditions",
-    "exit_criteria",
-    "_conclusion",
-]
+RE_ITERATION = re.compile(r'\[Agent Loop\] Iteration (\d+)/(\d+)')
+RE_AGENT_THINK = re.compile(r'\[Agent Loop\] Agent: (.+)')
+RE_TOOL_CALL = re.compile(r'\[Agent Loop\] Tool call: (\w+)\((.+)')
+RE_TOOL_RESULT = re.compile(r'\[Agent Loop\] Result: (.+)')
+RE_EXIT_TOOL = re.compile(r'\[Agent Loop\] Exit tool called after (\d+)')
+RE_MAX_ITER = re.compile(r'\[Agent Loop\] Max iterations \((\d+)\) reached')
+RE_PHASE_COMPLETE = re.compile(r'\[(Retrieval Agent|Data Grounding Agent|Historical Context Agent)\] Completed')
+RE_COVERAGE = re.compile(r'\[Coverage\] (\w+) \((\d+)/(\d+) flags?\)')
+RE_COVERAGE_FLAG = re.compile(r'^\s+\[(Y|N)\] (.+)')
+RE_TRACK = re.compile(r'^TRACK (\d+): (.+)')
+RE_CONFIDENCE = re.compile(r'^\s+Confidence: (\d+)%')
+RE_MECHANISM = re.compile(r'^\s+Mechanism: (.+)')
+RE_TIME_HORIZON = re.compile(r'^\s+Time Horizon: (.+)')
+RE_PHASE_LINE = re.compile(r'^\s+Phase: (\d+)')
+RE_EVIDENCE = re.compile(r'^\s+Evidence: (.+)')
+RE_SUB_LOG = re.compile(r'^\[([^\]]+)\] (.+)')
+RE_HTTPX = re.compile(r'^\d{4}-\d{2}-\d{2}.*httpx.*HTTP Request')
+RE_LLM_MODEL = re.compile(r'^(HAIKU|OPUS|SONNET):$')
+RE_LLM_CALLS = re.compile(r'^Calls:\s+(\d+)')
+RE_LLM_INPUT = re.compile(r'^Input:\s+([\d,]+) tokens')
+RE_LLM_OUTPUT = re.compile(r'^Output:\s+([\d,]+) tokens')
+RE_LLM_COST = re.compile(r'^Cost:\s+\$([\d.]+)')
+RE_TOTAL_COST = re.compile(r'^Cost:\s+\$([\d.]+)')
+RE_TOTAL_TOKENS = re.compile(r'^Tokens:\s+([\d,]+)')
+RE_DURATION = re.compile(r'^Pipeline duration: ([\d.]+)s')
 
 
-# ── Key step detection (same as v1) ─────────────────────────────────────
-
-def is_key_step(line: str) -> bool:
-    keywords = [
-        "Gap split:", "Coverage:", "Gaps:", "FILLED", "UNFILL", "PARTIAL",
-        "Confidence:", "confidence_level", "Stage 1 complete", "Stage 2 complete",
-        "Stage 3:", "WEB CHAIN EXTRACTION NEEDED", "Injected web_chain_extraction",
-        "Total:", "chains from", "merged", "Expanded to", "Extracted",
-        "Final:", "chunks", "re-ranked", "Persisted", "direction=",
-        "Summary:", "dominant_pattern", "episodes", "Status:",
-        "CHAIN INCOMPLETE", "dangling", "resolution rate",
-        "Query complexity:", "Temporal reference:", "Type:",
-        "Processing query", "Querying:",
-    ]
-    return any(kw in line for kw in keywords)
+def is_separator(line: str) -> bool:
+    s = line.strip()
+    return bool(s) and all(c in '=-#' for c in s) and len(s) >= 10
 
 
-# ── Gap Analysis helpers (v2 only) ──────────────────────────────────────
-
-def extract_gap_json(body_lines: list[str]) -> dict | None:
-    """Extract gap detection JSON from step body lines."""
-    text = "\n".join(body_lines)
-    start = text.find('{\n  "coverage_rating"')
-    if start == -1:
-        start = text.find('{"coverage_rating"')
-    if start == -1:
-        return None
-    brace_count = 0
-    for i in range(start, len(text)):
-        if text[i] == '{':
-            brace_count += 1
-        elif text[i] == '}':
-            brace_count -= 1
-        if brace_count == 0:
-            try:
-                return json.loads(text[start:i + 1])
-            except json.JSONDecodeError:
-                return None
-    return None
-
-
-def tag_gap_step(step: dict, current_gap: str, seen_any_gap: bool) -> tuple[str, str]:
-    """Tag a step with its gap group. Returns (group, new_current_gap)."""
-    summary = step["summary"]
-    body_text = "\n".join(step["body"])
-
-    # 1. Explicit gap markers
-    m = re.match(r'\[Gap:\s*([\w_]+)\]', summary.strip())
-    if m:
-        cat = m.group(1)
-        return cat, cat
-
-    # 2. Web chain content → topic_not_covered
-    wc_markers = [
-        "Searching for logic chains on:",
-        "logic_chains with Haiku",
-        "Web chain expansion response",
-        "web chain queries",
-        "trusted sources from",
-        '"chain_count"',
-        "chains from",
-    ]
-    if any(marker in body_text for marker in wc_markers):
-        return "topic_not_covered", current_gap
-
-    # 3. Conclusion markers
-    conc_markers = ["Chain Merge", "chains extracted", "Web chain extraction:"]
-    if any(marker in summary for marker in conc_markers):
-        return "_conclusion", current_gap
-    if re.search(r'\[Knowledge Gap\].*Summary:', summary):
-        return "_conclusion", current_gap
-
-    # 4. Data fetch errors
-    if "yfinance" in body_text or "Data fetcher import" in body_text:
-        return "quantified_relationships", current_gap
-
-    # 5. Persistence
-    if "Persisted" in summary or "persist" in summary.lower():
-        return "_conclusion", current_gap
-
-    # 6. Before any gap → overview
-    if not seen_any_gap:
-        return "_overview", current_gap
-
-    # 7. "Attempting to fill" → overview
-    if "Attempting to fill" in summary:
-        return "_overview", current_gap
-
-    # 8. Default: current gap
-    return current_gap, current_gap
-
-
-def organize_gap_steps(steps: list[dict]) -> tuple[list[tuple], dict | None]:
-    """Organize gap steps into groups by category for nested rendering."""
-    # Extract gap JSON
-    gap_json = None
-    for step in steps:
-        gap_json = extract_gap_json(step["body"])
-        if gap_json:
-            break
-
-    # Tag all steps
-    current_gap = "_overview"
-    seen_any_gap = False
-    for step in steps:
-        if re.match(r'\[Gap:\s*', step["summary"].strip()):
-            seen_any_gap = True
-        group, current_gap = tag_gap_step(step, current_gap, seen_any_gap)
-        step["_gap_group"] = group
-
-    # Build ordered groups
-    groups = []
-    seen = set()
-    for group_name in GAP_CANONICAL_ORDER:
-        group_steps = [s for s in steps if s.get("_gap_group") == group_name]
-        if group_steps and group_name not in seen:
-            groups.append((group_name, group_steps))
-            seen.add(group_name)
-    # Catch any unlisted groups
-    for step in steps:
-        g = step.get("_gap_group", "_overview")
-        if g not in seen:
-            gs = [s for s in steps if s.get("_gap_group") == g]
-            groups.append((g, gs))
-            seen.add(g)
-
-    return groups, gap_json
-
-
-def detect_group_status(group_steps: list[dict]) -> str | None:
-    """Detect FILLED/UNFILLABLE/ERROR status from a gap group's steps."""
-    for step in group_steps:
-        body = "\n".join(step["body"])
-        if "Status: FILLED" in body:
-            return "FILLED"
-        if "Status: UNFILLABLE" in body:
-            return "UNFILLABLE"
-        if "Status: PARTIAL" in body:
-            return "PARTIAL"
-    for step in group_steps:
-        body = "\n".join(step["body"])
-        if "not installed" in body or "import failed" in body:
-            return "ERROR"
-    return None
-
-
-def get_gap_info(gap_json: dict | None, category: str) -> dict:
-    """Get gap info from JSON for a category."""
-    if not gap_json:
-        return {}
-    for gap in gap_json.get("gaps", []):
-        if gap.get("category") == category:
-            return gap
-    return {}
-
-
-# ── Parser (same as v1) ─────────────────────────────────────────────────
-
-def parse_log(lines: list[str]) -> list[dict]:
-    steps = []
-    i = 0
+def parse_log(lines: list[str]) -> PipelineRun:
+    run = PipelineRun()
     n = len(lines)
+    i = 0
 
-    # Header
-    header_lines = []
-    while i < n and i < 10:
-        cl = classify_line(lines[i])
-        if cl in ("header", "separator", "blank"):
-            header_lines.append(lines[i])
+    # Parse header
+    while i < n and i < 15:
+        line = lines[i].strip()
+        if line.startswith("Pipeline Run:"):
+            run.timestamp = line.replace("Pipeline Run:", "").strip()
+        elif line.startswith("Query:"):
+            run.query = line[6:].strip()
+            # Multi-line query
             i += 1
-        elif cl == "step" and "[Retrieve]" in lines[i]:
-            break
-        else:
-            header_lines.append(lines[i])
-            i += 1
+            while i < n and lines[i].strip() and not is_separator(lines[i]):
+                if lines[i].strip().startswith("Trader query:"):
+                    break
+                run.query += "\n" + lines[i].strip()
+                i += 1
+            continue
+        elif line.startswith("Trader query:"):
+            pass  # Skip, already have the data query
+        i += 1
 
-    if header_lines:
-        steps.append({
-            "type": "header", "module": "Pipeline", "phase": "Query Processing",
-            "summary": next((l.strip() for l in header_lines if l.strip().startswith("Query:")), "Pipeline Start"),
-            "body": header_lines, "is_key": True,
-        })
+    # State machine
+    current_phase: Phase | None = None
+    current_iter: Iteration | None = None
+    current_tool: ToolCall | None = None
+    in_post_processing = False
+    in_output = False
+    in_synthesis = False
+    in_current_data = False
+    in_uncertainties = False
+    in_condensed = False
+    in_llm_usage = False
+    in_total = False
+    current_track: Track | None = None
+    current_track_section = ""  # "evidence", "implications", "monitor"
+    current_llm_model: LLMModelUsage | None = None
+    coverage_pending: CoverageResult | None = None
+    synthesis_lines: list[str] = []
+    current_data_lines: list[str] = []
+    uncertainty_lines: list[str] = []
+    condensed_lines: list[str] = []
 
+    i = 0
     while i < n:
         line = lines[i]
-        cl = classify_line(line)
+        stripped = line.strip()
 
-        if cl == "httpx_noise":
+        # Skip httpx noise
+        if RE_HTTPX.match(stripped):
             i += 1
             continue
 
-        if cl == "separator":
+        # Skip blank/separator in non-content contexts
+        if not stripped and not (in_synthesis or in_current_data or in_condensed or in_output):
+            i += 1
+            continue
+
+        # ── LLM USAGE SUMMARY ──
+        if stripped == "LLM USAGE SUMMARY":
+            in_llm_usage = True
+            in_output = False
+            in_synthesis = False
+            in_current_data = False
+            in_condensed = False
+            if current_track:
+                run.output.tracks.append(current_track)
+                current_track = None
+            i += 1
+            continue
+
+        if in_llm_usage:
+            if stripped == "TOTAL:":
+                in_total = True
+                if current_llm_model:
+                    run.llm_usage.append(current_llm_model)
+                    current_llm_model = None
+                i += 1
+                continue
+
+            if in_total:
+                m = RE_TOTAL_COST.match(stripped)
+                if m:
+                    run.total_cost = float(m.group(1))
+                m = RE_TOTAL_TOKENS.match(stripped)
+                if m:
+                    run.total_tokens = int(m.group(1).replace(",", ""))
+                m = RE_DURATION.match(stripped)
+                if m:
+                    run.duration = m.group(1) + "s"
+                i += 1
+                continue
+
+            m = RE_LLM_MODEL.match(stripped)
+            if m:
+                if current_llm_model:
+                    run.llm_usage.append(current_llm_model)
+                current_llm_model = LLMModelUsage(model=m.group(1))
+                i += 1
+                continue
+
+            if current_llm_model:
+                m = RE_LLM_CALLS.match(stripped)
+                if m:
+                    current_llm_model.calls = int(m.group(1))
+                m = RE_LLM_INPUT.match(stripped)
+                if m:
+                    current_llm_model.input_tokens = int(m.group(1).replace(",", ""))
+                m = RE_LLM_OUTPUT.match(stripped)
+                if m:
+                    current_llm_model.output_tokens = int(m.group(1).replace(",", ""))
+                m = RE_LLM_COST.match(stripped)
+                if m:
+                    current_llm_model.cost = float(m.group(1))
+
+            m = RE_DURATION.match(stripped)
+            if m:
+                run.duration = m.group(1) + "s"
+                if current_llm_model:
+                    run.llm_usage.append(current_llm_model)
+                    current_llm_model = None
+
+            i += 1
+            continue
+
+        # ── Duration after LLM usage ──
+        m = RE_DURATION.match(stripped)
+        if m:
+            run.duration = m.group(1) + "s"
+            i += 1
+            continue
+
+        # ── INSIGHT REPORT ──
+        if "INSIGHT REPORT" in stripped and not stripped.startswith("["):
+            in_output = True
+            in_synthesis = False
+            in_current_data = False
+            in_condensed = False
+            in_post_processing = False
+            # Flush current phase
+            if current_phase:
+                if current_iter:
+                    current_phase.iterations.append(current_iter)
+                    current_iter = None
+                run.phases.append(current_phase)
+                current_phase = None
+            # Extract asset name
+            m2 = re.search(r'INSIGHT REPORT\s*--\s*(.+)', stripped)
+            if m2:
+                run.output.asset = m2.group(1).strip()
+            i += 1
+            continue
+
+        # ── CONDENSED SUMMARY ──
+        if "CONDENSED SUMMARY" in stripped and not stripped.startswith("["):
+            if current_track:
+                run.output.tracks.append(current_track)
+                current_track = None
+            if in_synthesis:
+                run.output.synthesis = "\n".join(synthesis_lines).strip()
+                in_synthesis = False
+            if in_current_data:
+                run.output.current_data = "\n".join(current_data_lines).strip()
+                in_current_data = False
+            if in_uncertainties:
+                in_uncertainties = False
+            in_condensed = True
+            in_output = False
+            i += 1
+            continue
+
+        # ── Inside condensed ──
+        if in_condensed:
+            if stripped == "LLM USAGE SUMMARY":
+                run.output.condensed = "\n".join(condensed_lines).strip()
+                in_condensed = False
+                in_llm_usage = True
+                i += 1
+                continue
+            if not is_separator(stripped):
+                condensed_lines.append(line.rstrip())
+            i += 1
+            continue
+
+        # ── Inside output section ──
+        if in_output:
+            # Track parsing
+            m = RE_TRACK.match(stripped)
+            if m:
+                if current_track:
+                    run.output.tracks.append(current_track)
+                current_track = Track(number=int(m.group(1)), title=m.group(2))
+                current_track_section = ""
+                in_synthesis = False
+                in_current_data = False
+                in_uncertainties = False
+                i += 1
+                continue
+
+            if current_track:
+                m = RE_CONFIDENCE.match(line)
+                if m:
+                    current_track.confidence = int(m.group(1))
+                    i += 1
+                    continue
+                m = RE_MECHANISM.match(line)
+                if m:
+                    current_track.mechanism = m.group(1).strip()
+                    i += 1
+                    continue
+                m = RE_TIME_HORIZON.match(line)
+                if m:
+                    current_track.time_horizon = m.group(1).strip()
+                    i += 1
+                    continue
+                m = RE_PHASE_LINE.match(line)
+                if m:
+                    current_track.phase_num = int(m.group(1))
+                    i += 1
+                    continue
+                m = RE_EVIDENCE.match(line)
+                if m:
+                    current_track.evidence = m.group(1).strip()
+                    current_track_section = "evidence"
+                    i += 1
+                    continue
+
+                if stripped.startswith("Asset Implications:"):
+                    current_track_section = "implications"
+                    i += 1
+                    continue
+                if stripped.startswith("Monitor:"):
+                    current_track_section = "monitor"
+                    i += 1
+                    continue
+
+                # Track separator
+                if stripped.startswith("----") and len(stripped) >= 10:
+                    run.output.tracks.append(current_track)
+                    current_track = None
+                    current_track_section = ""
+                    i += 1
+                    continue
+
+                # Track content by section
+                if current_track_section == "evidence" and stripped:
+                    current_track.evidence += "\n" + stripped
+                elif current_track_section == "implications" and stripped.startswith("- "):
+                    current_track.asset_implications.append(stripped[2:])
+                elif current_track_section == "monitor" and stripped.startswith("- "):
+                    current_track.monitor.append(stripped[2:])
+
+                i += 1
+                continue
+
+            # SYNTHESIS section
+            if stripped.startswith("SYNTHESIS:"):
+                if current_track:
+                    run.output.tracks.append(current_track)
+                    current_track = None
+                in_synthesis = True
+                synthesis_lines = []
+                i += 1
+                continue
+
+            if in_synthesis:
+                if stripped.startswith("KEY UNCERTAINTIES:"):
+                    run.output.synthesis = "\n".join(synthesis_lines).strip()
+                    in_synthesis = False
+                    in_uncertainties = True
+                    i += 1
+                    continue
+                if stripped.startswith("CURRENT DATA:"):
+                    run.output.synthesis = "\n".join(synthesis_lines).strip()
+                    in_synthesis = False
+                    in_current_data = True
+                    i += 1
+                    continue
+                if not is_separator(stripped):
+                    synthesis_lines.append(line.rstrip())
+                i += 1
+                continue
+
+            # KEY UNCERTAINTIES section
+            if stripped.startswith("KEY UNCERTAINTIES:"):
+                in_uncertainties = True
+                i += 1
+                continue
+
+            if in_uncertainties:
+                if stripped.startswith("CURRENT DATA:"):
+                    in_uncertainties = False
+                    in_current_data = True
+                    i += 1
+                    continue
+                if stripped.startswith("- "):
+                    run.output.uncertainties.append(stripped[2:])
+                elif is_separator(stripped):
+                    in_uncertainties = False
+                i += 1
+                continue
+
+            # CURRENT DATA section
+            if stripped.startswith("CURRENT DATA:"):
+                in_current_data = True
+                i += 1
+                continue
+
+            if in_current_data:
+                if is_separator(stripped) and current_data_lines:
+                    run.output.current_data = "\n".join(current_data_lines).strip()
+                    in_current_data = False
+                    i += 1
+                    continue
+                current_data_lines.append(line.rstrip())
+                i += 1
+                continue
+
+            i += 1
+            continue
+
+        # ── Phase start detection ──
+        phase_started = False
+        for pnum, regex in RE_PHASE_START.items():
+            if regex.search(stripped):
+                # Flush previous phase
+                if current_phase:
+                    if current_iter:
+                        current_phase.iterations.append(current_iter)
+                        current_iter = None
+                    run.phases.append(current_phase)
+
+                phase_names = {
+                    1: "Retrieval",
+                    2: "Data Grounding",
+                    3: "Historical Context",
+                    4: "Synthesis",
+                }
+                current_phase = Phase(name=phase_names[pnum], phase_number=pnum)
+                in_post_processing = False
+                phase_started = True
+                break
+
+        if phase_started:
+            i += 1
+            continue
+
+        # ── Agent loop iteration ──
+        m = RE_ITERATION.match(stripped)
+        if m and current_phase:
+            if current_iter:
+                current_phase.iterations.append(current_iter)
+            current_iter = Iteration(
+                number=int(m.group(1)),
+                max_iterations=int(m.group(2))
+            )
+            current_tool = None
+            in_post_processing = False
+            i += 1
+            continue
+
+        # ── Agent thinking ──
+        m = RE_AGENT_THINK.match(stripped)
+        if m and current_iter:
+            current_iter.thinking = m.group(1).strip()
+            i += 1
+            continue
+
+        # ── Tool call ──
+        m = RE_TOOL_CALL.match(stripped)
+        if m and current_iter:
+            tool_name = m.group(1)
+            args_raw = m.group(2)
+            # Remove trailing ) if present
+            if args_raw.endswith(")"):
+                args_raw = args_raw[:-1]
+            current_tool = ToolCall(tool_name=tool_name, arguments=args_raw)
+            current_iter.tool_calls.append(current_tool)
+            i += 1
+            continue
+
+        # ── Tool result ──
+        m = RE_TOOL_RESULT.match(stripped)
+        if m and current_iter:
+            result_text = m.group(1).strip()
+            if current_tool:
+                current_tool.result_preview = result_text
+            current_tool = None
+            i += 1
+            continue
+
+        # ── Coverage assessment (special sub-log) ──
+        m = RE_COVERAGE.match(stripped)
+        if m:
+            coverage = CoverageResult(
+                rating=m.group(1),
+                flags_met=int(m.group(2)),
+                flags_total=int(m.group(3))
+            )
+            # Read flag lines
             j = i + 1
-            while j < n and classify_line(lines[j]) == "blank":
-                j += 1
-            if j < n:
-                next_line = lines[j].strip()
-                if next_line.startswith("IMPACT ANALYSIS") or next_line.startswith("LLM USAGE") or next_line.startswith("CURRENT MARKET") or next_line.startswith("CONDENSED SUMMARY"):
-                    has_real_steps = any(s["type"] == "step" for s in steps)
-                    if not has_real_steps:
-                        i = j + 1
-                        while i < n and classify_line(lines[i]) in ("separator", "blank"):
-                            i += 1
-                        continue
-                    body = []
-                    while i < n and classify_line(lines[i]) in ("separator", "blank"):
-                        i += 1
-                    section_title = lines[i].strip() if i < n else "Section"
-                    body.append(lines[i])
-                    i += 1
-                    # For content-heavy sections (CONDENSED SUMMARY), capture all
-                    # body lines until next === separator or EOF
-                    if "CONDENSED" in section_title:
-                        while i < n and classify_line(lines[i]) in ("separator", "blank"):
-                            i += 1
-                        while i < n:
-                            if classify_line(lines[i]) == "separator":
-                                # Check if this separator starts a new named section
-                                peek = i + 1
-                                while peek < n and classify_line(lines[peek]) == "blank":
-                                    peek += 1
-                                if peek < n and (lines[peek].strip().startswith("LLM USAGE") or
-                                                 lines[peek].strip().startswith("CONDENSED") or
-                                                 lines[peek].strip().startswith("Pipeline")):
-                                    break
-                            body.append(lines[i])
-                            i += 1
-                    else:
-                        while i < n and classify_line(lines[i]) in ("separator", "blank"):
-                            i += 1
-                    phase = "Risk Intelligence" if "IMPACT" in section_title else "Output"
-                    steps.append({"type": "section", "module": section_title, "phase": phase,
-                                  "summary": section_title, "body": body, "is_key": True})
-                    continue
-            i += 1
-            continue
-
-        if cl == "blank":
-            i += 1
-            continue
-
-        if cl == "step":
-            module = detect_module(line)
-            phase = MODULE_TO_PHASE.get(module, "Risk Intelligence")
-            summary_text = line.strip()
-            body = [line]
-            is_key = is_key_step(line)
-            i += 1
-            while i < n:
-                next_cl = classify_line(lines[i])
-                if next_cl == "step":
+            while j < n:
+                fm = RE_COVERAGE_FLAG.match(lines[j])
+                if fm:
+                    coverage.flags.append((fm.group(1) == "Y", fm.group(2).strip()))
+                    j += 1
+                else:
                     break
-                if next_cl == "separator":
-                    j = i + 1
-                    while j < n and classify_line(lines[j]) in ("blank", "separator"):
-                        j += 1
-                    if j < n and classify_line(lines[j]) == "step":
-                        i = j
+            i = j
+            # Attach to current tool as sub-log
+            if current_tool:
+                flag_text = f"{coverage.rating} ({coverage.flags_met}/{coverage.flags_total} flags)\n"
+                for passed, name in coverage.flags:
+                    flag_text += f"  [{'Y' if passed else 'N'}] {name}\n"
+                current_tool.sub_logs.append(SubLog(tag="Coverage", text=flag_text.strip()))
+            continue
+
+        # ── Exit / max iterations ──
+        m = RE_EXIT_TOOL.match(stripped) or RE_MAX_ITER.match(stripped)
+        if m and current_phase:
+            if current_iter:
+                current_phase.iterations.append(current_iter)
+                current_iter = None
+            current_tool = None
+            i += 1
+            continue
+
+        # ── Phase completion note ──
+        m = RE_PHASE_COMPLETE.match(stripped)
+        if m and current_phase:
+            current_phase.completion_note = stripped
+            in_post_processing = True
+            i += 1
+            continue
+
+        # ── Sub-logs (between tool call and result, or in post-processing) ──
+        m = RE_SUB_LOG.match(stripped)
+        if m:
+            tag = m.group(1)
+            text = m.group(2)
+
+            # Check if this is a phase start or other special tag
+            if tag in ("Retrieval Agent", "Data Grounding Agent", "Historical Context Agent", "Synthesis Phase"):
+                # Don't consume, let the phase start detection handle it on next pass
+                # Actually, the completion note was handled above, check if it's starting
+                is_start = False
+                for _, regex in RE_PHASE_START.items():
+                    if regex.search(stripped):
+                        is_start = True
                         break
-                    break
-                if next_cl == "httpx_noise":
-                    i += 1
-                    continue
-                body.append(lines[i])
+                if is_start:
+                    continue  # Let next iteration handle it
+
+            if current_phase and (in_post_processing or current_iter is None):
+                # Accumulate multi-line content for this log entry
+                entry = LogEntry(tag=tag, lines=[text])
+                j = i + 1
+                while j < n:
+                    next_line = lines[j].strip()
+                    if not next_line:
+                        j += 1
+                        continue
+                    if RE_HTTPX.match(next_line):
+                        j += 1
+                        continue
+                    # Check if next line is a new sub-log or a phase start
+                    if RE_SUB_LOG.match(next_line):
+                        break
+                    if any(r.search(next_line) for r in RE_PHASE_START.values()):
+                        break
+                    if is_separator(next_line):
+                        # Check if this precedes INSIGHT REPORT or CONDENSED or LLM
+                        peek = j + 1
+                        while peek < n and (not lines[peek].strip() or is_separator(lines[peek].strip())):
+                            peek += 1
+                        if peek < n and ("INSIGHT REPORT" in lines[peek] or "CONDENSED" in lines[peek] or "LLM USAGE" in lines[peek]):
+                            break
+                        # Check for another phase start
+                        if peek < n and any(r.search(lines[peek].strip()) for r in RE_PHASE_START.values()):
+                            break
+                    entry.lines.append(lines[j].rstrip())
+                    j += 1
+                current_phase.post_processing.append(entry)
+                i = j
+                continue
+            elif current_tool:
+                current_tool.sub_logs.append(SubLog(tag=tag, text=text))
                 i += 1
-            steps.append({"type": "step", "module": module, "phase": phase,
-                          "summary": summary_text, "body": body, "is_key": is_key})
-            continue
-
-        if cl == "dimension":
-            body = [line]
-            i += 1
-            while i < n and classify_line(lines[i]) in ("reasoning", "query_line", "blank", "body"):
-                body.append(lines[i])
+                continue
+            elif current_iter and not current_tool:
+                # Sub-log between tool calls (loose)
                 i += 1
-            steps.append({"type": "dimension", "module": "query_processing", "phase": "Query Processing",
-                          "summary": line.strip(), "body": body, "is_key": False})
-            continue
+                continue
 
-        if cl == "raw_message":
-            body = [line]
+        # Skip separators
+        if is_separator(stripped):
             i += 1
-            steps.append({"type": "raw", "module": "LLM Response", "phase": "Risk Intelligence",
-                          "summary": "Raw LLM tool_use response (click to expand)", "body": body, "is_key": False})
             continue
 
-        if cl in ("chain_detail", "body"):
-            if steps and steps[-1]["type"] in ("step", "dimension"):
-                steps[-1]["body"].append(line)
+        # Accumulate body text for current tool's sub-logs (non-tagged lines)
+        if current_tool and stripped and not stripped.startswith("Message(id="):
+            # Lines that are part of tool execution but not tagged
+            if current_tool.sub_logs:
+                current_tool.sub_logs[-1].text += "\n" + stripped
             i += 1
             continue
 
         i += 1
 
-    return steps
+    # Flush any remaining phase
+    if current_phase:
+        if current_iter:
+            current_phase.iterations.append(current_iter)
+        run.phases.append(current_phase)
+
+    # Flush remaining LLM model
+    if current_llm_model:
+        run.llm_usage.append(current_llm_model)
+
+    # Flush remaining output sections
+    if in_synthesis:
+        run.output.synthesis = "\n".join(synthesis_lines).strip()
+    if in_current_data:
+        run.output.current_data = "\n".join(current_data_lines).strip()
+    if in_condensed:
+        run.output.condensed = "\n".join(condensed_lines).strip()
+    if current_track:
+        run.output.tracks.append(current_track)
+
+    return run
 
 
-# ── Visit merging (v2 only) ─────────────────────────────────────────────
+# ── HTML Renderer ────────────────────────────────────────────────────────
 
-def merge_gap_visits(visits: list[tuple]) -> list[tuple]:
-    """Merge gap-related visits into a single Gap Analysis visit."""
-    GAP_PHASE = "Gap Analysis"
+PHASE_COLORS = {
+    "Retrieval": "#3b82f6",
+    "Data Grounding": "#06b6d4",
+    "Historical Context": "#a855f7",
+    "Synthesis": "#f59e0b",
+    "Output": "#10b981",
+}
 
-    # Find first and last gap visit
-    first_gap = None
-    last_gap = None
-    for i, (phase, _) in enumerate(visits):
-        if phase == GAP_PHASE:
-            if first_gap is None:
-                first_gap = i
-            last_gap = i
+PHASE_ICONS = {
+    "Retrieval": "1",
+    "Data Grounding": "2",
+    "Historical Context": "3",
+    "Synthesis": "4",
+    "Output": "&#x2713;",
+}
 
-    if first_gap is None:
-        return visits  # No gap visits
+TOOL_COLORS = {
+    "search_pinecone": "#3b82f6",
+    "extract_web_chains": "#10b981",
+    "assess_coverage": "#f59e0b",
+    "generate_synthesis": "#ef4444",
+    "finish_retrieval": "#6366f1",
+    "extract_variables": "#a855f7",
+    "fetch_variable_data": "#06b6d4",
+    "validate_claim": "#ec4899",
+    "validate_patterns": "#ec4899",
+    "compute_derived": "#8b5cf6",
+    "finish_grounding": "#6366f1",
+    "detect_analogs": "#d946ef",
+    "fetch_analog_data": "#f97316",
+    "aggregate_analogs": "#f97316",
+    "characterize_regime": "#ef4444",
+    "load_theme_chains": "#a855f7",
+    "fetch_additional_data": "#0ea5e9",
+    "finish_historical": "#6366f1",
+}
 
-    # Collect gap steps and defer interleaved non-gap visits
-    result = list(visits[:first_gap])
-    gap_steps = []
-    deferred = []
 
-    for i in range(first_gap, last_gap + 1):
-        phase, group = visits[i]
-        if phase == GAP_PHASE:
-            gap_steps.extend(group)
-        else:
-            deferred.append((phase, group))
-
-    result.append((GAP_PHASE, gap_steps))
-    result.extend(deferred)
-    result.extend(visits[last_gap + 1:])
-
-    return result
+def esc(text: str) -> str:
+    return html.escape(str(text))
 
 
-# ── HTML Renderer (v2: gap-aware) ───────────────────────────────────────
+def truncate(text: str, max_len: int = 200) -> str:
+    if len(text) <= max_len:
+        return text
+    return text[:max_len - 3] + "..."
 
-def render_html(steps: list[dict], log_path: str, query: str) -> str:
-    # Build visits (consecutive same-phase runs)
-    visits = []
-    cur_phase = None
-    cur_group = []
-    for step in steps:
-        p = step["phase"]
-        if p != cur_phase:
-            if cur_group:
-                visits.append((cur_phase, cur_group))
-            cur_phase = p
-            cur_group = [step]
-        else:
-            cur_group.append(step)
-    if cur_group:
-        visits.append((cur_phase, cur_group))
 
-    # v2: merge gap visits
-    visits = merge_gap_visits(visits)
+def format_json_preview(text: str) -> str:
+    """Try to pretty-print JSON, fall back to raw text."""
+    text = text.strip()
+    if not text.startswith("{") and not text.startswith("["):
+        return esc(truncate(text, 500))
+    try:
+        obj = json.loads(text)
+        formatted = json.dumps(obj, indent=2, ensure_ascii=False)
+        if len(formatted) > 2000:
+            formatted = formatted[:2000] + "\n..."
+        return esc(formatted)
+    except (json.JSONDecodeError, ValueError):
+        return esc(truncate(text, 500))
 
-    total_visits = len(visits)
-    total_steps = sum(len(g) for _, g in visits)
-    key_steps = sum(1 for _, g in visits for s in g if s.get("is_key"))
 
-    # Visit metadata JSON for JS
-    visit_meta_js = json.dumps([
-        {"phase": phase, "count": len(group),
-         "keys": sum(1 for s in group if s.get("is_key"))}
-        for phase, group in visits
-    ])
+def render_html(run: PipelineRun) -> str:
+    # Compute stats
+    total_iters = sum(len(p.iterations) for p in run.phases)
+    total_tools = sum(
+        len(tc.tool_calls)
+        for p in run.phases
+        for tc in p.iterations
+    )
 
-    # Phase stats (aggregate)
-    phase_stats = {}
-    for phase, group in visits:
-        if phase not in phase_stats:
-            phase_stats[phase] = {"total": 0, "key": 0, "visits": 0}
-        phase_stats[phase]["total"] += len(group)
-        phase_stats[phase]["key"] += sum(1 for s in group if s.get("is_key"))
-        phase_stats[phase]["visits"] += 1
+    # Build navigation items: list of (phase_idx, iter_idx_or_special, label, tool_count)
+    nav_items = []
+    for pi, phase in enumerate(run.phases):
+        for ii, iteration in enumerate(phase.iterations):
+            tc = len(iteration.tool_calls)
+            nav_items.append({
+                "phase_idx": pi,
+                "iter_idx": ii,
+                "type": "iteration",
+                "label": f"Ph{phase.phase_number} It{iteration.number}",
+                "tool_count": tc,
+                "phase_name": phase.name,
+            })
+        if phase.post_processing:
+            nav_items.append({
+                "phase_idx": pi,
+                "iter_idx": -1,
+                "type": "post",
+                "label": f"Ph{phase.phase_number} Post",
+                "tool_count": len(phase.post_processing),
+                "phase_name": phase.name,
+            })
+    # Output section
+    nav_items.append({
+        "phase_idx": -1,
+        "iter_idx": -1,
+        "type": "output",
+        "label": "Output",
+        "tool_count": len(run.output.tracks),
+        "phase_name": "Output",
+    })
+
+    nav_items_js = json.dumps(nav_items)
+
+    # Phase data for JS
+    phase_data = []
+    for p in run.phases:
+        phase_data.append({
+            "name": p.name,
+            "number": p.phase_number,
+            "iterations": len(p.iterations),
+            "tools": sum(len(it.tool_calls) for it in p.iterations),
+            "has_post": bool(p.post_processing),
+        })
+    phase_data_js = json.dumps(phase_data)
 
     parts = []
+
+    # ── HTML Head + CSS ──
     parts.append(f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Pipeline Trace v2 — {html.escape(query[:60])}</title>
+<title>Pipeline Trace — {esc(run.query[:60])}</title>
 <style>
 * {{ margin: 0; padding: 0; box-sizing: border-box; }}
 body {{ font-family: 'SF Mono', 'Consolas', 'Monaco', monospace; background: #0f172a; color: #e2e8f0; font-size: 13px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }}
@@ -632,11 +840,10 @@ body {{ font-family: 'SF Mono', 'Consolas', 'Monaco', monospace; background: #0f
 }}
 .btn {{ background: #334155; color: #e2e8f0; border: 1px solid #475569; border-radius: 4px; padding: 3px 10px; font-size: 11px; cursor: pointer; font-family: inherit; }}
 .btn:hover {{ background: #475569; }}
-.visit-label {{
+.nav-label {{
     font-size: 11px; padding: 3px 10px; border-radius: 4px;
-    font-weight: 600; min-width: 260px; text-align: center;
+    font-weight: 600; min-width: 200px; text-align: center;
 }}
-.step-counter {{ color: #64748b; font-size: 11px; }}
 .sep {{ width: 1px; height: 18px; background: #334155; }}
 
 /* ── Main layout ── */
@@ -644,78 +851,71 @@ body {{ font-family: 'SF Mono', 'Consolas', 'Monaco', monospace; background: #0f
 
 /* ── Left panel ── */
 .left-panel {{
-    width: 220px; min-width: 220px;
+    width: 240px; min-width: 240px;
     display: flex; flex-direction: column;
     border-right: 1px solid #1e293b;
     flex-shrink: 0;
 }}
 
-/* Flowchart section */
+/* Flowchart */
 .flowchart {{ padding: 10px 8px; flex-shrink: 0; }}
 
 .flow-node {{
     position: relative;
-    padding: 6px 8px; margin: 0;
+    padding: 7px 10px; margin: 0;
     border-radius: 7px;
     border: 2px solid #1e293b;
     cursor: pointer;
     transition: all 0.3s ease;
-    display: flex; align-items: center; gap: 6px;
+    display: flex; align-items: center; gap: 8px;
     z-index: 1;
 }}
 .flow-node:hover {{ border-color: #475569; background: #1e293b; }}
 .flow-node.active {{
-    border-color: var(--phase-color);
+    border-color: var(--pc);
     border-width: 2.5px;
-    background: color-mix(in srgb, var(--phase-color) 15%, #0f172a);
-    box-shadow: 0 0 16px color-mix(in srgb, var(--phase-color) 50%, transparent);
+    background: color-mix(in srgb, var(--pc) 15%, #0f172a);
+    box-shadow: 0 0 16px color-mix(in srgb, var(--pc) 50%, transparent);
     animation: pulse-glow 2s ease-in-out infinite;
 }}
 @keyframes pulse-glow {{
-    0%, 100% {{ box-shadow: 0 0 12px color-mix(in srgb, var(--phase-color) 40%, transparent); }}
-    50% {{ box-shadow: 0 0 22px color-mix(in srgb, var(--phase-color) 65%, transparent), 0 0 8px color-mix(in srgb, var(--phase-color) 35%, transparent); }}
+    0%, 100% {{ box-shadow: 0 0 12px color-mix(in srgb, var(--pc) 40%, transparent); }}
+    50% {{ box-shadow: 0 0 22px color-mix(in srgb, var(--pc) 65%, transparent), 0 0 8px color-mix(in srgb, var(--pc) 35%, transparent); }}
 }}
 .flow-node.visited {{ border-color: #334155; background: #1e293b44; }}
 .flow-node.visited .flow-label {{ color: #64748b; }}
-.flow-node.visited .flow-icon {{ opacity: 0.5; }}
-.flow-icon {{ font-size: 13px; flex-shrink: 0; width: 18px; text-align: center; }}
-.flow-label {{ font-size: 10px; font-weight: 600; color: #94a3b8; line-height: 1.2; }}
-.flow-node.active .flow-label {{ color: var(--phase-color); font-weight: 700; }}
-.flow-count {{ font-size: 9px; color: #475569; margin-left: auto; white-space: nowrap; }}
-.flow-node.active .flow-count {{ color: var(--phase-color); opacity: 0.8; }}
+.flow-node.visited .flow-num {{ opacity: 0.5; }}
+.flow-num {{
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; flex-shrink: 0;
+    border: 2px solid #475569; color: #94a3b8;
+}}
+.flow-node.active .flow-num {{ border-color: var(--pc); color: var(--pc); }}
+.flow-node.visited .flow-num {{ border-color: #334155; }}
+.flow-node.visited .flow-num::after {{ content: '\\2713'; position: absolute; font-size: 10px; color: #475569; }}
+.flow-label {{ font-size: 10px; font-weight: 600; color: #94a3b8; line-height: 1.2; flex: 1; }}
+.flow-node.active .flow-label {{ color: var(--pc); font-weight: 700; }}
+.flow-stats {{ font-size: 9px; color: #475569; white-space: nowrap; text-align: right; }}
+.flow-node.active .flow-stats {{ color: var(--pc); opacity: 0.8; }}
 
 .flow-connector {{
     display: flex; align-items: center; justify-content: center;
-    height: 18px; position: relative; margin: 0;
+    height: 16px; position: relative; margin: 0;
 }}
 .flow-connector::before {{
     content: '';
-    position: absolute; left: 50%; top: 0; bottom: 0;
+    position: absolute; left: 19px; top: 0; bottom: 0;
     width: 2px; background: #1e293b;
-    transform: translateX(-50%);
 }}
-.flow-connector .arrow-head {{
-    width: 0; height: 0;
-    border-left: 4px solid transparent;
-    border-right: 4px solid transparent;
-    border-top: 5px solid #334155;
-    z-index: 1; position: relative;
-}}
-.flow-connector.active::before {{ background: var(--phase-color); opacity: 0.6; }}
-.flow-connector.active .arrow-head {{ border-top-color: var(--phase-color); }}
+.flow-connector.active::before {{ background: var(--pc); opacity: 0.6; }}
 
-.flow-progress {{
-    position: absolute; bottom: 0; left: 0; height: 2px;
-    background: var(--phase-color); border-radius: 0 0 6px 6px;
-    transition: width 0.3s ease;
-}}
-
-/* ── Visit trail ── */
+/* ── Trail ── */
 .trail-divider {{ height: 1px; background: #1e293b; margin: 4px 8px; }}
 .trail-header {{ font-size: 9px; color: #475569; padding: 4px 10px; text-transform: uppercase; letter-spacing: 0.1em; }}
-.visit-trail {{ flex: 1; overflow-y: auto; padding: 0 4px 8px; }}
+.trail {{ flex: 1; overflow-y: auto; padding: 0 4px 8px; }}
 
-.visit-item {{
+.trail-item {{
     display: flex; align-items: center; gap: 6px;
     padding: 3px 8px; margin: 1px 0;
     border-left: 3px solid transparent;
@@ -723,520 +923,776 @@ body {{ font-family: 'SF Mono', 'Consolas', 'Monaco', monospace; background: #0f
     cursor: pointer; font-size: 10px;
     transition: all 0.15s;
 }}
-.visit-item:hover {{ background: #1e293b; }}
-.visit-item.active {{
-    background: color-mix(in srgb, var(--vc) 12%, #0f172a);
-    border-left-color: var(--vc);
+.trail-item:hover {{ background: #1e293b; }}
+.trail-item.active {{
+    background: color-mix(in srgb, var(--tc) 12%, #0f172a);
+    border-left-color: var(--tc);
 }}
-.visit-item.past {{ opacity: 0.45; }}
-.visit-num {{ color: #475569; width: 18px; text-align: right; font-size: 9px; }}
-.visit-item.active .visit-num {{ color: var(--vc); font-weight: 700; }}
-.visit-phase {{ color: #94a3b8; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
-.visit-item.active .visit-phase {{ color: var(--vc); font-weight: 600; }}
-.visit-steps {{ color: #475569; font-size: 9px; }}
-.visit-item.active .visit-steps {{ color: var(--vc); }}
+.trail-item.past {{ opacity: 0.45; }}
+.trail-num {{ color: #475569; width: 18px; text-align: right; font-size: 9px; }}
+.trail-item.active .trail-num {{ color: var(--tc); font-weight: 700; }}
+.trail-label {{ color: #94a3b8; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+.trail-item.active .trail-label {{ color: var(--tc); font-weight: 600; }}
+.trail-count {{ color: #475569; font-size: 9px; }}
+.trail-item.active .trail-count {{ color: var(--tc); }}
 
 /* ── Right panel ── */
 .right-panel {{ flex: 1; overflow-y: auto; padding: 12px 16px 80px; }}
 
-.visit-block {{ display: none; }}
-.visit-block.active {{ display: block; }}
+.content-block {{ display: none; }}
+.content-block.active {{ display: block; }}
 
-.visit-header {{
-    padding: 8px 12px; border-radius: 6px; margin-bottom: 8px;
+.phase-header {{
+    padding: 8px 12px; border-radius: 6px; margin-bottom: 10px;
     font-size: 12px; font-weight: 600;
     display: flex; align-items: center; gap: 8px;
 }}
-.visit-header .vh-icon {{ font-size: 16px; }}
-.visit-header .vh-phase {{ flex: 1; }}
-.visit-header .vh-meta {{ font-size: 10px; font-weight: 400; opacity: 0.7; }}
+.phase-header .ph-name {{ flex: 1; }}
+.phase-header .ph-meta {{ font-size: 10px; font-weight: 400; opacity: 0.7; }}
 
-.step-card {{
-    border-left: 3px solid #1e293b;
-    margin: 0 0 1px 8px;
-    padding: 3px 10px;
+/* Iteration block */
+.iter-block {{
+    border: 1px solid #1e293b; border-radius: 8px;
+    margin-bottom: 10px; overflow: hidden;
+}}
+.iter-header {{
+    padding: 6px 12px; background: #1e293b;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 600; color: #94a3b8;
+}}
+.iter-num {{ color: var(--pc); }}
+.iter-tools {{ font-size: 9px; color: #64748b; margin-left: auto; }}
+
+/* Thinking block */
+.thinking {{
+    padding: 8px 12px; margin: 6px 8px;
+    background: #1e1b4b; border-radius: 6px;
+    border-left: 3px solid #6366f1;
+    font-size: 11px; color: #a5b4fc; line-height: 1.5;
+    white-space: pre-wrap;
+}}
+
+/* Tool call card */
+.tool-card {{
+    margin: 4px 8px; border-left: 3px solid #334155;
+    padding: 6px 10px; cursor: pointer;
     transition: all 0.15s;
-    cursor: pointer;
 }}
-.step-card:hover {{ background: #1e293b; }}
-.step-card.key {{ border-left-color: #f59e0b; }}
-.step-card.expanded {{ background: #1e293b; }}
-.step-card.highlight {{ background: #172554; border-left-color: #60a5fa; }}
+.tool-card:hover {{ background: #1e293b; }}
+.tool-card.expanded {{ background: #1e293b; }}
 
-.step-summary {{ display: flex; align-items: baseline; gap: 6px; }}
-.step-module {{
-    font-size: 9px; padding: 1px 5px; border-radius: 3px;
-    font-weight: 600; white-space: nowrap; flex-shrink: 0;
+.tool-header {{ display: flex; align-items: center; gap: 8px; }}
+.tool-badge {{
+    font-size: 10px; padding: 2px 8px; border-radius: 4px;
+    font-weight: 600; white-space: nowrap;
 }}
-.step-text {{
-    font-size: 11px; color: #cbd5e1;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}}
-.step-text.key-text {{ color: #fbbf24; font-weight: 600; }}
+.tool-summary {{ font-size: 10px; color: #64748b; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
 
-.step-body {{
-    display: none; margin-top: 4px; padding: 6px 8px;
-    background: #0f172a; border-radius: 4px; border: 1px solid #1e293b;
-    white-space: pre-wrap; font-size: 10px; color: #94a3b8;
-    max-height: 350px; overflow-y: auto; line-height: 1.5;
-}}
-.step-card.expanded .step-body {{ display: block; }}
+.tool-details {{ display: none; margin-top: 6px; }}
+.tool-card.expanded .tool-details {{ display: block; }}
 
-.hidden {{ display: none !important; }}
+.tool-section-label {{ font-size: 9px; color: #475569; text-transform: uppercase; margin: 6px 0 2px; letter-spacing: 0.05em; }}
+.tool-content {{
+    padding: 6px 8px; background: #0f172a; border-radius: 4px;
+    border: 1px solid #1e293b; white-space: pre-wrap; font-size: 10px;
+    color: #94a3b8; max-height: 300px; overflow-y: auto; line-height: 1.5;
+}}
 
-/* ── v2: Gap Analysis styles ── */
-.gap-summary {{
-    background: #1e293b; border: 1px solid #334155; border-radius: 8px;
-    padding: 10px 14px; margin-bottom: 12px;
+/* Sub-log badges */
+.sub-log {{ margin: 4px 0; }}
+.sub-log-tag {{
+    font-size: 9px; padding: 1px 6px; border-radius: 3px;
+    font-weight: 600; display: inline-block; margin-right: 4px;
 }}
-.gap-summary-title {{
-    font-size: 12px; font-weight: 700; margin-bottom: 8px;
-    display: flex; align-items: center; gap: 8px;
-}}
-.gap-summary-rating {{
-    font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600;
-}}
-.gap-table {{ width: 100%; border-collapse: collapse; }}
-.gap-table td {{
-    padding: 3px 6px; font-size: 10px; border-bottom: 1px solid #1e293b22;
-}}
-.gap-table td:first-child {{ width: 16px; text-align: center; }}
-.gap-table td:nth-child(2) {{ color: #cbd5e1; }}
-.gap-table td:nth-child(3) {{ text-align: right; font-weight: 600; font-size: 9px; }}
-.gap-table td:nth-child(4) {{ color: #64748b; font-size: 9px; text-align: right; }}
-.gap-row-covered td:first-child {{ color: #10b981; }}
-.gap-row-covered td:nth-child(3) {{ color: #10b981; }}
-.gap-row-gap td:first-child {{ color: #f59e0b; }}
-.gap-row-gap td:nth-child(3) {{ color: #f59e0b; }}
+.sub-log-text {{ font-size: 10px; color: #94a3b8; }}
 
-.gap-group {{
-    margin: 10px 0 4px;
-    border-left: 3px solid var(--gc);
-    padding-left: 6px;
+/* Coverage special rendering */
+.coverage-grid {{
+    display: grid; grid-template-columns: 18px 1fr; gap: 2px 6px;
+    padding: 6px 8px; background: #0f172a; border-radius: 4px;
+    border: 1px solid #1e293b; font-size: 11px;
 }}
-.gap-group-hdr {{
-    display: flex; align-items: center; gap: 8px;
-    padding: 5px 8px; border-radius: 4px;
-    font-size: 11px; font-weight: 600;
-    background: color-mix(in srgb, var(--gc) 10%, #0f172a);
-    color: var(--gc);
+.coverage-check {{ color: #10b981; text-align: center; }}
+.coverage-cross {{ color: #ef4444; text-align: center; }}
+.coverage-name {{ color: #cbd5e1; }}
+.coverage-rating {{
+    font-size: 11px; padding: 2px 10px; border-radius: 10px;
+    font-weight: 600; display: inline-block; margin-bottom: 6px;
 }}
-.gap-group-hdr .gg-label {{ flex: 1; }}
-.gap-group-hdr .gg-method {{ font-size: 9px; font-weight: 400; opacity: 0.7; }}
-.gap-group-hdr .gg-status {{
-    font-size: 9px; padding: 2px 8px; border-radius: 10px; font-weight: 600;
+
+/* Post-processing section */
+.post-section {{
+    border: 1px solid #1e293b; border-radius: 8px;
+    margin-bottom: 10px; overflow: hidden;
 }}
-.gap-missing {{
-    font-size: 10px; color: #94a3b8; padding: 2px 8px 4px; font-style: italic;
+.post-header {{
+    padding: 6px 12px; background: #1e293b;
+    font-size: 11px; font-weight: 600; color: #94a3b8;
 }}
+.post-entry {{
+    margin: 3px 8px; padding: 4px 8px;
+    border-left: 3px solid #334155; cursor: pointer;
+    transition: all 0.15s;
+}}
+.post-entry:hover {{ background: #1e293b; }}
+.post-entry.expanded {{ background: #1e293b; }}
+.post-tag {{
+    font-size: 9px; padding: 1px 6px; border-radius: 3px;
+    font-weight: 600; display: inline-block; margin-right: 6px;
+}}
+.post-preview {{ font-size: 10px; color: #64748b; }}
+.post-body {{ display: none; margin-top: 4px; }}
+.post-entry.expanded .post-body {{ display: block; }}
+
+/* ── Output section styles ── */
+.track-card {{
+    border: 1px solid #1e293b; border-radius: 8px;
+    margin-bottom: 10px; overflow: hidden;
+    cursor: pointer; transition: all 0.15s;
+}}
+.track-card:hover {{ border-color: #334155; }}
+.track-card.expanded {{ border-color: #475569; }}
+
+.track-header {{
+    padding: 8px 12px; display: flex; align-items: center; gap: 10px;
+}}
+.track-num {{
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    background: #10b98120; color: #10b981;
+    flex-shrink: 0;
+}}
+.track-title {{ font-size: 11px; font-weight: 600; color: #e2e8f0; flex: 1; }}
+.track-conf {{ font-size: 11px; font-weight: 700; white-space: nowrap; }}
+
+.conf-bar {{
+    height: 4px; background: #1e293b; border-radius: 2px;
+    margin: 0 12px 4px; overflow: hidden;
+}}
+.conf-fill {{ height: 100%; border-radius: 2px; transition: width 0.5s; }}
+
+.track-details {{ display: none; padding: 0 12px 10px; }}
+.track-card.expanded .track-details {{ display: block; }}
+.track-field {{ margin: 6px 0; }}
+.track-field-label {{ font-size: 9px; color: #475569; text-transform: uppercase; margin-bottom: 2px; }}
+.track-field-value {{ font-size: 11px; color: #cbd5e1; line-height: 1.5; }}
+
+.track-implication {{
+    display: flex; gap: 8px; padding: 3px 0;
+    font-size: 11px; align-items: baseline;
+}}
+.impl-asset {{ font-weight: 600; color: #e2e8f0; min-width: 80px; }}
+.impl-detail {{ color: #94a3b8; }}
+
+.track-monitor-item {{
+    padding: 3px 0; font-size: 11px; color: #94a3b8;
+    border-left: 2px solid #334155; padding-left: 8px; margin: 3px 0;
+}}
+
+/* Synthesis block */
+.synth-block {{
+    border: 1px solid #1e293b; border-radius: 8px;
+    padding: 12px; margin-bottom: 10px;
+}}
+.synth-title {{ font-size: 12px; font-weight: 600; color: #f59e0b; margin-bottom: 8px; }}
+.synth-content {{ font-size: 11px; color: #cbd5e1; line-height: 1.6; white-space: pre-wrap; }}
+.synth-content h2, .synth-content h3 {{ color: #f8fafc; margin: 12px 0 6px; font-size: 12px; }}
+
+/* Uncertainties */
+.uncertainty-item {{
+    padding: 4px 0 4px 10px; font-size: 11px; color: #94a3b8;
+    border-left: 2px solid #f59e0b; margin: 4px 0;
+}}
+
+/* Current data */
+.data-block {{
+    border: 1px solid #1e293b; border-radius: 8px;
+    padding: 10px 12px; margin-bottom: 10px;
+    font-size: 11px; color: #cbd5e1; line-height: 1.6;
+    white-space: pre-wrap;
+}}
+
+/* LLM usage table */
+.llm-table {{
+    width: 100%; border-collapse: collapse;
+    font-size: 11px; margin-top: 6px;
+}}
+.llm-table th {{
+    text-align: left; padding: 4px 8px; color: #64748b;
+    border-bottom: 1px solid #334155; font-size: 10px;
+}}
+.llm-table td {{
+    padding: 4px 8px; border-bottom: 1px solid #1e293b;
+}}
+.llm-table td:nth-child(n+2) {{ text-align: right; }}
+.llm-table .total-row {{ font-weight: 600; color: #f8fafc; }}
+.llm-table .total-row td {{ border-top: 2px solid #334155; }}
 </style>
 </head>
 <body>
-
-<div class="top-bar">
-    <h1>Pipeline Trace v2</h1>
-    <div class="query">{html.escape(query)}</div>
-    <div class="stats">{total_steps} steps &middot; {key_steps} key &middot; {total_visits} visits &middot; {html.escape(Path(log_path).name)}</div>
-</div>
-
-<div class="controls">
-    <button class="btn" onclick="navVisit(-1)" title="Left / h">&#9664; Visit</button>
-    <button class="btn" onclick="navVisit(1)" title="Right / l">Visit &#9654;</button>
-    <div class="visit-label" id="visitLabel" style="background:#33415520;color:#94a3b8;">Visit 0/{total_visits}</div>
-    <div class="sep"></div>
-    <button class="btn" onclick="navStep(-1)" title="Up / k">&#9650; Step</button>
-    <button class="btn" onclick="navStep(1)" title="Down / j">&#9660; Step</button>
-    <button class="btn" onclick="navKey(-1)" title="p">&#9664; Key</button>
-    <button class="btn" onclick="navKey(1)" title="n">Key &#9654;</button>
-    <span class="step-counter" id="stepCounter"></span>
-    <span style="flex:1"></span>
-    <label style="color:#94a3b8;font-size:11px;cursor:pointer;"><input type="checkbox" id="showOnlyKey" onchange="filterSteps()" style="margin-right:2px;"> Key only</label>
-</div>
-
-<div class="main">
-
-<!-- ── Left: Flowchart + Visit trail ── -->
-<div class="left-panel">
-<div class="flowchart" id="flowchart">
 """)
 
-    # Render flowchart nodes
-    for idx, phase in enumerate(PHASE_ORDER):
-        color = PHASE_COLORS.get(phase, "#64748b")
-        icon = PHASE_ICONS.get(phase, "&#x25CB;")
-        short = PHASE_SHORT.get(phase, phase)
-        stats = phase_stats.get(phase, {"total": 0, "key": 0, "visits": 0})
-        pid = phase.replace(" ", "_").replace("&", "").replace(".", "")
+    # ── Top bar ──
+    cost_text = f"${run.total_cost:.2f}" if run.total_cost else ""
+    duration_text = run.duration if run.duration else ""
+    stats_parts = [
+        f"{len(run.phases)} phases",
+        f"{total_iters} iters",
+        f"{total_tools} tools",
+    ]
+    if cost_text:
+        stats_parts.append(cost_text)
+    if duration_text:
+        stats_parts.append(duration_text)
+    stats_text = " · ".join(stats_parts)
 
-        parts.append(f'  <div class="flow-node" id="fn_{pid}" style="--phase-color:{color};" data-phase="{html.escape(phase)}" onclick="goToFirstVisit(\'{html.escape(phase)}\')">\n')
-        parts.append(f'    <span class="flow-icon">{icon}</span>\n')
-        parts.append(f'    <span class="flow-label">{html.escape(short)}</span>\n')
-        parts.append(f'    <span class="flow-count">{stats["total"]}</span>\n')
-        parts.append(f'    <div class="flow-progress" id="fp_{pid}" style="width:0%"></div>\n')
-        parts.append(f'  </div>\n')
-
-        if idx < len(PHASE_ORDER) - 1:
-            parts.append(f'  <div class="flow-connector" id="fa_{pid}" style="--phase-color:{color};"><div class="arrow-head"></div></div>\n')
-
-    parts.append('</div>\n')
-
-    # Visit trail
-    parts.append('<div class="trail-divider"></div>\n')
-    parts.append(f'<div class="trail-header">Execution Flow ({total_visits} visits)</div>\n')
-    parts.append('<div class="visit-trail" id="visitTrail">\n')
-
-    for vi, (phase_name, group) in enumerate(visits):
-        color = PHASE_COLORS.get(phase_name, "#64748b")
-        short = PHASE_SHORT.get(phase_name, phase_name)
-        kc = sum(1 for s in group if s.get("is_key"))
-        count_text = str(len(group)) + (f"/{kc}\u2605" if kc else "")
-        parts.append(f'  <div class="visit-item" id="vi_{vi}" style="--vc:{color};" data-visit="{vi}" onclick="goToVisit({vi})">\n')
-        parts.append(f'    <span class="visit-num">{vi + 1}</span>\n')
-        parts.append(f'    <span class="visit-phase">{html.escape(short)}</span>\n')
-        parts.append(f'    <span class="visit-steps">{count_text}</span>\n')
-        parts.append(f'  </div>\n')
-
-    parts.append('</div>\n</div>\n\n')
-
-    # ── Right panel: visit blocks ──
-    parts.append('<!-- ── Right: Steps ── -->\n<div class="right-panel" id="rightPanel">\n')
-
-    global_idx = 0
-    for vi, (phase_name, group) in enumerate(visits):
-        color = PHASE_COLORS.get(phase_name, "#64748b")
-        icon = PHASE_ICONS.get(phase_name, "&#x25CB;")
-        active_cls = " active" if vi == 0 else ""
-
-        parts.append(f'<div class="visit-block{active_cls}" data-visit="{vi}">\n')
-        parts.append(f'<div class="visit-header" style="background:{color}15; color:{color};">\n')
-        parts.append(f'  <span class="vh-icon">{icon}</span>\n')
-        parts.append(f'  <span class="vh-phase">{html.escape(phase_name)}</span>\n')
-        parts.append(f'  <span class="vh-meta">Visit {vi + 1}/{total_visits} &middot; {len(group)} steps</span>\n')
-        parts.append(f'</div>\n')
-
-        if phase_name == "Gap Analysis":
-            # v2: Render gap-organized content
-            gap_groups, gap_json = organize_gap_steps(group)
-
-            # Gap summary table
-            if gap_json:
-                rating = gap_json.get("coverage_rating", "?")
-                gap_count = gap_json.get("gap_count", 0)
-                r_color = {"COMPLETE": "#10b981", "PARTIAL": "#f59e0b", "INSUFFICIENT": "#ef4444"}.get(rating, "#64748b")
-                parts.append(f'<div class="gap-summary">\n')
-                parts.append(f'  <div class="gap-summary-title">Knowledge Gap Assessment '
-                             f'<span class="gap-summary-rating" style="background:{r_color}20;color:{r_color};">'
-                             f'{html.escape(rating)} ({gap_count} gaps)</span></div>\n')
-                parts.append(f'  <table class="gap-table">\n')
-                for gap in gap_json.get("gaps", []):
-                    cat = gap.get("category", "?")
-                    status = gap.get("status", "?")
-                    fm = gap.get("fill_method", "")
-                    label = GAP_LABELS.get(cat, cat)
-                    row_cls = "gap-row-covered" if status == "COVERED" else "gap-row-gap"
-                    check = "&#x2713;" if status == "COVERED" else "&#x2717;"
-                    method_text = f"&rarr; {html.escape(fm)}" if status == "GAP" else ""
-                    parts.append(f'    <tr class="{row_cls}"><td>{check}</td>'
-                                 f'<td>{html.escape(label)}</td>'
-                                 f'<td>{html.escape(status)}</td>'
-                                 f'<td>{method_text}</td></tr>\n')
-                parts.append(f'  </table>\n')
-                parts.append(f'</div>\n')
-
-            # Render each gap group with header
-            for gname, gsteps in gap_groups:
-                gc = GAP_GROUP_COLORS.get(gname, "#64748b")
-                glabel = GAP_LABELS.get(gname, gname)
-                gap_info = get_gap_info(gap_json, gname)
-                fm = gap_info.get("fill_method", "")
-                missing = gap_info.get("missing", "")
-                status = detect_group_status(gsteps)
-
-                parts.append(f'<div class="gap-group" style="--gc:{gc};">\n')
-                parts.append(f'<div class="gap-group-hdr">\n')
-                parts.append(f'  <span class="gg-label">{html.escape(glabel)}</span>\n')
-                if fm:
-                    parts.append(f'  <span class="gg-method">{html.escape(fm)}</span>\n')
-                if status:
-                    sc = {"FILLED": "#10b981", "UNFILLABLE": "#ef4444", "PARTIAL": "#f59e0b", "ERROR": "#ef4444"}.get(status, "#64748b")
-                    parts.append(f'  <span class="gg-status" style="background:{sc}20;color:{sc};">{html.escape(status)}</span>\n')
-                parts.append(f'</div>\n')
-                if missing:
-                    parts.append(f'<div class="gap-missing">{html.escape(missing[:200])}</div>\n')
-
-                # Step cards within group
-                for step in gsteps:
-                    module = step["module"]
-                    mod_color = MODULE_COLORS.get(module, PHASE_COLORS.get(phase_name, "#64748b"))
-                    is_key = step.get("is_key", False)
-                    key_cls = " key" if is_key else ""
-                    text_cls = " key-text" if is_key else ""
-                    summary = step["summary"]
-                    if len(summary) > 180:
-                        summary = summary[:177] + "..."
-                    body_text = html.escape("\n".join(step["body"]))
-                    parts.append(f'<div class="step-card{key_cls}" data-idx="{global_idx}" data-key="{1 if is_key else 0}" onclick="toggleStep(this)">\n')
-                    parts.append(f'  <div class="step-summary">\n')
-                    parts.append(f'    <span class="step-module" style="background:{mod_color}18; color:{mod_color};">{html.escape(module[:28])}</span>\n')
-                    parts.append(f'    <span class="step-text{text_cls}">{html.escape(summary)}</span>\n')
-                    parts.append(f'  </div>\n')
-                    parts.append(f'  <div class="step-body">{body_text}</div>\n')
-                    parts.append(f'</div>\n')
-                    global_idx += 1
-
-                parts.append(f'</div>\n')  # close gap-group
-        else:
-            # Normal visit rendering (same as v1)
-            for step in group:
-                module = step["module"]
-                mod_color = MODULE_COLORS.get(module, PHASE_COLORS.get(phase_name, "#64748b"))
-                is_key = step.get("is_key", False)
-                key_cls = " key" if is_key else ""
-                text_cls = " key-text" if is_key else ""
-                summary = step["summary"]
-                if len(summary) > 180:
-                    summary = summary[:177] + "..."
-                body_text = html.escape("\n".join(step["body"]))
-                parts.append(f'<div class="step-card{key_cls}" data-idx="{global_idx}" data-key="{1 if is_key else 0}" onclick="toggleStep(this)">\n')
-                parts.append(f'  <div class="step-summary">\n')
-                parts.append(f'    <span class="step-module" style="background:{mod_color}18; color:{mod_color};">{html.escape(module[:28])}</span>\n')
-                parts.append(f'    <span class="step-text{text_cls}">{html.escape(summary)}</span>\n')
-                parts.append(f'  </div>\n')
-                parts.append(f'  <div class="step-body">{body_text}</div>\n')
-                parts.append(f'</div>\n')
-                global_idx += 1
-
-        parts.append('</div>\n')
-
-    parts.append(f"""</div>
+    parts.append(f"""
+<div class="top-bar">
+    <h1>Pipeline Trace</h1>
+    <div class="query">{esc(run.query)}</div>
+    <div class="stats">{esc(stats_text)} · {esc(Path(run.log_path).name)}</div>
 </div>
+""")
 
+    # ── Controls bar ──
+    parts.append(f"""
+<div class="controls">
+    <button class="btn" onclick="navPhase(-1)" title="h">&#9664; Phase</button>
+    <button class="btn" onclick="navPhase(1)" title="l">Phase &#9654;</button>
+    <div class="nav-label" id="navLabel" style="background:#33415520;color:#94a3b8;">Loading...</div>
+    <div class="sep"></div>
+    <button class="btn" onclick="navIter(-1)" title="k">&#9650; Iter</button>
+    <button class="btn" onclick="navIter(1)" title="j">&#9660; Iter</button>
+    <button class="btn" onclick="navKey(-1)" title="p">&#9664; Key</button>
+    <button class="btn" onclick="navKey(1)" title="n">Key &#9654;</button>
+    <span style="flex:1"></span>
+</div>
+""")
+
+    # ── Main layout ──
+    parts.append('<div class="main">\n')
+
+    # ── Left panel ──
+    parts.append('<div class="left-panel">\n<div class="flowchart">\n')
+
+    # Flow nodes for phases + output
+    all_nodes = list(run.phases) + [None]  # None = output
+    for idx, phase in enumerate(all_nodes):
+        if phase is None:
+            name = "Output"
+            pnum = "Output"
+            color = PHASE_COLORS["Output"]
+            icon = PHASE_ICONS["Output"]
+            it_count = len(run.output.tracks)
+            tc_count = 0
+            stats_str = f"{it_count} tracks"
+        else:
+            name = phase.name
+            color = PHASE_COLORS.get(name, "#64748b")
+            icon = PHASE_ICONS.get(name, str(phase.phase_number))
+            it_count = len(phase.iterations)
+            tc_count = sum(len(it.tool_calls) for it in phase.iterations)
+            stats_str = f"{it_count}it {tc_count}tc"
+
+        node_id = name.replace(" ", "_")
+        parts.append(f'  <div class="flow-node" id="fn_{node_id}" style="--pc:{color};" data-phase="{esc(name)}" onclick="goToPhase(\'{esc(name)}\')">\n')
+        parts.append(f'    <div class="flow-num">{icon}</div>\n')
+        parts.append(f'    <span class="flow-label">{esc(name)}</span>\n')
+        parts.append(f'    <span class="flow-stats">{stats_str}</span>\n')
+        parts.append(f'  </div>\n')
+        if idx < len(all_nodes) - 1:
+            parts.append(f'  <div class="flow-connector" id="fc_{node_id}" style="--pc:{color};"></div>\n')
+
+    parts.append('</div>\n')  # close flowchart
+
+    # ── Trail ──
+    parts.append('<div class="trail-divider"></div>\n')
+    parts.append(f'<div class="trail-header">Execution Flow ({len(nav_items)} items)</div>\n')
+    parts.append('<div class="trail" id="trail">\n')
+
+    for ni, item in enumerate(nav_items):
+        color = PHASE_COLORS.get(item["phase_name"], "#64748b")
+        count = str(item["tool_count"])
+        parts.append(f'  <div class="trail-item" id="ti_{ni}" style="--tc:{color};" data-nav="{ni}" onclick="goToNav({ni})">\n')
+        parts.append(f'    <span class="trail-num">{ni + 1}</span>\n')
+        parts.append(f'    <span class="trail-label">{esc(item["label"])}</span>\n')
+        parts.append(f'    <span class="trail-count">{count}</span>\n')
+        parts.append(f'  </div>\n')
+
+    parts.append('</div>\n</div>\n')  # close trail, left-panel
+
+    # ── Right panel ──
+    parts.append('<div class="right-panel" id="rightPanel">\n')
+
+    # Render content blocks for each nav item
+    for ni, item in enumerate(nav_items):
+        active = " active" if ni == 0 else ""
+        parts.append(f'<div class="content-block{active}" data-nav="{ni}">\n')
+
+        if item["type"] == "iteration":
+            phase = run.phases[item["phase_idx"]]
+            iteration = phase.iterations[item["iter_idx"]]
+            color = PHASE_COLORS.get(phase.name, "#64748b")
+
+            # Phase header
+            parts.append(f'<div class="phase-header" style="background:{color}15; color:{color};">\n')
+            parts.append(f'  <span class="ph-name">{esc(phase.name)} Agent</span>\n')
+            parts.append(f'  <span class="ph-meta">Phase {phase.phase_number}</span>\n')
+            parts.append(f'</div>\n')
+
+            # Iteration block
+            parts.append(f'<div class="iter-block" style="--pc:{color};">\n')
+            parts.append(f'  <div class="iter-header">\n')
+            parts.append(f'    <span class="iter-num">ITERATION {iteration.number}/{iteration.max_iterations}</span>\n')
+            parts.append(f'    <span class="iter-tools">{len(iteration.tool_calls)} tool calls</span>\n')
+            parts.append(f'  </div>\n')
+
+            # Thinking
+            if iteration.thinking:
+                parts.append(f'  <div class="thinking">{esc(iteration.thinking)}</div>\n')
+
+            # Tool calls
+            for ti, tool in enumerate(iteration.tool_calls):
+                tc_color = TOOL_COLORS.get(tool.tool_name, "#64748b")
+                args_preview = truncate(tool.arguments, 80) if tool.arguments else ""
+
+                parts.append(f'  <div class="tool-card" onclick="toggleTool(this)">\n')
+                parts.append(f'    <div class="tool-header">\n')
+                parts.append(f'      <span class="tool-badge" style="background:{tc_color}20; color:{tc_color};">{esc(tool.tool_name)}</span>\n')
+                parts.append(f'      <span class="tool-summary">{esc(args_preview)}</span>\n')
+                parts.append(f'    </div>\n')
+
+                parts.append(f'    <div class="tool-details">\n')
+
+                # Arguments
+                if tool.arguments:
+                    parts.append(f'      <div class="tool-section-label">Arguments</div>\n')
+                    parts.append(f'      <div class="tool-content">{format_json_preview(tool.arguments)}</div>\n')
+
+                # Sub-logs
+                for sl in tool.sub_logs:
+                    if sl.tag == "Coverage":
+                        # Special coverage rendering
+                        parts.append(f'      <div class="tool-section-label">Coverage Assessment</div>\n')
+                        _render_coverage(parts, sl.text)
+                    else:
+                        tag_color = _sub_log_color(sl.tag)
+                        parts.append(f'      <div class="sub-log">\n')
+                        parts.append(f'        <span class="sub-log-tag" style="background:{tag_color}20; color:{tag_color};">{esc(sl.tag)}</span>\n')
+                        parts.append(f'        <span class="sub-log-text">{esc(truncate(sl.text, 300))}</span>\n')
+                        parts.append(f'      </div>\n')
+
+                # Result
+                if tool.result_preview:
+                    parts.append(f'      <div class="tool-section-label">Result</div>\n')
+                    parts.append(f'      <div class="tool-content">{format_json_preview(tool.result_preview)}</div>\n')
+
+                parts.append(f'    </div>\n')  # tool-details
+                parts.append(f'  </div>\n')  # tool-card
+
+            parts.append(f'</div>\n')  # iter-block
+
+        elif item["type"] == "post":
+            phase = run.phases[item["phase_idx"]]
+            color = PHASE_COLORS.get(phase.name, "#64748b")
+
+            parts.append(f'<div class="phase-header" style="background:{color}15; color:{color};">\n')
+            parts.append(f'  <span class="ph-name">{esc(phase.name)} — Post-Processing</span>\n')
+            parts.append(f'  <span class="ph-meta">{len(phase.post_processing)} entries</span>\n')
+            parts.append(f'</div>\n')
+
+            parts.append(f'<div class="post-section">\n')
+            parts.append(f'  <div class="post-header">Post-processing ({len(phase.post_processing)} items)</div>\n')
+
+            for ei, entry in enumerate(phase.post_processing):
+                tag_color = _sub_log_color(entry.tag)
+                preview = truncate(entry.lines[0] if entry.lines else "", 100)
+                body_text = esc("\n".join(entry.lines))
+
+                parts.append(f'  <div class="post-entry" onclick="togglePost(this)">\n')
+                parts.append(f'    <span class="post-tag" style="background:{tag_color}20; color:{tag_color};">{esc(entry.tag)}</span>\n')
+                parts.append(f'    <span class="post-preview">{esc(preview)}</span>\n')
+                parts.append(f'    <div class="post-body"><div class="tool-content">{body_text}</div></div>\n')
+                parts.append(f'  </div>\n')
+
+            parts.append(f'</div>\n')  # post-section
+
+        elif item["type"] == "output":
+            color = PHASE_COLORS["Output"]
+
+            parts.append(f'<div class="phase-header" style="background:{color}15; color:{color};">\n')
+            parts.append(f'  <span class="ph-name">Output — {esc(run.output.asset)}</span>\n')
+            parts.append(f'  <span class="ph-meta">{len(run.output.tracks)} tracks</span>\n')
+            parts.append(f'</div>\n')
+
+            # Tracks
+            for track in run.output.tracks:
+                conf = track.confidence
+                conf_color = "#10b981" if conf >= 65 else "#f59e0b" if conf >= 45 else "#ef4444"
+
+                parts.append(f'<div class="track-card" onclick="toggleTrack(this)">\n')
+                parts.append(f'  <div class="track-header">\n')
+                parts.append(f'    <div class="track-num">{track.number}</div>\n')
+                parts.append(f'    <div class="track-title">{esc(track.title)}</div>\n')
+                parts.append(f'    <div class="track-conf" style="color:{conf_color};">{conf}%</div>\n')
+                parts.append(f'  </div>\n')
+                parts.append(f'  <div class="conf-bar"><div class="conf-fill" style="width:{conf}%; background:{conf_color};"></div></div>\n')
+
+                parts.append(f'  <div class="track-details">\n')
+
+                # Mechanism
+                if track.mechanism:
+                    parts.append(f'    <div class="track-field">\n')
+                    parts.append(f'      <div class="track-field-label">Mechanism</div>\n')
+                    parts.append(f'      <div class="track-field-value">{esc(track.mechanism)}</div>\n')
+                    parts.append(f'    </div>\n')
+
+                # Time Horizon
+                if track.time_horizon:
+                    parts.append(f'    <div class="track-field">\n')
+                    parts.append(f'      <div class="track-field-label">Time Horizon</div>\n')
+                    parts.append(f'      <div class="track-field-value">{esc(track.time_horizon)}</div>\n')
+                    parts.append(f'    </div>\n')
+
+                # Evidence
+                if track.evidence:
+                    parts.append(f'    <div class="track-field">\n')
+                    parts.append(f'      <div class="track-field-label">Evidence</div>\n')
+                    parts.append(f'      <div class="track-field-value" style="white-space:pre-wrap;">{esc(track.evidence)}</div>\n')
+                    parts.append(f'    </div>\n')
+
+                # Asset Implications
+                if track.asset_implications:
+                    parts.append(f'    <div class="track-field">\n')
+                    parts.append(f'      <div class="track-field-label">Asset Implications</div>\n')
+                    for imp in track.asset_implications:
+                        parts.append(f'      <div class="track-implication">\n')
+                        # Try to split "ASSET: direction (range)"
+                        m_imp = re.match(r'^([^:]+):\s*(.+)', imp)
+                        if m_imp:
+                            parts.append(f'        <span class="impl-asset">{esc(m_imp.group(1))}</span>\n')
+                            parts.append(f'        <span class="impl-detail">{esc(m_imp.group(2))}</span>\n')
+                        else:
+                            parts.append(f'        <span class="impl-detail">{esc(imp)}</span>\n')
+                        parts.append(f'      </div>\n')
+                    parts.append(f'    </div>\n')
+
+                # Monitor
+                if track.monitor:
+                    parts.append(f'    <div class="track-field">\n')
+                    parts.append(f'      <div class="track-field-label">Monitor</div>\n')
+                    for mon in track.monitor:
+                        parts.append(f'      <div class="track-monitor-item">{esc(mon)}</div>\n')
+                    parts.append(f'    </div>\n')
+
+                parts.append(f'  </div>\n')  # track-details
+                parts.append(f'</div>\n')  # track-card
+
+            # Synthesis
+            if run.output.synthesis:
+                parts.append(f'<div class="synth-block">\n')
+                parts.append(f'  <div class="synth-title">Synthesis</div>\n')
+                parts.append(f'  <div class="synth-content">{esc(run.output.synthesis)}</div>\n')
+                parts.append(f'</div>\n')
+
+            # Key Uncertainties
+            if run.output.uncertainties:
+                parts.append(f'<div class="synth-block">\n')
+                parts.append(f'  <div class="synth-title">Key Uncertainties</div>\n')
+                for unc in run.output.uncertainties:
+                    parts.append(f'  <div class="uncertainty-item">{esc(unc)}</div>\n')
+                parts.append(f'</div>\n')
+
+            # Current Data
+            if run.output.current_data:
+                parts.append(f'<div class="synth-block">\n')
+                parts.append(f'  <div class="synth-title">Current Data</div>\n')
+                parts.append(f'  <div class="data-block">{esc(run.output.current_data)}</div>\n')
+                parts.append(f'</div>\n')
+
+            # Condensed Summary
+            if run.output.condensed:
+                parts.append(f'<div class="synth-block">\n')
+                parts.append(f'  <div class="synth-title">Condensed Summary</div>\n')
+                parts.append(f'  <div class="data-block">{esc(run.output.condensed)}</div>\n')
+                parts.append(f'</div>\n')
+
+            # LLM Usage
+            if run.llm_usage:
+                parts.append(f'<div class="synth-block">\n')
+                parts.append(f'  <div class="synth-title">LLM Usage</div>\n')
+                parts.append(f'  <table class="llm-table">\n')
+                parts.append(f'    <tr><th>Model</th><th>Calls</th><th>Input</th><th>Output</th><th>Cost</th></tr>\n')
+                for u in run.llm_usage:
+                    parts.append(f'    <tr><td>{esc(u.model)}</td><td>{u.calls}</td><td>{u.input_tokens:,}</td><td>{u.output_tokens:,}</td><td>${u.cost:.4f}</td></tr>\n')
+                parts.append(f'    <tr class="total-row"><td>TOTAL</td><td>{sum(u.calls for u in run.llm_usage)}</td><td>{sum(u.input_tokens for u in run.llm_usage):,}</td><td>{sum(u.output_tokens for u in run.llm_usage):,}</td><td>${run.total_cost:.4f}</td></tr>\n')
+                parts.append(f'  </table>\n')
+                if run.duration:
+                    parts.append(f'  <div style="margin-top:6px;font-size:10px;color:#64748b;">Duration: {esc(run.duration)}</div>\n')
+                parts.append(f'</div>\n')
+
+        parts.append(f'</div>\n')  # content-block
+
+    parts.append('</div>\n')  # right-panel
+    parts.append('</div>\n')  # main
+
+    # ── JavaScript ──
+    parts.append(f"""
 <script>
-const visits = {visit_meta_js};
-const totalVisits = {total_visits};
-const PHASE_ORDER = {json.dumps(PHASE_ORDER)};
+const navItems = {nav_items_js};
+const phaseData = {phase_data_js};
 const PHASE_COLORS = {json.dumps(PHASE_COLORS)};
-const PHASE_SHORT = {json.dumps(PHASE_SHORT)};
-let currentVisit = 0;
-let currentStep = -1;
+const totalNav = navItems.length;
+let currentNav = 0;
 
-function phaseId(phase) {{
-    return phase.replace(/ /g, '_').replace(/&/g, '').replace(/\\./g, '');
+function phaseId(name) {{
+    return name.replace(/ /g, '_');
 }}
 
-// ── Visit navigation ──
+// ── Navigation ──
 
-function goToVisit(idx) {{
-    if (idx < 0 || idx >= totalVisits) return;
-    currentVisit = idx;
-    currentStep = -1;
+function goToNav(idx) {{
+    if (idx < 0 || idx >= totalNav) return;
+    currentNav = idx;
 
-    document.querySelectorAll('.visit-block').forEach(b => {{
-        b.classList.toggle('active', parseInt(b.dataset.visit) === idx);
+    document.querySelectorAll('.content-block').forEach(b => {{
+        b.classList.toggle('active', parseInt(b.dataset.nav) === idx);
     }});
 
-    document.querySelectorAll('.step-card.highlight, .step-card.expanded').forEach(c => {{
-        c.classList.remove('highlight', 'expanded');
+    document.querySelectorAll('.trail-item').forEach(item => {{
+        const ni = parseInt(item.dataset.nav);
+        item.classList.toggle('active', ni === idx);
+        item.classList.toggle('past', ni < idx);
     }});
-
-    document.querySelectorAll('.visit-item').forEach(item => {{
-        const vi = parseInt(item.dataset.visit);
-        item.classList.toggle('active', vi === idx);
-        item.classList.toggle('past', vi < idx);
-    }});
-    const activeItem = document.getElementById('vi_' + idx);
+    const activeItem = document.getElementById('ti_' + idx);
     if (activeItem) activeItem.scrollIntoView({{ behavior: 'auto', block: 'nearest' }});
 
-    highlightPhase(visits[idx].phase);
-    updateVisitLabel();
-    updateStepCounter();
-
-    document.querySelectorAll('.flow-progress').forEach(b => b.style.width = '0%');
+    highlightPhase(navItems[idx].phase_name);
+    updateNavLabel();
     document.getElementById('rightPanel').scrollTop = 0;
 }}
 
-function goToFirstVisit(phase) {{
-    let idx = -1;
-    for (let i = currentVisit; i < totalVisits; i++) {{
-        if (visits[i].phase === phase) {{ idx = i; break; }}
-    }}
-    if (idx === -1) {{
-        for (let i = 0; i < currentVisit; i++) {{
-            if (visits[i].phase === phase) {{ idx = i; break; }}
-        }}
-    }}
-    if (idx >= 0) goToVisit(idx);
-}}
-
-function navVisit(dir) {{ goToVisit(currentVisit + dir); }}
-
-// ── Flowchart ──
-
-function highlightPhase(phase) {{
-    document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('active', 'visited'));
-    document.querySelectorAll('.flow-connector').forEach(a => {{
-        a.classList.remove('active');
-        a.style.removeProperty('--phase-color');
-    }});
-
-    if (!phase) return;
-
-    const pid = phaseId(phase);
-    const node = document.getElementById('fn_' + pid);
-    if (node) {{
-        node.classList.add('active');
-        const visitedPhases = new Set();
-        for (let i = 0; i < currentVisit; i++) visitedPhases.add(visits[i].phase);
-        visitedPhases.delete(phase);
-        visitedPhases.forEach(p => {{
-            const el = document.getElementById('fn_' + phaseId(p));
-            if (el) el.classList.add('visited');
-        }});
-        node.scrollIntoView({{ behavior: 'auto', block: 'nearest' }});
-    }}
-
-    const phaseIdx = PHASE_ORDER.indexOf(phase);
-    if (phaseIdx > 0) {{
-        const prevPid = phaseId(PHASE_ORDER[phaseIdx - 1]);
-        const arrow = document.getElementById('fa_' + prevPid);
-        if (arrow) {{
-            arrow.classList.add('active');
-            arrow.style.setProperty('--phase-color', PHASE_COLORS[phase] || '#64748b');
+function goToPhase(phaseName) {{
+    for (let i = 0; i < totalNav; i++) {{
+        if (navItems[i].phase_name === phaseName) {{
+            goToNav(i);
+            return;
         }}
     }}
 }}
 
-// ── Step navigation (within visit) ──
-
-function getVisibleSteps() {{
-    const block = document.querySelector('.visit-block.active');
-    if (!block) return [];
-    const keyOnly = document.getElementById('showOnlyKey').checked;
-    return [...block.querySelectorAll('.step-card')].filter(c => !keyOnly || c.dataset.key === '1');
-}}
-
-function activateStep(card, stepIdx) {{
-    document.querySelectorAll('.step-card.highlight, .step-card.expanded').forEach(c => {{
-        c.classList.remove('highlight', 'expanded');
-    }});
-    card.classList.add('highlight', 'expanded');
-    card.scrollIntoView({{ behavior: 'auto', block: 'center' }});
-    currentStep = stepIdx;
-
-    const phase = visits[currentVisit].phase;
-    const total = getVisibleSteps().length;
-    const pid = phaseId(phase);
-    const bar = document.getElementById('fp_' + pid);
-    if (bar) bar.style.width = Math.min(100, Math.round(((stepIdx + 1) / total) * 100)) + '%';
-
-    updateStepCounter();
-}}
-
-function toggleStep(el) {{
-    if (el.classList.contains('expanded') && el.classList.contains('highlight')) {{
-        el.classList.remove('expanded', 'highlight');
-        currentStep = -1;
+function navPhase(dir) {{
+    const curPhase = navItems[currentNav].phase_name;
+    if (dir > 0) {{
+        for (let i = currentNav + 1; i < totalNav; i++) {{
+            if (navItems[i].phase_name !== curPhase) {{
+                goToNav(i);
+                return;
+            }}
+        }}
     }} else {{
-        const cards = getVisibleSteps();
-        activateStep(el, cards.indexOf(el));
+        // Go to first item of previous phase
+        let prevPhase = null;
+        for (let i = currentNav - 1; i >= 0; i--) {{
+            if (navItems[i].phase_name !== curPhase) {{
+                prevPhase = navItems[i].phase_name;
+                break;
+            }}
+        }}
+        if (prevPhase) {{
+            for (let i = 0; i < totalNav; i++) {{
+                if (navItems[i].phase_name === prevPhase) {{
+                    goToNav(i);
+                    return;
+                }}
+            }}
+        }}
     }}
-    updateStepCounter();
 }}
 
-function navStep(dir) {{
-    const cards = getVisibleSteps();
-    if (!cards.length) return;
-    const next = currentStep + dir;
-    if (next < 0 || next >= cards.length) return;
-    activateStep(cards[next], next);
+function navIter(dir) {{
+    goToNav(currentNav + dir);
 }}
 
 function navKey(dir) {{
-    const allCards = getVisibleSteps();
-    const keyCards = allCards.filter(c => c.dataset.key === '1');
-
-    if (keyCards.length > 0) {{
-        let pos = -1;
-        if (currentStep >= 0) {{
-            const currentCard = allCards[currentStep];
-            pos = keyCards.indexOf(currentCard);
-        }}
-        const target = (pos === -1) ? (dir > 0 ? 0 : keyCards.length - 1) : pos + dir;
-        if (target >= 0 && target < keyCards.length) {{
-            activateStep(keyCards[target], allCards.indexOf(keyCards[target]));
+    // Jump to next/prev coverage assessment or phase boundary
+    const keyTypes = ['post', 'output'];
+    let i = currentNav + dir;
+    while (i >= 0 && i < totalNav) {{
+        if (keyTypes.includes(navItems[i].type)) {{
+            goToNav(i);
             return;
         }}
-    }}
-
-    let vi = currentVisit + dir;
-    while (vi >= 0 && vi < totalVisits) {{
-        if (visits[vi].keys > 0) {{
-            goToVisit(vi);
-            const newAll = getVisibleSteps();
-            const newKeys = newAll.filter(c => c.dataset.key === '1');
-            if (newKeys.length) {{
-                const pick = dir > 0 ? newKeys[0] : newKeys[newKeys.length - 1];
-                activateStep(pick, newAll.indexOf(pick));
-            }}
+        // Also stop at first iteration of a new phase
+        if (i > 0 && navItems[i].phase_name !== navItems[i - 1].phase_name) {{
+            goToNav(i);
             return;
         }}
-        vi += dir;
+        i += dir;
     }}
 }}
 
-function filterSteps() {{
-    const keyOnly = document.getElementById('showOnlyKey').checked;
-    document.querySelectorAll('.step-card').forEach(card => {{
-        card.classList.toggle('hidden', keyOnly && card.dataset.key !== '1');
+// ── Flowchart ──
+
+function highlightPhase(phaseName) {{
+    const nodes = document.querySelectorAll('.flow-node');
+    const connectors = document.querySelectorAll('.flow-connector');
+
+    nodes.forEach(n => n.classList.remove('active', 'visited'));
+    connectors.forEach(c => c.classList.remove('active'));
+
+    const pid = phaseId(phaseName);
+    const activeNode = document.getElementById('fn_' + pid);
+    if (activeNode) activeNode.classList.add('active');
+
+    // Mark visited phases
+    const visitedPhases = new Set();
+    for (let i = 0; i < currentNav; i++) {{
+        visitedPhases.add(navItems[i].phase_name);
+    }}
+    visitedPhases.delete(phaseName);
+    visitedPhases.forEach(p => {{
+        const el = document.getElementById('fn_' + phaseId(p));
+        if (el) el.classList.add('visited');
     }});
-    currentStep = -1;
-    updateStepCounter();
+
+    // Activate connector before current phase
+    const phaseNames = [...phaseData.map(p => p.name), 'Output'];
+    const phaseIdx = phaseNames.indexOf(phaseName);
+    if (phaseIdx > 0) {{
+        const prevPid = phaseId(phaseNames[phaseIdx - 1]);
+        const conn = document.getElementById('fc_' + prevPid);
+        if (conn) {{
+            conn.classList.add('active');
+            conn.style.setProperty('--pc', PHASE_COLORS[phaseName] || '#64748b');
+        }}
+    }}
 }}
 
 // ── UI updates ──
 
-function updateVisitLabel() {{
-    const v = visits[currentVisit];
-    const short = PHASE_SHORT[v.phase] || v.phase;
-    const color = PHASE_COLORS[v.phase] || '#64748b';
-    const label = document.getElementById('visitLabel');
-    label.textContent = 'Visit ' + (currentVisit + 1) + '/' + totalVisits + ': ' + short + ' (' + v.count + ' steps)';
+function updateNavLabel() {{
+    const item = navItems[currentNav];
+    const color = PHASE_COLORS[item.phase_name] || '#64748b';
+    const label = document.getElementById('navLabel');
+    let text = '';
+    if (item.type === 'iteration') {{
+        text = item.phase_name + ' — Iteration ' + item.label.split('It')[1];
+    }} else if (item.type === 'post') {{
+        text = item.phase_name + ' — Post-Processing';
+    }} else {{
+        text = 'Output — {esc(run.output.asset)}';
+    }}
+    label.textContent = text;
     label.style.background = color + '20';
     label.style.color = color;
 }}
 
-function updateStepCounter() {{
-    const cards = getVisibleSteps();
-    const counter = document.getElementById('stepCounter');
-    if (currentStep >= 0 && currentStep < cards.length) {{
-        counter.textContent = 'Step ' + (currentStep + 1) + '/' + cards.length;
-    }} else {{
-        counter.textContent = cards.length + ' steps';
-    }}
+// ── Toggles ──
+
+function toggleTool(el) {{
+    el.classList.toggle('expanded');
+}}
+
+function togglePost(el) {{
+    el.classList.toggle('expanded');
+}}
+
+function toggleTrack(el) {{
+    el.classList.toggle('expanded');
 }}
 
 // ── Keyboard ──
 
 document.addEventListener('keydown', (e) => {{
-    if (e.target.tagName === 'INPUT') return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
     switch (e.key) {{
-        case 'ArrowRight': case 'l': e.preventDefault(); navVisit(1); break;
-        case 'ArrowLeft': case 'h': e.preventDefault(); navVisit(-1); break;
-        case 'ArrowDown': case 'j': e.preventDefault(); navStep(1); break;
-        case 'ArrowUp': case 'k': e.preventDefault(); navStep(-1); break;
+        case 'ArrowRight': case 'l': e.preventDefault(); navPhase(1); break;
+        case 'ArrowLeft': case 'h': e.preventDefault(); navPhase(-1); break;
+        case 'ArrowDown': case 'j': e.preventDefault(); navIter(1); break;
+        case 'ArrowUp': case 'k': e.preventDefault(); navIter(-1); break;
         case 'n': navKey(1); break;
         case 'p': navKey(-1); break;
-        case 'Escape': goToVisit(currentVisit); break;
+        case 'Escape':
+            // Collapse all expanded items
+            document.querySelectorAll('.expanded').forEach(el => el.classList.remove('expanded'));
+            break;
     }}
 }});
 
 // Initialize
-goToVisit(0);
+goToNav(0);
 </script>
 </body>
 </html>""")
 
     return "".join(parts)
+
+
+def _sub_log_color(tag: str) -> str:
+    colors = {
+        "vector_search": "#8b5cf6",
+        "extract_web_chains": "#10b981",
+        "Coverage": "#f59e0b",
+        "answer_generation": "#06b6d4",
+        "chain_expansion": "#6366f1",
+        "Knowledge Gap": "#f59e0b",
+        "WebSearch": "#10b981",
+        "Historical Analog": "#ec4899",
+        "Chain Merge": "#f97316",
+        "web_chain_persistence": "#14b8a6",
+        "Variable Extraction": "#a855f7",
+        "Retrieve": "#3b82f6",
+        "retriever.gap_detector": "#f59e0b",
+        "Gap": "#f59e0b",
+        "Relationship Store": "#78716c",
+        "Regime Characterization": "#dc2626",
+        "Chain Graph": "#f97316",
+        "Impact Analysis": "#ef4444",
+        "Synthesis Phase": "#f59e0b",
+        "Regime": "#dc2626",
+    }
+    # Check prefix matches
+    for prefix, c in colors.items():
+        if tag.startswith(prefix) or tag.startswith("Gap:"):
+            return c
+    return "#64748b"
+
+
+def _render_coverage(parts: list[str], text: str) -> None:
+    """Render coverage assessment with visual checkmarks."""
+    lines = text.strip().split("\n")
+    if not lines:
+        return
+
+    # First line: rating
+    first = lines[0].strip()
+    m = re.match(r'(\w+)\s*\((\d+)/(\d+)', first)
+    if m:
+        rating = m.group(1)
+        met = m.group(2)
+        total = m.group(3)
+        r_color = {
+            "ADEQUATE": "#10b981",
+            "PARTIAL": "#f59e0b",
+            "INSUFFICIENT": "#ef4444",
+            "COMPLETE": "#10b981",
+        }.get(rating, "#64748b")
+        parts.append(f'      <span class="coverage-rating" style="background:{r_color}20; color:{r_color};">{esc(rating)} ({met}/{total} flags)</span>\n')
+
+    # Flag lines
+    parts.append(f'      <div class="coverage-grid">\n')
+    for line in lines[1:]:
+        fm = re.match(r'\s*\[(Y|N)\]\s*(.+)', line)
+        if fm:
+            passed = fm.group(1) == "Y"
+            name = fm.group(2).strip()
+            cls = "coverage-check" if passed else "coverage-cross"
+            icon = "&#x2713;" if passed else "&#x2717;"
+            parts.append(f'        <span class="{cls}">{icon}</span>\n')
+            parts.append(f'        <span class="coverage-name">{esc(name)}</span>\n')
+    parts.append(f'      </div>\n')
 
 
 # ── Main ─────────────────────────────────────────────────────────────────
@@ -1260,31 +1716,28 @@ def main():
 
     lines = log_file.read_text(encoding="utf-8").splitlines()
 
-    query = "Unknown query"
-    for line in lines[:10]:
-        if line.strip().startswith("Query:"):
-            query = line.strip()[6:].strip()
-            break
+    run = parse_log(lines)
+    run.log_path = log_path
 
-    steps = parse_log(lines)
-    html_out = render_html(steps, log_path, query)
+    html_out = render_html(run)
 
     if not output_path:
         output_path = str(log_file.with_suffix("")) + "_v2.html"
 
     Path(output_path).write_text(html_out, encoding="utf-8")
 
-    # Count gap groups
-    gap_groups = 0
-    for step in steps:
-        if step["phase"] == "Gap Analysis":
-            gap_groups += 1
+    total_tools = sum(len(tc.tool_calls) for p in run.phases for tc in p.iterations)
+    total_iters = sum(len(p.iterations) for p in run.phases)
 
     print(f"Generated: {output_path}")
-    print(f"  Steps: {len(steps)}")
-    print(f"  Key steps: {sum(1 for s in steps if s.get('is_key'))}")
-    print(f"  Phases: {len(set(s['phase'] for s in steps))}")
-    print(f"  Gap-related steps: {gap_groups}")
+    print(f"  Phases: {len(run.phases)}")
+    print(f"  Iterations: {total_iters}")
+    print(f"  Tool calls: {total_tools}")
+    print(f"  Tracks: {len(run.output.tracks)}")
+    if run.total_cost:
+        print(f"  Cost: ${run.total_cost:.4f}")
+    if run.duration:
+        print(f"  Duration: {run.duration}")
 
 
 if __name__ == "__main__":

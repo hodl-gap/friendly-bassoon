@@ -11,6 +11,7 @@ Usage:
 """
 
 import argparse
+import os
 import sys
 import json
 from pathlib import Path
@@ -69,6 +70,13 @@ CASE_STUDIES = {
         "pass_threshold": 10,
         "total_points": 16,
     },
+    7: {
+        "query": "FDIC data shows US banks still carry $306B in unrealized securities losses (Q4 2025), down from the -$688B peak in Q3 2022 but still 3x worse than any pre-2022 quarter. HTM losses are $207B — hidden from balance sheets. What are the historical precedents for this level of bank balance sheet stress, and under what conditions could this become a systemic risk for equities?",
+        "asset": "equity",
+        "rubric_file": "test_cases/07_bank_unrealized_losses.md",
+        "pass_threshold": 10,
+        "total_points": 16,
+    },
 }
 
 
@@ -87,7 +95,57 @@ def enrich_query_with_data(query: str, case_num: int) -> str:
                 return f"{state}\n\nTrader query: {query}"
         except Exception as e:
             print(f"[enrich] Could not generate put-call state: {e}")
+    if case_num == 7:
+        try:
+            state = _describe_fdic_state()
+            if state:
+                return f"{state}\n\nTrader query: {query}"
+        except Exception as e:
+            print(f"[enrich] Could not generate FDIC state: {e}")
     return query
+
+
+def _describe_fdic_state() -> str:
+    """Generate a plain-text state description of FDIC unrealized losses."""
+    import csv
+    csv_path = Path(__file__).parent / "subproject_data_collection" / "data" / "fdic_securities.csv"
+    if not csv_path.exists():
+        return ""
+    rows = []
+    with open(csv_path, newline="") as f:
+        for row in csv.DictReader(f):
+            if row.get("total_unrealized"):
+                rows.append(row)
+    if len(rows) < 4:
+        return ""
+    latest = rows[-1]
+    total = float(latest["total_unrealized"])
+    htm = float(latest["htm_unrealized"]) if latest.get("htm_unrealized") else 0
+    afs = float(latest["afs_unrealized"]) if latest.get("afs_unrealized") else 0
+    # Peak loss
+    peak_row = min(rows, key=lambda r: float(r["total_unrealized"]))
+    peak_total = float(peak_row["total_unrealized"])
+    # Pre-2022 worst
+    pre2022 = [r for r in rows if r["date"] < "2022-01-01"]
+    pre2022_worst = min(pre2022, key=lambda r: float(r["total_unrealized"])) if pre2022 else None
+    lines = [
+        f"FDIC bank securities data (Q4 2025): Total unrealized losses = ${total:,.0f}M "
+        f"(HTM: ${htm:,.0f}M, AFS: ${afs:,.0f}M).",
+        f"Peak loss: ${peak_total:,.0f}M in {peak_row['date']} (Q3 2022).",
+        f"Current losses are {abs(total/peak_total)*100:.0f}% of peak but still "
+        f"historically extreme.",
+    ]
+    if pre2022_worst:
+        pre_val = float(pre2022_worst["total_unrealized"])
+        lines.append(
+            f"Worst pre-2022 quarter: ${pre_val:,.0f}M ({pre2022_worst['date']}). "
+            f"Current level is {abs(total/pre_val):.1f}x worse."
+        )
+    # Recent trajectory (last 4 quarters)
+    recent = rows[-4:]
+    trajectory = [f"{r['date']}: ${float(r['total_unrealized']):,.0f}M" for r in recent]
+    lines.append(f"Recent trajectory: {' → '.join(trajectory)}.")
+    return "\n".join(lines)
 
 
 def run_case(case_num: int, run_num: int, asset: str = None, query_override: str = None):
@@ -175,12 +233,16 @@ def import_traceback():
 
 def main():
     parser = argparse.ArgumentParser(description="Run case study through full pipeline")
-    parser.add_argument("--case", type=int, default=1, help="Case study number (1-6)")
+    parser.add_argument("--case", type=int, default=1, help="Case study number (1-7)")
     parser.add_argument("--run", type=int, default=1, help="Run number for logging")
     parser.add_argument("--asset", default=None, help="Asset class (default: from case config)")
     parser.add_argument("--query", default=None, help="Override query (for custom runs)")
+    parser.add_argument("--step", action="store_true", help="Step-by-step execution mode (pause after each LLM decision and tool execution)")
 
     args = parser.parse_args()
+
+    if args.step:
+        os.environ["STEP_MODE"] = "1"
 
     result, log_path = run_case(args.case, args.run, args.asset, args.query)
 
