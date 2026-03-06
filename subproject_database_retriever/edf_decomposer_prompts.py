@@ -17,6 +17,16 @@ Before decomposing, classify the query:
 
 Include the classification in your output as a top-level "query_type" field.
 
+## Temporal Direction
+
+Also classify the query's temporal orientation:
+- **retrospective**: query uses past tense, asks "what caused", "what happened", "why did" — the event already occurred and the user wants causal explanation
+- **prospective**: query asks about future impact of a current or hypothetical event — "what will happen", "what does this mean for", "what are the implications"
+
+When ambiguous (e.g., "FDIC shows $306B losses... under what conditions could this become systemic?"), default to `prospective`.
+
+Include as a top-level "temporal_direction" field: "retrospective" or "prospective".
+
 ## The 7 Knowledge Types
 
 | # | Type | Core Question |
@@ -95,6 +105,7 @@ Respond with ONLY a JSON object. No markdown code fences, no preamble, no explan
 
 {{
   "query_type": "actor-driven | data-driven | hybrid",
+  "temporal_direction": "retrospective | prospective",
   "keywords": [
     {{
       "id": "K1",

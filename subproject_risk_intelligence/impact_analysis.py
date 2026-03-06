@@ -1,4 +1,9 @@
-"""Impact analysis module - LLM-based insight generation."""
+"""Impact analysis module - LLM-based insight generation.
+
+Two output modes:
+- Retrospective (output_causal_decomposition): causal tracks explaining what happened
+- Prospective (output_scenario_analysis): scenario-based forward analysis with predictions
+"""
 
 import sys
 import json
@@ -10,8 +15,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from models import call_claude_with_tools
 
 from .impact_analysis_prompts import (
-    SYSTEM_PROMPT,
-    get_insight_prompt,
+    SYSTEM_PROMPT_RETROSPECTIVE,
+    SYSTEM_PROMPT_PROSPECTIVE,
+    get_retrospective_prompt,
+    get_prospective_prompt,
 )
 from .current_data_fetcher import format_current_values_for_prompt
 from .relationship_store import get_relevant_historical_chains, format_historical_chains_for_prompt
@@ -27,8 +34,162 @@ _MODEL_SHORT_NAME = {
     "claude_haiku": "haiku",
 }
 
+
+def _get_retrospective_tool() -> dict:
+    """Tool schema for retrospective causal decomposition."""
+    return {
+        "name": "output_causal_decomposition",
+        "description": "Output structured causal decomposition explaining what happened and why",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "trigger_event": {
+                    "type": "object",
+                    "properties": {
+                        "description": {"type": "string", "maxLength": 200},
+                        "date": {"type": "string"},
+                    },
+                    "required": ["description"],
+                },
+                "causal_tracks": {
+                    "type": "array",
+                    "maxItems": 4,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "title": {"type": "string", "maxLength": 80},
+                            "mechanism": {
+                                "type": "string",
+                                "maxLength": 200,
+                                "description": "Arrow notation: A → B → C",
+                            },
+                            "evidence_summary": {"type": "string", "maxLength": 300},
+                            "quantitative_data": {
+                                "type": "array",
+                                "maxItems": 4,
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "metric": {"type": "string"},
+                                        "value": {"type": "string"},
+                                        "source": {"type": "string"},
+                                    },
+                                    "required": ["metric", "value"],
+                                },
+                            },
+                            "confidence": {"type": "number"},
+                        },
+                        "required": ["title", "mechanism", "evidence_summary", "confidence"],
+                    },
+                },
+                "cross_track_synthesis": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "description": "How tracks interact. 2-3 sentences max.",
+                },
+                "residual_forward_view": {
+                    "type": "string",
+                    "maxLength": 300,
+                    "description": "Optional: what to watch going forward. NOT scored.",
+                },
+                "key_data_gaps": {
+                    "type": "array",
+                    "maxItems": 3,
+                    "items": {"type": "string", "maxLength": 100},
+                },
+            },
+            "required": ["trigger_event", "causal_tracks", "cross_track_synthesis"],
+        },
+    }
+
+
+def _get_prospective_tool() -> dict:
+    """Tool schema for prospective scenario analysis."""
+    return {
+        "name": "output_scenario_analysis",
+        "description": "Output structured scenario analysis with predictions grounded in historical data",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "current_situation": {"type": "string", "maxLength": 300},
+                "scenarios": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 4,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "title": {"type": "string", "maxLength": 80},
+                            "condition": {
+                                "type": "string",
+                                "maxLength": 200,
+                                "description": "What must be true for this scenario",
+                            },
+                            "mechanism": {
+                                "type": "string",
+                                "maxLength": 200,
+                                "description": "Arrow notation causal chain",
+                            },
+                            "analog_basis": {
+                                "type": "string",
+                                "maxLength": 200,
+                                "description": "Which historical analogs support this. Reference the base rate data.",
+                            },
+                            "predictions": {
+                                "type": "array",
+                                "maxItems": 4,
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "variable": {"type": "string"},
+                                        "direction": {
+                                            "type": "string",
+                                            "enum": ["bullish", "bearish", "neutral"],
+                                        },
+                                        "magnitude_low": {"type": "number"},
+                                        "magnitude_high": {"type": "number"},
+                                        "timeframe_days": {"type": "integer"},
+                                    },
+                                    "required": ["variable", "direction", "timeframe_days"],
+                                },
+                            },
+                            "falsification": {
+                                "type": "string",
+                                "maxLength": 150,
+                                "description": "What would prove this scenario wrong",
+                            },
+                        },
+                        "required": ["title", "condition", "mechanism", "predictions", "falsification"],
+                    },
+                },
+                "monitoring_dashboard": {
+                    "type": "array",
+                    "maxItems": 6,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "variable": {"type": "string"},
+                            "current_value": {"type": "number"},
+                            "scenario_1_threshold": {"type": "string", "maxLength": 30},
+                            "scenario_2_threshold": {"type": "string", "maxLength": 30},
+                        },
+                        "required": ["variable"],
+                    },
+                },
+                "synthesis": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "description": "3-4 sentence bottom line connecting scenarios",
+                },
+            },
+            "required": ["current_situation", "scenarios", "monitoring_dashboard", "synthesis"],
+        },
+    }
+
+
+# Keep legacy tool for backward compat during transition
 def _get_insight_tool(asset_class: str = "btc") -> dict:
-    """Get the tool definition for structured insight output."""
+    """Get legacy tool definition — used only by synthesis_phase patch path."""
     cfg = get_asset_config(asset_class)
     return {
         "name": "output_insight",
@@ -42,83 +203,50 @@ def _get_insight_tool(asset_class: str = "btc") -> dict:
                         "type": "object",
                         "properties": {
                             "title": {"type": "string"},
-                            "causal_mechanism": {"type": "string", "description": "Arrow notation chain"},
-                            "historical_evidence": {
-                                "type": "object",
-                                "properties": {
-                                    "precedent_count": {"type": "integer"},
-                                    "success_rate": {"type": "number"},
-                                    "precedent_summary": {"type": "string"},
-                                    "precedents": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "object",
-                                            "properties": {
-                                                "event": {"type": "string"},
-                                                "outcome": {"type": "string"},
-                                                "magnitude": {"type": "string"}
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            "asset_implications": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "asset": {"type": "string"},
-                                        "direction": {"type": "string"},
-                                        "magnitude_range": {"type": "string"},
-                                        "timing": {"type": "string"}
-                                    },
-                                    "required": ["asset", "direction"]
-                                }
-                            },
-                            "monitoring_variables": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "variable": {"type": "string"},
-                                        "condition": {"type": "string"},
-                                        "meaning": {"type": "string"}
-                                    },
-                                    "required": ["variable", "condition"]
-                                }
-                            },
+                            "causal_mechanism": {"type": "string"},
+                            "historical_evidence": {"type": "object"},
+                            "asset_implications": {"type": "array", "items": {"type": "object"}},
+                            "monitoring_variables": {"type": "array", "items": {"type": "object"}},
                             "confidence": {"type": "number"},
                             "time_horizon": {"type": "string"},
-                            "sequence_position": {
-                                "type": "integer",
-                                "description": "Temporal order (1=first, 2=next...). Use when tracks have sequential dependency."
-                            }
                         },
-                        "required": ["title", "causal_mechanism", "asset_implications", "confidence"]
-                    }
+                        "required": ["title", "causal_mechanism", "confidence"],
+                    },
                 },
-                "key_uncertainties": {
-                    "type": "array",
-                    "items": {"type": "string"}
-                },
-                "outlook": {
-                    "type": "string",
-                    "description": "Forward projections, seasonal patterns, and predictions about what happens next. Content that is temporally AFTER the queried event belongs here, not in causal tracks."
-                },
-                "synthesis": {
-                    "type": "string",
-                    "description": "Narrative connecting the causal tracks"
-                }
+                "key_uncertainties": {"type": "array", "items": {"type": "string"}},
+                "synthesis": {"type": "string"},
             },
-            "required": ["tracks", "synthesis"]
-        }
+            "required": ["tracks", "synthesis"],
+        },
+    }
+
+
+def _parse_retrospective_result(tool_input: Dict[str, Any]) -> Dict[str, Any]:
+    """Parse output_causal_decomposition tool result."""
+    return {
+        "output_mode": "retrospective",
+        "trigger_event": tool_input.get("trigger_event", {}),
+        "causal_tracks": tool_input.get("causal_tracks", []),
+        "cross_track_synthesis": tool_input.get("cross_track_synthesis", ""),
+        "residual_forward_view": tool_input.get("residual_forward_view", ""),
+        "key_data_gaps": tool_input.get("key_data_gaps", []),
+    }
+
+
+def _parse_prospective_result(tool_input: Dict[str, Any]) -> Dict[str, Any]:
+    """Parse output_scenario_analysis tool result."""
+    return {
+        "output_mode": "prospective",
+        "current_situation": tool_input.get("current_situation", ""),
+        "scenarios": tool_input.get("scenarios", []),
+        "monitoring_dashboard": tool_input.get("monitoring_dashboard", []),
+        "synthesis": tool_input.get("synthesis", ""),
     }
 
 
 def _parse_insight_tool_result(tool_input: Dict[str, Any]) -> Dict[str, Any]:
-    """Convert insight tool_use input into structured insight output."""
+    """Parse legacy output_insight tool result — kept for patch path."""
     tracks = tool_input.get("tracks", [])
-
     parsed_tracks = []
     for i, t in enumerate(tracks):
         track_data = {
@@ -137,6 +265,7 @@ def _parse_insight_tool_result(tool_input: Dict[str, Any]) -> Dict[str, Any]:
         parsed_tracks.append(track_data)
 
     return {
+        "output_mode": "legacy",
         "tracks": parsed_tracks,
         "key_uncertainties": tool_input.get("key_uncertainties", []),
         "synthesis": tool_input.get("synthesis", ""),
@@ -147,16 +276,25 @@ def analyze_impact(state: RiskImpactState, asset_class: str = "btc") -> RiskImpa
     """
     Analyze the impact of a macro event using retrieved context.
 
-    Produces multi-track insight output with independent reasoning tracks.
-
-    Args:
-        state: Current state with retrieval results
-        asset_class: Asset class to analyze impact for
-
-    Returns:
-        Updated state with analysis results
+    Routes to retrospective (causal decomposition) or prospective (scenario analysis)
+    based on temporal_direction from the EDF knowledge tree.
     """
-    return _analyze_insight(state, asset_class)
+    temporal_direction = _get_temporal_direction(state)
+    print(f"\n[Impact Analysis] Output mode: {temporal_direction}")
+
+    if temporal_direction == "retrospective":
+        return _analyze_retrospective(state, asset_class)
+    else:
+        return _analyze_prospective(state, asset_class)
+
+
+def _get_temporal_direction(state: RiskImpactState) -> str:
+    """Get temporal direction from EDF tree, default to prospective."""
+    tree = state.get("_edf_knowledge_tree", {})
+    direction = tree.get("temporal_direction", "prospective")
+    if direction not in ("retrospective", "prospective"):
+        return "prospective"
+    return direction
 
 
 def _prepare_prompt_data(state: RiskImpactState, asset_class: str) -> dict:
@@ -217,75 +355,140 @@ def _prepare_prompt_data(state: RiskImpactState, asset_class: str) -> dict:
     }
 
 
-def _analyze_insight(state: RiskImpactState, asset_class: str = "btc") -> RiskImpactState:
-    """Produce multi-track reasoning with independent evidence."""
+def _analyze_retrospective(state: RiskImpactState, asset_class: str) -> RiskImpactState:
+    """Produce causal decomposition (retrospective mode)."""
     data = _prepare_prompt_data(state, asset_class)
-    prompt = get_insight_prompt(**data)
+    prompt = get_retrospective_prompt(**data)
 
     model_short = _MODEL_SHORT_NAME.get(config.ANALYSIS_MODEL, "sonnet")
     asset_name = get_asset_config(asset_class)["name"]
-    print(f"\n[Impact Analysis] Calling {config.ANALYSIS_MODEL} ({model_short}) for {asset_name} INSIGHT mode...")
+    print(f"\n[Impact Analysis] Calling {config.ANALYSIS_MODEL} ({model_short}) for {asset_name} RETROSPECTIVE mode...")
 
-    insight_tool = _get_insight_tool(asset_class)
+    tool = _get_retrospective_tool()
+    tool_name = "output_causal_decomposition"
 
     try:
         response = call_claude_with_tools(
             messages=[{"role": "user", "content": prompt}],
-            tools=[insight_tool],
-            tool_choice={"type": "tool", "name": "output_insight"},
+            tools=[tool],
+            tool_choice={"type": "tool", "name": tool_name},
             model=model_short,
             temperature=0.3,
-            max_tokens=16000,
-            system=SYSTEM_PROMPT,
+            max_tokens=8000,
+            system=SYSTEM_PROMPT_RETROSPECTIVE,
         )
 
-        print("\n[Impact Analysis] Raw LLM Response (insight):")
-        print("-" * 40)
-        print(response)
-        print("-" * 40)
-
-        tool_input = None
-        for block in response.content:
-            if block.type == "tool_use" and block.name == "output_insight":
-                tool_input = block.input
-                break
-
-        if tool_input is None:
-            raise ValueError("No output_insight tool_use block found in response")
-
-        print("\n[Impact Analysis] Insight tool output (structured):")
-        print("-" * 40)
-        print(json.dumps(tool_input, indent=2))
-        print("-" * 40)
-
-        parsed = _parse_insight_tool_result(tool_input)
-
+        tool_input = _extract_tool_input(response, tool_name)
+        parsed = _parse_retrospective_result(tool_input)
         state["insight_output"] = parsed
-
-        # Populate legacy fields from best track for backward compatibility
-        tracks = parsed.get("tracks", [])
-        if tracks:
-            best_track = max(tracks, key=lambda t: t.get("confidence", 0))
-            implications = best_track.get("asset_implications", [])
-            if implications:
-                direction = implications[0].get("direction", "NEUTRAL").upper()
-                if direction not in ("BULLISH", "BEARISH", "NEUTRAL"):
-                    direction = "NEUTRAL"
-                state["direction"] = direction
-            else:
-                state["direction"] = "NEUTRAL"
-            state["confidence"] = {"score": best_track.get("confidence", 0.5)}
-            state["time_horizon"] = best_track.get("time_horizon", "unknown")
-            state["rationale"] = parsed.get("synthesis", "")
-            state["risk_factors"] = parsed.get("key_uncertainties", [])
-        else:
-            state["direction"] = "NEUTRAL"
-            state["confidence"] = {"score": 0.5}
-            state["rationale"] = parsed.get("synthesis", "")
-            state["risk_factors"] = parsed.get("key_uncertainties", [])
-
+        _populate_legacy_fields_retrospective(state, parsed)
         return state
 
     except Exception as e:
-        print(f"\n[Impact Analysis] Insight analysis failed: {e}")
+        print(f"\n[Impact Analysis] Retrospective analysis failed: {e}")
         raise
+
+
+def _analyze_prospective(state: RiskImpactState, asset_class: str) -> RiskImpactState:
+    """Produce scenario analysis (prospective mode)."""
+    data = _prepare_prompt_data(state, asset_class)
+    scenario_skeleton = state.get("scenario_skeleton", {})
+    prompt = get_prospective_prompt(**data, scenario_skeleton=scenario_skeleton)
+
+    model_short = _MODEL_SHORT_NAME.get(config.ANALYSIS_MODEL, "sonnet")
+    asset_name = get_asset_config(asset_class)["name"]
+    print(f"\n[Impact Analysis] Calling {config.ANALYSIS_MODEL} ({model_short}) for {asset_name} PROSPECTIVE mode...")
+
+    tool = _get_prospective_tool()
+    tool_name = "output_scenario_analysis"
+
+    try:
+        response = call_claude_with_tools(
+            messages=[{"role": "user", "content": prompt}],
+            tools=[tool],
+            tool_choice={"type": "tool", "name": tool_name},
+            model=model_short,
+            temperature=0.3,
+            max_tokens=8000,
+            system=SYSTEM_PROMPT_PROSPECTIVE,
+        )
+
+        tool_input = _extract_tool_input(response, tool_name)
+        parsed = _parse_prospective_result(tool_input)
+
+        # Inject analog_count from skeleton into parsed scenarios
+        skeleton_scenarios = scenario_skeleton.get("scenarios", [])
+        for i, scenario in enumerate(parsed.get("scenarios", [])):
+            if i < len(skeleton_scenarios):
+                scenario["analog_count"] = skeleton_scenarios[i].get("analog_count")
+                scenario["total_episodes"] = skeleton_scenarios[i].get("total_episodes")
+
+        state["insight_output"] = parsed
+        _populate_legacy_fields_prospective(state, parsed)
+        return state
+
+    except Exception as e:
+        print(f"\n[Impact Analysis] Prospective analysis failed: {e}")
+        raise
+
+
+def _extract_tool_input(response, tool_name: str) -> Dict[str, Any]:
+    """Extract tool_use input from LLM response."""
+    print("\n[Impact Analysis] Raw LLM Response:")
+    print("-" * 40)
+    print(response)
+    print("-" * 40)
+
+    tool_input = None
+    for block in response.content:
+        if block.type == "tool_use" and block.name == tool_name:
+            tool_input = block.input
+            break
+
+    if tool_input is None:
+        raise ValueError(f"No {tool_name} tool_use block found in response")
+
+    print(f"\n[Impact Analysis] {tool_name} output (structured):")
+    print("-" * 40)
+    print(json.dumps(tool_input, indent=2))
+    print("-" * 40)
+
+    return tool_input
+
+
+def _populate_legacy_fields_retrospective(state: RiskImpactState, parsed: Dict[str, Any]):
+    """Populate legacy fields from retrospective output for backward compat."""
+    tracks = parsed.get("causal_tracks", [])
+    if tracks:
+        best = max(tracks, key=lambda t: t.get("confidence", 0))
+        state["direction"] = "NEUTRAL"
+        state["confidence"] = {"score": best.get("confidence", 0.5)}
+        state["time_horizon"] = "unknown"
+        state["rationale"] = parsed.get("cross_track_synthesis", "")
+        state["risk_factors"] = parsed.get("key_data_gaps", [])
+    else:
+        state["direction"] = "NEUTRAL"
+        state["confidence"] = {"score": 0.5}
+        state["rationale"] = parsed.get("cross_track_synthesis", "")
+        state["risk_factors"] = []
+
+
+def _populate_legacy_fields_prospective(state: RiskImpactState, parsed: Dict[str, Any]):
+    """Populate legacy fields from prospective output for backward compat."""
+    scenarios = parsed.get("scenarios", [])
+    if scenarios:
+        # Pick direction from first scenario's first prediction
+        first_pred = scenarios[0].get("predictions", [{}])[0] if scenarios[0].get("predictions") else {}
+        direction = first_pred.get("direction", "neutral").upper()
+        if direction not in ("BULLISH", "BEARISH", "NEUTRAL"):
+            direction = "NEUTRAL"
+        state["direction"] = direction
+        state["confidence"] = {"score": 0.5}
+        state["time_horizon"] = "unknown"
+        state["rationale"] = parsed.get("synthesis", "")
+        state["risk_factors"] = [s.get("falsification", "") for s in scenarios if s.get("falsification")]
+    else:
+        state["direction"] = "NEUTRAL"
+        state["confidence"] = {"score": 0.5}
+        state["rationale"] = parsed.get("synthesis", "")
+        state["risk_factors"] = []

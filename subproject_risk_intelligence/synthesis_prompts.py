@@ -1,6 +1,6 @@
 """Prompts for the synthesis self-check phase."""
 
-VERIFICATION_PROMPT = """You are a quality reviewer for macro research insight reports.
+VERIFICATION_PROMPT_RETROSPECTIVE = """You are a quality reviewer for macro research causal decompositions.
 
 EVIDENCE AVAILABLE:
 ---
@@ -25,19 +25,53 @@ REPORT PRODUCED:
 {insight_output_text}
 ---
 
-Check the report against the evidence:
+Check the CAUSAL DECOMPOSITION against the evidence:
 1. Are ALL discovered causal mechanisms from the evidence addressed in tracks?
-2. Are historical precedents cited with quantified outcomes where available?
-3. Are monitoring variables specified with thresholds (not just variable names)?
-4. Is there at least one track addressing counter-arguments or alternative interpretations?
-5. Are magnitude ranges and timing estimates provided for asset implications?
-6. Does the report reference specific events, data points, statistics, or factual claims
-   that are NOT found in the evidence sections above? If so, list each unsourced claim.
-   NOTE: General labels for well-known dates (e.g., "COVID period" for March 2020) are
-   acceptable inferences. Specific quantitative claims (e.g., "insider selling hit record
-   levels", "dark pool activity surged 40%") MUST have evidence in the sections above.
+2. Is quantitative data cited per track (specific numbers, not vague ranges)?
+3. Does each track's mechanism match the evidence (no invented causal links)?
+4. Are there unsourced claims? Specific quantitative claims MUST have evidence above.
+5. Is the cross-track synthesis coherent (does it explain how tracks interact)?
 
 List any specific gaps. If none, respond with exactly "NO_GAPS".
 
-If gaps exist, respond with a numbered list of specific missing items that should be added to the report. Be concrete — reference specific evidence from above that was not addressed.
-For criterion 6, prefix unsourced claims with "UNSOURCED:" so they are clearly identified for removal."""
+If gaps exist, respond with a numbered list of specific missing items. Be concrete.
+Prefix unsourced claims with "UNSOURCED:" for clear identification."""
+
+
+VERIFICATION_PROMPT_PROSPECTIVE = """You are a quality reviewer for macro research scenario analyses.
+
+EVIDENCE AVAILABLE:
+---
+SYNTHESIS:
+{synthesis}
+
+CHAIN GRAPH (Multi-Hop Causal Paths):
+{chain_graph_text}
+
+HISTORICAL ANALOGS:
+{historical_analogs_text}
+
+CURRENT DATA:
+{current_data_text}
+
+CLAIM VALIDATION:
+{claim_validation_text}
+---
+
+REPORT PRODUCED:
+---
+{insight_output_text}
+---
+
+Check the SCENARIO ANALYSIS against the evidence:
+1. Does each scenario have a falsification criterion (not just a vague "if things change")?
+2. Are predictions grounded in the base rate / forward return data?
+3. Are magnitude ranges consistent with the historical data provided?
+4. Does the monitoring dashboard cover the key distinguishing variables?
+5. Are there unsourced quantitative claims? Specific numbers MUST have evidence above.
+6. Is each scenario's analog basis referencing actual episodes from the evidence?
+
+List any specific gaps. If none, respond with exactly "NO_GAPS".
+
+If gaps exist, respond with a numbered list of specific missing items. Be concrete.
+Prefix unsourced claims with "UNSOURCED:" for clear identification."""

@@ -238,28 +238,179 @@ def retrieve_context(query: str, image_path: str = None) -> RiskImpactState:
 
 
 def format_insight(state: RiskImpactState, as_json: bool = False, asset_class: str = "btc") -> str:
-    """Format the final output for display - Insight Report format."""
-
+    """Format the final output for display — routes by output mode."""
     insight = state.get("insight_output", {})
-    tracks = insight.get("tracks", [])
-    synthesis = insight.get("synthesis", "")
-    uncertainties = insight.get("key_uncertainties", [])
-    current_values = state.get("current_values", {})
+    output_mode = insight.get("output_mode", "legacy")
     asset_name = get_asset_config(asset_class)["name"]
 
     if as_json:
         output = {
             "asset_class": asset_class,
-            "output_mode": "insight",
-            "tracks": tracks,
-            "synthesis": synthesis,
-            "outlook": insight.get("outlook", ""),
-            "key_uncertainties": uncertainties,
+            "output_mode": output_mode,
+            "insight_output": insight,
             "direction": state.get("direction", "NEUTRAL"),
             "confidence": state.get("confidence", {}),
-            "current_values": current_values,
+            "predictions": state.get("predictions", []),
         }
         return json.dumps(output, indent=2, default=str)
+
+    if output_mode == "retrospective":
+        return _format_causal_decomposition(insight, asset_name)
+    elif output_mode == "prospective":
+        return _format_scenario_analysis(insight, state.get("scenario_skeleton", {}), asset_name)
+    else:
+        return _format_legacy_insight(insight, state, asset_name)
+
+
+def _format_causal_decomposition(insight: dict, asset_name: str) -> str:
+    """Format retrospective causal decomposition."""
+    trigger = insight.get("trigger_event", {})
+    tracks = insight.get("causal_tracks", [])
+    synthesis = insight.get("cross_track_synthesis", "")
+    forward = insight.get("residual_forward_view", "")
+    gaps = insight.get("key_data_gaps", [])
+
+    lines = [
+        "=" * 64,
+        f"CAUSAL DECOMPOSITION -- {asset_name.upper()}",
+        "=" * 64,
+    ]
+
+    trigger_desc = trigger.get("description", "Unknown")
+    trigger_date = trigger.get("date", "")
+    lines.append(f"TRIGGER: {trigger_desc}" + (f" ({trigger_date})" if trigger_date else ""))
+    lines.append("")
+
+    for i, track in enumerate(tracks, 1):
+        title = track.get("title", f"Track {i}")
+        confidence = track.get("confidence", 0)
+        mechanism = track.get("mechanism", "N/A")
+        evidence = track.get("evidence_summary", "")
+
+        lines.append(f"TRACK {i}: {title} ({confidence*100:.0f}%)")
+        lines.append(f"  {mechanism}")
+        if evidence:
+            lines.append(f"  Evidence: {evidence}")
+
+        qdata = track.get("quantitative_data", [])
+        if qdata:
+            data_parts = [f"{d.get('metric', '?')}: {d.get('value', '?')}" for d in qdata]
+            lines.append(f"  Data: {' | '.join(data_parts)}")
+
+        lines.append("")
+
+    if synthesis:
+        lines.append(f"SYNTHESIS: {synthesis}")
+        lines.append("")
+
+    if forward:
+        lines.append(f"FORWARD VIEW: {forward}")
+        lines.append("")
+
+    if gaps:
+        lines.append(f"DATA GAPS: {' | '.join(gaps)}")
+        lines.append("")
+
+    lines.append("=" * 64)
+    return "\n".join(lines)
+
+
+def _format_scenario_analysis(insight: dict, skeleton: dict, asset_name: str) -> str:
+    """Format prospective scenario analysis."""
+    situation = insight.get("current_situation", "")
+    scenarios = insight.get("scenarios", [])
+    dashboard = insight.get("monitoring_dashboard", [])
+    synthesis = insight.get("synthesis", "")
+    base_rates = skeleton.get("base_rates", {})
+
+    lines = [
+        "=" * 64,
+        f"SCENARIO ANALYSIS -- {asset_name.upper()}",
+        "=" * 64,
+    ]
+
+    if situation:
+        lines.append(situation)
+        lines.append("")
+
+    # Base rates
+    total = scenarios[0].get("total_episodes", 0) if scenarios and scenarios[0].get("total_episodes") else 0
+    if total:
+        dir_pct = base_rates.get("direction_positive_pct")
+        mag_med = base_rates.get("magnitude_median")
+        mag_range = base_rates.get("magnitude_range")
+        br_parts = [f"{total} episodes"]
+        if dir_pct is not None:
+            br_parts.append(f"{dir_pct}% positive")
+        if mag_med is not None:
+            br_parts.append(f"median {mag_med:+.1f}%")
+        if mag_range:
+            br_parts.append(f"range [{mag_range[0]:+.1f}% to {mag_range[1]:+.1f}%]")
+        lines.append(f"BASE RATES: {' | '.join(br_parts)}")
+    else:
+        lines.append("BASE RATES: No historical episodes found")
+    lines.append("")
+
+    for i, scenario in enumerate(scenarios, 1):
+        title = scenario.get("title", f"Scenario {i}")
+        ac = scenario.get("analog_count")
+        te = scenario.get("total_episodes")
+        analog_str = f" ({ac}/{te} analogs)" if ac is not None and te is not None else ""
+        lines.append(f"SCENARIO {i}: {title}{analog_str}")
+        lines.append(f"  Condition: {scenario.get('condition', 'N/A')}")
+        lines.append(f"  Mechanism: {scenario.get('mechanism', 'N/A')}")
+        basis = scenario.get("analog_basis", "")
+        if basis:
+            lines.append(f"  Basis: {basis}")
+
+        preds = scenario.get("predictions", [])
+        if preds:
+            lines.append("  Predictions:")
+            for pred in preds:
+                var = pred.get("variable", "?")
+                direction = pred.get("direction", "?")
+                days = pred.get("timeframe_days", "?")
+                mag_lo = pred.get("magnitude_low")
+                mag_hi = pred.get("magnitude_high")
+                mag_str = ""
+                if mag_lo is not None and mag_hi is not None:
+                    mag_str = f" {mag_lo}% to {mag_hi}%"
+                lines.append(f"    {var}: {direction}{mag_str} ({days}d)")
+
+        falsification = scenario.get("falsification", "")
+        if falsification:
+            lines.append(f"  Falsification: {falsification}")
+        lines.append("")
+
+    if dashboard:
+        lines.append("MONITORING DASHBOARD:")
+        for m in dashboard:
+            var = m.get("variable", "?")
+            cv = m.get("current_value")
+            s1 = m.get("scenario_1_threshold", "")
+            s2 = m.get("scenario_2_threshold", "")
+            parts = [var]
+            if cv is not None:
+                parts.append(f"current: {cv}")
+            if s1:
+                parts.append(f"S1: {s1}")
+            if s2:
+                parts.append(f"S2: {s2}")
+            lines.append(f"  {' | '.join(parts)}")
+        lines.append("")
+
+    if synthesis:
+        lines.append(f"BOTTOM LINE: {synthesis}")
+        lines.append("")
+
+    lines.append("=" * 64)
+    return "\n".join(lines)
+
+
+def _format_legacy_insight(insight: dict, state: dict, asset_name: str) -> str:
+    """Format legacy track-based insight (backward compat)."""
+    tracks = insight.get("tracks", [])
+    synthesis = insight.get("synthesis", "")
 
     lines = [
         "=" * 60,
@@ -267,163 +418,18 @@ def format_insight(state: RiskImpactState, as_json: bool = False, asset_class: s
         "=" * 60,
     ]
 
-    # Sort tracks: sequenced tracks first (by position), then unsequenced
-    tracks_sorted = sorted(tracks, key=lambda t: (t.get("sequence_position") or 999, tracks.index(t)))
-
-    for i, track in enumerate(tracks_sorted, 1):
-        title = track.get("title", f"Track {i}")
-        confidence = track.get("confidence", 0)
-        mechanism = track.get("causal_mechanism", "N/A")
-        time_horizon = track.get("time_horizon", "unknown")
-
+    for i, track in enumerate(tracks, 1):
         lines.append("")
-        lines.append(f"TRACK {i}: {title}")
-        lines.append(f"  Confidence: {confidence*100:.0f}%")
-        lines.append(f"  Mechanism: {mechanism}")
-        lines.append(f"  Time Horizon: {time_horizon}")
-        seq = track.get("sequence_position")
-        if seq:
-            lines.append(f"  Phase: {seq}")
-
-        # Historical evidence
-        evidence = track.get("historical_evidence", {})
-        if evidence:
-            precedent_count = evidence.get("precedent_count")
-            success_rate = evidence.get("success_rate")
-            summary = evidence.get("precedent_summary", "")
-            if precedent_count is not None and success_rate is not None:
-                lines.append(f"  Evidence: {precedent_count} precedents, {success_rate*100:.0f}% success rate")
-            if summary:
-                lines.append(f"    {summary}")
-
-            precedents = evidence.get("precedents", [])
-            for p in precedents[:3]:
-                event = p.get("event", "")
-                outcome = p.get("outcome", "")
-                magnitude = p.get("magnitude", "")
-                line = f"    - {event}"
-                if outcome:
-                    line += f": {outcome}"
-                if magnitude:
-                    line += f" ({magnitude})"
-                lines.append(line)
-
-        # Asset implications
-        implications = track.get("asset_implications", [])
-        if implications:
-            lines.append("  Asset Implications:")
-            for imp in implications:
-                asset = imp.get("asset", "?")
-                direction = imp.get("direction", "?")
-                mag_range = imp.get("magnitude_range", "")
-                timing = imp.get("timing", "")
-                line = f"    - {asset}: {direction}"
-                if mag_range:
-                    line += f" ({mag_range}"
-                    if timing:
-                        line += f", {timing}"
-                    line += ")"
-                elif timing:
-                    line += f" ({timing})"
-                lines.append(line)
-
-        # Monitoring variables
-        monitors = track.get("monitoring_variables", [])
-        if monitors:
-            lines.append("  Monitor:")
-            for m in monitors:
-                variable = m.get("variable", "?")
-                condition = m.get("condition", "?")
-                meaning = m.get("meaning", "")
-                line = f"    - {variable} {condition}"
-                if meaning:
-                    line += f": {meaning}"
-                lines.append(line)
-
+        lines.append(f"TRACK {i}: {track.get('title', f'Track {i}')}")
+        lines.append(f"  Confidence: {track.get('confidence', 0)*100:.0f}%")
+        lines.append(f"  Mechanism: {track.get('causal_mechanism', 'N/A')}")
         lines.append("-" * 40)
 
     if synthesis:
         lines.append("")
-        lines.append("SYNTHESIS:")
-        lines.append(synthesis)
-
-    outlook = insight.get("outlook", "")
-    if outlook:
-        lines.append("")
-        lines.append("OUTLOOK (Forward Projections):")
-        lines.append(outlook)
-
-    if uncertainties:
-        lines.append("")
-        lines.append("KEY UNCERTAINTIES:")
-        for u in uncertainties:
-            lines.append(f"  - {u}")
-
-    # Current values section
-    if current_values:
-        lines.append("")
-        lines.append("CURRENT DATA:")
-        current_text = format_current_values_for_prompt(current_values)
-        for line in current_text.split("\n"):
-            lines.append(f"  {line}")
+        lines.append(f"SYNTHESIS: {synthesis}")
 
     lines.append("=" * 60)
-
-    # Condensed summary
-    lines.append("")
-    lines.append("=" * 60)
-    lines.append(f"CONDENSED SUMMARY -- {asset_name.upper()}")
-    lines.append("=" * 60)
-    lines.append("")
-    for i, track in enumerate(tracks_sorted, 1):
-        title = track.get("title", f"Track {i}")
-        confidence = track.get("confidence", 0)
-        mechanism = track.get("causal_mechanism", "N/A")
-        evidence = track.get("historical_evidence", {})
-        implications = track.get("asset_implications", [])
-
-        # Line 1: title + confidence → mechanism
-        lines.append(f"TRACK {i} ({confidence*100:.0f}%): {title}")
-
-        # Line 2: mechanism (truncated if long)
-        mech_str = f"  {mechanism}"
-        if len(mech_str) > 120:
-            mech_str = mech_str[:117] + "..."
-        lines.append(mech_str)
-
-        # Line 3: precedent + asset implications
-        parts = []
-        precedent_count = evidence.get("precedent_count")
-        success_rate = evidence.get("success_rate")
-        if precedent_count and success_rate is not None:
-            parts.append(f"{precedent_count} precedents ({success_rate*100:.0f}% success)")
-        imp_strs = []
-        for imp in implications[:3]:
-            s = f"{imp.get('asset', '?')}: {imp.get('direction', '?')}"
-            mag = imp.get("magnitude_range", "")
-            if mag:
-                s += f" ({mag})"
-            imp_strs.append(s)
-        if imp_strs:
-            parts.append("; ".join(imp_strs))
-        if parts:
-            lines.append(f"  {'. '.join(parts)}.")
-        lines.append("")
-
-    if synthesis:
-        # One-sentence bottom line from synthesis (first sentence or truncated)
-        synth_clean = synthesis.replace("\n", " ").strip()
-        first_sentence_end = synth_clean.find(". ")
-        if first_sentence_end > 0 and first_sentence_end < 200:
-            bottom = synth_clean[:first_sentence_end + 1]
-        elif len(synth_clean) > 200:
-            bottom = synth_clean[:197] + "..."
-        else:
-            bottom = synth_clean
-        lines.append(f"BOTTOM LINE: {bottom}")
-
-    lines.append("=" * 60)
-
     return "\n".join(lines)
 
 
@@ -642,19 +648,32 @@ def run_asset_impact(
         if ENABLE_SNAPSHOTS:
             snapshot_state(f"characterize_regime_{asset_class}", state, "out")
 
+    # Build scenario skeleton from Phase 3 data (mechanical, no LLM)
+    from .scenario_builder import build_scenario_skeleton
+    state["scenario_skeleton"] = build_scenario_skeleton(state)
+    skeleton = state["scenario_skeleton"]
+    scenario_count = len(skeleton.get("scenarios", []))
+    total_episodes = skeleton.get("scenarios", [{}])[0].get("total_episodes", 0) if skeleton.get("scenarios") else 0
+    print(f"[Scenario Builder] Built skeleton: {scenario_count} scenarios from {total_episodes} episodes")
+
     # Run impact analysis with synthesis self-check
     from .synthesis_phase import run_synthesis_phase
     state = run_synthesis_phase(state, asset_class)
     if ENABLE_SNAPSHOTS:
         snapshot_state(f"analyze_impact_{asset_class}", state, "out")
 
-    # Store asset-specific chains
-    if not skip_chain_store:
-        state = store_chains(state, asset_class=asset_class)
-        new_regime = update_regime_from_analysis(dict(state), asset_class=asset_class)
-        if new_regime:
-            state["regime_state"] = new_regime
-            print(f"[Regime/{asset_name}] Updated to: {new_regime.get('liquidity_regime')}")
+    # Store predictions from prospective output
+    insight_output = state.get("insight_output", {})
+    if insight_output.get("output_mode") == "prospective":
+        from .prediction_store import store_predictions
+        import hashlib
+        run_id = hashlib.md5(f"{state.get('query', '')}_{asset_class}".encode()).hexdigest()[:8]
+        predictions = store_predictions(insight_output, state.get("query", ""), run_id)
+        state["predictions"] = predictions
+
+    # Chain storage deferred — new output format needs separate chain extraction update
+    # TODO: Update store_chains() to parse new retrospective/prospective output schemas
+    # (see CLAUDE.md TODOs)
 
     return dict(state)
 

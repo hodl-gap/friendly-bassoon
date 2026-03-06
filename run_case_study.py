@@ -200,10 +200,14 @@ def run_case(case_num: int, run_num: int, asset: str = None, query_override: str
             debug_log_node("run_impact_analysis", "EXIT", f"direction={result.get('direction', 'N/A')}")
 
             # Log the full result state
+            insight_output = result.get("insight_output", {})
             debug_log("FINAL_RESULT_STATE", json.dumps({
                 "direction": result.get("direction"),
                 "confidence": result.get("confidence"),
-                "insight_output": result.get("insight_output"),
+                "output_mode": insight_output.get("output_mode"),
+                "scenario_count": len(insight_output.get("scenarios", [])),
+                "prediction_count": len(result.get("predictions", [])),
+                "insight_output": insight_output,
                 "current_values_count": len(result.get("current_values", {})),
                 "logic_chains_count": len(result.get("logic_chains", [])),
                 "historical_event_data": result.get("historical_event_data"),

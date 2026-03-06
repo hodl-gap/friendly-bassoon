@@ -1,6 +1,6 @@
-"""State definitions for BTC Impact Module."""
+"""State definitions for Risk Intelligence Module."""
 
-from typing import TypedDict, List, Optional, Dict, Any
+from typing import TypedDict, List, Optional, Dict, Any, Literal
 
 import sys
 from pathlib import Path
@@ -20,6 +20,23 @@ class InsightTrack(TypedDict, total=False):
     confidence: float
     time_horizon: str
     sequence_position: int              # 1, 2, 3... for temporal ordering (Gap 3)
+
+
+class Prediction(TypedDict, total=False):
+    """A scoreable prediction extracted from prospective output."""
+    prediction_id: str
+    query: str
+    scenario: str
+    variable: str
+    direction: Literal["bullish", "bearish", "neutral"]
+    magnitude_low: float
+    magnitude_high: float
+    timeframe_days: int
+    falsification: str
+    created_at: str
+    check_date: str
+    actual_outcome: Optional[str]
+    score: Optional[str]
 
 
 class RiskImpactState(TypedDict, total=False):
@@ -109,6 +126,12 @@ class RiskImpactState(TypedDict, total=False):
 
     # EDF knowledge tree from Phase 0 (optional, passed through for routing directives)
     _edf_knowledge_tree: Dict[str, Any]
+
+    # Scenario skeleton (from scenario_builder, pre-Phase 4)
+    scenario_skeleton: Dict[str, Any]
+
+    # Predictions extracted from prospective output
+    predictions: List[Prediction]
 
     # Insight output
     insight_output: Dict[str, Any]  # InsightOutput (tracks, synthesis, key_uncertainties)

@@ -17,71 +17,54 @@ Produce a concise regime characterization that:
 4. States which analog is most relevant and why
 """
 
-SYSTEM_PROMPT = """You are a macro research analyst producing INSIGHT REPORTS with independent reasoning TRACKS.
+SYSTEM_PROMPT_RETROSPECTIVE = """You are a macro research analyst producing CAUSAL DECOMPOSITIONS that explain what happened and why.
 
-## CORE PRINCIPLE: MULTI-TRACK CAUSAL REASONING
+## CORE TASK
+Explain the event's causes through independent causal tracks. Each track is a separate pathway that contributed to the event.
 
-An insight is NOT a trade signal (BULLISH/BEARISH). An insight is a multi-track causal understanding grounded in historical evidence.
-
-CRITICAL DISTINCTION:
-- SCENARIOS = different outcomes for the SAME mechanism (BAD: "bullish 60% vs bearish 40%")
-- TRACKS = INDEPENDENT reasoning paths, each with its OWN evidence chain (GOOD)
-
-Each track represents a separate causal pathway operating independently. Tracks can reinforce or oppose each other, but they are logically independent.
-
-## TRACK STRUCTURE
-
-Each track MUST contain:
-1. **Causal mechanism**: Arrow notation showing the full causal chain (e.g., election → fiscal_expansion → bond_issuance → yen_weakness)
-2. **Historical evidence**: How many prior instances followed this pattern (e.g., "4/5 prior fiscal expansions led to currency depreciation")
-3. **Asset implications**: Specific directional view per asset with magnitude range and timing
-4. **Monitoring variables**: What to watch to confirm/invalidate this track
-5. **Confidence**: Based on evidence quality, not opinion
-
-## EXAMPLE OUTPUT
-
-```
-Track 1: Historical Contagion Pattern
-  Mechanism: contagion → risk_off → forced_liquidation → crypto_selloff
-  Evidence: 4/5 prior contagion events bearish for risk assets, median -31%
-  Asset Implications: BTC bearish (-20% to -45%, 1-3 months)
-  Monitor: VIX > 40 confirms stress escalation
-
-Track 2: Monetary Policy Response
-  Mechanism: contagion → central_bank_easing → money_supply_expansion → asset_inflation
-  Evidence: 3/4 prior crises led to easing within 60 days
-  Asset Implications: BTC bullish (+30% to +100%, 6-12 months)
-  Monitor: Fed emergency meeting, rate cut signals
-
-Track 3: Flight to Digital Gold
-  Mechanism: contagion → banking_stress → sovereign_risk → crypto_as_hedge
-  Evidence: 2/3 banking crises saw crypto rally after initial selloff
-  Asset Implications: BTC bullish after initial drop (+50%, 3-6 months)
-  Monitor: Bank CDS spreads, stablecoin inflows
-```
-
-## TEMPORAL SEQUENCING (when applicable)
-
-If tracks have a temporal dependency (one creates conditions for another), assign sequence_position:
-- sequence_position=1: happens first (near-term catalyst)
-- sequence_position=2: follows from Track 1's outcome (medium-term)
-- sequence_position=3: long-term structural consequence
-
-Example: "Carry unwind selloff (1-3mo)" → "Central bank easing response (3-6mo)" → "Liquidity-driven recovery (6-12mo)"
-
-Only use sequencing when tracks are genuinely sequential. Independent parallel tracks should omit sequence_position.
-
-## KNOWLEDGE GAPS AND DATA
-You will receive current market data, historical chain graphs, and precedent analysis. Use ALL of it.
-Where information is missing, widen your confidence intervals and note the gap.
+## RULES
+- Max 4 tracks. If you have more, merge the weaker ones.
+- Each track MUST have quantitative data from the evidence (specific numbers, dollar amounts, percentages).
+- Arrow notation for mechanisms: A → B → C
+- Do NOT make forward predictions in causal tracks. Put those in residual_forward_view.
+- Confidence is based on evidence quality (how many data points support this track), not opinion.
 
 ## SOURCING DISCIPLINE
-- You may ONLY cite specific events, data points, or statistics that appear in the evidence sections above.
-- For episode dates where no narrative context is provided, describe them by their regime conditions (e.g., "a low-vol, easy-policy period") — do NOT assign event labels from your own knowledge.
-- If you believe additional data would strengthen the analysis (e.g., insider flow data, dark pool activity), note it as a "DATA GAP" in the key_uncertainties section rather than filling it in yourself.
-- General labels for well-known dates (e.g., "COVID period" for March 2020) are acceptable ONLY when clearly marked as context, not as evidence.
+- ONLY cite events, data points, statistics that appear in the evidence sections.
+- For episode dates without narrative context, describe by regime conditions — do NOT assign event labels.
+- Note data gaps in key_data_gaps rather than inventing data.
+- General labels for well-known dates (e.g., "COVID period" for March 2020) are acceptable as context, not evidence.
 
-Be specific, quantitative, and ground every track in historical evidence."""
+## LENGTH
+Keep it concise. The maxLength constraints on each field are hard limits — stay well within them."""
+
+
+SYSTEM_PROMPT_PROSPECTIVE = """You are a macro research analyst producing SCENARIO ANALYSES grounded in historical data.
+
+## CORE TASK
+Fill in a scenario analysis skeleton with causal mechanisms and human-readable names. The scenario STRUCTURE (how many scenarios, which analogs support each) is pre-computed from historical data.
+
+## RULES
+- Do NOT change the number of scenarios from the skeleton.
+- Name each scenario descriptively (e.g., "Risk-On Continuation" not "Scenario 1").
+- Write the condition (what must be true), mechanism (arrow notation), and analog basis.
+- Write a falsification criterion for each scenario (what would prove it wrong).
+- Keep predictions grounded in the forward return data from the scenario skeleton.
+- Do NOT assign probabilities — the analog counts ARE the probability signal.
+- Each prediction needs: variable, direction (bullish/bearish/neutral), and timeframe_days.
+- magnitude_low and magnitude_high should come from the skeleton's forward return data.
+
+## SOURCING DISCIPLINE
+- ONLY cite events, data points, statistics that appear in the evidence sections.
+- For episode dates without narrative context, describe by regime conditions — do NOT assign event labels.
+- Note any gaps explicitly rather than inventing data.
+
+## LENGTH
+Keep it concise. The maxLength constraints on each field are hard limits — stay well within them."""
+
+
+# Keep legacy prompt for reference — only used if somehow called directly
+SYSTEM_PROMPT = SYSTEM_PROMPT_PROSPECTIVE
 
 
 def format_theme_states_for_prompt(theme_states: dict) -> str:
@@ -210,7 +193,7 @@ def _format_data_sections(
     return "\n".join(main_parts)
 
 
-def get_insight_prompt(
+def get_retrospective_prompt(
     query: str,
     synthesis: str,
     logic_chains: list,
@@ -225,48 +208,87 @@ def get_insight_prompt(
     chain_graph_text: str = "",
     historical_analogs_text: str = "",
     claim_validation_text: str = "",
-    regime_characterization_text: str = ""
+    regime_characterization_text: str = "",
 ) -> str:
-    """Build the insight analysis prompt (track-based output)."""
+    """Build the retrospective causal decomposition prompt."""
 
     data_sections = _format_data_sections(
-        query=query,
-        synthesis=synthesis,
-        logic_chains=logic_chains,
-        confidence_metadata=confidence_metadata,
-        current_values_text=current_values_text,
-        historical_chains_text=historical_chains_text,
-        historical_event_text=historical_event_text,
-        knowledge_gaps=knowledge_gaps,
-        gap_enrichment_text=gap_enrichment_text,
-        theme_states=theme_states,
-        chain_graph_text=chain_graph_text,
-        historical_analogs_text=historical_analogs_text,
-        claim_validation_text=claim_validation_text,
-        regime_characterization_text=regime_characterization_text
+        query=query, synthesis=synthesis, logic_chains=logic_chains,
+        confidence_metadata=confidence_metadata, current_values_text=current_values_text,
+        historical_chains_text=historical_chains_text, historical_event_text=historical_event_text,
+        knowledge_gaps=knowledge_gaps, gap_enrichment_text=gap_enrichment_text,
+        theme_states=theme_states, chain_graph_text=chain_graph_text,
+        historical_analogs_text=historical_analogs_text, claim_validation_text=claim_validation_text,
+        regime_characterization_text=regime_characterization_text,
     )
 
     return f"""{data_sections}
 
-Based on the above context, produce an INSIGHT REPORT for {get_asset_config(asset_class)["prompt_asset_line"]}
+Produce a CAUSAL DECOMPOSITION for {get_asset_config(asset_class)["prompt_asset_line"]}.
 
-Build INDEPENDENT reasoning tracks. Each track must have:
-- A distinct causal mechanism (arrow notation)
-- Historical evidence grounding (N/M precedents, success rate)
-- Specific asset implications with magnitude ranges and timing
-- Monitoring variables with trigger conditions
+Explain what happened and why through independent causal tracks:
+- Each track is a separate causal pathway (arrow notation: A → B → C)
+- Include specific quantitative data from the evidence (dollar amounts, percentages, dates)
+- Max 4 tracks — merge weaker ones if needed
+- Put forward-looking views ONLY in residual_forward_view, NOT in causal tracks
 
-Use the MULTI-HOP CAUSAL PATHS section (if present) to identify independent causal tracks.
-Use the HISTORICAL PRECEDENT ANALYSIS section (if present) to ground evidence in each track.
+Use the MULTI-HOP CAUSAL PATHS and HISTORICAL PRECEDENT sections to identify tracks."""
 
-Do NOT produce belief-space scenarios (BULLISH 60% vs BEARISH 40%).
-Instead, produce independent tracks that each stand on their own evidence.
 
-Pay special attention to TRIGGERED patterns and historical analogs — these provide the strongest evidence basis.
+def get_prospective_prompt(
+    query: str,
+    synthesis: str,
+    logic_chains: list,
+    confidence_metadata: dict,
+    current_values_text: str = "",
+    historical_chains_text: str = "",
+    historical_event_text: str = "",
+    knowledge_gaps: dict = None,
+    gap_enrichment_text: str = "",
+    asset_class: str = "btc",
+    theme_states: dict = None,
+    chain_graph_text: str = "",
+    historical_analogs_text: str = "",
+    claim_validation_text: str = "",
+    regime_characterization_text: str = "",
+    scenario_skeleton: dict = None,
+) -> str:
+    """Build the prospective scenario analysis prompt."""
+    from .scenario_builder import format_skeleton_for_prompt
 
-TEMPORAL DISCIPLINE: Separate causal tracks from forward projections.
-- **Causal tracks**: Only include events/mechanisms that occurred BEFORE or CONCURRENT with the queried event. These explain what caused it.
-- **Outlook section**: Forward projections, seasonal patterns, and predictions about what happens NEXT belong in the synthesis/outlook, NOT as causal tracks. A forecast made after the event is not a cause of the event.
-- If a piece of evidence is dated, use its date to determine whether it is a cause or a projection relative to the event in the query.
+    data_sections = _format_data_sections(
+        query=query, synthesis=synthesis, logic_chains=logic_chains,
+        confidence_metadata=confidence_metadata, current_values_text=current_values_text,
+        historical_chains_text=historical_chains_text, historical_event_text=historical_event_text,
+        knowledge_gaps=knowledge_gaps, gap_enrichment_text=gap_enrichment_text,
+        theme_states=theme_states, chain_graph_text=chain_graph_text,
+        historical_analogs_text=historical_analogs_text, claim_validation_text=claim_validation_text,
+        regime_characterization_text=regime_characterization_text,
+    )
 
-IMPORTANT: In your synthesis, include ALL specific quantitative data from the retrieved context — dollar amounts ($XB lost), valuation multiples (P/S, P/E compression ratios), index drawdowns (% from peak), and named institutional sources. These concrete numbers are critical for trader decision-making."""
+    skeleton_text = format_skeleton_for_prompt(scenario_skeleton or {})
+
+    return f"""{data_sections}
+
+{skeleton_text}
+
+Produce a SCENARIO ANALYSIS for {get_asset_config(asset_class)["prompt_asset_line"]}.
+
+Fill in the scenario skeleton above with:
+- A descriptive title for each scenario (not "Scenario 1")
+- The condition (what must be true)
+- The causal mechanism (arrow notation)
+- Which historical analogs support it (reference dates/clusters from skeleton)
+- Predictions: variable, direction, magnitude range (from skeleton forward return data), timeframe
+- A falsification criterion (what would prove this wrong)
+
+Also provide a monitoring dashboard (key variables with thresholds) and synthesis (3-4 sentences).
+
+Do NOT assign probabilities — the analog count/total IS the probability signal.
+Ground magnitude estimates in the skeleton's forward return data."""
+
+
+# Keep legacy alias for any remaining callers
+def get_insight_prompt(**kwargs) -> str:
+    """Legacy alias — routes to prospective prompt."""
+    return get_prospective_prompt(**kwargs)

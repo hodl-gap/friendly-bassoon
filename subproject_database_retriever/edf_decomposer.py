@@ -177,6 +177,17 @@ def get_query_type_hint(tree: dict) -> str:
     return "indicator-driven" if data_api_count >= 2 else "event-driven"
 
 
+def get_temporal_direction(tree: dict) -> str:
+    """Get the temporal direction classification from the EDF tree.
+
+    Returns 'retrospective' or 'prospective' (default).
+    """
+    direction = tree.get("temporal_direction", "prospective")
+    if direction not in ("retrospective", "prospective"):
+        return "prospective"
+    return direction
+
+
 def get_search_plan(tree: dict) -> dict:
     """
     Extract a search plan from the knowledge tree, grouped by source_hint.
