@@ -163,10 +163,33 @@ Running the pipeline repeatedly improves future analysis through these persisten
 - [x] **TEST hybrid agentic pipeline** — Tested Cases 1, 2, 4 with `--hybrid`. Results: +3 across all cases. Three bugs fixed: dict key mismatch in web chain handler, agent prompt too weak (kept searching after ADEQUATE), synthesis patch overwriting good output with empty result. (Added 2026-02-23, tested 2026-02-24)
 - [ ] **Remove legacy non-agentic retrieval path** — `vector_search.search_vectors()` (LangGraph `RetrieverState`-based) is dead code. The agentic path (`retrieval_agent.py` → `handle_search_pinecone` → `search_single_query`) is the only active retrieval path. The legacy path has Haiku reranking, query expansion, and two-stage retrieval that were never ported to the agentic handler, creating a false sense that these features exist. Remove `search_vectors()`, `rerank_with_llm()`, and all associated config (`ENABLE_LLM_RERANK`, `BROAD_RETRIEVAL_TOP_K`, `RERANK_TOP_K`, `ORIGINAL_QUERY_TOP_N`, `USE_STRUCTURED_RERANK`) to avoid confusion. If reranking is needed in the agentic path, reimplement it cleanly inside `handle_search_pinecone`.
 - [ ] **Multi-variable divergence detection for `find_indicator_extremes`** — Current tool finds extremes for a single indicator. Cannot handle cross-asset divergence queries like "software sector down while S&P 500 up" (requires computing a derived spread between two series, then finding extremes on that spread). Extend with a `find_divergence_extremes` function: takes two variables, computes rolling spread/ratio, runs the same percentile + clustering + forward return machinery on the derived series. Tool schema would get an optional `reference_variable` parameter — when provided, switches from single-indicator mode to divergence mode.
+- [ ] **Adversarial self-check in Phase 4** — Current Sonnet self-check (synthesis_phase.py) verifies *completeness* (are chains grounded? is historical evidence cited?) but does not steelman the opposing thesis. Add a structured adversarial step: "What is the strongest case that this insight is wrong? What evidence would invalidate the primary tracks?" This catches confirmation bias where all tracks converge on the same direction without examining disconfirming evidence. Inspired by TradingAgents' bull/bear researcher debate pattern — but ours would be a single prompt addition to the existing self-check, not a separate agent. (Ref: github.com/TauricResearch/TradingAgents)
+- [ ] **Automated evaluation regression testing** — Case study rubrics (test_cases/) are currently scored manually. Automate: (1) run pipeline on a case, (2) LLM-as-judge scores each rubric dimension against the output, (3) store scores with run metadata, (4) compare against baseline to catch regressions. This is distinct from the feedback loop TODO (which is about scoring predictions against real outcomes) — this is about ensuring pipeline changes don't degrade output quality on known cases. (Ref: github.com/virattt/dexter's eval pattern, though ours would use dimensional rubrics not binary fact-matching)
+- [ ] **Tag output tracks as interpretation vs prediction** — Each track in the structured output should be tagged as `interpretation` (causal explanation of current situation — not scoreable against future outcomes) or `prediction` (directional claim with implicit/explicit timeframe — scoreable). This is a prerequisite for any feedback loop: only prediction tracks can be validated against actuals. The tagging should happen in Phase 4 synthesis via the `output_insight` tool schema (add a `track_type` field per track).
 
 ### Long-term: Data Collection Infrastructure
 
 Currently all market data is fetched on-demand per query (FRED, Yahoo Finance). This works for now since we focus on precedents and reasoning rather than data freshness, and we only use a few months of public data. But it won't scale.
+
+**Current data sources**: FRED (macro time series), Yahoo Finance (equity/ETF prices)
+
+**Available free data sources to integrate** (via OpenBB `pip install openbb` or direct adapters):
+
+| Source | Data | Key? | Priority for our pipeline |
+|--------|------|------|--------------------------|
+| CFTC | Commodity futures positioning (COT reports) | Free key | High — macro regime, positioning signals |
+| OECD | OECD CLI, economic indicators by country | No | High — regime framework uses OECD CLI |
+| CBOE | Delayed options chains, derivatives data | No | Medium — partial CPCE gap fill (not full history) |
+| SEC | Regulatory filings (10-K, 10-Q, 8-K) | No | Medium — needed for SADF stock-level pipeline |
+| IMF | International economic statistics | No | Medium — cross-country macro analysis |
+| ECB | Eurozone economic data, rates | No | Medium — EU macro coverage |
+| Fama-French | Factor portfolios, research factor returns | No | Medium — historical analog grounding |
+| BLS | Bureau of Labor Statistics (employment, CPI components) | Free key | Medium — granular labor/inflation data |
+| EIA | Energy data (crude, natgas, inventories) | Free key | Low — relevant for commodity-driven queries |
+| FINRA | Short interest, margin statistics | No | Low — positioning data |
+| Congress.gov | Legislative bills, regulatory pipeline | Free key | Low — policy-driven event analysis |
+
+OpenBB (`pip install openbb`) wraps all of these behind a unified Python SDK (`from openbb import obb`). Also offers an MCP server (`pip install openbb-mcp-server`) for direct agent tool integration. OpenBB itself is free and open-source; rate limits come from underlying providers, not OpenBB.
 
 - [ ] **Persistent data collection** — Move from on-demand fetching to scheduled scraping/storage. Examples of data not available through current adapters:
   - CBOE equity put-call ratio (CPCE) — not on FRED or Yahoo. Free CBOE CSVs stop at Oct 2019. Would need CBOE daily page scraper. (Discovered via Case 5: pipeline used VIX as proxy instead of actual put-call ratio)
