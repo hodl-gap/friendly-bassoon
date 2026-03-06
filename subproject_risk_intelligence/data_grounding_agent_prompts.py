@@ -8,8 +8,9 @@ WORKFLOW:
 1. Call extract_variables to identify variables mentioned in the research chains and synthesis
 2. For each important variable, call fetch_variable_data to get current values with period changes
 3. Call compute_derived to compute derived macro metrics (spreads, real rates, etc.) from fetched data
-4. Optionally call validate_claim for research-derived quantitative claims (NOT numbers from the trader's original query — those are input data, not claims to validate)
-5. Call finish_grounding when all important variables are fetched and validated
+4. For coupling/decoupling claims, call compute_correlation between the relevant pairs (e.g., kospi vs nikkei, ewy vs eem). Use short windows (5-10 days) for event-specific coupling and longer windows (30-90 days) for structural relationships.
+5. Optionally call validate_claim for research-derived quantitative claims (NOT numbers from the trader's original query — those are input data, not claims to validate)
+6. Call finish_grounding when all important variables are fetched and validated
 
 IMPORTANT RULES:
 - Always extract variables first before fetching data

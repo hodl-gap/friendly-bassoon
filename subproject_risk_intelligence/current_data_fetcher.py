@@ -673,9 +673,14 @@ def format_current_values_for_prompt(current_values: Dict[str, Any]) -> str:
         "Rates": ["sofr", "fed_funds", "us10y", "us02y", "term_premium", "real_yield_10y", "sofr_spread",
                   "equity_risk_premium", "credit_spread_ig", "credit_spread_hy", "real_fed_funds", "money_supply_velocity_proxy"],
         "Indices": ["sp500", "nasdaq", "dow", "russell2000", "spy", "qqq"],
+        "Asian Indices": ["kospi", "kosdaq", "nikkei", "nikkei225", "taiex", "twse", "hang_seng", "hsi",
+                          "shanghai", "csi300", "sensex", "nifty50", "asx200", "straits_times"],
+        "Country/EM ETFs": ["ewy", "ewt", "ewj", "fxi", "mchi", "eem", "vwo", "eido", "thd", "vnm",
+                            "ewz", "eww", "inda", "ephe"],
         "Sectors": ["igv", "xlk", "smh", "soxx", "xly", "xlf", "xle"],
         "Big Tech": ["googl", "amzn", "msft", "meta", "aapl", "nvda", "orcl"],
-        "FX & Commodities": ["dxy", "usdjpy", "eurusd", "gold", "gld"],
+        "FX & Commodities": ["dxy", "usdjpy", "eurusd", "usdkrw", "usdtwd", "usdcny", "usdthb",
+                              "usdidr", "usdinr", "usdphp", "usdmyr", "usdsgd", "gold", "gld"],
         "Volatility": ["vix", "vvix"],
     }
 

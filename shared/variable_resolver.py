@@ -67,6 +67,49 @@ YAHOO_FALLBACK = {
     # Volatility
     "vix": {"source": "Yahoo", "series_id": "^VIX"},
     "vvix": {"source": "Yahoo", "series_id": "^VVIX"},
+
+    # Asian Indices
+    "kospi": {"source": "Yahoo", "series_id": "^KS11"},
+    "kosdaq": {"source": "Yahoo", "series_id": "^KQ11"},
+    "nikkei": {"source": "Yahoo", "series_id": "^N225"},
+    "nikkei225": {"source": "Yahoo", "series_id": "^N225"},
+    "taiex": {"source": "Yahoo", "series_id": "^TWII"},
+    "twse": {"source": "Yahoo", "series_id": "^TWII"},
+    "hang_seng": {"source": "Yahoo", "series_id": "^HSI"},
+    "hsi": {"source": "Yahoo", "series_id": "^HSI"},
+    "shanghai": {"source": "Yahoo", "series_id": "000001.SS"},
+    "csi300": {"source": "Yahoo", "series_id": "000300.SS"},
+    "sensex": {"source": "Yahoo", "series_id": "^BSESN"},
+    "nifty50": {"source": "Yahoo", "series_id": "^NSEI"},
+    "asx200": {"source": "Yahoo", "series_id": "^AXJO"},
+    "straits_times": {"source": "Yahoo", "series_id": "^STI"},
+
+    # Country / Regional ETFs
+    "ewy": {"source": "Yahoo", "series_id": "EWY"},     # iShares MSCI South Korea
+    "ewt": {"source": "Yahoo", "series_id": "EWT"},     # iShares MSCI Taiwan
+    "ewj": {"source": "Yahoo", "series_id": "EWJ"},     # iShares MSCI Japan
+    "fxi": {"source": "Yahoo", "series_id": "FXI"},     # iShares China Large-Cap
+    "mchi": {"source": "Yahoo", "series_id": "MCHI"},   # iShares MSCI China
+    "eem": {"source": "Yahoo", "series_id": "EEM"},     # iShares MSCI Emerging Markets
+    "vwo": {"source": "Yahoo", "series_id": "VWO"},     # Vanguard FTSE Emerging Markets
+    "eido": {"source": "Yahoo", "series_id": "EIDO"},   # iShares MSCI Indonesia
+    "thd": {"source": "Yahoo", "series_id": "THD"},     # iShares MSCI Thailand
+    "vnm": {"source": "Yahoo", "series_id": "VNM"},     # VanEck Vietnam
+    "ewz": {"source": "Yahoo", "series_id": "EWZ"},     # iShares MSCI Brazil
+    "eww": {"source": "Yahoo", "series_id": "EWW"},     # iShares MSCI Mexico
+    "inda": {"source": "Yahoo", "series_id": "INDA"},   # iShares MSCI India
+    "ephe": {"source": "Yahoo", "series_id": "EPHE"},   # iShares MSCI Philippines
+
+    # Asian / EM FX (USD cross rates)
+    "usdkrw": {"source": "Yahoo", "series_id": "KRW=X"},
+    "usdtwd": {"source": "Yahoo", "series_id": "TWD=X"},
+    "usdcny": {"source": "Yahoo", "series_id": "CNY=X"},
+    "usdthb": {"source": "Yahoo", "series_id": "THB=X"},
+    "usdidr": {"source": "Yahoo", "series_id": "IDR=X"},
+    "usdinr": {"source": "Yahoo", "series_id": "INR=X"},
+    "usdphp": {"source": "Yahoo", "series_id": "PHP=X"},
+    "usdmyr": {"source": "Yahoo", "series_id": "MYR=X"},
+    "usdsgd": {"source": "Yahoo", "series_id": "SGD=X"},
 }
 
 # Thread-safe cache for loaded mappings

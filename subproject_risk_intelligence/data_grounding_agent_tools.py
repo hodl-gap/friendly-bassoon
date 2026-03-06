@@ -77,6 +77,30 @@ COMPUTE_DERIVED_TOOL = {
     }
 }
 
+COMPUTE_CORRELATION_TOOL = {
+    "name": "compute_correlation",
+    "description": "Compute return correlation between two variables over a specified window. Use this to verify coupling/decoupling claims (e.g., 'KOSPI moved in tandem with Nikkei during the selloff'). Fetches price history for both variables, computes daily returns, and calculates Pearson correlation over the window.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "variable_a": {
+                "type": "string",
+                "description": "First variable name (e.g., 'kospi', 'ewy', 'nikkei')"
+            },
+            "variable_b": {
+                "type": "string",
+                "description": "Second variable name (e.g., 'nikkei', 'ewt', 'sp500')"
+            },
+            "window_days": {
+                "type": "integer",
+                "description": "Lookback window in calendar days for correlation calculation. Use 5-10 for event-specific coupling, 30 for short-term, 90 for medium-term.",
+                "default": 30
+            }
+        },
+        "required": ["variable_a", "variable_b"]
+    }
+}
+
 FINISH_GROUNDING_TOOL = {
     "name": "finish_grounding",
     "description": "Signal that data grounding is complete. Call after all variables are fetched and validated.",
@@ -105,6 +129,7 @@ ALL_TOOLS = [
     FETCH_VARIABLE_DATA_TOOL,
     VALIDATE_CLAIM_TOOL,
     COMPUTE_DERIVED_TOOL,
+    COMPUTE_CORRELATION_TOOL,
     FINISH_GROUNDING_TOOL,
 ]
 
@@ -246,6 +271,112 @@ def build_tool_handlers(agent_state: DataGroundingAgentState) -> dict:
             },
         }
 
+    def handle_compute_correlation(variable_a: str, variable_b: str, window_days: int = 30) -> dict:
+        from .current_data_fetcher import (
+            resolve_variable, fetch_fred_with_history, fetch_yahoo_with_history,
+            fetch_csv_with_history,
+            MONTHLY_FRED_SERIES, MONTHLY_LOOKBACK_DAYS, DEFAULT_LOOKBACK_DAYS,
+        )
+        from datetime import datetime, timedelta
+        import math
+
+        def _fetch_history(var_name: str) -> list:
+            resolved = resolve_variable(var_name)
+            if not resolved:
+                return []
+            series_id = resolved["series_id"]
+            source = resolved["source"]
+            lookback = max(window_days + 30, DEFAULT_LOOKBACK_DAYS)
+            if source.upper() == "FRED":
+                data = fetch_fred_with_history(series_id, lookback)
+            elif source.upper() == "CSV":
+                data = fetch_csv_with_history(series_id, lookback)
+            else:
+                data = fetch_yahoo_with_history(series_id, lookback)
+            if data and data.get("history"):
+                return data["history"]  # list of (date_str, value)
+            return []
+
+        hist_a = _fetch_history(variable_a)
+        hist_b = _fetch_history(variable_b)
+
+        if not hist_a:
+            return {"error": f"Could not fetch history for {variable_a}"}
+        if not hist_b:
+            return {"error": f"Could not fetch history for {variable_b}"}
+
+        # Build date->value dicts
+        dict_a = {d: v for d, v in hist_a}
+        dict_b = {d: v for d, v in hist_b}
+
+        # Find common dates within the window
+        cutoff = (datetime.now() - timedelta(days=window_days)).strftime("%Y-%m-%d")
+        common_dates = sorted(d for d in dict_a if d in dict_b and d >= cutoff)
+
+        if len(common_dates) < 3:
+            return {"error": f"Not enough overlapping data points ({len(common_dates)}) in {window_days}-day window"}
+
+        # Compute daily returns for common dates
+        returns_a = []
+        returns_b = []
+        dates_used = []
+        for i in range(1, len(common_dates)):
+            prev_d = common_dates[i - 1]
+            curr_d = common_dates[i]
+            va_prev, va_curr = dict_a[prev_d], dict_a[curr_d]
+            vb_prev, vb_curr = dict_b[prev_d], dict_b[curr_d]
+            if va_prev != 0 and vb_prev != 0:
+                returns_a.append((va_curr - va_prev) / va_prev)
+                returns_b.append((vb_curr - vb_prev) / vb_prev)
+                dates_used.append(curr_d)
+
+        n = len(returns_a)
+        if n < 2:
+            return {"error": f"Not enough return observations ({n}) for correlation"}
+
+        # Pearson correlation
+        mean_a = sum(returns_a) / n
+        mean_b = sum(returns_b) / n
+        cov = sum((a - mean_a) * (b - mean_b) for a, b in zip(returns_a, returns_b)) / n
+        std_a = math.sqrt(sum((a - mean_a) ** 2 for a in returns_a) / n)
+        std_b = math.sqrt(sum((b - mean_b) ** 2 for b in returns_b) / n)
+
+        if std_a == 0 or std_b == 0:
+            return {"error": "Zero variance in one of the series — correlation undefined"}
+
+        corr = cov / (std_a * std_b)
+
+        # t-statistic for significance
+        if abs(corr) < 1.0:
+            t_stat = corr * math.sqrt((n - 2) / (1 - corr ** 2))
+        else:
+            t_stat = float('inf')
+
+        # Cumulative returns over the window
+        cum_a = (dict_a[common_dates[-1]] / dict_a[common_dates[0]] - 1) * 100
+        cum_b = (dict_b[common_dates[-1]] / dict_b[common_dates[0]] - 1) * 100
+
+        return {
+            "variable_a": variable_a,
+            "variable_b": variable_b,
+            "window_days": window_days,
+            "correlation": round(corr, 4),
+            "t_statistic": round(t_stat, 2),
+            "observations": n,
+            "date_range": f"{dates_used[0]} to {dates_used[-1]}",
+            "cumulative_return_a": f"{cum_a:+.2f}%",
+            "cumulative_return_b": f"{cum_b:+.2f}%",
+            "interpretation": (
+                "strong positive" if corr > 0.7 else
+                "moderate positive" if corr > 0.4 else
+                "weak positive" if corr > 0.1 else
+                "negligible" if corr > -0.1 else
+                "weak negative" if corr > -0.4 else
+                "moderate negative" if corr > -0.7 else
+                "strong negative"
+            ),
+        }
+
     def handle_finish_grounding(summary: str = "", variables_fetched: int = 0, patterns_validated: int = 0) -> dict:
         return {"status": "completed", "summary": summary}
 
@@ -254,5 +385,6 @@ def build_tool_handlers(agent_state: DataGroundingAgentState) -> dict:
         "fetch_variable_data": handle_fetch_variable_data,
         "validate_claim": handle_validate_claim,
         "compute_derived": handle_compute_derived,
+        "compute_correlation": handle_compute_correlation,
         "finish_grounding": handle_finish_grounding,
     }
