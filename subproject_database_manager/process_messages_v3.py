@@ -125,6 +125,10 @@ def classify_for_image_routing(msg):
     if has_photo and len(text.strip()) < MIN_TEXT_FOR_CATEGORIZATION:
         return 'needs_image', None, 'short_text'
 
+    # Short text + no photo → skip (section headers, fragments, chat noise)
+    if not has_photo and len(text.strip()) < MIN_TEXT_FOR_CATEGORIZATION:
+        return 'skip', 'other', 'short_text_no_photo'
+
     # No photo → text-only categorization (cheap)
     if not has_photo:
         return 'text_only', None, 'no_photo'
@@ -670,6 +674,92 @@ def process_batches_parallel_sync(all_batches, channel_name):
     return asyncio.run(process_batches_parallel(all_batches, channel_name))
 
 
+# =============================================================================
+# THREAD GROUPING — concatenate sequential messages from same sender
+# =============================================================================
+# Groups messages from the same sender within THREAD_GAP_SECONDS into a single
+# message before categorization/extraction. Fixes issue #31 where short fragments
+# (e.g., 5 messages of 20 chars each) are extracted independently and produce
+# garbage, but together form one coherent argument.
+
+THREAD_GAP_SECONDS = 180  # 3 minutes
+
+def group_thread_messages(messages):
+    """
+    Group consecutive messages from the same sender within THREAD_GAP_SECONDS.
+
+    Concatenates text with '\\n\\n' separator. Uses first message's metadata
+    (telegram_msg_id, date, photo, original_num). Stores all constituent
+    telegram_msg_ids in '_thread_msg_ids' for processing tracker.
+
+    Args:
+        messages: list of message dicts with 'from', 'date', 'text', etc.
+
+    Returns:
+        New list of (possibly grouped) message dicts. Original list is not modified.
+    """
+    if not messages:
+        return messages
+
+    from datetime import datetime, timezone
+
+    def _parse_date(date_str):
+        """Parse ISO date string to datetime."""
+        try:
+            # Handle both +00:00 and Z suffix
+            date_str = date_str.replace('Z', '+00:00')
+            return datetime.fromisoformat(date_str)
+        except (ValueError, AttributeError):
+            return None
+
+    grouped = []
+    current_group = [messages[0]]
+
+    for msg in messages[1:]:
+        prev = current_group[-1]
+        prev_date = _parse_date(prev.get('date', ''))
+        curr_date = _parse_date(msg.get('date', ''))
+        same_sender = msg.get('from', '') == prev.get('from', '') and msg.get('from', '') != ''
+
+        if (same_sender and prev_date and curr_date
+                and abs((curr_date - prev_date).total_seconds()) <= THREAD_GAP_SECONDS):
+            current_group.append(msg)
+        else:
+            grouped.append(current_group)
+            current_group = [msg]
+
+    grouped.append(current_group)
+
+    # Merge each group into a single message
+    result = []
+    threads_formed = 0
+    for group in grouped:
+        if len(group) == 1:
+            msg = dict(group[0])  # shallow copy
+            msg['_thread_msg_ids'] = [msg.get('telegram_msg_id', '')]
+            result.append(msg)
+        else:
+            threads_formed += 1
+            primary = dict(group[0])  # use first message's metadata
+            # Concatenate text
+            texts = [m.get('text', '') for m in group if m.get('text', '').strip()]
+            primary['text'] = '\n\n'.join(texts)
+            # Collect all telegram_msg_ids
+            primary['_thread_msg_ids'] = [m.get('telegram_msg_id', '') for m in group]
+            # Keep first photo found in the group
+            if not primary.get('photo'):
+                for m in group[1:]:
+                    if m.get('photo'):
+                        primary['photo'] = m['photo']
+                        break
+            result.append(primary)
+
+    if threads_formed > 0:
+        print(f"  Thread grouping: {len(messages)} messages → {len(result)} ({threads_formed} threads formed, gap={THREAD_GAP_SECONDS}s)")
+
+    return result
+
+
 def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base_photo_path=None, channel_name=None):
     """
     V3 Flow:
@@ -713,6 +803,9 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
         channel_name = messages[0]['name'] if messages else "Unknown"
 
     print(f"Loaded {len(messages)} messages (channel: {channel_name})")
+
+    # Group sequential messages from same sender within 3 minutes
+    messages = group_thread_messages(messages)
 
     # Track timing for each step
     step_times = {}
@@ -977,13 +1070,13 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
         filtered_count = 0
         for msg in messages:
             if msg.get('category') not in EXTRACTABLE_CATEGORIES:
-                telegram_msg_id = msg.get('telegram_msg_id')
-                if telegram_msg_id:
-                    try:
-                        mark_filtered(channel_name, int(telegram_msg_id))
-                        filtered_count += 1
-                    except (ValueError, TypeError):
-                        pass
+                for tid in msg.get('_thread_msg_ids', [msg.get('telegram_msg_id', '')]):
+                    if tid:
+                        try:
+                            mark_filtered(channel_name, int(tid))
+                            filtered_count += 1
+                        except (ValueError, TypeError):
+                            pass
         if filtered_count > 0:
             print(f"    Tracked {filtered_count} filtered messages (won't re-categorize on next run)")
 
@@ -1110,16 +1203,26 @@ def process_all_messages_v3(input_csv, output_csv, batch_size=5, overlap=2, base
     print(f"Wrote {len(all_results)} entries to {output_csv}")
 
     # Track extracted messages in processing tracker
+    # For grouped threads, mark ALL constituent message IDs as extracted
     from processing_tracker import mark_extracted
     tracked_count = 0
+    tracked_ids = set()
     for result in all_results:
         telegram_msg_id = result.get('telegram_msg_id')
-        if telegram_msg_id:
-            try:
-                mark_extracted(result['tg_channel'], int(telegram_msg_id))
-                tracked_count += 1
-            except (ValueError, TypeError):
-                pass  # Skip if telegram_msg_id is not a valid integer
+        # Find the original message to get _thread_msg_ids
+        thread_ids = [telegram_msg_id]
+        for msg in messages:
+            if msg.get('telegram_msg_id') == telegram_msg_id:
+                thread_ids = msg.get('_thread_msg_ids', [telegram_msg_id])
+                break
+        for tid in thread_ids:
+            if tid and tid not in tracked_ids:
+                try:
+                    mark_extracted(result['tg_channel'], int(tid))
+                    tracked_count += 1
+                    tracked_ids.add(tid)
+                except (ValueError, TypeError):
+                    pass
     if tracked_count > 0:
         print(f"Tracked {tracked_count} messages in processing state DB")
 

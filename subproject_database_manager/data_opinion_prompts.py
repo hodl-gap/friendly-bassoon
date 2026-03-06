@@ -90,6 +90,7 @@ For EACH message, extract the following fields:
    - Format: short phrases
    - GOOD: "Fed may pause QT, liquidity injection via TGA"
    - BAD: "This may force the Fed to halt QT soon" (too wordy)
+   - For asset allocation messages: preserve per-asset-class/region/timing breakdown (e.g., "H1 EU/JP equity rally, H2 rotate to US; bonds: short-duration core; credit: HY→IG shift, monitor IG tech debt; alts: data center/energy storage PF")
    - Empty string if no interpretation
 
 7. **tags** - Liquidity relevance classification
@@ -186,6 +187,7 @@ For EACH message, extract the following fields:
        - "effect": Resulting outcome (natural language)
        - "effect_normalized": Normalized variable name (snake_case, for cross-chunk linking)
        - "mechanism": How cause leads to effect
+       - "conditional_on": Conditions under which this causal link holds (free text, empty string if unconditional). E.g., "inflation falling, not rising", "reserve scarcity regime", "tariff shock < 10%". Include scenario-specific thresholds when the source provides them.
        - "evidence_quote": 1-3 sentences from the original message that support this step (REQUIRED)
        - "polarity": Directional outcome for risk assets - "BULLISH" | "BEARISH" | "NEUTRAL" (REQUIRED)
          - BULLISH: This step implies positive impact on risk assets (BTC, equities)
@@ -193,6 +195,7 @@ For EACH message, extract the following fields:
          - NEUTRAL: No clear directional implication
    - Chains should have 2+ steps when the logic continues
    - Single-step chains are acceptable if no further effects
+   - For multi-speaker messages (Fed trackers, analyst roundups): extract one chain per speaker's distinct stance — do NOT merge all views into 2-3 summary chains
    - Empty array [] if no causal relationships
 
    **Normalization Rules (CRITICAL for cross-chunk chain linking):**
@@ -217,8 +220,8 @@ For EACH message, extract the following fields:
    Fed rate cuts → real rates down → risk asset valuations up
 
    **How to structure:**
-   - Step 1: cause="Fed rate cuts", cause_normalized="fed_rate_cut", effect="real rates down", effect_normalized="real_rates", mechanism="rate cuts reduce yields", evidence_quote="Fed는 25bp 인하를 단행했고..."
-   - Step 2: cause="real rates down", cause_normalized="real_rates", effect="risk asset valuations up", effect_normalized="risk_asset_valuation", mechanism="lower real yields increase PV", evidence_quote="실질 금리 하락은..."
+   - Step 1: cause="Fed rate cuts", cause_normalized="fed_rate_cut", effect="real rates down", effect_normalized="real_rates", mechanism="rate cuts reduce yields", conditional_on="inflation falling, not rising", evidence_quote="Fed는 25bp 인하를 단행했고..."
+   - Step 2: cause="real rates down", cause_normalized="real_rates", effect="risk asset valuations up", effect_normalized="risk_asset_valuation", mechanism="lower real yields increase PV", conditional_on="", evidence_quote="실질 금리 하락은..."
 
 11. **temporal_context** - Temporal and regime information for retrieval filtering
    - Purpose: Enable retrieval filtering by policy/liquidity regime
@@ -269,7 +272,7 @@ For EACH message, extract the following fields:
         "logic_chains": [
             {
                 "steps": [
-                    {"cause": "TGA drawdown", "cause_normalized": "tga", "effect": "bank reserves increase", "effect_normalized": "bank_reserves", "mechanism": "Treasury spending releases TGA funds", "evidence_quote": "TGA 잔고가 750B로 감소하면서 시스템 유동성이 증가", "polarity": "BULLISH"}
+                    {"cause": "TGA drawdown", "cause_normalized": "tga", "effect": "bank reserves increase", "effect_normalized": "bank_reserves", "mechanism": "Treasury spending releases TGA funds", "conditional_on": "", "evidence_quote": "TGA 잔고가 750B로 감소하면서 시스템 유동성이 증가", "polarity": "BULLISH"}
                 ]
             }
         ],
@@ -410,6 +413,7 @@ For EACH message, extract the following fields:
    - Format: short phrases
    - GOOD: "Fed may pause QT, liquidity injection via TGA"
    - BAD: "This may force the Fed to halt QT soon" (too wordy)
+   - For asset allocation messages: preserve per-asset-class/region/timing breakdown (e.g., "H1 EU/JP equity rally, H2 rotate to US; bonds: short-duration core; credit: HY→IG shift, monitor IG tech debt; alts: data center/energy storage PF")
    - Empty string if no interpretation
 
 7. **tags** - Liquidity relevance classification
@@ -506,6 +510,7 @@ For EACH message, extract the following fields:
        - "effect": Resulting outcome (natural language)
        - "effect_normalized": Normalized variable name (snake_case, for cross-chunk linking)
        - "mechanism": How cause leads to effect
+       - "conditional_on": Conditions under which this causal link holds (free text, empty string if unconditional). E.g., "inflation falling, not rising", "reserve scarcity regime", "tariff shock < 10%". Include scenario-specific thresholds when the source provides them.
        - "evidence_quote": 1-3 sentences from the original message that support this step (REQUIRED)
        - "polarity": Directional outcome for risk assets - "BULLISH" | "BEARISH" | "NEUTRAL" (REQUIRED)
          - BULLISH: This step implies positive impact on risk assets (BTC, equities)
@@ -513,6 +518,7 @@ For EACH message, extract the following fields:
          - NEUTRAL: No clear directional implication
    - Chains should have 2+ steps when the logic continues
    - Single-step chains are acceptable if no further effects
+   - For multi-speaker messages (Fed trackers, analyst roundups): extract one chain per speaker's distinct stance — do NOT merge all views into 2-3 summary chains
    - Empty array [] if no causal relationships
 
    **Normalization Rules (CRITICAL for cross-chunk chain linking):**
@@ -537,8 +543,8 @@ For EACH message, extract the following fields:
    Fed rate cuts → real rates down → risk asset valuations up
 
    **How to structure:**
-   - Step 1: cause="Fed rate cuts", cause_normalized="fed_rate_cut", effect="real rates down", effect_normalized="real_rates", mechanism="rate cuts reduce yields", evidence_quote="Fed는 25bp 인하를 단행했고..."
-   - Step 2: cause="real rates down", cause_normalized="real_rates", effect="risk asset valuations up", effect_normalized="risk_asset_valuation", mechanism="lower real yields increase PV", evidence_quote="실질 금리 하락은..."
+   - Step 1: cause="Fed rate cuts", cause_normalized="fed_rate_cut", effect="real rates down", effect_normalized="real_rates", mechanism="rate cuts reduce yields", conditional_on="inflation falling, not rising", evidence_quote="Fed는 25bp 인하를 단행했고..."
+   - Step 2: cause="real rates down", cause_normalized="real_rates", effect="risk asset valuations up", effect_normalized="risk_asset_valuation", mechanism="lower real yields increase PV", conditional_on="", evidence_quote="실질 금리 하락은..."
 
 11. **temporal_context** - Temporal and regime information for retrieval filtering
    - Purpose: Enable retrieval filtering by policy/liquidity regime
@@ -600,13 +606,13 @@ For EACH message, extract the following fields:
         "logic_chains": [
             {{
                 "steps": [
-                    {{"cause": "TGA drawdown", "cause_normalized": "tga", "effect": "bank reserves increase", "effect_normalized": "bank_reserves", "mechanism": "Treasury spending releases TGA funds into banking system", "evidence_quote": "TGA 잔고가 750B로 감소하면서 시스템 유동성이 증가"}},
-                    {{"cause": "bank reserves increase", "cause_normalized": "bank_reserves", "effect": "funding conditions ease", "effect_normalized": "funding_conditions", "mechanism": "more reserves reduce repo rate pressure", "evidence_quote": "리저브 증가로 레포 압력 완화 예상"}}
+                    {{"cause": "TGA drawdown", "cause_normalized": "tga", "effect": "bank reserves increase", "effect_normalized": "bank_reserves", "mechanism": "Treasury spending releases TGA funds into banking system", "conditional_on": "", "evidence_quote": "TGA 잔고가 750B로 감소하면서 시스템 유동성이 증가"}},
+                    {{"cause": "bank reserves increase", "cause_normalized": "bank_reserves", "effect": "funding conditions ease", "effect_normalized": "funding_conditions", "mechanism": "more reserves reduce repo rate pressure", "conditional_on": "reserve scarcity regime", "evidence_quote": "리저브 증가로 레포 압력 완화 예상"}}
                 ]
             }},
             {{
                 "steps": [
-                    {{"cause": "RDE spike", "cause_normalized": "rde", "effect": "QT pause likely", "effect_normalized": "qt_pause", "mechanism": "high reserve demand elasticity signals system stress", "evidence_quote": "RDE가 0.5까지 급등하면 Fed는 QT를 멈출 수밖에 없다"}}
+                    {{"cause": "RDE spike", "cause_normalized": "rde", "effect": "QT pause likely", "effect_normalized": "qt_pause", "mechanism": "high reserve demand elasticity signals system stress", "conditional_on": "RDE > 0.5", "evidence_quote": "RDE가 0.5까지 급등하면 Fed는 QT를 멈출 수밖에 없다"}}
                 ]
             }}
         ],

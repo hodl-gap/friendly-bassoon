@@ -1,19 +1,84 @@
 {
-  "tga": ["treasury_general_account", "tga_balance", "tga_drawdown", "tga_rebuild"],
-  "rrp": ["reverse_repo", "overnight_rrp", "rrp_facility", "reverse_repurchase"],
-  "bank_reserves": ["reserves", "banking_reserves", "reserve_balances", "system_reserves"],
-  "sofr": ["secured_overnight_financing_rate", "sofr_rate", "sofr_spike"],
-  "fed_balance_sheet": ["fed_assets", "federal_reserve_balance_sheet", "fed_bs", "qt_runoff"],
-  "fed_funds": ["fed_funds_rate", "federal_funds_rate", "effective_fed_funds"],
-  "vix": ["volatility_index", "cboe_vix", "vix_spike", "implied_volatility"],
-  "dxy": ["dollar_index", "us_dollar_index", "usd_index"],
-  "btc_price": ["bitcoin_price", "btc", "btc_rally", "bitcoin_rally", "btc_demand", "bitcoin_demand"],
-  "us10y": ["ten_year_yield", "us_10y", "treasury_10y", "10y_yield", "us_10yr"],
-  "credit_spreads": ["high_yield_spreads", "hy_spreads", "credit_spread", "ig_spreads"],
+  "tga": [
+    "treasury_general_account",
+    "tga_balance",
+    "tga_drawdown",
+    "tga_rebuild"
+  ],
+  "rrp": [
+    "reverse_repo",
+    "overnight_rrp",
+    "rrp_facility",
+    "reverse_repurchase"
+  ],
+  "bank_reserves": [
+    "reserves",
+    "banking_reserves",
+    "reserve_balances",
+    "system_reserves"
+  ],
+  "sofr": [
+    "secured_overnight_financing_rate",
+    "sofr_rate",
+    "sofr_spike"
+  ],
+  "fed_balance_sheet": [
+    "fed_assets",
+    "federal_reserve_balance_sheet",
+    "fed_bs",
+    "qt_runoff"
+  ],
+  "fed_funds": [
+    "fed_funds_rate",
+    "federal_funds_rate",
+    "effective_fed_funds"
+  ],
+  "vix": [
+    "volatility_index",
+    "cboe_vix",
+    "vix_spike",
+    "implied_volatility"
+  ],
+  "dxy": [
+    "dollar_index",
+    "us_dollar_index",
+    "usd_index"
+  ],
+  "btc_price": [
+    "bitcoin_price",
+    "btc",
+    "btc_rally",
+    "bitcoin_rally",
+    "btc_demand",
+    "bitcoin_demand",
+    "btc_rebound",
+    "btc_price_drop",
+    "btc_price_support"
+  ],
+  "us10y": [
+    "ten_year_yield",
+    "us_10y",
+    "treasury_10y",
+    "10y_yield",
+    "us_10yr",
+    "bond_yields",
+    "ust_demand"
+  ],
+  "credit_spreads": [
+    "high_yield_spreads",
+    "hy_spreads",
+    "credit_spread",
+    "ig_spreads"
+  ],
   "put_call_ratio": [
-    "put_call_ratio_spike", "put_call_ratio_surge", "put_call_ratio_rise",
-    "put_call_ratio_rising", "put_call_ratio_high", "pcr",
-    "equity_put_call_ratio", "cboe_equity_put_call_ratio",
+    "put_call_ratio_spike",
+    "put_call_ratio_surge",
+    "put_call_ratio_rise",
+    "put_call_ratio_rising",
+    "put_call_ratio_high",
+    "pcr",
+    "equity_put_call_ratio",
+    "cboe_equity_put_call_ratio",
     "extreme_put_call_ratio_spike",
     "spike_in_cboe_equity_put_call",
     "cboe_equity_put_call_ratio_soa",
@@ -27,67 +92,232 @@
     "put_call_ratio_spike_to_95th_p",
     "high_put_call_ratio_entry_sign"
   ],
-  "gs_prime_book": ["prime_brokerage", "gs_prime", "goldman_prime_book"],
-  "cta_positioning": ["cta_flows", "trend_following_positioning", "cta_exposure"],
-  "etf_flows": ["fund_flows", "etf_inflows", "etf_outflows"],
-  "equity_flows": ["equity_fund_flows", "stock_flows", "equity_inflows"],
-  "futures_oi": ["futures_open_interest", "open_interest", "oi"],
-  "rate_expectations": ["fed_rate_path", "rate_path", "rate_pricing", "fed_rate_expectations", "fed_cut_probability"],
-  "btc_etf_flows": ["bitcoin_etf_flows", "btc_etf_inflows", "bitcoin_etf_inflows"],
-  "stablecoin_supply": ["stablecoin_market_cap", "usdt_supply", "usdc_supply"],
-  "exchange_reserves": ["btc_exchange_reserves", "exchange_btc", "crypto_exchange_reserves"],
-  "fomc": ["fomc_meeting", "fed_meeting", "fomc_decision"],
-  "cpi": ["consumer_price_index", "cpi_release", "inflation_data", "cpi_print"],
-  "nfp": ["nonfarm_payrolls", "jobs_report", "employment_data", "payrolls_data"],
-  "opex": ["options_expiration", "options_expiry", "quarterly_opex"],
-  "fed_rate_cut": ["rate_cuts", "fed_cut", "fed_rate_cuts", "fed_easing", "rate_cut", "fed_cutting"],
-  "fed_rate_hike": ["rate_hike", "fed_hike", "rate_hikes", "fed_tightening", "fed_hiking"],
-  "carry_trade_unwind": ["carry_unwind", "carry_trade_unwinding", "unwinding_of_yen_carry_trades", "carry_trade_reversal"],
-  "jpy_weakness": ["yen_weakness", "jpy_depreciation", "weak_yen", "yen_depreciation"],
-  "jpy_strength": ["yen_strength", "jpy_appreciation", "strong_yen", "yen_appreciation"],
-  "usd_jpy": ["usdjpy", "dollar_yen", "jpy_rate"],
-  "boj_rate_hike": ["boj_hike", "boj_tightening", "boj_normalization", "boj_slow_normalization"],
-  "jpy_intervention_risk": ["jpy_intervention", "boj_intervention", "mof_intervention", "fx_intervention"],
+  "gs_prime_book": [
+    "prime_brokerage",
+    "gs_prime",
+    "goldman_prime_book"
+  ],
+  "cta_positioning": [
+    "cta_flows",
+    "trend_following_positioning",
+    "cta_exposure"
+  ],
+  "etf_flows": [
+    "fund_flows",
+    "etf_inflows",
+    "etf_outflows",
+    "etf_net_flows",
+    "etf_record_inflows"
+  ],
+  "equity_flows": [
+    "equity_fund_flows",
+    "stock_flows",
+    "equity_inflows"
+  ],
+  "futures_oi": [
+    "futures_open_interest",
+    "open_interest",
+    "oi"
+  ],
+  "rate_expectations": [
+    "fed_rate_path",
+    "rate_path",
+    "rate_pricing",
+    "fed_rate_expectations",
+    "fed_cut_probability",
+    "global_rate_cuts",
+    "rate_hold",
+    "policy_hold",
+    "policy_rate",
+    "policy_tightening"
+  ],
+  "btc_etf_flows": [
+    "bitcoin_etf_flows",
+    "btc_etf_inflows",
+    "bitcoin_etf_inflows"
+  ],
+  "stablecoin_supply": [
+    "stablecoin_market_cap",
+    "usdt_supply",
+    "usdc_supply"
+  ],
+  "exchange_reserves": [
+    "btc_exchange_reserves",
+    "exchange_btc",
+    "crypto_exchange_reserves"
+  ],
+  "fomc": [
+    "fomc_meeting",
+    "fed_meeting",
+    "fomc_decision"
+  ],
+  "cpi": [
+    "consumer_price_index",
+    "cpi_release",
+    "inflation_data",
+    "cpi_print",
+    "inflation",
+    "cpi_inflation",
+    "cpi_transmission_risk"
+  ],
+  "nfp": [
+    "nonfarm_payrolls",
+    "jobs_report",
+    "employment_data",
+    "payrolls_data",
+    "unemployment_rate",
+    "us_employment_weakness",
+    "structural_unemployment"
+  ],
+  "opex": [
+    "options_expiration",
+    "options_expiry",
+    "quarterly_opex"
+  ],
+  "fed_rate_cut": [
+    "rate_cuts",
+    "fed_cut",
+    "fed_rate_cuts",
+    "fed_easing",
+    "rate_cut",
+    "fed_cutting",
+    "fed_rate_cut_probability",
+    "rate_cut_expectations",
+    "rate_cut_delay",
+    "fed_cut_catalyst",
+    "fed_rate_cut_delay"
+  ],
+  "fed_rate_hike": [
+    "rate_hike",
+    "fed_hike",
+    "rate_hikes",
+    "fed_tightening",
+    "fed_hiking"
+  ],
+  "carry_trade": [
+    "carry_trade_unwind",
+    "carry_unwind",
+    "carry_trade_unwinding",
+    "unwinding_of_yen_carry_trades",
+    "carry_trade_reversal",
+    "basis_trade_unwind",
+    "yen_carry_trade"
+  ],
+  "jpy_weakness": [
+    "yen_weakness",
+    "jpy_depreciation",
+    "weak_yen",
+    "yen_depreciation"
+  ],
+  "jpy_strength": [
+    "yen_strength",
+    "jpy_appreciation",
+    "strong_yen",
+    "yen_appreciation"
+  ],
+  "usd_jpy": [
+    "usdjpy",
+    "dollar_yen",
+    "jpy_rate"
+  ],
+  "boj_rate_hike": [
+    "boj_hike",
+    "boj_tightening",
+    "boj_normalization",
+    "boj_slow_normalization",
+    "boj_rate_hike_path"
+  ],
+  "jpy_intervention_risk": [
+    "jpy_intervention",
+    "boj_intervention",
+    "mof_intervention",
+    "fx_intervention"
+  ],
   "bearish_options_positioning": [
-    "bearish_positioning", "put_buying", "hedging_demand",
-    "downside_hedging", "downside_hedging_cost",
+    "bearish_positioning",
+    "put_buying",
+    "hedging_demand",
+    "downside_hedging",
+    "downside_hedging_cost",
     "trader_hedging_demand",
     "trader_hedging_demand_and_mark"
   ],
   "contrarian_signal": [
-    "contrarian_buy_signal", "contrarian_indicator",
-    "contrary_sentiment_indicator", "contrarian_buy",
+    "contrarian_buy_signal",
+    "contrarian_indicator",
+    "contrary_sentiment_indicator",
+    "contrarian_buy",
     "creates_buying_opportunity_for",
     "contrary_sentiment_indicator_s"
   ],
   "market_sentiment_reversal": [
-    "sentiment_reversal", "sentiment_shift",
+    "sentiment_reversal",
+    "sentiment_shift",
     "washout_of_bearishness",
     "potential_washout_of_bearishne",
     "signal_of_investor_fear_and_ma",
-    "market_sentiment_shifts_to_pes"
+    "market_sentiment_shifts_to_pes",
+    "market_sentiment",
+    "momentum_reversal"
   ],
   "equity_market_decline": [
-    "stock_market_decline", "equity_selloff", "market_selloff",
+    "stock_market_decline",
+    "equity_selloff",
+    "market_selloff",
     "equity_market_decline_and_trad",
     "market_distrust"
   ],
   "equity_relief_rally": [
-    "relief_rally", "market_rebound", "market_recovery",
+    "relief_rally",
+    "market_rebound",
+    "market_recovery",
     "contrarian_buy_signal_and_subs",
-    "significant_equity_market_gain"
+    "significant_equity_market_gain",
+    "risk_asset_rally",
+    "risk_rally",
+    "equities_rally",
+    "valuation_rerating",
+    "limited_recovery"
   ],
   "volatility_risk": [
-    "vol_risk", "volatility_spike", "market_volatility",
+    "vol_risk",
+    "volatility_spike",
+    "market_volatility",
     "market_volatility_expectations",
     "vix_spikes_to_elevated_levels"
   ],
-  "btc_volatility": ["bitcoin_volatility", "crypto_volatility", "btc_vol"],
-  "btc_price_down": ["bitcoin_decline", "btc_decline", "btc_selloff", "crypto_downside"],
-  "btc_midterm_positive": ["btc_bullish_medium_term", "bitcoin_midterm_bullish"],
-  "usd_strength": ["dollar_strength", "strong_dollar", "usd_rally", "broad_market_volatility_with_d"],
-  "usd_weakness": ["dollar_weakness", "weak_dollar", "usd_decline", "usd_strength_shaken"],
-  "labor_market_tightness": ["tight_labor_market", "labor_shortage", "low_unemployment"],
+  "btc_volatility": [
+    "bitcoin_volatility",
+    "crypto_volatility",
+    "btc_vol"
+  ],
+  "btc_price_down": [
+    "bitcoin_decline",
+    "btc_decline",
+    "btc_selloff",
+    "crypto_downside"
+  ],
+  "btc_midterm_positive": [
+    "btc_bullish_medium_term",
+    "bitcoin_midterm_bullish"
+  ],
+  "usd_strength": [
+    "dollar_strength",
+    "strong_dollar",
+    "usd_rally",
+    "broad_market_volatility_with_d"
+  ],
+  "usd_weakness": [
+    "dollar_weakness",
+    "weak_dollar",
+    "usd_decline",
+    "usd_strength_shaken"
+  ],
+  "labor_market_tightness": [
+    "tight_labor_market",
+    "labor_shortage",
+    "low_unemployment"
+  ],
   "ai_disruption": [
     "ai_agents_capability_expansion",
     "ai_disruption_saas",
@@ -95,7 +325,9 @@
     "intensified_investor_concerns"
   ],
   "saas_selloff": [
-    "saas_meltdown", "software_selloff", "saas_drawdown",
+    "saas_meltdown",
+    "software_selloff",
+    "saas_drawdown",
     "saas_and_software_sector_exper",
     "sector_wide_stock_price_collap",
     "deteriorating_relative_strengt",
@@ -104,28 +336,365 @@
     "correction_start"
   ],
   "saas_valuation_compression": [
-    "software_derating", "multiple_compression",
+    "software_derating",
+    "multiple_compression",
     "wall_street_forced_to_rethink",
     "high_valuation_multiples_and_g",
     "investor_revaluation_of_tradit"
   ],
-  "buy_signal": ["entry_signal", "buying_signal", "buy_indicator"],
-  "risk_asset_outlook": ["risk_asset_view", "risk_appetite", "risk_on_sentiment"],
-  "market_liquidity": ["liquidity_conditions", "system_liquidity", "funding_conditions"],
-  "borrow_rates": ["borrowing_costs", "borrow_cost", "lending_rates"],
-  "maintenance_cost": ["carry_cost", "holding_cost"],
-  "tariff_impact": ["tariff_elimination", "tariffs_struck_down", "tariff_ruling", "supreme_court_ieepa_ruling", "greenland_tariff_war"],
-  "snap_election": ["takaichi_election", "snap_election_called", "political_uncertainty_election", "snap_election_called_by_takaic"],
-  "japan_bond_volatility": ["jgb_volatility", "japan_bond_market_experiences"],
-  "funding_conditions": ["funding_stress", "funding_market", "money_market_conditions"],
-  "qe": ["quantitative_easing", "asset_purchases", "fed_qe"],
-  "qt": ["quantitative_tightening", "balance_sheet_runoff", "fed_qt"],
-  "risk_off": ["flight_to_safety", "risk_aversion", "defensive_positioning"],
-  "risk_on": ["risk_appetite_rising", "risk_seeking"],
-  "sp500": ["snp500", "s_and_p_500", "spx"],
-  "nasdaq": ["qqq", "tech_stocks", "nasdaq_100"],
-  "real_rates": ["real_interest_rates", "tips_yield", "real_yield"],
-  "oil_price": ["crude_oil", "wti", "brent", "oil_rally"],
-  "gold_price": ["gold", "xauusd", "gold_rally"],
-  "capex_overspend": ["capex_concerns", "ai_capex", "hyperscaler_capex", "capex_overspending"]
+  "buy_signal": [
+    "entry_signal",
+    "buying_signal",
+    "buy_indicator"
+  ],
+  "risk_asset_outlook": [
+    "risk_asset_view",
+    "risk_appetite",
+    "risk_on_sentiment"
+  ],
+  "market_liquidity": [
+    "liquidity_conditions",
+    "system_liquidity",
+    "funding_conditions",
+    "global_liquidity",
+    "global_liquidity_tightening",
+    "global_liquidity_index",
+    "liquidity_return",
+    "reserves_plus_rrp"
+  ],
+  "borrow_rates": [
+    "borrowing_costs",
+    "borrow_cost",
+    "lending_rates"
+  ],
+  "maintenance_cost": [
+    "carry_cost",
+    "holding_cost"
+  ],
+  "tariff_impact": [
+    "tariff_elimination",
+    "tariffs_struck_down",
+    "tariff_ruling",
+    "supreme_court_ieepa_ruling",
+    "greenland_tariff_war",
+    "tariff_shock",
+    "us_china_tariff",
+    "us_tariff_policy",
+    "tariff_policy",
+    "tariff_ruling_negative"
+  ],
+  "snap_election": [
+    "takaichi_election",
+    "snap_election_called",
+    "political_uncertainty_election",
+    "snap_election_called_by_takaic"
+  ],
+  "japan_bond_volatility": [
+    "jgb_volatility",
+    "japan_bond_market_experiences"
+  ],
+  "funding_conditions": [
+    "funding_stress",
+    "funding_market",
+    "money_market_conditions"
+  ],
+  "qe": [
+    "quantitative_easing",
+    "asset_purchases",
+    "fed_qe"
+  ],
+  "qt": [
+    "quantitative_tightening",
+    "balance_sheet_runoff",
+    "fed_qt",
+    "qt_end",
+    "qt_end_proximity"
+  ],
+  "risk_off": [
+    "flight_to_safety",
+    "risk_aversion",
+    "defensive_positioning"
+  ],
+  "risk_on": [
+    "risk_appetite_rising",
+    "risk_seeking"
+  ],
+  "sp500": [
+    "snp500",
+    "s_and_p_500",
+    "spx"
+  ],
+  "nasdaq": [
+    "qqq",
+    "tech_stocks",
+    "nasdaq_100"
+  ],
+  "real_rates": [
+    "real_interest_rates",
+    "tips_yield",
+    "real_yield",
+    "us_negative_real_rates"
+  ],
+  "oil_price": [
+    "crude_oil",
+    "wti",
+    "brent",
+    "oil_rally",
+    "oil_price_spike",
+    "oil_supply_shock"
+  ],
+  "gold_price": [
+    "gold",
+    "xauusd",
+    "gold_rally"
+  ],
+  "capex_overspend": [
+    "capex_concerns",
+    "ai_capex",
+    "hyperscaler_capex",
+    "capex_overspending",
+    "ai_capex_cycle",
+    "ai_capex_revision",
+    "corporate_capex",
+    "hyperscaler_bond_issuance"
+  ],
+  "fiscal_stimulus": [
+    "germany_fiscal_stimulus",
+    "german_fiscal_stimulus",
+    "us_fiscal_stimulus",
+    "fiscal_expansion",
+    "fiscal_spending",
+    "japan_fiscal_expansion",
+    "us_fiscal_expansion",
+    "european_rearmament"
+  ],
+  "fiscal_risk": [
+    "uk_fiscal_risk",
+    "german_fiscal_risk",
+    "us_fiscal_risk",
+    "uk_fiscal_unchanged",
+    "fiscal_deficit_concern",
+    "us_fiscal_deficit"
+  ],
+  "tariff_front_loading": [
+    "consumer_front_loading",
+    "auto_tariff_front_loading",
+    "pre_tariff_buying",
+    "tariff_pull_forward"
+  ],
+  "tariff_cost_push": [
+    "tariff_cost_passthrough",
+    "tariff_passthrough",
+    "tariff_passthrough_delayed",
+    "tariff_inflation_passthrough",
+    "tariff_inflation_visible",
+    "tariff_inflation"
+  ],
+  "tariff_uncertainty": [
+    "tariff_framework_uncertainty",
+    "tariff_legal_risk",
+    "tariff_growth_risk",
+    "tariff_inflation_risk"
+  ],
+  "consumer_sentiment": [
+    "consumer_confidence",
+    "consumer_confidence_collapse",
+    "consumer_spending_pressure",
+    "consumer_spending_contraction"
+  ],
+  "inflation_expectations": [
+    "inflation_expectations_rise",
+    "inflation_expectations_deanchor"
+  ],
+  "consumer_credit": [
+    "consumer_credit_quality",
+    "consumer_credit_restriction",
+    "consumer_credit_cascade",
+    "consumer_credit_rates",
+    "credit_quality"
+  ],
+  "real_consumption": [
+    "us_real_consumption",
+    "us_goods_consumption",
+    "real_income_decline",
+    "real_disposable_income"
+  ],
+  "labor_market": [
+    "labor_market_weakening",
+    "labor_market_rebalancing",
+    "labor_market_resilience",
+    "labor_market_softening",
+    "labor_market_vulnerability"
+  ],
+  "housing_market": [
+    "us_housing_demand",
+    "us_housing_supply",
+    "us_housing_afford",
+    "housing_affordability"
+  ],
+  "cre_recovery": [
+    "cre_price_recovery",
+    "cre_demand_recovery",
+    "reit_price_recovery"
+  ],
+  "hy_spreads": [
+    "hy_spread_widening",
+    "hy_credit_spread",
+    "hy_spread_tightening",
+    "hy_spread_divergence",
+    "hy_spread_spike",
+    "hy_spread_reversal",
+    "ccc_spread_widening",
+    "hy_spread_expansion"
+  ],
+  "ecb_rate_cut": [
+    "ecb_rate_cuts",
+    "ecb_rate_hold",
+    "ecb_cuts"
+  ],
+  "gdp_growth": [
+    "gdp_growth_downgrade",
+    "eu_gdp_growth",
+    "korea_gdp_growth",
+    "global_growth_downgrade"
+  ],
+  "eurozone_stagnation": [
+    "eurozone_growth_stagnation",
+    "eurozone_disinflation_risk",
+    "eurozone_disinflation"
+  ],
+  "supply_chain_risk": [
+    "supply_chain_disruption",
+    "supply_chain_dependency",
+    "auto_supply_disruption"
+  ],
+  "uk_inflation": [
+    "uk_inflation_persistence",
+    "uk_services_inflation"
+  ],
+  "uk_employment": [
+    "uk_employment_decline",
+    "uk_employment_tax"
+  ],
+  "uk_gilt_yield": [
+    "uk_gilt_supply"
+  ],
+  "gold_demand": [
+    "gold_institutional_demand",
+    "bank_gold_demand",
+    "gold_structural_demand",
+    "gold_price_bullish",
+    "gold_price_surge",
+    "gold_price_elevated"
+  ],
+  "japan_inflation": [
+    "japan_wage_inflation",
+    "japan_core_inflation",
+    "japan_food_cpi",
+    "japan_core_cpi",
+    "japan_services_cpi",
+    "japan_wage_growth"
+  ],
+  "recession_risk": [
+    "us_gdp_recession_risk"
+  ],
+  "stagflation_risk": [
+    "fed_stagflation_dilemma",
+    "fed_policy_dilemma"
+  ],
+  "policy_uncertainty": [
+    "us_policy_uncertainty"
+  ],
+  "fed_put": [
+    "fed_put_removal",
+    "fed_put_absent"
+  ],
+  "bund_yield": [
+    "bund_yield_rise"
+  ],
+  "auto_sales": [
+    "auto_sales_surge",
+    "auto_sales_decline",
+    "auto_tariff_shock"
+  ],
+  "ust_pressure": [
+    "ust_selling_pressure",
+    "ust_forced_selling",
+    "ust_yield_spike",
+    "ust_yield_elevated"
+  ],
+  "krw": [
+    "krw_strength",
+    "krw_weakness",
+    "usd_krw",
+    "won_weakness",
+    "won_strength",
+    "korea_foreign_inflows",
+    "foreign_inflows",
+    "korea_to_us_equity_flows"
+  ],
+  "ai_demand": [
+    "ai_power_demand",
+    "ai_server_demand",
+    "data_center_power_demand",
+    "data_center_demand",
+    "power_demand",
+    "us_power"
+  ],
+  "sector_rotation": [
+    "market_concentration",
+    "market_direction",
+    "market_signal",
+    "market_breadth_signal"
+  ],
+  "korea_equity": [
+    "korea_equity_valuation",
+    "kospi_forward_eps",
+    "kospi_price",
+    "korea_eps_growth",
+    "korea_governance_reform",
+    "kospi_correction_risk",
+    "correction_risk"
+  ],
+  "france_political_risk": [
+    "france_political_instability",
+    "france_germany_10y_spread",
+    "france_germany_spread"
+  ],
+  "ycc": [
+    "ycc_implementation",
+    "yield_curve_control"
+  ],
+  "mortgage": [
+    "mortgage_rate",
+    "mortgage_rate_change",
+    "mbs_purchase",
+    "gse_mbs_purchase"
+  ],
+  "systemic_risk": [
+    "systemic_crisis",
+    "hidden_leverage",
+    "bubble_risk"
+  ],
+  "usd_reserve_status": [
+    "usd_reserve_share",
+    "central_bank_independence"
+  ],
+  "funding_market": [
+    "short_term_funding",
+    "repo_usage",
+    "primary_credit"
+  ],
+  "wage": [
+    "wage_growth",
+    "wage_inflation"
+  ],
+  "student_loan": [
+    "student_loan_delinquency",
+    "student_loan_default"
+  ],
+  "fcf": [
+    "fcf_pressure",
+    "free_cash_flow"
+  ]
 }

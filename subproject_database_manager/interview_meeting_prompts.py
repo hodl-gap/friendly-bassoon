@@ -89,8 +89,8 @@ For EACH message, extract structured information about who said what.
         "logic_chains": [
             {{
                 "steps": [
-                    {{"cause": "labor market cooling", "cause_normalized": "labor_market", "effect": "wage pressure easing", "effect_normalized": "wage_pressure", "mechanism": "fewer job openings reduce worker bargaining power", "evidence_quote": "The labor market has been cooling, with job openings declining significantly", "polarity": "BEARISH"}},
-                    {{"cause": "wage pressure easing", "cause_normalized": "wage_pressure", "effect": "inflation decline", "effect_normalized": "inflation", "mechanism": "lower wage growth reduces service inflation", "evidence_quote": "This should help bring down service sector inflation over time", "polarity": "BULLISH"}}
+                    {{"cause": "labor market cooling", "cause_normalized": "labor_market", "effect": "wage pressure easing", "effect_normalized": "wage_pressure", "mechanism": "fewer job openings reduce worker bargaining power", "conditional_on": "", "evidence_quote": "The labor market has been cooling, with job openings declining significantly", "polarity": "BEARISH"}},
+                    {{"cause": "wage pressure easing", "cause_normalized": "wage_pressure", "effect": "inflation decline", "effect_normalized": "inflation", "mechanism": "lower wage growth reduces service inflation", "conditional_on": "no tariff-driven cost-push inflation", "evidence_quote": "This should help bring down service sector inflation over time", "polarity": "BULLISH"}}
                 ]
             }}
         ],
@@ -188,10 +188,12 @@ For EACH message, extract structured information about who said what.
     - "effect": Resulting outcome (natural language)
     - "effect_normalized": Normalized variable name (snake_case, for cross-chunk linking)
     - "mechanism": How cause leads to effect
+    - "conditional_on": Conditions under which this causal link holds (free text, empty string if unconditional). E.g., "inflation at 2% target", "labor market cooling confirmed", "no external shock"
     - "evidence_quote": 1-3 sentences from the original message that support this step (REQUIRED)
     - "polarity": "BULLISH" | "BEARISH" | "NEUTRAL" - Market direction implied by this step (REQUIRED)
 - Chains should have 2+ steps when the logic continues
 - Single-step chains acceptable if no further effects
+- When multiple speakers express distinct views, extract one chain per speaker's key policy stance — do NOT merge all speakers into 2-3 summary chains
 - Empty array [] if no causal relationships
 
 **Normalization Rules (CRITICAL for cross-chunk chain linking):**
@@ -216,8 +218,8 @@ For EACH message, extract structured information about who said what.
 → Chain: inflation down → rate cuts → housing recovery
 
 Structure as:
-- Step 1: cause="inflation falls to 2%", cause_normalized="inflation", effect="rate cuts", effect_normalized="rate_cut", mechanism="target achieved allows policy normalization", evidence_quote="If inflation falls to 2%, we can normalize rates"
-- Step 2: cause="rate cuts", cause_normalized="rate_cut", effect="housing recovery", effect_normalized="housing", mechanism="lower mortgage rates increase affordability", evidence_quote="which would support housing"
+- Step 1: cause="inflation falls to 2%", cause_normalized="inflation", effect="rate cuts", effect_normalized="rate_cut", mechanism="target achieved allows policy normalization", conditional_on="no external supply shock", evidence_quote="If inflation falls to 2%, we can normalize rates"
+- Step 2: cause="rate cuts", cause_normalized="rate_cut", effect="housing recovery", effect_normalized="housing", mechanism="lower mortgage rates increase affordability", conditional_on="", evidence_quote="which would support housing"
 
 **temporal_context field:**
 - Purpose: Enable retrieval filtering by policy/liquidity regime

@@ -55,12 +55,20 @@ Text: {message_text}
    - Earnings analysis, company fundamentals, stock-specific trade ideas
    - Example: "삼성전자 4Q 실적 리뷰: DRAM 가격 상승으로..."
    - Example: "AAPL: iPhone 16 cycle disappointing, cutting PT to $200"
+   - Example: "미국 주요 IB 애널리스트 투자 의견 요약 — Astera Labs Buy, Dauch Corp Hold→Buy 상향, Westlake Outperform" (stock recommendation roundup with target prices)
    - NOTE: If the stock analysis connects to a MACRO theme (e.g., "NVDA earnings → AI CAPEX cycle → market regime"), categorize as data_opinion instead
+   - BOUNDARY: Messages that cite company actions (layoffs, restructuring, earnings) as EVIDENCE for a macro thesis are **data_opinion**, NOT individual_stock. The test: is the MESSAGE ABOUT the companies, or about a macro trend that USES companies as data points?
+     - data_opinion: "Morgan Stanley 2,500명 감원... Block 4,000명 감원... Salesforce 4,000명 감원... AI 도입에 따른 구조적 변화, K자 구조 확산" (companies = evidence for AI workforce disruption thesis)
+     - data_opinion: "New K-ETF 상장 — TIGER 미국AI테크TOP10, KODEX 인도Nifty50" (ETF product launches = market/flow event, not individual stock)
+     - individual_stock: "Astera Labs Buy (신규), target $120" (stock recommendation with price target)
    - Will save raw text only
 
 8. **other** - Doesn't fit any of the above categories
    - Use this if you're uncertain or the message is ambiguous
    - Flag for manual review
+
+**IMPORTANT RULES:**
+- Messages shorter than 50 characters with no analytical content (section headers like "*Source: BofA", single-line reactions like "1.2조??", labels like "*결론") → classify as **other**
 
 **Your task:**
 Categorize this message into ONE of the above categories.
